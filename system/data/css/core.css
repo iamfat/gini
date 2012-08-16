@@ -1,0 +1,134 @@
+small, .small {font-size:90%;}
+
+.right {text-align:right;}
+.center {text-align:center;}
+.left {text-align:left;}
+.middle {vertical-align:middle}
+.top {vertical-align:top}
+.bottom {vertical-align:bottom}
+
+.float_left {float:left}
+.float_right {float:right}
+
+.padding_0 {padding:0;}
+.padding_1 {padding:5px;}
+.padding_2 {padding:10px;}
+.padding_3 {padding:20px;}
+.padding_4 {padding:40px;}
+
+.lpadding_1 {padding-left:5px;}
+.lpadding_2 {padding-left:10px;}
+.lpadding_3 {padding-left:20px;}
+.lpadding_4 {padding-left:40px;}
+
+.rpadding_1 {padding-right:5px;}
+.rpadding_2 {padding-right:10px;}
+.rpadding_3 {padding-right:20px;}
+.rpadding_4 {padding-right:40px;}
+
+.tpadding_1 {padding-top:5px;}
+.tpadding_2 {padding-top:10px;}
+.tpadding_3 {padding-top:20px;}
+.tpadding_4 {padding-top:40px;}
+
+.bpadding_1 {padding-bottom:5px;}
+.bpadding_2 {padding-bottom:10px;}
+.bpadding_3 {padding-bottom:20px;}
+.bpadding_4 {padding-bottom:40px;}
+
+.vspacing_1 {height:5px;}
+.vspacing_2 {height:10px;}
+.vspacing_3 {height:20px;}
+.vspacing_4 {height:40px;}
+
+.margin_1 {margin:5px;}
+.margin_2 {margin:10px;}
+.margin_3 {margin:20px;}
+.margin_4 {margin:40px;}
+
+.lmargin_-1 {margin-left:0;}
+.lmargin_-2 {margin-left:-5px;}
+.rmargin_-1 {margin-right:0;}
+.rmargin_-2 {margin-right:-5px;}
+
+.lmargin_1 {margin-left:5px;}
+.rmargin_1 {margin-right:5px;}
+
+.hr_1 {overflow:hidden !important; height:5px !important; line-height:5px !important; }
+.hr_2 {overflow:hidden !important; height:10px !important; line-height:5px !important;}
+
+.hidden {display:none;}
+.invisible {visibility: hidden;}
+
+a.hidden {display:none;}
+input.hidden {display:none;}
+
+.relative {position: relative}
+
+.nowrap {white-space:nowrap}
+.nowrap * {white-space:nowrap;}
+.flexible {width:98%}
+.tight {width:1px; *width:auto; overflow:visible;}
+table.flexible {width:100%}
+
+.inline_block {
+	display: inline-block;
+}
+
+.editor {
+}
+
+.error {
+	color:#C00;
+}
+
+/* `Clear Floated Elements
+----------------------------------------------------------------------------------------------------*/
+
+/* http://sonspring.com/journal/clearing-floats */
+
+.clear {
+	clear: both;
+	display: block;
+	overflow: hidden;
+	visibility: hidden;
+	width: 0;
+	height: 0;
+}
+
+.debug {
+	white-space: -moz-pre-wrap;
+	white-space: -pre-wrap;
+	white-space: -o-pre-wrap;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	margin:10px;
+	padding:10px;
+	border: 1px solid #396;
+	background-color: #9CA;
+}
+
+/* http://perishablepress.com/press/2008/02/05/lessons-learned-concerning-the-clearfix-css-hack */
+
+.clearfix:after {
+	clear: both;
+	content: ' ';
+	display: block;
+	font-size: 0;
+	line-height: 0;
+	visibility: hidden;
+	width: 0;
+	height: 0;
+}
+
+.clearfix {
+	display: inline-block;
+}
+
+* html .clearfix {
+	height: 1%;
+}
+
+.clearfix {
+	display: block;
+}

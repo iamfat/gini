@@ -1,0 +1,29 @@
+body,  .normal {
+	font-family: helvetica, arial, sans-serif;
+	*font-family: tahoma;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+form, table, input, select, textarea, button, label {
+	font-family: helvetica, arial, sans-serif;
+	*font-family: tahoma;
+	font-size: 12px;
+}
+
+a:focus {
+	outline: 1px dotted invert;
+}
+
+hr {
+	border: 0 #ccc solid;
+	border-top-width: 1px;
+	clear: both;
+	height: 0px;
+	display:block;
+	margin: 0;
+	*line-height: 1px !important;
+	*margin-top:-9px !important;
+	*margin-bottom:-9px !important;
+	*font-size:1px !important;
+}

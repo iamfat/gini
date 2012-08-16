@@ -1,0 +1,13 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title><?php echo $title ? H($title) : ''; ?></title>
+	<meta http-equiv="Content-Style-Type" content="text/css" />
+	<meta http-equiv="Content-Script-Type" content="text/javascript" />
+	<base href="<?php echo \Model\URI::base(); ?>" />
+</head>
+<body>
+	<?php echo $this->body; ?>
+</body>
+</html>

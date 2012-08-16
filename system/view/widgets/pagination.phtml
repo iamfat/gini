@@ -1,0 +1,48 @@
+<?php if ($total > $per_page) : 
+
+$current_page = floor($start / $per_page) + 1;
+$total_pages = ceil($total / $per_page);
+$max_pages = 5;
+
+$url = $this->url ?: '';
+$st = $this->query_key;
+
+if ($total_pages > 1) :
+
+	$lamda_func = 'pagination_'.uniqid();
+
+?>
+<div class="pagination">
+<?php 
+	$f=$current_page - floor($max_pages/2);
+	$t=$current_page + floor($max_pages/2);
+	if ($f<1) {
+		$f=1;
+		$t=$f+$max_pages-1;
+	}
+	if ($t>$total_pages) {
+		$t=$total_pages;
+		$f=$t-$max_pages+1;
+		if($f<1)$f=1;
+	}
+	if ($f>1) {
+		echo '<a href="'.URI::url($url, array($st=>0)).'">1</a>';
+		echo '<span>...</span>';				
+	}
+	for ($i=$f;$i<=$t;$i++) {
+		if ($i == $current_page) {
+			echo '<span class="current">'.$i.'</span>';
+		}
+		else {
+			echo '<a href="'.URI::url($url, array($st=>($i - 1)*$per_page)).'">'.$i.'</a>';
+		}
+	}
+	if ($t<$total_pages) {
+		echo '<span>...</span>';
+	}
+
+?>
+</div>
+<?php 	endif;
+endif; 
+
