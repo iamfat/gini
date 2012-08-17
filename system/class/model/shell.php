@@ -186,20 +186,24 @@ namespace Model {
 					// 获得环境变量
 					$results = array();
 					if (count($args) == 1) {
-						$results = array_keys($env);
+						foreach($env as $k => $v) {
+							$results[$k] = $k;	
+						}
 					}
 					else {
 						foreach($env as $k => $v) {
 							if (fnmatch($args[1], $k)) {
-								$results[] = $k;
+								$results[$k] = $k;
 							}
 						}
 					}
 
+					unset($results['argc']);
+					unset($results['argv']);
+
 					foreach($results as $k) {
 						$v = $env[$k];
-						if (is_array($v)) $v = '@' . json_encode($v);
-						printf("%s=\"\033[33m%s\033[0m\"\n", $k, $v);
+						printf("%s = \"\033[31m%s\033[0m\"\n", $k, addcslashes((string) $v, "\\\'\"\n\r"));
 					}
 
 					break;
