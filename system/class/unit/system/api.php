@@ -10,7 +10,7 @@ namespace API {
 
 namespace Unit\System {
 	
-	use \Gini\Config;
+	use \Model\Config;
 	use \Gini\Core;
 	
 	class API extends \Model\Unit {

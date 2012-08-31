@@ -2,14 +2,12 @@
 
 namespace Unit\System;
 
-use \Gini\Config;
-
 class Database extends \Model\Unit {
 
 	var $db;
 
 	function setup() {
-		Config::set('database.test.url', 'mysql://gini@localhost/test');	
+		_CONF('database.test.url', 'mysql://gini@localhost/test');	
 		$this->db = \Model\Database::db('test');
 	}
 

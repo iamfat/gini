@@ -81,7 +81,7 @@ abstract class _Q extends ORM_Iterator {
 		if (!$this->_is_parsed) {
 			$cache_key = 'Q:'.Misc::key($this->selector);
 			$cache = Cache::factory('memcache');
-			if (Config::get('debug.Q_nocache', FALSE) 
+			if ((_CONF('debug.Q_nocache') ?: FALSE)
 				|| NULL === ($cache_data = $cache->get($cache_key))) {
 				$query = $this->parse_selector();
 				$cache_data = array(

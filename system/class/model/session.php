@@ -13,7 +13,7 @@ abstract class _Session {
 		
 		if (PHP_SAPI == 'cli') return;	
 	
-		$handler = Config::get('system.session_handler', 'buildin');
+		$handler = _CONF('system.session_handler') ?: 'buildin';
 
 		if ($handler != 'buildin') {
 			
@@ -25,14 +25,14 @@ abstract class _Session {
 		
 		}
 
-		$session_name = Config::get('system.session_name') ?: 'qsession';
+		$session_name = _CONF('system.session_name') ?: 'qsession';
 		
 		ini_set('session.name', $session_name);
 
 		session_set_cookie_params (
-			Config::get('system.session_lifetime'),
-			Config::get('system.session_path'),
-			Config::get('system.session_domain')
+			_CONF('system.session_lifetime'),
+			_CONF('system.session_path'),
+			_CONF('system.session_domain')
 		);
 		
 		if ($_POST['qsession']) {

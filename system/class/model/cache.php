@@ -1,18 +1,21 @@
 <?php
 
-namespace Gini {
+namespace Model\Cache {
 
-	interface Cache_Handler {
-		function setup();
+	interface Driver {
 		function get($key);
 		function set($key, $value, $ttl);
 		function remove($key);
 		function flush();
 	}
 
+}
+
+namespace Model {
+
 	final class Cache {
 		
-		private $handler;
+		private $driver;
 		private static $_caches;
 
 		static $CACHE_PREFIX;
@@ -23,27 +26,27 @@ namespace Gini {
 		}
 
 		function set($key, $value, $ttl=0) {
-			if (!$this->handler) return FALSE;
+			if (!$this->driver) return FALSE;
 			$key = self::normalize_key($key);
-			return $this->handler->set($key, $value, $ttl); 
+			return $this->driver->set($key, $value, $ttl); 
 		}
 		
 		function get($key) {
-			if (!$this->handler) return NULL;
+			if (!$this->driver) return NULL;
 			$key = self::normalize_key($key);
-			$value = $this->handler->get($key); 
+			$value = $this->driver->get($key); 
 			return $value;
 		}
 		
 		function remove($key) {
-			if (!$this->handler) return FALSE;
+			if (!$this->driver) return FALSE;
 			$key = self::normalize_key($key);
-			return $this->handler->remove($key); 
+			return $this->driver->remove($key); 
 		}
 		
 		//清空缓冲
 		function flush() {
-			if ($this->handler) $this->handler->flush(); 
+			if ($this->driver) $this->driver->flush(); 
 		}
 		
 		function __construct($name=NULL) {
@@ -51,8 +54,7 @@ namespace Gini {
 			if (!class_exists($class, FALSE)) {
 				require(GINI_PATH.'/cache/'.strtolower($name).EXT);
 			}
-			$this->handler = new $class;
-			$this->handler->setup();
+			$this->driver = new $class;
 		}
 
 		static function factory($name=NULL) {
@@ -61,10 +63,6 @@ namespace Gini {
 				self::$_caches[$name] = new Cache($name);
 			}
 			return self::$_caches[$name];
-		}
-
-		static function L($key, $value) {
-			self::$vars[$key] = $value;
 		}
 
 		/**
@@ -89,7 +87,7 @@ namespace Gini {
 		 */
 		static function cache_content($path, $content) {
 			$cache_file = self::cache_filename($path);
-			$cache_path = WEB_PATH.$cache_file;
+			$cache_path =  $_SERVER['DOCUMENT_ROOT'].'/'.$cache_file;
 			$dir = dirname($cache_path);
 			if (!is_dir($dir)) {
 				mkdir($dir, 0755, true);
@@ -107,7 +105,7 @@ namespace Gini {
 		 */
 		static function cache_file($path, $recache = FALSE) {
 			$cache_file = self::cache_filename($path);
-			$cache_path = WEB_PATH.$cache_file;
+			$cache_path =  $_SERVER['DOCUMENT_ROOT'].'/'.$cache_file;
 			if ($recache || !file_exists($cache_path)) {
 				$dir = dirname($cache_path);
 				if (!is_dir($dir)) {
@@ -126,26 +124,17 @@ namespace Gini {
 			* @return 无
 		 */
 		static function remove_cache_file($path) {
-			list($ext) = pathinfo($path, PATHINFO_EXTENSION);
+			$ext = pathinfo($path, PATHINFO_EXTENSION);
 			$cache_file = 'cache/'.hash('md4', $path).'.'.$ext;
-			$cache_path = WEB_PATH.$cache_file;
+			$cache_path = $_SERVER['DOCUMENT_ROOT'].'/'.$cache_file;
 			@unlink($cache_path);
 		}
 
 		static function setup() {
-			self::$CACHE_PREFIX = hash('md4', APP_PATH . SYS_PATH).':';		
+			self::$CACHE_PREFIX = hash('md4', APP_PATH).':';		
 		}
 	}
 
 }
-
-namespace {
-
-	function L($key) {
-		return \Gini\Cache::$vars[$key];
-	}
-
-}
-
 
 

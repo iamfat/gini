@@ -12,6 +12,7 @@ namespace Gini {
 	final class Core {
 
 		static $PATH_INFO;
+		static $PATH_TO_SHORTNAME;
 
 		static function normalize_path($path) {
 			if (FALSE === strpos($path, 'phar://')) {
@@ -23,6 +24,18 @@ namespace Gini {
 			}
 
 			return $path;
+		}
+
+		static function short_path($path) {
+			$path_arr = explode(DIRECTORY_SEPARATOR, $path);
+			$num = count($path_arr);
+			for ($i=$num;$i>1;$i--) {
+				$base = implode(DIRECTORY_SEPARATOR, array_slice($path_arr, 0, $i)) . '/';
+				if (isset(self::$PATH_TO_SHORTNAME[$base])) {
+					$rpath = $i == $num ? '' : implode(DIRECTORY_SEPARATOR, array_slice($path_arr, $i));
+					return self::$PATH_TO_SHORTNAME[$base] . '/' . $rpath;
+				}
+			}
 		}
 
 		private static function _fetch_info($path) {
@@ -79,6 +92,7 @@ namespace Gini {
 			}
 
 			self::$PATH_INFO = $path_info;
+			self::$PATH_TO_SHORTNAME[$path] = $info->shortname;
 		}
 
 		static function autoload($class){
@@ -218,9 +232,9 @@ namespace Gini {
 
 			self::import(SYS_PATH);
 
-			// $_SERVER['GN_APP'] = '/var/lib/gini-apps/hello'
-			if (isset($_SERVER['GN_APP'])) {
-				define('APP_PATH', realpath($_SERVER['GN_APP']) . '/');
+			// $_SERVER['APP_PATH'] = '/var/lib/gini-apps/hello'
+			if (isset($_SERVER['APP_PATH'])) {
+				define('APP_PATH', realpath($_SERVER['APP_PATH']) . '/');
 				self::import(APP_PATH);
 			}
 			else {
@@ -251,9 +265,9 @@ namespace {
 		$fmt = array_shift($args);
 		if (defined('DEBUG')) {
 			if (PHP_SAPI == 'cli') {
-				vfprintf(STDERR, "\033[36m\033[4mTRACE\033[0m $fmt\n", $args);
+				vfprintf(STDERR, "\e[36m\e[4mTRACE\e[0m $fmt\n", $args);
 			}
-			error_log(vsprintf("\033[36m\033[4mTRACE\033[0m $fmt", $args));			
+			error_log(vsprintf("\e[36m\e[4mTRACE\e[0m $fmt", $args));			
 		}
 	}
 
@@ -269,6 +283,15 @@ namespace {
 	function DECLARED($name, $file) {
 		global $_DECLARED;
 		return  $_DECLARED[$name] == $file;
+	}
+
+	function _G($key, $value = NULL) {
+		if (is_null($value)) {
+			return isset(\Gini\Core::$_G[$key]) ? \Gini\Core::$_G[$key] : NULL;
+		}
+		else {
+			\Gini\Core::$_G[$key] = $value;
+		}
 	}
 
 }

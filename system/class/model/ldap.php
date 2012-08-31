@@ -35,7 +35,7 @@ abstract class _LDAP {
 	
 	function get_option($name, $default=NULL) {
 		if (isset($this->options[$name])) return $this->options[$name];
-		return Config::get('ldap.'.$name, $default);
+		return _CONF('ldap.'.$name) ?: $default;
 	}
 	
 	function bind($dn, $password) {

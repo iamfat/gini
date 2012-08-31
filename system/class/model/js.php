@@ -92,7 +92,7 @@ abstract class _JS {
 	static function format($content) {
 		if (!$content) return NULL;
 		
-		$mode = Config::get('page.js_mode');
+		$mode = _CONF('page.js_mode');
 		
 		if (!preg_match('|^'.preg_quote(JS_FORMATTED, '|').'|', $content)) {
 			switch ($mode) {
@@ -142,13 +142,13 @@ abstract class _JS {
 			$mtime = filemtime($path);
 			
 			$lamda = 'jslamda_'.$js_key;
-			$prefix_path =  Config::get('system.tmp_dir').'js/';
+			$prefix_path =  _CONF('system.tmp_dir').'js/';
 
-			$locale = Config::get('system.locale');
+			$locale = _CONF('system.locale');
 			if ($locale) {
 				$prefix_path .= $locale.'_';
 			}
-			$mode = Config::get('page.js_mode');
+			$mode = _CONF('page.js_mode');
 			if ($mode) {
 				$prefix_path .= $mode.'_';
 			}
@@ -209,7 +209,7 @@ abstract class _JS {
 			}
 			else {
 				$file = $js_ser;
-				$mode = Config::get('page.js_mode');
+				$mode = _CONF('page.js_mode');
 			}
 			
 			if (FALSE === strpos($file, '://')) {
@@ -248,8 +248,8 @@ abstract class _JS {
 		$js_file = Misc::key('js', $f).'.js'; 
 		$cache_file = Cache::cache_filename($js_file);
 		$cache_path = ROOT_PATH.WEB_DIR.$cache_file;
-		$version = (int)Config::get('page.js_version');
-		if (Config::get('debug.js_check_cache')) {
+		$version = (int)_CONF('page.js_version');
+		if (_CONF('debug.js_check_cache')) {
 			if (file_exists($cache_path)) {
 				$files = array_unique(explode(' ', $f));
 				$mtime = 0;

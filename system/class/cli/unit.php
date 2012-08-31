@@ -71,16 +71,16 @@ class Unit {
 		}
 
 		if (self::$stat['count'] > 0) {
-			printf("\033[1mRESULTS\033[0m \n");
-			printf("   \033[1m%d\033[0m tests performed!\n", self::$stat['count']);
-			printf("   \033[1m%d\033[0m tests passed!\n", self::$stat['pass']);
-			printf("   \033[1m%d\033[0m tests failed!\n", self::$stat['fail']);
+			printf("\e[1mRESULTS\e[0m \n");
+			printf("   \e[1m%d\e[0m tests performed!\n", self::$stat['count']);
+			printf("   \e[1m%d\e[0m tests passed!\n", self::$stat['pass']);
+			printf("   \e[1m%d\e[0m tests failed!\n", self::$stat['fail']);
 		}
 	}
 
 	static function exception($e) {
 		$message = $e->getMessage();
-		fprintf(STDERR, "\033[31m\033[4mERROR\033[0m \033[1m%s\033[0m\n", $message);
+		fprintf(STDERR, "\e[31m\e[4mERROR\e[0m \e[1m%s\e[0m\n", $message);
 		$trace = array_slice($e->getTrace(), 1, 8);
 		foreach ($trace as $n => $t) {
 			fprintf(STDERR, "%3d. %s%s() in %s on line %d\n", $n + 1,

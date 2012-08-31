@@ -16,7 +16,7 @@ namespace GR\System\Model {
 		function remove($token);
 	}
 
-	use \Gini\Event;
+	use \Model\Event;
 
 	TRY_DECLARE('\Model\Auth', __FILE__);
 
@@ -27,8 +27,8 @@ namespace GR\System\Model {
 			static $curr_token;
 
 			//system.auth_token可强制重载进程令牌
-			if(Config::get('auth.token')){
-				return Config::get('auth.token');
+			if(_CONF('auth.token')){
+				return _CONF('auth.token');
 			}
 			
 			if ($curr_token === NULL) { 
@@ -71,9 +71,9 @@ namespace GR\System\Model {
 
 			list($token, $backend) = self::parse_token($token);
 
-			$backend = $backend ?: Config::get('auth.default_backend');
+			$backend = $backend ?: _CONF('auth.default_backend');
 
-			$opts = (array) Config::get('auth.backends');
+			$opts = (array) _CONF('auth.backends');
 			$opt = $opts[$backend];
 			
 			assert($opt['handler']);	//handler必须存在
@@ -128,7 +128,7 @@ namespace GR\System\Model {
 			$token = trim($token);
 			if (!$token) return '';
 			if (!preg_match('/\|[\w.-]+/', $token)) {
-				$default_backend = $default_backend ?: Config::get('auth.default_backend');
+				$default_backend = $default_backend ?: _CONF('auth.default_backend');
 				$token .= '|'.$default_backend;
 			}
 			return $token;
@@ -136,7 +136,7 @@ namespace GR\System\Model {
 
 		static function make_token($name, $backend=NULL) {
 			list($name, $b) = self::parse_token($name);
-			$backend = $backend ?: ($b ?: Config::get('auth.default_backend'));
+			$backend = $backend ?: ($b ?: _CONF('auth.default_backend'));
 			return $name . '|' . $backend;
 		}
 

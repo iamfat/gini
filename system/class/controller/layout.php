@@ -4,8 +4,6 @@ namespace GR\System\Controller {
 
 	TRY_DECLARE('\Controller\Layout', __FILE__);
 
-	use Gini\Event;
-	
 	class Layout extends \Model\Controller {
 		
 		public $layout;

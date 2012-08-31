@@ -7,8 +7,8 @@ abstract class _Session_Database implements Session_Handler {
 
 	function __construct(){
 		
-		$this->db_name = Config::get('session.database.name', NULL);
-		$this->table = Config::get('session.database.table', '_session');
+		$this->db_name = _CONF('session.database.name');
+		$this->table = _CONF('session.database.table') ?: '_session';
 		
 		$db = Database::factory($this->db_name);
 		$db->prepare_table($this->table, array(

@@ -24,7 +24,7 @@ namespace GR\System\Model {
 			return htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8');
 		}
 
-		static function E($str){
+		static function encode($str){
 			return rawurlencode($str);
 		}
 		
@@ -46,9 +46,12 @@ namespace {
 		return \Model\Output::H($str);
 	}
 
-	function E($str) {
-		return \Model\Output::E($str);
+	function eH($str) {
+		echo H($str);
 	}
 
+	function e($str) {
+		echo $str;
+	}
 }
 	

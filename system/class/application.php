@@ -8,8 +8,8 @@ namespace GR\System {
 
 		static function setup() {
 
-			\Gini\Cache::setup();
-			\Gini\Config::setup();
+			\Model\Cache::setup();
+			\Model\Config::setup();
 
 			\Model\I18N::setup();
 			\Model\Input::setup();

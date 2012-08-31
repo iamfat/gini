@@ -1,10 +1,8 @@
 <?php
 
-namespace Gini\Cache;
+namespace Model\Cache;
 
-class APC implements \Gini\Cache_Handler {
-
-	function setup() {}
+class APC implements \Model\Cache\Driver {
 
 	function set($key, $value, $ttl) {
 		return function_exists('apc_store') && @apc_store($key, serialize($value), $ttl);

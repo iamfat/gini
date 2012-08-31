@@ -4,7 +4,7 @@ namespace GR\System\Model {
 
 	TRY_DECLARE('\Model\URI', __FILE__);
 
-	use \Gini\Config;
+	use \Model\Config;
 
 	class URI {
 

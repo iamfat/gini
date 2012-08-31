@@ -8,7 +8,7 @@ $object = new \Model\ORM\Object($id);
 $object = O('user', 1);
 */
 
-use \Gini\Event;
+use \Model\Event;
 use \Model\Database;
 
 abstract class ORM {
@@ -55,7 +55,7 @@ abstract class ORM {
 		}
 
 		array_unshift($args, implode(' ', $events), $this);
-		return call_user_func_array('\Gini\Event::'.$func, $args);		
+		return call_user_func_array('\Model\Event::'.$func, $args);		
 	}
 
 	private function inheritance() {

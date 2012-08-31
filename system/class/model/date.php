@@ -54,7 +54,7 @@ abstract class _Date {
 	}
 
 	static function default_format($type=NULL) {
-		$time_format .= Config::get('system.24hour') ? 'H:i:s' : 'h:i:s A';
+		$time_format .= _CONF('system.24hour') ? 'H:i:s' : 'h:i:s A';
 		switch ($type) {
 		case 'time':
 			return $time_format;

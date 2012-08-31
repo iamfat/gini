@@ -2,12 +2,10 @@
 
 namespace Unit\System;
 
-use \Gini\Config;
-
 class I18N extends \Model\Unit {
 
 	function setup() {
-		Config::set('system.locale', 'en_US');
+		_CONF('system.locale', 'en_US');
 		\Model\I18N::setup();
 	}
 

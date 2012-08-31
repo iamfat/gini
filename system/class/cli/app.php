@@ -60,7 +60,7 @@ PHP;
 				);
 
 			foreach($prompt as $k => $v) {
-				$data[$k] = readline($v . " [\033[31m" . ($default[$k]?:'N/A') . "\033[0m]: ");
+				$data[$k] = readline($v . " [\e[31m" . ($default[$k]?:'N/A') . "\e[0m]: ");
 				if (!$data[$k]) $data[$k] = $default[$k];
 			}
 

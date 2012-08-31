@@ -2,7 +2,7 @@
 
 namespace GR\System\Model {
 
-	use \Gini\Config;
+	use \Model\Config;
 	use \Model\URI;
 	
 	TRY_DECLARE('\Model\Input', __FILE__);
@@ -37,7 +37,7 @@ namespace GR\System\Model {
 	
 			$route = $_SERVER['PATH_INFO'];
 			if (!$route) $route = $_SERVER['ORIG_PATH_INFO'];
-			$route = preg_replace('/^[\/ ]*|[\/ ]*$|'.preg_quote(Config::get('system.url_suffix')).'$/iu','', $route);
+			$route = preg_replace('/^[\/ ]*|[\/ ]*$|'.preg_quote(_CONF('system.url_suffix')).'$/iu','', $route);
 	
 			Input::$route = $route;
 			$args = array();

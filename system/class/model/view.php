@@ -4,8 +4,7 @@ namespace GR\System\Model {
 
 	TRY_DECLARE('\Model\View', __FILE__);
 	
-	use \Gini\Event;
-	use \Gini\Config;
+	use \Model\Event;
 	use \Gini\Core;
 
 	class View {
@@ -63,7 +62,7 @@ namespace GR\System\Model {
 		function __toString(){
 
 			if ($this->_ob_cache !== NULL) return $this->_ob_cache;
-			
+
 			$path = $this->_path;
 			$module = NULL;
 
@@ -72,7 +71,7 @@ namespace GR\System\Model {
 				$module = substr($module, 1);
 			}
 
-			$locale = Config::get('system.locale');
+			$locale = _CONF('system.locale');
 			$_path = Core::file_exists(VIEW_DIR.'@'.$locale.'/'.$path.VEXT, $module);
 			if (!$_path) {
 				$_path=Core::file_exists(VIEW_DIR.$path.VEXT, $module);

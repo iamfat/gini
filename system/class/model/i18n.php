@@ -2,7 +2,7 @@
 
 namespace Model {
 
-	use \Gini\Config;
+	use \Model\Config;
 	use \Gini\Core;
 
 	final class I18N {
@@ -10,7 +10,7 @@ namespace Model {
 		static $domain_loaded;
 
 		static function setup() {
-			$locale = (Config::get('system.locale') ?: 'zh_CN').'UTF-8';
+			$locale = (_CONF('system.locale') ?: 'zh_CN').'UTF-8';
 			setlocale(LC_MESSAGES, $locale);
 			putenv('LC_MESSAGE='.$locale);
 
@@ -68,7 +68,7 @@ namespace Model {
 		}
 
 		static function locales() {
-			return (array) Config::get('system.locales');
+			return (array) _CONF('system.locales');
 		}
 			
 	}
@@ -78,11 +78,21 @@ namespace Model {
 namespace {
 
 	function T($str, $args=NULL) {
-		return Model\I18N::T('system', $str, $args);
+		return \Model\I18N::T('system', $str, $args);
 	}
 
 	function HT($str, $args=NULL, $convert_return=FALSE){ 	
-		return Model\Output::H(T($str, $args), $convert_return);
+		return \Model\Output::H(T($str, $args), $convert_return);
+	}
+
+	function eT() {
+		$args = func_get_args();
+		echo call_user_func_array('T', $args);
+	}
+
+	function eHT() {
+		$args = func_get_args();
+		echo call_user_func_array('HT', $args);
 	}
 
 }

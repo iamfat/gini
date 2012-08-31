@@ -2,7 +2,7 @@
 
 namespace Unit\System;
 
-use \Gini\Config;
+use \Model\Config;
 use \Gini\Core;
 
 class Cascade extends \Model\Unit {

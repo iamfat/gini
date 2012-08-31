@@ -9,7 +9,7 @@ if (!class_exists('CSS', false)) {
 define('CSS_PATCHED_FLAG', '/*CSS PATCHED*/');
 
 use \Gini\Core;
-use \Gini\Config;
+use \Model\Config;
 
 abstract class _CSS {
 
@@ -18,7 +18,7 @@ abstract class _CSS {
 			return $css;
 		}
 
-		$mini = Config::get('page.css_minify');
+		$mini = _CONF('page.css_minify');
 		
 		Core::load(THIRD_DIR, 'cssp', 'system');
 		
@@ -54,8 +54,8 @@ abstract class _CSS {
 		$css_file = Misc::key('css', $f).'.css'; 
 		$cache_file = Cache::cache_filename($css_file);
 		$cache_path = ROOT_PATH.WEB_DIR.$cache_file;
-		$version = (int)Config::get('page.css_version');
-		if (Config::get('debug.css_check_cache')) {
+		$version = (int)_CONF('page.css_version');
+		if (_CONF('debug.css_check_cache')) {
 			if (file_exists($cache_path)) {
 				$files = array_unique(explode(' ', $f));
 				$mtime = 0;

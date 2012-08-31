@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini;
+namespace Model;
 
 final class Event {
 

@@ -1,2 +1,12 @@
-<h1><?php echo H('Gini PHP Framework'); ?></h1>
-<p><?php echo HT('Please override this view: %file', array('%file'=>\Model\File::relative_path(__FILE__))); ?></p>
+<h1><?php eHT('Gini PHP Framework'); ?></h1>
+<div class="body">
+	<h3>Hello, world!</h3>
+	<p><?php eHT('Please override this view'); ?>: <strong><?php e(\Gini\Core::short_path(__FILE__)); ?></strong></p>
+	<div class="monospace">
+		<div><strong>SYS_PATH</strong> = <?php eH(SYS_PATH); ?></div>
+		<div><strong>APP_PATH</strong> = <?php eH(APP_PATH); ?></div>
+	</div>
+</div>
+<div class="footer">
+	2012 &copy; Jia Huang from Genee
+</div>

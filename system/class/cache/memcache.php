@@ -1,33 +1,31 @@
 <?php
 
-namespace Gini\Cache;
+namespace Model\Cache;
 
 define('MEMCACHE_HOST', '127.0.0.1');
 define('MEMCACHE_PORT', 11211);
 
-class Memcache implements \Gini\Cache_Handler {
+class Memcache implements \Model\Cache\Driver {
 
 	private $memcache;
 	private $memcached = FALSE;
 
-	function setup() {
+	function __construct() {
 		
-		if (!$this->memcache) {
-			if (class_exists('Memcache', FALSE)) {
-				$memcache = new Memcache;
-				$memcache->connect(MEMCACHE_HOST, MEMCACHE_PORT);
-				$this->memcache = $memcache;
+		if (class_exists('Memcache', FALSE)) {
+			$memcache = new Memcache;
+			$memcache->connect(MEMCACHE_HOST, MEMCACHE_PORT);
+			$this->memcache = $memcache;
+		}
+		elseif (class_exists('Memcached', FALSE)) {
+			$memcache = new Memcached(CACHE_PREFIX);
+			$memcache->setOption(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+			$memcache->setOption(Memcached::OPT_SERIALIZER, Memcached::SERIALIZER_PHP);
+			if (0 == count($memcache->getServerList())) {
+				$memcache->addServer(MEMCACHE_HOST, MEMCACHE_PORT);
 			}
-			elseif (class_exists('Memcached', FALSE)) {
-				$memcache = new Memcached(CACHE_PREFIX);
-				$memcache->setOption(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
-				$memcache->setOption(Memcached::OPT_SERIALIZER, Memcached::SERIALIZER_PHP);
-				if (0 == count($memcache->getServerList())) {
-					$memcache->addServer(MEMCACHE_HOST, MEMCACHE_PORT);
-				}
-				$this->memcached = TRUE;
-				$this->memcache = $memcache;
-			}
+			$this->memcached = TRUE;
+			$this->memcache = $memcache;
 		}
 		
 	}

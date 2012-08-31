@@ -44,7 +44,7 @@ namespace Model\Database {
 
 namespace Model {
 	
-	use \Gini\Config;
+	use \Model\Config;
 	use \Model\Log;
 	
 	final class Database {
@@ -61,14 +61,14 @@ namespace Model {
 	
 		static function & db($name=NULL) {
 		
-			$name = $name ?:Config::get('database.default');
+			$name = $name ?:_CONF('database.default');
 		
 			if(!isset(self::$DB[$name])){
-				$url = Config::get('database.'.$name.'.url');
+				$url = _CONF('database.'.$name.'.url');
 				if (!$url) {
-					$dbname = Config::get('database.'.$name.'.db');
-					if (!$dbname) $dbname = Config::get('database.prefix') . $name;
-					$url = strtr(Config::get('database.root'), array('%database' => $dbname));
+					$dbname = _CONF('database.'.$name.'.db');
+					if (!$dbname) $dbname = _CONF('database.prefix') . $name;
+					$url = strtr(_CONF('database.root'), array('%database' => $dbname));
 				}
 				self::$DB[$name] = new Database($url);
 				self::$DB[$name]->name($name);
@@ -78,7 +78,7 @@ namespace Model {
 		}	
 		
 		static function shutdown($name=NULL) {
-			if(!$name) $name = Config::get('database.default');
+			if(!$name) $name = _CONF('database.default');
 		
 			if(!isset(self::$DB[$name])){
 				unset(self::$DB[$name]);
@@ -158,7 +158,7 @@ namespace Model {
 			//去掉不必要的换行符
 			$SQL = preg_replace('/[\n\r\t]+/', ' ', $SQL);
 		
-			if (Config::get('debug.database', FALSE)) { 
+			if (_CONF('debug.database')?:FALSE) { 
 				Log::add($SQL, 'database');
 			}
 				

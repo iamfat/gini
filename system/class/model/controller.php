@@ -28,7 +28,7 @@ namespace Model {
 namespace Model\Controller {
 
 	use \Gini\Core;
-	use \Gini\Config;
+	use \Model\Config;
 
 	use \Model\Input;
 	use \Model\URI;
@@ -97,8 +97,8 @@ namespace Model\Controller {
 
 		if (!$class || !class_exists($class, FALSE)) URI::redirect('error/404');
 
-		Config::set('runtime.controller_path', $path);
-		Config::set('runtime.controller_class', $class);
+		_CONF('runtime.controller_path', $path);
+		_CONF('runtime.controller_class', $class);
 
 		$controller = new $class;
 
@@ -118,8 +118,8 @@ namespace Model\Controller {
 		}
 
 		\Model\Controller::$CURRENT = $controller;
-		Config::set('runtime.controller_action', $action);
-		Config::set('runtime.controller_params', $params);
+		_CONF('runtime.controller_action', $action);
+		_CONF('runtime.controller_params', $params);
 
 		$controller->__pre_action($action, $params);
 		call_user_func_array(array($controller, $action), $params);

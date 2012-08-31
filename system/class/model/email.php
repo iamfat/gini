@@ -6,7 +6,7 @@ if (!class_exists('Email', false)) {
 	class Email extends _Email {};
 }
 
-use \Gini\Config;
+use \Model\Config;
 
 /*
 	e.g.
@@ -32,8 +32,8 @@ abstract class _Email {
 	
 	function __construct($sender=NULL){
 		if(is_null($sender)){
-			$sender->email = Config::get('system.email_address');
-			$sender->name = Config::get('system.email_name', $sender->email);
+			$sender->email = _CONF('system.email_address');
+			$sender->name = _CONF('system.email_name') ?: $sender->email;
 		}
 
 		$this->from($sender->email, $sender->name);
@@ -86,7 +86,7 @@ abstract class _Email {
 	function send()
 	{		
 		$success = FALSE;
-		if (Config::get('debug.email')) {
+		if (_CONF('debug.email')) {
 			$success = TRUE;
 		}
 		else {		

@@ -135,12 +135,30 @@ namespace Model {
 			return preg_replace_callback('|%(\w+)|', '\Model\Shell::prompt_replace_cb', $prompt);
 		}
 
+		static function relaunch() {
+			//$ph = proc_open($_SERVER['_'] . ' &', array(STDIN, STDOUT, STDERR), $pipes, NULL, $env);
+			// fork process to avoid memory leak
+			if (isset($_SERVER['FORKED'])) {
+				exit(200);
+			}
+			else {
+				$_SERVER['FORKED'] = 1;
+				do {
+					$ph = proc_open($_SERVER['_'], array(STDIN, STDOUT, STDERR), $pipes, NULL, $_SERVER);
+					if (is_resource($ph)) {
+						$code = proc_close($ph);
+					}					
+				}
+				while ($code == 200);
+				exit;
+			}
+		}
+
 		static function main() {
 
 			$_SERVER['PID'] = posix_getpid();
 
-			$prompt = "\033[34;1mGINI\033[0m@";
-			$env = $_SERVER;
+			$prompt = "[%PID]\e[34;1mGINI\e[0m@";
 
 			readline_completion_function('\Model\Shell::on_readline_completion');
 
@@ -163,7 +181,7 @@ namespace Model {
 				case 'quit':
 					exit;
 				case 'clear':
-					echo "\033[2J\033[H";
+					echo "\e[2J\e[H";
 					break;
 				case 'history':
 					if (function_exists('readline_list_history')) {
@@ -176,7 +194,8 @@ namespace Model {
 				case 'setenv':
 					// 设置环境变量
 					if (count($args) > 2) {
-						$env[$args[1]] = $args[2];
+						$_SERVER[$args[1]] = $args[2];
+						static::relaunch();
 					}
 					else {
 						echo "Usage: setenv KEY VALUE\n";
@@ -186,12 +205,12 @@ namespace Model {
 					// 获得环境变量
 					$results = array();
 					if (count($args) == 1) {
-						foreach($env as $k => $v) {
+						foreach($_SERVER as $k => $v) {
 							$results[$k] = $k;	
 						}
 					}
 					else {
-						foreach($env as $k => $v) {
+						foreach($_SERVER as $k => $v) {
 							if (fnmatch($args[1], $k)) {
 								$results[$k] = $k;
 							}
@@ -202,8 +221,8 @@ namespace Model {
 					unset($results['argv']);
 
 					foreach($results as $k) {
-						$v = $env[$k];
-						printf("%s = \"\033[31m%s\033[0m\"\n", $k, addcslashes((string) $v, "\\\'\"\n\r"));
+						$v = $_SERVER[$k];
+						printf("%s = \"\e[31m%s\e[0m\"\n", $k, addcslashes((string) $v, "\\\'\"\n\r"));
 					}
 
 					break;
@@ -230,7 +249,7 @@ namespace Model {
 						$prompt = $args[1];
 					}
 					else {
-						echo preg_replace('/\e(\[[\d;]+[a-z])/i', "\033$1\033[30m*$1\033[0m\033$1", $prompt)."\n";
+						echo preg_replace('/\e(\[[\d;]+[a-z])/i', "\e$1\e[30m*$1\e[0m\e$1", $prompt)."\n";
 					}
 					break;
 				default:

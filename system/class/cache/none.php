@@ -1,10 +1,8 @@
 <?php
 
-namespace Gini\Cache;
+namespace Model\Cache;
 
-class None implements \Gini\Cache_Handler {
-
-	function setup() {}
+class None implements \Model\Cache\Driver {
 
 	function set($key, $value, $ttl) { }
 	

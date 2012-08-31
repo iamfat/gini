@@ -2,7 +2,7 @@
 
 namespace Model\Database;
 
-use \Gini\Config;
+use \Model\Config;
 
 final class MySQL implements \Model\Database\Handler {
 
@@ -153,7 +153,7 @@ final class MySQL implements \Model\Database\Handler {
 
 	function adjust_table($table, $schema) {
 		
-		$remove_nonexistent = Config::get('database.remove_nonexistent') ?: FALSE;
+		$remove_nonexistent = _CONF('database.remove_nonexistent') ?: FALSE;
 		
 		if (!$this->table_exists($table)){
 			$this->create_table($table);

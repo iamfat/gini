@@ -1,10 +1,8 @@
 <?php
 
-namespace Gini\Cache;
+namespace Model\Cache;
 
-class XCache implements \Gini\Cache_Handler {
-
-	function setup() {}
+class XCache implements \Model\Cache\Driver {
 
 	function set($key, $value, $ttl) {
 		return @xcache_set($key, serialize($value), $ttl);
