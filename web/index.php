@@ -27,7 +27,7 @@ function exception($e) {
 	if ($message) {
 		$file = \Model\File::relative_path($e->getFile());
 		$line = $e->getLine();
-		error_log(sprintf("\e[31m\e[4mERROR\e[0m \e[1m%s\e[0m", $message));
+		error_log(sprintf("\033[31m\033[4mERROR\033[0m \033[1m%s\033[0m", $message));
 		$trace = array_slice($e->getTrace(), 1, 5);
 		foreach ($trace as $n => $t) {
 			error_log(sprintf("    %d) %s%s() in %s on line %d", $n + 1,

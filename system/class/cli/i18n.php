@@ -10,13 +10,13 @@ namespace CLI {
 		static function command_scan($argc, $argv) {
 
 			if ($argc < 2) {
-				exit("usage: \e[1;34mgini i18n scan\e[0m <path/to/app> [<locales>]\n");
+				exit("usage: \033[1;34mgini i18n scan\033[0m <path/to/app> [<locales>]\n");
 			}
 
 			echo "I18N_PATH=".I18N_PATH."\n";
 			$info = Core::fetch_info($argv[1]);
 			if (!isset($info->shortname)) {
-				echo "\e[1;34mgini i18n scan\e[0m: Invalid app path!\n";
+				echo "\033[1;34mgini i18n scan\033[0m: Invalid app path!\n";
 				exit;
 			}
 
@@ -73,7 +73,7 @@ namespace CLI {
 
 		static function command_format($argc, $argv) {
 			if ($argc < 2) {
-				exit("usage: \e[1;34mgini i18n format\e[0m <locales>\n");
+				exit("usage: \033[1;34mgini i18n format\033[0m <locales>\n");
 			}
 
 			array_shift($argv);

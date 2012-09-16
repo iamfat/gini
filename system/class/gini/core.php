@@ -308,9 +308,9 @@ namespace {
 		$fmt = array_shift($args);
 		if (defined('DEBUG')) {
 			if (PHP_SAPI == 'cli') {
-				vfprintf(STDERR, "\e[36m\e[4mTRACE\e[0m $fmt\n", $args);
+				vfprintf(STDERR, "\033[36m\033[4mTRACE\033[0m $fmt\n", $args);
 			}
-			error_log(vsprintf("\e[36m\e[4mTRACE\e[0m $fmt", $args));			
+			error_log(vsprintf("\033[36m\033[4mTRACE\033[0m $fmt", $args));			
 		}
 	}
 

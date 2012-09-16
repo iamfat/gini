@@ -7,7 +7,7 @@ namespace Model {
 		static function main($argc, $argv) {
 		
 			if ($argc < 2) {	
-				exit("usage: \e[1;34mgini {$argv[0]}\e[0m <command> [<args>]\n");
+				exit("usage: \033[1;34mgini {$argv[0]}\033[0m <command> [<args>]\n");
 			}
 			
 			$command = 'command_'.$argv[1];
@@ -16,13 +16,13 @@ namespace Model {
 				static::$command(count($argv), $argv);
 			}
 			else {
-				exit("\e[1;34mgini {$argv[0]}\e[0m: unknown command '{$argv[1]}'. See 'gini {$argv[0]} help'.\n");
+				exit("\033[1;34mgini {$argv[0]}\033[0m: unknown command '{$argv[1]}'. See 'gini {$argv[0]} help'.\n");
 			}
 			
 		}
 
 		static function command_help($argc, $argv) {
-			echo "\e[1;34mgini {$argv[0]}\e[0m: help is unavailable.\n";
+			echo "\033[1;34mgini {$argv[0]}\033[0m: help is unavailable.\n";
 		}
 			
 	}

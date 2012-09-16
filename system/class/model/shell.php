@@ -177,10 +177,10 @@ namespace Model {
 		}
 
 		static function command_help($argc, $argv) {
-			echo "usage: \e[1;34mgini\e[0m <command> [<args>]\n\n";
+			echo "usage: \033[1;34mgini\033[0m <command> [<args>]\n\n";
 			echo "The most commonly used git commands are:\n";
 			foreach(self::$buildin_commands as $k => $v) {
-				printf("   \e[1;34m%-10s\e[0m %s\n", $k, $v);
+				printf("   \033[1;34m%-10s\033[0m %s\n", $k, $v);
 			}
 		}
 
@@ -193,7 +193,7 @@ namespace Model {
 				$paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'cli');
 				foreach($paths as $path) {
 					$shortname = \Gini\Core::shortname($path);
-					printf("\e[30;1;4m%s\e[0m:\n", $shortname);
+					printf("\033[30;1;4m%s\033[0m:\n", $shortname);
 					if (!is_dir($path)) continue;
 
 					$dh = opendir($path);
@@ -227,7 +227,7 @@ namespace Model {
 				$cmd = substr($cmd, 1);
 				$_SERVER['GINI_APP_PATH'] = $app_base_path . '/' .$cmd;
 				if (!is_dir($_SERVER['GINI_APP_PATH'] )) {
-					exit("\e[1;34mgini\e[0m: missing app '$cmd'.\n");
+					exit("\033[1;34mgini\033[0m: missing app '$cmd'.\n");
 				}
 
 				array_shift($argv);
@@ -241,7 +241,7 @@ namespace Model {
 				// fork process to avoid memory leak
 				$pid = pcntl_fork();
 				if ($pid == -1) {
-					exit("\e[1;34mgini\e[0m: cannot fork process\n");
+					exit("\033[1;34mgini\033[0m: cannot fork process\n");
 				}
 				elseif ($pid) {
 					//parent process
@@ -254,7 +254,7 @@ namespace Model {
 						call_user_func($func, count($argv), $argv);
 					}
 					else {
-						exit("\e[1;34mgini\e[0m: '$cmd' is not a gini command. See 'gini help'.\n");
+						exit("\033[1;34mgini\033[0m: '$cmd' is not a gini command. See 'gini help'.\n");
 					}
 				}
 	
@@ -283,7 +283,7 @@ namespace Model {
 					$message = $e->getMessage();
 					$file = \Model\File::relative_path($e->getFile());
 					$line = $e->getLine();
-					fprintf(STDERR, "\e[314mERROR\e[0m \e[1m%s\e[0m (\e[34m%s\e[0m:$line)\n", $message, $file, $line);
+					fprintf(STDERR, "\033[314mERROR\033[0m \033[1m%s\033[0m (\033[34m%s\033[0m:$line)\n", $message, $file, $line);
 					if (defined('DEBUG')) {
 						$trace = array_slice($e->getTrace(), 1, 3);
 						foreach ($trace as $n => $t) {

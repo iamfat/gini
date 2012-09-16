@@ -56,7 +56,7 @@ namespace CLI {
 
 		static function main($argc, $argv) {
 			if ($argc <= 1 || $argv[1] == 'help') {
-				exit("Usage: \e[1;34mgini test\e[0m [unit/integration/performance/fixtures]/path/to/test\n");
+				exit("Usage: \033[1;34mgini test\033[0m [unit/integration/performance/fixtures]/path/to/test\n");
 			}
 
 			array_shift($argv);
@@ -66,10 +66,10 @@ namespace CLI {
 			}			
 
 			if (self::$stat['count'] > 0) {
-				printf("\e[1mRESULTS\e[0m \n");
-				printf("   \e[1m%d\e[0m tests performed!\n", self::$stat['count']);
-				printf("   \e[1m%d\e[0m tests passed!\n", self::$stat['pass']);
-				printf("   \e[1m%d\e[0m tests failed!\n", self::$stat['fail']);
+				printf("\033[1mRESULTS\033[0m \n");
+				printf("   \033[1m%d\033[0m tests performed!\n", self::$stat['count']);
+				printf("   \033[1m%d\033[0m tests passed!\n", self::$stat['pass']);
+				printf("   \033[1m%d\033[0m tests failed!\n", self::$stat['fail']);
 			}
 		}
 		

@@ -7,19 +7,19 @@ class Cancel_Exception extends \Exception {}
 
 class Unit {
 	
-	const ANSI_RED = "\e[31m";
-	const ANSI_GREEN = "\e[32m";
-	const ANSI_YELLOW = "\e[33m";
+	const ANSI_RED = "\033[31m";
+	const ANSI_GREEN = "\033[32m";
+	const ANSI_YELLOW = "\033[33m";
 
-	const ANSI_RESET = "\e[0m";
-	const ANSI_HIGHLIGHT = "\e[1m\e[4m";
+	const ANSI_RESET = "\033[0m";
+	const ANSI_HIGHLIGHT = "\033[1m\033[4m";
 
 	var $_fails = array();
 	var $_done = array();
 
 	final function run() {
 
-		$this->printf("\e[34m==>\e[0m start test %s\n", self::ANSI_HIGHLIGHT.get_class($this).self::ANSI_RESET);
+		$this->printf("\033[34m==>\033[0m start test %s\n", self::ANSI_HIGHLIGHT.get_class($this).self::ANSI_RESET);
 
 		if (!is_callable(array($this, 'setup'))) {
 			$this->_fails[] = array(
@@ -73,11 +73,11 @@ class Unit {
 			$this->_done[$name] = TRUE;
 		}
 		catch (Fail_Exception $e) {
-			$status = self::ANSI_RED . '×'.self::ANSI_RESET."  \e[1;31m".$e->getMessage().self::ANSI_RESET;
+			$status = self::ANSI_RED . '×'.self::ANSI_RESET."  \033[1;31m".$e->getMessage().self::ANSI_RESET;
 			$this->_done[$name] = FALSE;
 		}
 		catch (Cancel_Exception $e) {
-			$status = self::ANSI_YELLOW . '-' . self::ANSI_RESET."  \e[1;33m".$e->getMessage().self::ANSI_RESET;
+			$status = self::ANSI_YELLOW . '-' . self::ANSI_RESET."  \033[1;33m".$e->getMessage().self::ANSI_RESET;
 			$this->_fails[] = array(
 				'name' => sprintf('test %s is canceled', $name),
 			);
