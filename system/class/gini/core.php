@@ -14,31 +14,30 @@ namespace Gini {
 		static $PATH_INFO;
 		static $PATH_TO_SHORTNAME;
 
-		static function normalize_path($path) {
-			if (FALSE === strpos($path, 'phar://')) {
-				//尝试替换成phar
-				$phar_path = dirname($path).'/'.basename($path, '.phar').'.phar';
-				if (file_exists($phar_path)) {
-					return 'phar://'.$phar_path.'/';
-				}
-			}
-
-			return $path;
-		}
-
 		static function short_path($path) {
-			$path_arr = explode(DIRECTORY_SEPARATOR, $path);
+			$path_arr = explode('/', $path);
 			$num = count($path_arr);
 			for ($i=$num;$i>1;$i--) {
-				$base = implode(DIRECTORY_SEPARATOR, array_slice($path_arr, 0, $i)) . '/';
+				$base = implode('/', array_slice($path_arr, 0, $i));
 				if (isset(self::$PATH_TO_SHORTNAME[$base])) {
-					$rpath = $i == $num ? '' : implode(DIRECTORY_SEPARATOR, array_slice($path_arr, $i));
+					$rpath = $i == $num ? '' : implode('/', array_slice($path_arr, $i));
 					return self::$PATH_TO_SHORTNAME[$base] . '/' . $rpath;
 				}
 			}
 		}
 
-		private static function _fetch_info($path) {
+		static function shortname($path) {
+			$path_arr = explode('/', $path);
+			$num = count($path_arr);
+			for ($i=$num;$i>1;$i--) {
+				$base = implode('/', array_slice($path_arr, 0, $i));
+				if (isset(self::$PATH_TO_SHORTNAME[$base])) {
+					return self::$PATH_TO_SHORTNAME[$base];
+				}
+			}
+		}
+
+		static function fetch_info($path) {
 
 			/*
 			$shortname; $path;
@@ -46,8 +45,12 @@ namespace Gini {
 			$dependencies;
 			*/
 
-			$info_script = $path.'info'.EXT;
-			file_exists($info_script) and include($info_script);
+			$path = realpath($path);
+
+			$info_script = $path.'/.gini';
+			if (!file_exists($info_script)) return NULL;
+
+			extract((array)@json_decode(@file_get_contents($info_script), TRUE));
 
 			if (is_string($dependencies)) {
 				$dependencies = explode(',', $dependencies);
@@ -74,7 +77,7 @@ namespace Gini {
 		}
 
 		static function import($path) {
-			$info = self::_fetch_info($path);
+			$info = self::fetch_info($path);
 
 			$inserted = FALSE;
 			foreach ((array) self::$PATH_INFO as $b_shortname => $b_info) {
@@ -104,7 +107,7 @@ namespace Gini {
 			\GR\path\to\class
 			*/
 
-			list($gr, $class_path)=explode('/', $path, 2);
+			list($gr, $class_path) = explode('/', $path, 2);
 			if ($gr == 'gr') {
 
 				for(;;) {
@@ -112,7 +115,9 @@ namespace Gini {
 					list($s, $class_path) = explode('/', $class_path, 2);
 					if (!$class_path) break;
 
-					$scope .= $s . '/';
+					if ($scope) $scope .= '/' . $s;
+					else $scope = $s;
+
 					$file = Core::load(CLASS_DIR, $class_path, $scope);
 					if (class_exists($class, FALSE)) break;
 
@@ -139,7 +144,7 @@ namespace Gini {
 				}
 			}
 			else {
-				$file = Core::file_exists($base.$name.EXT, $scope);
+				$file = Core::phar_file_exists($base, $name.EXT, $scope);
 				if ($file) {
  					require_once($file);
 					return $file;
@@ -148,35 +153,71 @@ namespace Gini {
 			return FALSE;
 		}
 
-		static function file_exists($file, $scope = NULL) {
+		static function phar_file_exists($phar, $file, $scope=NULL) {
 
-			if ($scope) {
-
-				if (isset(self::$PATH_INFO[$scope])) {
-					$info = self::$PATH_INFO[$scope];
-					if ($info->enabled === FALSE) {
-						return FALSE;
-					}
-
-					$file_path = $info->path . '/' . $file;
-					if (file_exists($file_path)) {
-						return $file_path;
-					}
-
+			if (is_null($scope)) {
+				foreach (array_reverse(array_keys((array)self::$PATH_INFO)) as $scope) {
+					$file_path = self::phar_file_exists($phar, $file, $scope);
+					if ($file_path) return $file_path;
 				}
+			}
+			elseif (isset(self::$PATH_INFO[$scope])) {
+				$info = self::$PATH_INFO[$scope];
+				if ($info->enabled === FALSE) {
+					return FALSE;
+				}
+
+				$file_path = 'phar://'.$info->path . '/' . $phar . '.phar/' . $file;
+				if (file_exists($file_path)) return $file_path;
+
+				$file_path = $info->path . '/' . $phar . '/' . $file;
+				if (file_exists($file_path)) return $file_path;
 
 			}
-			else foreach ((array)self::$PATH_INFO as $info) {
+			
+			return NULL;		
+		}
+
+		static function file_exists($file, $scope = NULL) {
+
+			if (is_null($scope)) foreach (array_reverse(array_keys((array)self::$PATH_INFO)) as $scope) {
+				$file_path = self::file_exists($file, $scope);
+				if ($file_path) return $file_path;
+			}
+			elseif (isset(self::$PATH_INFO[$scope])) {
+				$info = self::$PATH_INFO[$scope];
 				if ($info->enabled === FALSE) {
-					continue;
+					return FALSE;
 				}
 
-				$file_path = $info->path . $file;
+				$file_path = $info->path . '/' . $file;
 				if (file_exists($file_path)) return $file_path;
+
 			}
 
 			return NULL;
 
+		}
+
+		static function phar_file_paths($phar, $file) {
+
+			foreach ((array) self::$PATH_INFO as $info) {
+				if ($info->enabled === FALSE) {
+					continue;
+				}
+
+				$file_path = 'phar://' . $info->path . '/' . $phar . '.phar/' . $file;
+				if (file_exists($file_path)) {
+					$file_paths[] = $file_path;
+				}
+
+				$file_path = $info->path . '/' . $phar . '/' . $file;
+				if (file_exists($file_path)) {
+					$file_paths[] = $file_path;
+				}
+			}
+
+			return array_unique((array) $file_paths);
 		}
 
 		static function file_paths($file) {
@@ -186,7 +227,7 @@ namespace Gini {
 					continue;
 				}
 
-				$file_path = $info->path . $file;
+				$file_path = $info->path . '/' . $file;
 				if (file_exists($file_path)) {
 					$file_paths[] = $file_path;
 				}
@@ -232,9 +273,11 @@ namespace Gini {
 
 			self::import(SYS_PATH);
 
-			// $_SERVER['APP_PATH'] = '/var/lib/gini-apps/hello'
-			if (isset($_SERVER['APP_PATH'])) {
-				define('APP_PATH', realpath($_SERVER['APP_PATH']) . '/');
+			// $_SERVER['GINI_APP_PATH'] = '/var/lib/gini-apps/hello'
+			if (isset($_SERVER['GINI_APP_PATH'])) {
+				$app_path = realpath($_SERVER['GINI_APP_PATH']);
+				define('APP_PATH', $app_path);
+				$_SERVER['GINI_APP_PATH'] = $app_path;
 				self::import(APP_PATH);
 			}
 			else {

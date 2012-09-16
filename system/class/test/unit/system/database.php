@@ -1,8 +1,8 @@
 <?php
 
-namespace Unit\System;
+namespace Test\Unit\System;
 
-class Database extends \Model\Unit {
+class Database extends \Model\Test\Unit {
 
 	var $db;
 

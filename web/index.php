@@ -3,24 +3,24 @@
 /*
 ROOT_PATH=/usr/share/gini
 APP_PATH=/var/lib/gini-apps/hello
-GN_DEBUG=0/1
+DEBUG=0/1
 */
 
-$root_path = realpath(isset($_SERVER['ROOT_PATH']) ? $_SERVER['ROOT_PATH'] : (dirname(__FILE__).'/..'));
+$sys_path = realpath(isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] : (dirname(__FILE__).'/../system'));
+$_SERVER['GINI_SYS_PATH'] = $sys_path;
+define('SYS_PATH', $sys_path);
 
-$phar_path = $root_path.'system.phar';
-if (is_file($phar_path)) {
-	define('SYS_PATH', 'phar://'.$root_path.'/system.phar/');
-}
-else {
-	define('SYS_PATH', $root_path.'/system/');
-}
-
-if (isset($_SERVER['GN_DEBUG']) && $_SERVER['GN_DEBUG']) {
+if (isset($_SERVER['GINI_DEBUG']) && $_SERVER['GINI_DEBUG']) {
 	define('DEBUG', 1);
 }
 
-require SYS_PATH.'class/gini/bootstrap.php';
+$class_path = SYS_PATH . '/class';
+if (file_exists($class_path.'.phar')) {
+	require 'phar://' . $class_path . '.phar/gini/bootstrap.php';
+}
+else {
+	require $class_path . '/gini/bootstrap.php';
+}
 
 function exception($e) {
 	$message = $e->getMessage();
@@ -45,11 +45,8 @@ function exception($e) {
 	}
 }
 
-function setup() {
+function main($argc, $argv) {
 	class_exists('Model\Controller');
 	\Model\Controller\setup();
-}
-
-function main($argc, $argv) {
 	\Model\Controller\main($argc, $argv);					// 分派控制器
 }

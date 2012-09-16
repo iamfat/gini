@@ -1,0 +1,19 @@
+#: /Users/iamfat/Documents/Codes/Web/gini/system/class/unit/system/i18n.php:14
+msgid   "Hello!"
+msgstr  ""
+
+#: /Users/iamfat/Documents/Codes/Web/gini/system/view/body.phtml:1
+msgid   "Gini PHP Framework"
+msgstr  ""
+
+#: /Users/iamfat/Documents/Codes/Web/gini/system/view/body.phtml:3
+msgid   "Hello, world!"
+msgstr  ""
+
+#: /Users/iamfat/Documents/Codes/Web/gini/system/view/body.phtml:4
+msgid   "Please override this view"
+msgstr  ""
+
+#: /Users/iamfat/Documents/Codes/Web/gini/system/view/body.phtml:11
+msgid   "Jia Huang from Genee"
+msgstr  ""

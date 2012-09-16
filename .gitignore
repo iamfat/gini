@@ -3,3 +3,5 @@
 *.mo
 *.po
 .DS_Store
+.config
+.i18n

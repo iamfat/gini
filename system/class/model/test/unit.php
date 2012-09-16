@@ -1,6 +1,6 @@
 <?php
 
-namespace Model;
+namespace Model\Test;
 
 class Fail_Exception extends \Exception {}
 class Cancel_Exception extends \Exception {}
@@ -17,7 +17,7 @@ class Unit {
 	var $_fails = array();
 	var $_done = array();
 
-	final function test() {
+	final function run() {
 
 		$this->printf("\e[34m==>\e[0m start test %s\n", self::ANSI_HIGHLIGHT.get_class($this).self::ANSI_RESET);
 
@@ -73,11 +73,11 @@ class Unit {
 			$this->_done[$name] = TRUE;
 		}
 		catch (Fail_Exception $e) {
-			$status = self::ANSI_RED . '×'.self::ANSI_RESET.' ('.$e->getMessage().')';
+			$status = self::ANSI_RED . '×'.self::ANSI_RESET."  \e[1;31m".$e->getMessage().self::ANSI_RESET;
 			$this->_done[$name] = FALSE;
 		}
 		catch (Cancel_Exception $e) {
-			$status = self::ANSI_YELLOW . '-' . self::ANSI_RESET.' ('.$e->getMessage().')';
+			$status = self::ANSI_YELLOW . '-' . self::ANSI_RESET."  \e[1;33m".$e->getMessage().self::ANSI_RESET;
 			$this->_fails[] = array(
 				'name' => sprintf('test %s is canceled', $name),
 			);
@@ -136,15 +136,16 @@ class Unit {
 
 	final function _diff_array($a, $b) {
 		if (is_array($a)) {
+			if (!is_array($b)) return 1;
 			foreach ($a as $ak => $av) {
+				if (!array_key_exists($ak, $b)) return 1;
 				$bv = $b[$ak];
-				if (!isset($bv)) return 1;
 				if ($this->_diff_array($av, $bv) != 0) {
 					return 1;
 				}				
 			}
 		}
-		elseif (is_array($b) || $a != $b) {
+		elseif (is_array($b) || $a !== $b) {
 			return 1;
 		}
 

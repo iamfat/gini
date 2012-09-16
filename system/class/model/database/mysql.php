@@ -4,7 +4,7 @@ namespace Model\Database;
 
 use \Model\Config;
 
-final class MySQL implements \Model\Database\Handler {
+final class MySQL implements \Model\Database\Driver {
 
 	private $_table_status = NULL;
 	private $_table_schema = NULL;
@@ -66,28 +66,12 @@ final class MySQL implements \Model\Database\Handler {
 		return '\''.$this->escape($s).'\'';
 	}
 
-	function rewrite(){
-		$args = func_get_args();	
-		$SQL = array_shift($args);
-		foreach($args as $k=>&$v){
-			if (is_array($v)) {
-				$v=$this->quote($v);
-			}
-			elseif (is_bool($v) || is_int($v) || is_float($v)){
-			} 
-			else {
-				$v=$this->escape($v);
-			} 
-		}
-		return vsprintf($SQL, $args);	
-	}
-	
 	function query($SQL) {
 		$retried = 0;
 
 		while (1) {
 			$result = @$this->_h->query($SQL);
-			if (is_object($result)) return new DBResult($result);
+			if (is_object($result)) return new \Model\Database\Result($this, $result);
 
 			if ($this->_h->errno != 2006) break;
 			if ($retried > 0) {
@@ -114,11 +98,16 @@ final class MySQL implements \Model\Database\Handler {
 			
 			if ($table && $table != '*') {
 				unset($this->_table_status[$table]);
-				$SQL = $this->rewrite('SHOW TABLE STATUS FROM `%s` WHERE `Name`="%s"', $this->_info['db'], $table);
+				$SQL = sprintf('SHOW TABLE STATUS FROM `%s` WHERE `Name`="%s"', 
+						$this->_h->escape_string($this->_info['db']), 
+						$this->_h->escape_string($table)
+						);
 			}
 			else {
 				$this->_table_status = NULL;
-				$SQL = $this->rewrite('SHOW TABLE STATUS FROM `%s`', $this->_info['db']);
+				$SQL = sprintf('SHOW TABLE STATUS FROM `%s`', 
+						$this->_h->escape_string($this->_info['db'])
+						);
 			}
 
 			$rs = $this->query($SQL);
@@ -153,7 +142,7 @@ final class MySQL implements \Model\Database\Handler {
 
 	function adjust_table($table, $schema) {
 		
-		$remove_nonexistent = _CONF('database.remove_nonexistent') ?: FALSE;
+		// $remove_nonexistent = _CONF('database.remove_nonexistent') ?: FALSE;
 		
 		if (!$this->table_exists($table)){
 			$this->create_table($table);
@@ -186,9 +175,11 @@ final class MySQL implements \Model\Database\Handler {
 						, $this->field_sql($key, $field));
 				}
 			}
+			/*
 			elseif ($remove_nonexistent) {
 				$field_sql[] = sprintf('DROP %s', $this->quote_ident($key) );
 			}
+			*/
 			/*
 			elseif ($key[0] != '@') {
 				$nkey = '@'.$key;
@@ -221,7 +212,8 @@ final class MySQL implements \Model\Database\Handler {
 						, $this->alter_index_sql($key, $val));
 				}
 			}
-			else/*if ($remove_nonexistent)*/ {
+			// remove other indexes
+			else {
 				$field_sql[]=sprintf('DROP INDEX %s', $this->quote_ident($key) );
 			}
 		}
@@ -235,8 +227,10 @@ final class MySQL implements \Model\Database\Handler {
 
 	function table_schema($name, $refresh = FALSE) {
 		
-		if($refresh || !isset($this->_table_schema[$name]['fields'])){
-			$ds = $this->query($this->rewrite('SHOW FIELDS FROM `%s`', $name));
+		if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
+
+			$ds = $this->query(sprintf('SHOW FIELDS FROM `%s`', $this->_h->escape_string($name)));
+
 			$fields=array();
 			if ($ds) while($dr = $ds->row('object')) {
 
@@ -261,8 +255,8 @@ final class MySQL implements \Model\Database\Handler {
 		}
 		
 		if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
-			$ds=$this->query($this->rewrite('SHOW INDEX FROM `%s`', $name));
-			$indexes=array();
+			$ds = $this->query(sprintf('SHOW INDEX FROM `%s`', $this->_h->escape_string($name)));
+			$indexes = array();
 			if ($ds) while($row = $ds->row('object')) {
 				$indexes[$row->Key_name]['fields'][] = $row->Column_name;
 				if (!$row->Non_unique) {
@@ -330,7 +324,10 @@ final class MySQL implements \Model\Database\Handler {
 		 
 		$engine = $engine ?: 'innodb';	//innodb as default db
 		
-		$SQL = $this->rewrite('CREATE TABLE `%s` (`%s` int NOT NULL) ENGINE = %s DEFAULT CHARSET = utf8', $table, '_FOO', $engine);
+		$SQL = sprintf('CREATE TABLE `%s` (`%s` int NOT NULL) ENGINE = %s DEFAULT CHARSET = utf8', 
+					$this->_h->escape_string($table), '_FOO', 
+					$this->_h->escape_string($engine)
+					);
 		$rs = $this->query($SQL);
 		$this->_update_table_status($table);
 		
@@ -403,52 +400,24 @@ final class MySQL implements \Model\Database\Handler {
 		return $ret == 0;
 	}
 	
-}
+	function fetch_row($result, $mode='object') {
+		if (!is_object($result)) return array();
 
-class DBResult implements \Model\Database\Result {
-	private $_result;
-	
-	function __construct($result){
-		$this->_result=$result;
-	}
-	
-	function rows($mode='object') {
-		$rows = array();
-		while ($row = $this->row($mode)) {
-			$rows[] = $row;
-		}
-		return $rows;
-	}
-	
-	function row($mode='object'){
 		if ($mode == 'assoc') {
-			return $this->_result->fetch_assoc();
-		}elseif ($mode == 'num') {
-			return $this->_result->fetch_row();
-		}elseif ($mode == 'object') {
-			return $this->_result->fetch_object();
-		}		
-		return $this->_result->fetch_array(MYSQL_BOTH);
-	}
-	
-	function count(){
-		return is_object($this->_result) ? $this->_result->num_rows : 0;
+			return $result->fetch_assoc();
+		}
+		elseif ($mode == 'num') {
+			return $result->fetch_row();
+		}
+		elseif ($mode == 'object') {
+			return $result->fetch_object();
+		}
+
+		return $result->fetch_array(MYSQL_BOTH);		
 	}
 
-	function value(){
-		$r = $this->row('num');
-		if(!$r)return NULL;
-		return $r[0];
+	function num_rows($result) {
+		return is_object($result) ? $result->num_rows : 0;
 	}
-	
-	function object(){
-		$r = $this->row('object');
-		if(!$r)return NULL;
-		return $r;
-	}
-	
-	function __destruct(){
-		if (is_object($this->_result)) $this->_result->free();
-	}
-
 }
+

@@ -8,12 +8,12 @@ namespace API {
 
 }
 
-namespace Unit\System {
+namespace Test\Unit\System {
 	
 	use \Model\Config;
 	use \Gini\Core;
 	
-	class API extends \Model\Unit {
+	class API extends \Model\Test\Unit {
 	
 		function setup() {
 	

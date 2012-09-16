@@ -2,7 +2,6 @@
 
 namespace Model {
 
-	use \Model\Config;
 	use \Gini\Core;
 
 	final class I18N {
@@ -10,89 +9,98 @@ namespace Model {
 		static $domain_loaded;
 
 		static function setup() {
-			$locale = (_CONF('system.locale') ?: 'zh_CN').'UTF-8';
-			setlocale(LC_MESSAGES, $locale);
-			putenv('LC_MESSAGE='.$locale);
 
-			self::bind_domain('system');
+			if (!defined('I18N_PATH')) {
+				define('I18N_PATH', APP_PATH . '/.i18n');
+			}
+
 			textdomain('system');
+			self::set_locale(_CONF('system.locale'));
 	 	}
-	 	
-	 	static function get_items(){
-	 		return self::$items;
-	 	}
-	 	
-	 	static function shutdown() {
+	 		 	
+	 	static function set_locale($locale) {
 	 		self::$domain_loaded = NULL;
+
+			$full_locale = ($locale ?: 'en_US').'.UTF-8';
+			putenv('LC_ALL='.$full_locale);
+			setlocale(LC_MESSAGES, $full_locale);
 	 	}
-		
-		static function HT($domain=NULL, $str, $args=NULL, $options=NULL, $convert_return=FALSE) {
-			return Output::H(self::T($domain, $str, $args, $options), $convert_return);
-		}
-		
-		static function T($domain=NULL, $str, $args=NULL) {
-			if(is_array($str)){
-				foreach($str as &$s){
-					$s = self::T($domain, $s, $args);
-				}
-				return $str;
-			}
-			
-			if ($domain && $domain != 'system') {
-				self::bind_domain($domain);
-				$str = dgettext($domain, $str) ?: gettext($str);
-			}
-			else {
-				$str = gettext($str);
-			}
-
-			if ($args) {
-				$str = strtr($str, $args);
-			}
-
-			return stripcslashes($str);
-		}
-	
-		static function bind_domain($domain) {
-
+					
+		static function load_domain($domain) {
 			if (!isset(self::$domain_loaded[$domain])) {
-				
-				$path = Core::file_exists(I18N_DIR.$locale, $domain);
-				if ($path) {
-					bindtextdomain($domain, $path);
-					bind_textdomain_codeset($domain, 'UTF-8');
-				}
-
+				bindtextdomain($domain, I18N_PATH);
+				bind_textdomain_codeset($domain, 'UTF-8');
 				self::$domain_loaded[$domain] = TRUE;
 			}
 		}
 
-		static function locales() {
-			return (array) _CONF('system.locales');
-		}
-			
 	}
 
 }
 
 namespace {
 
-	function T($str, $args=NULL) {
-		return \Model\I18N::T('system', $str, $args);
-	}
-
-	function HT($str, $args=NULL, $convert_return=FALSE){ 	
-		return \Model\Output::H(T($str, $args), $convert_return);
-	}
-
-	function eT() {
+	function D_() {
 		$args = func_get_args();
-		echo call_user_func_array('T', $args);
+		$domain = array_shift($args);
+		$fmt = array_shift($args);
+
+		if (!$fmt) return $fmt;
+
+		if ($domain) {
+			\Model\I18N::load_domain($domain);
+			$fmt = dgettext($domain, $fmt) ?: gettext($fmt);
+		}
+		else {
+			$fmt = gettext($fmt);
+		}
+
+		return count($args) > 0 ? vsprintf($fmt, $args) : $fmt;
+
 	}
 
-	function eHT() {
+	function __() {
 		$args = func_get_args();
-		echo call_user_func_array('HT', $args);
+		array_unshift($args, 'system');
+		return call_user_func_array('D_', $args);
+	}
+
+	function N_($msgid1, $msgid2, $n) {
+		return ngettext($msgid1, $msgid2, $n);
+	}
+
+	function DN_($domain, $msgid1, $msgid2, $n) {
+		return dngettext($domain, $msgid1, $msgid2, $n) ?: ngettext($msgid1, $msgid2, $n);
+	}
+
+	function H_(){ 	
+		$args = func_get_args();
+		return H(call_user_func_array('__', $args));
+	}
+
+	function e_() {
+		$args = func_get_args();
+		echo call_user_func_array('__', $args);
+	}
+
+	function HD_(){ 	
+		$args = func_get_args();
+		return H(call_user_func_array('D_', $args));
+	}
+
+	function eD_() {
+		$args = func_get_args();
+		echo call_user_func_array('D_', $args);
+	}
+
+	function eH_() {
+		$args = func_get_args();
+		echo call_user_func_array('H_', $args);
+	}
+
+	function eH_D() {
+		$args = func_get_args();
+		echo call_user_func_array('HD_', $args);
 	}
 
 }

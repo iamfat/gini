@@ -50,10 +50,7 @@ namespace Model {
 		}
 		
 		function __construct($name=NULL) {
-			$class = '\\Gini\\Cache\\'.$name;
-			if (!class_exists($class, FALSE)) {
-				require(GINI_PATH.'/cache/'.strtolower($name).EXT);
-			}
+			$class = '\\Model\\Cache\\'.ucwords($name);
 			$this->driver = new $class;
 		}
 

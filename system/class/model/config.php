@@ -6,10 +6,6 @@ namespace Model {
 
 		static $items = array();
 
-		static function setup() {
-			self::load(SYS_PATH);		
-		}
-
 		private static function _load($category, $filename) {
 			if (is_file($filename)) {
 				if (!isset(self::$items[$category])) self::$items[$category] = array();
@@ -28,7 +24,7 @@ namespace Model {
 					}
 					while ($file = readdir($dh)) {
 						if ($file[0] == '.') continue;
-						self::_load($category, $base . $file);
+						self::_load($category, $base . '/' . $file);
 					}
 					closedir($dh);
 				}
@@ -36,9 +32,9 @@ namespace Model {
 		}
 
 		static function load($path, $category=NULL){
-			$base = $path.CONFIG_DIR;
+			$base = $path.'/'.CONFIG_DIR;
 			if ($category) {
-				$ffile = $base.$category.EXT;
+				$ffile = $base.'/'.$category.EXT;
 				if (is_file($ffile)) {
 					self::_load($category, $ffile);
 				}
@@ -48,7 +44,7 @@ namespace Model {
 				if ($dh) {
 					while($file = readdir($dh)) {
 						if ($file[0] == '.') continue;
-						self::_load(basename($file, EXT), $base . $file);
+						self::_load(basename($file, EXT), $base . '/' . $file);
 					}
 					closedir($dh);
 				}
@@ -67,13 +63,10 @@ namespace Model {
 			self::$items = array();	//清空
 		}
 		
-		static function & get($key, $default=NULL){
+		static function & get($key){
 			list($category, $key) = explode('.', $key, 2);
-			if (!$key) return self::$items[$category];
-			$val = self::$items[$category][$key];
-			
-			if(isset($val)) return $val;
-			return $default;
+			if ($key === NULL) return self::$items[$category];			
+			return self::$items[$category][$key];
 		}
 
 		static function set($key, $val){
@@ -109,11 +102,29 @@ namespace Model {
 			}
 		}
 
-		static function reload() {
+		static function setup() {
 			self::clear();
-			foreach (array_reverse(\Gini\Core::$PATHS) as $p=>$n) {
-				self::load($p);
+			$exp = 300;
+			$config_file = APP_PATH . '/.config';
+			if (!file_exists($config_file) || filemtime($config_file) + $exp < time()) {
+				foreach ((array) \Gini\Core::$PATH_INFO as $path => $info) {
+					if ($info->enabled !== FALSE) {
+						self::load($info->path);
+					}
+				}
+
+				if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
+					$opt = JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES;
+				}
+				else {
+					$opt = 0;
+				}
+				file_put_contents($config_file, json_encode((array)self::$items, $opt));
 			}
+			else {
+				self::$items = (array)@json_decode(file_get_contents($config_file), TRUE);
+			}
+
 		}
 
 
@@ -125,10 +136,10 @@ namespace {
 
 	function _CONF($key, $value=NULL) {
 		if (is_null($value)) {
-			return isset(\Model\Config::$items[$key]) ? \Model\Config::$items[$key] : NULL;
+			return \Model\Config::get($key);
 		}
 		else {
-			\Model\Config::$items[$key] = $value;
+			\Model\Config::set($key, $value);
 		}
 	}
 

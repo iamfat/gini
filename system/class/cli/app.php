@@ -3,7 +3,7 @@
 /**
 * 模块操作命令行
 * usage: app command [args...]
-*	app init app_path [Name]
+*	app new app_path [Name]
 * @package default
 * @author Jia Huang
 **/
@@ -34,13 +34,13 @@ PHP;
 		 * @return void
 		 * @author Jia Huang
 		 **/
-		static function command_init($argc, $argv) {
+		static function command_new($argc, $argv) {
 
-			if ($argc == 0) {
+			if ($argc < 2) {
 				die("usage: app init path/to/app\n");
 			}
 
-			$path = $argv[0];
+			$path = $argv[1];
 
 			$prompt = array(
 				'shortname' => 'Shortname',
@@ -76,11 +76,11 @@ PHP;
 		}
 
 		static function command_info($argc, $argv) {
-			if ($argc == 0) {
-				die("usage: app init path/to/app\n");
+			if ($argc < 2) {
+				die("usage: app info path/to/app\n");
 			}
 
-			$info = \Gini\Core::path_info($argv[0]);
+			$info = \Gini\Core::path_info($argv[1]);
 			foreach($info as $k => $v) {
 				if (is_array($v)) $v = json_encode($v);
 				printf("%s = %s\n", $k, $v);

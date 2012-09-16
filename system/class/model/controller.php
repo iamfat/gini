@@ -76,8 +76,8 @@ namespace Model\Controller {
 		while (count($args) > 0) {
 			$arg = array_shift($args);
 			if (!preg_match('|^[a-z]\w+$|', $arg)) break;
-			if ($path) $path .= DIRECTORY_SEPARATOR;
-			$path .= $arg;
+			if ($path) $path .= '/' . $arg;
+			else $path = $arg;
 			$candidates[$path] = $args;
 		} 
 

@@ -10,9 +10,9 @@ namespace GR\System\Model {
 
 		static function url($url=NULL, $query=NULL, $fragment=NULL) {
 			
-			if(!$url) $url = Input::route();
+			if (!$url) $url = \Model\Input::route();
 		
-			$ui=parse_url($url);
+			$ui = parse_url($url);
 		
 			if($ui['scheme']=='mailto') {
 				//邮件地址
@@ -118,14 +118,14 @@ namespace {
 
 	\Model\URI::setup();
 
-	function _U() {
+	function URL() {
 		$args = func_get_args();
 		return call_user_func_array('\Model\URI::url', $args);
 	}
 
-	function _C($path) {
-		$full_path = \Gini\Core::file_exists(DATA_DIR.$path);
-		return $full_path ? \Gini\Cache::cache_file($full_path) : $path;
+	function MAILTO() {
+		$args = func_get_args();
+		return call_user_func_array('\Model\URI::mailto', $args);
 	}
 
 }

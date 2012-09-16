@@ -7,33 +7,28 @@ namespace GR\System {
 	class Application {
 
 		static function setup() {
-
 			\Model\Cache::setup();
 			\Model\Config::setup();
-
 			\Model\I18N::setup();
 			\Model\Input::setup();
 			\Model\Output::setup();
 			\Model\View::setup();
 
 			if (function_exists('\setup')) {
-				\setup();
+				return \setup();
 			}
-
 		}
 
-		static function main($argc, $argv) {
+		static function main($argc, $argv) {			
 			if (function_exists('\main')) {
 				return call_user_func('\main', $argc, $argv);
 			}
 		}
 
 		static function shutdown() {
-
 			if (function_exists('\shutdown')) {
 				\shutdown();
 			}
-
 		}
 
 	}

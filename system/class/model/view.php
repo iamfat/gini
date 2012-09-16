@@ -64,28 +64,22 @@ namespace GR\System\Model {
 			if ($this->_ob_cache !== NULL) return $this->_ob_cache;
 
 			$path = $this->_path;
-			$module = NULL;
-
-			if ($path[0] == '!') {
-				list($module, $path) = explode('/', $path, 2);
-				$module = substr($module, 1);
-			}
+			$scope = NULL;
 
 			$locale = _CONF('system.locale');
-			$_path = Core::file_exists(VIEW_DIR.'@'.$locale.'/'.$path.VEXT, $module);
+			$_path = Core::phar_file_exists(VIEW_DIR, '@'.$locale.'/'.$path.VEXT);
 			if (!$_path) {
-				$_path=Core::file_exists(VIEW_DIR.$path.VEXT, $module);
+				$_path=Core::phar_file_exists(VIEW_DIR, $path.VEXT);
 			}
 			
 			$output = $this->__load_view($_path);
 
-			$event = $module ? "view[{$module}:{$path}].postrender ":'';
-			$event .= "view[{$path}].postrender view.postrender";
-			
+/*
+			$event .= "view[{$path}].postrender view.postrender";			
 			$new_output = (string) Event::trigger($event, $this, $output);
-
 			$output = $new_output ?: (string) $output;
-
+*/
+			
 			return $this->_ob_cache = $output;
 						
 		}

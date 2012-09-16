@@ -10,19 +10,13 @@ namespace Model {
 
 		static $buildin_commands = array(
 			'help' => 'Help',
-			'exit' => 'Exit shell',
 			'ls' => 'List available CLI apps',
-			'clear' => 'Clear screen',
-			'env' => 'Print environment variables',
-			'setenv' => 'Set environment variables',
-			'history' => 'Read shell history (libreadline required)',
-			'prompt' => 'Set current prompt',
 			);
 
 		static function on_readline_completion($input, $index) {
 			$matches = array();
 
-			$paths = \Gini\Core::file_paths(CLASS_DIR.'cli');
+			$paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'cli');
 			foreach($paths as $path) {
 				if (!is_dir($path)) continue;
 				$dh = opendir($path);
@@ -138,15 +132,22 @@ namespace Model {
 		static function relaunch() {
 			//$ph = proc_open($_SERVER['_'] . ' &', array(STDIN, STDOUT, STDERR), $pipes, NULL, $env);
 			// fork process to avoid memory leak
-			if (isset($_SERVER['FORKED'])) {
+			$env_path = '/tmp/gini-cli';
+			$env_file = $env_path.'/'.posix_getpid().'.json';
+			if (!file_exists($env_path)) @mkdir($env_path, 0777, true);
+			file_put_contents($env_file, json_encode($_SERVER));
+			if (isset($_SERVER['__RELAUNCH_PROCESS'])) {
+				unset($_SERVER['__RELAUNCH_PROCESS']);
 				exit(200);
 			}
 			else {
-				$_SERVER['FORKED'] = 1;
 				do {
+					// load $_SERVER from shared memo-cliry
+					$_SERVER['__RELAUNCH_PROCESS'] = 1;
 					$ph = proc_open($_SERVER['_'], array(STDIN, STDOUT, STDERR), $pipes, NULL, $_SERVER);
 					if (is_resource($ph)) {
 						$code = proc_close($ph);
+						$_SERVER = (array) json_decode(@file_get_contents($env_file), TRUE);
 					}					
 				}
 				while ($code == 200);
@@ -154,122 +155,150 @@ namespace Model {
 			}
 		}
 
-		static function main() {
+		private static $prompt;
 
-			$_SERVER['PID'] = posix_getpid();
+		static function main($argc, $argv) {
 
-			$prompt = "[%PID]\e[34;1mGINI\e[0m@";
+			if ($argc < 1) {
+				static::command_help($argc, $argv);
+				exit;
+			}
 
-			readline_completion_function('\Model\Shell::on_readline_completion');
-
-			for(;;) {
-
-				$line = readline(static::parse_prompt($prompt.' '));
-				if (!$line) continue;
-				readline_add_history($line);
-
-				$args = static::parse_arguments($line);
-
-				switch ($args[0]) {
-				case 'help':
-				case '?':
-					foreach(self::$buildin_commands as $k => $v) {
-						printf("%-10s %s\n", $k, $v);
-					}
-					break;
-				case 'exit':
-				case 'quit':
-					exit;
-				case 'clear':
-					echo "\e[2J\e[H";
-					break;
-				case 'history':
-					if (function_exists('readline_list_history')) {
-						array_map(readline_list_history(), 'echo');
-					}
-					else {
-						echo "history command is not supported!\n";
-					}
-					break;
-				case 'setenv':
-					// 设置环境变量
-					if (count($args) > 2) {
-						$_SERVER[$args[1]] = $args[2];
-						static::relaunch();
-					}
-					else {
-						echo "Usage: setenv KEY VALUE\n";
-					}
-					break;
-				case 'env':
-					// 获得环境变量
-					$results = array();
-					if (count($args) == 1) {
-						foreach($_SERVER as $k => $v) {
-							$results[$k] = $k;	
-						}
-					}
-					else {
-						foreach($_SERVER as $k => $v) {
-							if (fnmatch($args[1], $k)) {
-								$results[$k] = $k;
-							}
-						}
-					}
-
-					unset($results['argc']);
-					unset($results['argv']);
-
-					foreach($results as $k) {
-						$v = $_SERVER[$k];
-						printf("%s = \"\e[31m%s\e[0m\"\n", $k, addcslashes((string) $v, "\\\'\"\n\r"));
-					}
-
-					break;
-				case 'ls':
-					// list available cli programs
-					$paths = \Gini\Core::file_paths(CLASS_DIR.'cli');
-					foreach($paths as $path) {
-						if (!is_dir($path)) continue;
-						$dh = opendir($path);
-						if ($dh) {
-							while ($name = readdir($dh)) {
-								if ($name[0] == '.') continue;
-								if (!is_file($path . '/' . $name)) continue;
-								echo basename($name, EXT) . "\t";
-							}
-							closedir($dh);
-						}
-
-					}
-					echo "\n";
-					break;
-				case 'prompt':
-					if (count($args) > 1) {
-						$prompt = $args[1];
-					}
-					else {
-						echo preg_replace('/\e(\[[\d;]+[a-z])/i', "\e$1\e[30m*$1\e[0m\e$1", $prompt)."\n";
-					}
-					break;
-				default:
-					$cmd = $args[0];
-					if ($cmd[0] == '!') {
-						$cmd = substr($cmd, 1);
-						if (!$cmd) $cmd = 'bash';
-						$ph = proc_open($cmd, array(STDIN, STDOUT, STDERR), $pipes);
-					}
-					else {
-						$ph = proc_open($_SERVER['_'] . ' ' . $line, array(STDIN, STDOUT, STDERR), $pipes, NULL, $env);
-					}
-					if (is_resource($ph)) {
-						proc_close($ph);
-					}
-				}
+			$cli = strtolower($argv[0]);
+			$method = 'command_'.$cli;
+			if (method_exists(__CLASS__, $method)) {
+				call_user_func(array(__CLASS__, $method), $argc, $argv);
+			}
+			else {
+				$GLOBALS['GINI.CURRENT_CLI'] = $cli;
+				static::exec($argc, $argv);
 			}
 
 		}
 
+		static function command_help($argc, $argv) {
+			echo "usage: \e[1;34mgini\e[0m <command> [<args>]\n\n";
+			echo "The most commonly used git commands are:\n";
+			foreach(self::$buildin_commands as $k => $v) {
+				printf("   \e[1;34m%-10s\e[0m %s\n", $k, $v);
+			}
+		}
+
+		static function command_root() {
+			echo $_SERVER['GINI_APP_PATH']."\n";
+		}
+
+		static function command_ls($argc, $argv) {
+				// list available cli programs
+				$paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'cli');
+				foreach($paths as $path) {
+					$shortname = \Gini\Core::shortname($path);
+					printf("\e[30;1;4m%s\e[0m:\n", $shortname);
+					if (!is_dir($path)) continue;
+
+					$dh = opendir($path);
+					if ($dh) {
+						while ($name = readdir($dh)) {
+							if ($name[0] == '.') continue;
+							if (!is_file($path . '/' . $name)) continue;
+							printf("   %-10s ", basename($name, EXT));
+						}
+						echo "\n\n";
+						closedir($dh);
+					}
+
+				}
+		}
+
+		static function exec($argc, $argv) {
+
+			$cmd = $argv[0];
+			if ($cmd[0] == '!') {
+				$cmd = substr($cmd, 1);
+				if (!$cmd) $cmd = 'bash';
+				proc_close(proc_open($cmd, array(STDIN, STDOUT, STDERR), $pipes));
+			}
+			// @app: automatically set APP_PATH and run
+			elseif ($cmd[0] == '@') {
+				$app_base_path = realpath( isset($_SERVER['GINI_APP_BASE_PATH']) ? 
+									$_SERVER['GINI_APP_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..'
+								 );
+
+				$cmd = substr($cmd, 1);
+				$_SERVER['GINI_APP_PATH'] = $app_base_path . '/' .$cmd;
+				if (!is_dir($_SERVER['GINI_APP_PATH'] )) {
+					exit("\e[1;34mgini\e[0m: missing app '$cmd'.\n");
+				}
+
+				array_shift($argv);
+				$eargv = array(escapeshellcmd($_SERVER['_']));
+				foreach ($argv as $arg) {
+					$eargv[] = escapeshellcmd($arg);
+				}
+				proc_close(proc_open(implode(' ', $eargv), array(STDIN, STDOUT, STDERR), $pipes, NULL, $_SERVER));					
+			}
+			else {	
+				// fork process to avoid memory leak
+				$pid = pcntl_fork();
+				if ($pid == -1) {
+					exit("\e[1;34mgini\e[0m: cannot fork process\n");
+				}
+				elseif ($pid) {
+					//parent process
+					pcntl_wait($status);
+				}
+				else {
+					$func = "\\CLI\\$cmd::main";
+					if (is_callable($func)) {
+						$GLOBALS['GINI.CURRENT_CLI'] = $cmd;
+						call_user_func($func, count($argv), $argv);
+					}
+					else {
+						exit("\e[1;34mgini\e[0m: '$cmd' is not a gini command. See 'gini help'.\n");
+					}
+				}
+	
+			}
+		}
+
+		static function shutdown() {
+			if (isset($GLOBALS['GINI.CURRENT_CLI'])) {
+				$cli = $GLOBALS['GINI.CURRENT_CLI'];
+				$func = "\\CLI\\$cli::shutdown";
+				if (is_callable($func)) {
+					call_user_func($func);
+				}
+			}
+		}
+
+		static function exception($e) {
+			if (isset($GLOBALS['GINI.CURRENT_CLI'])) {
+				$cli = $GLOBALS['GINI.CURRENT_CLI'];
+
+				$func = "\\CLI\\$cli::exception";
+				if (is_callable($func)) {
+					call_user_func($func, $e);
+				}
+				else {
+					$message = $e->getMessage();
+					$file = \Model\File::relative_path($e->getFile());
+					$line = $e->getLine();
+					fprintf(STDERR, "\e[314mERROR\e[0m \e[1m%s\e[0m (\e[34m%s\e[0m:$line)\n", $message, $file, $line);
+					if (defined('DEBUG')) {
+						$trace = array_slice($e->getTrace(), 1, 3);
+						foreach ($trace as $n => $t) {
+							fprintf(STDERR, "%3d. %s%s() in %s on line %d\n", $n + 1,
+											$t['class'] ? $t['class'].'::':'', 
+											$t['function'],
+											\Model\File::relative_path($t['file']),
+											$t['line']);
+
+						}
+						fprintf(STDERR, "\n");
+					}
+				}
+			}
+		}
 	}
 
 }

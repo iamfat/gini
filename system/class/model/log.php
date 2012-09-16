@@ -6,7 +6,7 @@ abstract class _Log {
 	
 	static function get_path($ident = 'common') {
 		$tpl_path = _CONF('system.'.$ident.'_log_path');
-		if (!$tpl_path) $tpl_path = _CONF('system.log_path') ?: ROOT_PATH.'logs/%ident.log';
+		if (!$tpl_path) $tpl_path = _CONF('system.log_path') ?: APP_PATH . '/logs/%ident.log';
 		return strtr($tpl_path, array('%ident'=>$ident));
 	}
 	

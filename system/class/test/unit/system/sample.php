@@ -1,8 +1,8 @@
 <?php
 
-namespace Unit\System;
+namespace Test\Unit\System;
 
-class Sample extends \Model\Unit {
+class Sample extends \Model\Test\Unit {
 
 	function setup() {
 

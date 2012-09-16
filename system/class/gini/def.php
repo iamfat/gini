@@ -1,13 +1,12 @@
 <?php
 
-define('CONFIG_DIR', 'config/');
-define('CLASS_DIR', 'class/');
-define('VIEW_DIR', 'view/');
-define('DATA_DIR', 'data/');
-define('I18N_DIR', 'i18n/');
-define('THIRD_DIR', '3rd/');
+define('CONFIG_DIR', 'config');
+define('CLASS_DIR', 'class');
+define('VIEW_DIR', 'view');
+define('DATA_DIR', 'data');
+define('THIRD_DIR', '3rd');
 
-define('CACHE_DIR', 'cache/');
+define('CACHE_DIR', 'cache');
 
 define('EXT', '.php');
 define('VEXT', '.phtml');

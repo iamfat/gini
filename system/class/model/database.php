@@ -2,7 +2,7 @@
 
 namespace Model\Database {
 
-	interface Handler {
+	interface Driver {
 
 		function __construct($info);
 
@@ -14,6 +14,8 @@ namespace Model\Database {
 
 		function insert_id();
 		function affected_rows();
+		function fetch_row($result, $mode);
+		function num_rows($result);
 
 		function table_exists($table);
 		function table_status($table);
@@ -33,13 +35,6 @@ namespace Model\Database {
 		function restore($filename, &$restore_filename, $tables);
 	}
 
-	interface Result {
-		function rows($mode/*='object'*/);
-		function row($mode/*='object'*/);
-		function count();
-		function value();
-	}
-
 }
 
 namespace Model {
@@ -53,7 +48,7 @@ namespace Model {
 		static $query_count = 0;
 		static $cache_hits = 0;
 	
-		private $_handle;
+		private $_driver;
 		private $_url;
 		private $_info;
 		
@@ -93,7 +88,7 @@ namespace Model {
 			$this->_url = $url;
 			$url = parse_url($url);
 	
-			$this->_info['handler'] = $url['scheme'];	
+			$this->_info['driver'] = $url['scheme'] ?: 'mysql';	
 			$this->_info['host']= urldecode($url['host']);
 			$this->_info['port'] = (int)$url['port'];
 			$this->_info['db'] = substr(urldecode($url['path']), 1);
@@ -108,8 +103,8 @@ namespace Model {
 		}
 		
 		function connect() {
-			$handler = '\Model\Database\\'.$this->_info['handler'];
-			$this->_handle = new $handler($this->_info);
+			$driver = '\\Model\\Database\\'.$this->_info['driver'];
+			$this->_driver = new $driver($this->_info);
 		}
 		
 		function name($name = NULL) { return is_null($name) ? $this->_name : $this->_name = $name; }
@@ -118,7 +113,7 @@ namespace Model {
 	
 		function __call($method, $params) {
 			if ($method == __FUNCTION__) return;
-			return call_user_func_array(array($this->_handle, $method), $params);
+			return call_user_func_array(array($this->_driver, $method), $params);
 		}
 	
 		function make_ident() {
@@ -164,7 +159,7 @@ namespace Model {
 				
 			self::$query_count++;
 	
-			return $this->_handle->query($SQL);
+			return $this->_driver->query($SQL);
 		}
 	
 		function value() {
@@ -175,7 +170,7 @@ namespace Model {
 		
 		private $_trans_in_progress = FALSE;
 		function begin_transaction() {
-			$this->_handle->begin_transaction();
+			$this->_driver->begin_transaction();
 			$this->_trans_in_progress = TRUE;
 	
 			return $this;
@@ -183,7 +178,7 @@ namespace Model {
 		
 		function commit() {
 			if ($this->_trans_in_progress) {
-				$this->_handle->commit();
+				$this->_driver->commit();
 				$this->_trans_in_progress = FALSE;
 			}
 	
@@ -192,7 +187,7 @@ namespace Model {
 		
 		function rollback() {
 			if ($this->_trans_in_progress) {
-				$this->_handle->rollback();
+				$this->_driver->rollback();
 				$this->_trans_in_progress = FALSE;
 			}
 	
@@ -204,7 +199,7 @@ namespace Model {
 			if (is_string($tables)) $tables = array($tables);
 			else $tables = (array)$tables;
 			
-			return $this->_handle->snapshot($filename, $tables);
+			return $this->_driver->snapshot($filename, $tables);
 		}
 		
 		function create_table() {
@@ -212,7 +207,7 @@ namespace Model {
 			foreach($tables as $table) {
 				list($table, $engine) = explode(':', $table, 2);
 				if (!$this->table_exists($table)) {
-					$this->_handle->create_table($table, $engine);
+					$this->_driver->create_table($table, $engine);
 				}			
 			}
 		}
@@ -220,7 +215,7 @@ namespace Model {
 		function drop_table() {
 			$tables = func_get_args();
 			foreach($tables as $table) {
-				$this->_handle->drop_table($table);
+				$this->_driver->drop_table($table);
 			}
 		}
 	
@@ -238,9 +233,52 @@ namespace Model {
 				$this->empty_database();
 			}
 			
-			return $this->_handle->restore($filename, $tables);
+			return $this->_driver->restore($filename, $tables);
 		}
 		
 	}
+
+	class Result {
+
+		private $_driver;
+		private $_result;
+		
+		function __construct($driver, $result){
+			$this->_driver = $driver;
+			$this->_result = $result;
+		}
+		
+		function rows($mode='object') {
+			$rows = array();
+			while ($row = $this->row($mode)) {
+				$rows[] = $row;
+			}
+			return $rows;
+		}
+		
+		function row($mode='object') {
+			return $this->_driver->fetch_row($this->_result, $mode);
+		}
+		
+		function count(){
+			return $this->_driver->num_rows($this->_result);
+		}
+
+		function value(){
+			$r = $this->row('num');
+			if (!$r) return NULL;
+			return $r[0];
+		}
+		
+		function object(){
+			$r = $this->row('object');
+			if (!$r) return NULL;
+			return $r;
+		}
+		
+	}
+
 	
 }
+
+
