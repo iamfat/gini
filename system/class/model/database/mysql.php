@@ -194,6 +194,10 @@ final class MySQL implements \Model\Database\Driver {
 			*/
 		}
 
+		if (count($fields) > 0 && isset($curr_fields['_FOO'])) {
+			$field_sql[] = sprintf('DROP %s', $this->quote_ident('_FOO'));
+		}
+
 		$curr_indexes = $curr_schema['indexes'];
 		$missing_indexes = array_diff_key($indexes, $curr_indexes);
 		foreach($missing_indexes as $key=>$val) {

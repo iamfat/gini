@@ -7,15 +7,15 @@ class Database extends \Model\Test\Unit {
 	var $db;
 
 	function setup() {
-		_CONF('database.test.url', 'mysql://gini@localhost/test');	
-		$this->db = \Model\Database::db('test');
+		_CONF('database.gini_ut.url', 'mysql://genee@localhost/gini_ut');	
+		$this->db = \Model\Database::db('gini_ut');
 	}
 
 	function test_config() {
 		$db = $this->db;
 
 		$url = $this->get_property($db, '_url');
-		$this->assert('db[url]', $url == 'mysql://gini@localhost/test');
+		$this->assert('db[url]', $url == 'mysql://genee@localhost/gini_ut');
 
 	}
 

@@ -16,7 +16,12 @@ namespace Model {
 		const JSON_SUFFIX = '_json';
 
 		private static $_injections;
-		private static $_criteria;
+		private $_criteria;
+		private $_objects;
+		private $_name;
+		private $_oinfo;
+
+		protected $_uuid;
 
 		function __call($method, $params) {
 			if ($method == __FUNCTION__) return;
@@ -69,43 +74,50 @@ namespace Model {
 			return $inheritance;	
 		}
 
+		private static $_structures;
 		private function structure() {
-			$rc = new \ReflectionClass($this);
-			$defaults = $rc->getDefaultProperties();
 
-			$structure = array();
-			foreach($rc->getProperties() as $p) {
-				if (!$p->isStatic() && $p->isPublic()) {
-					$k = $p->getName();
-					$structure[$k] = $defaults[$k];
-				}
-			}
-
-			//check all injections
-			foreach ((array) self::$_injections as $injection) {
-				$rc = new \ReflectionClass($injection);
+			$class_name = get_class($this);
+			if (!isset(self::$_structures[$class_name])) {
+				$rc = new \ReflectionClass($this);
 				$defaults = $rc->getDefaultProperties();
 
+				$structure = array();
 				foreach($rc->getProperties() as $p) {
 					if (!$p->isStatic() && $p->isPublic()) {
 						$k = $p->getName();
 						$structure[$k] = $defaults[$k];
 					}
 				}
-			}
 
-			foreach ($structure as $k => $v) {
-				$params = explode(',', strtolower($v));
-				$v = array();
-				foreach($params as $p) {
-					list($p, $pv) = explode(':', trim($p), 2);
-					$v[$p] = $pv;
+				//check all injections
+				foreach ((array) self::$_injections as $injection) {
+					$rc = new \ReflectionClass($injection);
+					$defaults = $rc->getDefaultProperties();
+
+					foreach($rc->getProperties() as $p) {
+						if (!$p->isStatic() && $p->isPublic()) {
+							$k = $p->getName();
+							$structure[$k] = $defaults[$k];
+						}
+					}
 				}
 
-				$structure[$k] = $v;
+				foreach ($structure as $k => $v) {
+					$params = explode(',', strtolower($v));
+					$v = array();
+					foreach($params as $p) {
+						list($p, $pv) = explode(':', trim($p), 2);
+						$v[$p] = $pv;
+					}
+
+					$structure[$k] = $v;
+				}
+
+				self::$_structures[$class_name] = $structure;
 			}
 
-			return $structure;
+			return self::$_structures[$class_name];
 		}
 
 		function db() {
@@ -116,6 +128,9 @@ namespace Model {
 		}
 
 		function __construct($criteria = NULL) {
+
+			// 为每个实例化出来的对象赋一个唯一id, 方便事后判断
+			$this->_uuid = uniqid();
 
 			$structure = $this->structure();
 			foreach ($structure as $k => $v) {
@@ -132,15 +147,17 @@ namespace Model {
 
 			$criteria = $this->normalize_criteria($criteria);
 			$this->_criteria = $criteria;
-	
+			
 			$db = $this->db();
 			//从数据库中获取该数据
 			foreach ($criteria as $k=>$v) {
 				$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
 			}
 			
+			$name = $this->name();
+
 			// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
-			$SQL = 'SELECT * FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+			$SQL = 'SELECT * FROM '.$db->quote_ident($name).' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
 			
 			$result = $db->query($SQL);
 			//只取第一条记录
@@ -151,47 +168,8 @@ namespace Model {
 				$data = array();
 			}
 					
-			$delete_me = FALSE;
-
-			if ($data['id']) {
-				$id = $data['id'];
-			}
-			
-			if ($id && count($real_names) > 0) {
-
-				foreach ($real_names as $rname) {
-					
-					$db = self::db($rname);
-					$result = $db->query('SELECT * FROM `%s` WHERE `id`=%d', $rname, $id);
-					$d = $result ? $result->row('assoc') : NULL;
-					if ($d !== NULL) {
-						$data += $d;
-					}
-					else {
-						// 父类数据不存在
-						$delete_me = TRUE;
-						$delete_me_until = $rname;	//删除到该父类
-						break;
-					}
-				}
-				
-				if ($delete_me) {
-					// 如果父类数据不存在 删除相关数据
-					foreach ($real_names as $rname) {
-						if ($delete_me_until == $rname) break;
-						$db = self::db($rname);
-						$db->query('DELETE FROM `%s` WHERE `id`=%d', $rname, $id);
-					}
-					
-					$data = array();
-				}
-
-			}
-
 			//给object赋值
-			$object->set_data($data);
-
-			
+			$this->set_data($data);
 		}
 
 		function normalize_criteria(array $crit) {
@@ -209,7 +187,7 @@ namespace Model {
 					$ncrit[$k.'_id'] = $v->id;
 				}
 			}
-
+			
 			return $ncrit;
 		}
 
@@ -326,11 +304,7 @@ namespace Model {
 		function save($overwrite=TRUE) {
 
 			$db = $this->db();
-
-			$properties = $this->properties();
-			foreach($properties as $k => $v) {
-
-			}
+			$db->adjust_table($this->name(), $this->schema());
 
 			$db->begin_transaction();
 
@@ -339,16 +313,73 @@ namespace Model {
 
 		static function inject($injection) {
 			self::$_injections[] = $injection;
+			// clear structure cache
+			unset(self::$_structures[get_called_class()]);
 		}
 
-		private $_name;
 		function name() {
 			if (!isset($this->_name)) {
 				$this->_name = strtolower(basename(str_replace('\\', '/', get_class($this))));
 			}
 			return $this->_name;
 		}
+
+		function set_data($data) {
+			foreach ($this->structure() as $k => $v) {
+				if (array_key_exists('object', $v)) {
+					$oname = $v['object'];
+					$o = $data[$k];
+					if (isset($o) && $o instanceof \ORM\Object && isset($oname) && $o->name() == $oname) {
+						$this->$k = $o;
+					}
+					else {
+						//object need to be bind later to avoid deadlock.
+						unset($this->$k);
+						if (!isset($oname)) $oname = strval($data[$k.'_name']);
+						$oi = (object) array(
+							'name' => $oname,
+							'id' => $data[$k.'_id']
+						);
+						$this->_oinfo[$k] = $oi;
+					}
+				}
+				elseif (array_key_exists('array', $v)) {
+					$this->$k = @json_decode(strval($data[$k]), TRUE);				
+				}
+				else {
+					$this->$k = $data[$k];
+				}
+			}
+		}
+
+		function get_data() {
+			foreach($this->structure() as $k => $v) {
+				$data[$k] = $this->$k;
+			}
+			return $data;
+		}
 		
+		function __get($name) {
+			if (isset($this->_objects[$name])) {
+				return $this->_objects[$name];
+			}
+			elseif (isset($this->_oinfo[$name])) {
+				$oi = $this->_oinfo[$name];
+				$oclass = '\\ORM\\'.$oi->name;
+				$o = new $oclass($oi->id);
+				$this->_objects[$name] = $o;
+				return $o;
+			}
+		}
+
+		function __set($name, $value) {
+		
+			if (isset($this->_oinfo[$name])) {
+				$this->_objects[$name] = $value;
+			}
+
+		}
+
 	}	
 }
 

@@ -1,7 +1,7 @@
 <?php
 
 
-# $config['root']='mysql://gini@localhost/';
+// $config['root']='mysql://gini@localhost/';
 $config['root']='';
 
 $config['prefix']='';

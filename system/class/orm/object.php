@@ -5,7 +5,7 @@ namespace ORM;
 
 abstract class Object extends \Model\ORM {
 
-	var $id = 'int,primary';
+	var $id = 'bigint,primary,auto_increment';
 	var $_extra = 'array';
 
 	static $_db;	// database object

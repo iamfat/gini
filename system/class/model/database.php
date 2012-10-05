@@ -35,6 +35,46 @@ namespace Model\Database {
 		function restore($filename, &$restore_filename, $tables);
 	}
 
+	class Result {
+
+		private $_driver;
+		private $_result;
+		
+		function __construct($driver, $result){
+			$this->_driver = $driver;
+			$this->_result = $result;
+		}
+		
+		function rows($mode='object') {
+			$rows = array();
+			while ($row = $this->row($mode)) {
+				$rows[] = $row;
+			}
+			return $rows;
+		}
+		
+		function row($mode='object') {
+			return $this->_driver->fetch_row($this->_result, $mode);
+		}
+		
+		function count(){
+			return $this->_driver->num_rows($this->_result);
+		}
+
+		function value(){
+			$r = $this->row('num');
+			if (!$r) return NULL;
+			return $r[0];
+		}
+		
+		function object(){
+			$r = $this->row('object');
+			if (!$r) return NULL;
+			return $r;
+		}
+		
+	}
+
 }
 
 namespace Model {
@@ -234,46 +274,6 @@ namespace Model {
 			}
 			
 			return $this->_driver->restore($filename, $tables);
-		}
-		
-	}
-
-	class Result {
-
-		private $_driver;
-		private $_result;
-		
-		function __construct($driver, $result){
-			$this->_driver = $driver;
-			$this->_result = $result;
-		}
-		
-		function rows($mode='object') {
-			$rows = array();
-			while ($row = $this->row($mode)) {
-				$rows[] = $row;
-			}
-			return $rows;
-		}
-		
-		function row($mode='object') {
-			return $this->_driver->fetch_row($this->_result, $mode);
-		}
-		
-		function count(){
-			return $this->_driver->num_rows($this->_result);
-		}
-
-		function value(){
-			$r = $this->row('num');
-			if (!$r) return NULL;
-			return $r[0];
-		}
-		
-		function object(){
-			$r = $this->row('object');
-			if (!$r) return NULL;
-			return $r;
 		}
 		
 	}
