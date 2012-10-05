@@ -42,11 +42,11 @@ else {
 }
 
 function shutdown() {
-	\Model\Shell::shutdown();
+	\Model\CLI::shutdown();
 }
 
 function exception($e) {
-	\Model\Shell::exception($e);
+	\Model\CLI::exception($e);
 }
 
 function main($argc, $argv) {
@@ -56,7 +56,6 @@ function main($argc, $argv) {
 	array_shift($argv);
 
 	//enter interactive mode
-	\Model\Shell::main($argc, $argv);
-
+	\Model\CLI::main($argc, $argv);
 }
 

@@ -2,7 +2,7 @@
 
 namespace CLI {
 	
-	class Config extends \Model\CLI {
+	class Config extends \CLI\Base {
 
 		static function command_print($argc, $argv) {
 			echo serialize(\Model\Config::export())."\n";

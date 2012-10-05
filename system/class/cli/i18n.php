@@ -5,7 +5,7 @@ namespace CLI {
 	use \Model\File;
 	use \Gini\Core;
 
-	class I18N extends \Model\CLI {
+	class I18N extends \CLI\Base {
 
 		static function command_scan($argc, $argv) {
 

@@ -2,7 +2,7 @@
 
 namespace CLI {
 
-	class CLI extends \Model\CLI {
+	class CLI extends \CLI\Base {
 		
 		/**
 		 * 初始化模块

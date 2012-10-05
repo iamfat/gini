@@ -26,7 +26,7 @@ $dependencies = '%dependencies%';
 
 PHP;
 
-	class App extends \Model\CLI {
+	class App extends \CLI\Base {
 		
 		/**
 		 * 初始化模块
