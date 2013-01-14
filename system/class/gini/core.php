@@ -106,7 +106,6 @@ namespace Gini {
 			/*
 			\GR\path\to\class
 			*/
-
 			list($gr, $class_path) = explode('/', $path, 2);
 			if ($gr == 'gr') {
 
@@ -237,11 +236,8 @@ namespace Gini {
 		}
 
 		static function exception($e) {
-			if (function_exists('\\exception')) {
-				\exception($e);
-			}
-			elseif (function_exists('exception')) {
-				exception($e);
+			if (function_exists('\Application\exception')) {
+				\Application\exception($e);
 			}
 			exit(1);
 		}
@@ -288,8 +284,8 @@ namespace Gini {
 		}
 
 		static function main() {
-			global $argc, $argv;
-			\Application::main($argc, $argv);
+			global $argv;
+			\Application::main($argv);
 		}
 
 		static function shutdown() {
@@ -303,15 +299,29 @@ namespace Gini {
 
 namespace {
 
+	$_TRACE_INDENTS = array();
+
 	function TRACE() {
 		$args = func_get_args();
 		$fmt = array_shift($args);
 		if (defined('DEBUG')) {
 			if (PHP_SAPI == 'cli') {
-				vfprintf(STDERR, "\033[36m\033[4mTRACE\033[0m $fmt\n", $args);
+				global $_TRACE_INDENTS;
+				vfprintf(STDERR, str_pad(' ', end($_TRACE_INDENTS))
+									. "\033[36m\033[4mTRACE\033[0m $fmt\n", $args);
 			}
 			error_log(vsprintf("\033[36m\033[4mTRACE\033[0m $fmt", $args));			
 		}
+	}
+
+	function TRACE_INDENT_BEGIN($indent) {
+		global $_TRACE_INDENTS;
+		$_TRACE_INDENTS[] = (int)$indent;
+	}
+
+	function TRACE_INDENT_END() {
+		global $_TRACE_INDENTS;
+		array_pop($_TRACE_INDENTS);
 	}
 
 	$_DECLARED;

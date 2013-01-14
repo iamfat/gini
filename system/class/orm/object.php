@@ -3,9 +3,10 @@
 
 namespace ORM;
 
-abstract class Object extends \Model\ORM {
+class Object extends \Model\ORM {
 
-	var $id = 'bigint,primary,auto_increment';
+	var $id = 'bigint,primary,serial';
+
 	var $_extra = 'array';
 
 	static $_db;	// database object

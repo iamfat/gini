@@ -33,6 +33,7 @@ namespace Model\Database {
 		function drop_table($table);
 
 		function restore($filename, &$restore_filename, $tables);
+
 	}
 
 	class Result {
@@ -183,7 +184,7 @@ namespace Model {
 	
 		function query() {
 			
-			$args=func_get_args();
+			$args = func_get_args();
 			if (func_num_args()>1) {
 				$SQL = call_user_func_array(array($this, 'rewrite'), $args);
 			}
@@ -203,7 +204,7 @@ namespace Model {
 		}
 	
 		function value() {
-			$args=func_get_args();
+			$args = func_get_args();
 			$result = call_user_func_array(array($this,'query'), $args);
 			return $result ? $result->value():NULL;
 		}

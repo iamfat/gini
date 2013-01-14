@@ -1,10 +1,8 @@
 <?php
 
-namespace GR\System\Controller {
+namespace Controller\CGI {
 
-	TRY_DECLARE('\Controller\Layout', __FILE__);
-
-	class Layout extends \Model\Controller {
+	class Layout extends \Controller\CGI {
 		
 		public $layout;
 		protected $layout_name = 'layout';
@@ -23,12 +21,4 @@ namespace GR\System\Controller {
 	
 	}
 
-}
-
-namespace Controller {
-
-	if (DECLARED('\Controller\Layout', __FILE__)) {
-		class Layout extends \GR\System\Controller\Layout {}
-	}
-	
 }

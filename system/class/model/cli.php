@@ -10,38 +10,8 @@ namespace Model {
 
 		static $buildin_commands = array(
 			'help' => 'Help',
-			'ls' => 'List available CLI apps',
+			'commands' => 'List available commands',
 			);
-
-		static function on_readline_completion($input, $index) {
-			$matches = array();
-
-			$paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'cli');
-			foreach($paths as $path) {
-				if (!is_dir($path)) continue;
-				$dh = opendir($path);
-				if ($dh) {
-					while ($name = readdir($dh)) {
-						if ($name[0] == '.') continue;
-						if (!is_file($path . '/' . $name)) continue;
-						$cli_name = basename($name, EXT);
-						if (0 == strncmp($cli_name, $input, strlen($input))) {
-							$matches[] = $cli_name; 
-						}
-					}
-					closedir($dh);
-				}
-
-			}
-
-			foreach(self::$buildin_commands as $c => $desc) {
-				if (0 == strncmp($c, $input, strlen($input))) {
-					$matches[] = $c; 
-				}
-			}
-
-			return $matches;
-		}
 
 		static function parse_arguments($line) {
 			$max = strlen($line);
@@ -126,7 +96,7 @@ namespace Model {
 		}
 
 		static function parse_prompt($prompt) {
-			return preg_replace_callback('|%(\w+)|', '\Model\Shell::prompt_replace_cb', $prompt);
+			return preg_replace_callback('|%(\w+)|', '\Model\CLI::prompt_replace_cb', $prompt);
 		}
 
 		static function relaunch() {
@@ -157,16 +127,22 @@ namespace Model {
 
 		private static $prompt;
 
-		static function main($argc, $argv) {
+		static function main($argv) {
 
-			if ($argc < 1) {
-				static::command_help($argc, $argv);
+			if (count($argv) < 1) {
+				static::command_help($argv);
 				exit;
 			}
 
 			$cli = strtolower($argv[0]);
-			$method = 'command_'.$cli;
-			if (method_exists(__CLASS__, $method)) {
+			switch ($cli) {
+			case '?':
+				$method = 'subcommands';
+				break;
+			default:
+				$method = 'command_'.$cli;
+			}
+			if ($cli && method_exists(__CLASS__, $method)) {
 				call_user_func(array(__CLASS__, $method), $argc, $argv);
 			}
 			else {
@@ -176,7 +152,7 @@ namespace Model {
 
 		}
 
-		static function command_help($argc, $argv) {
+		static function command_help($argv) {
 			echo "usage: \033[1;34mgini\033[0m <command> [<args>]\n\n";
 			echo "The most commonly used git commands are:\n";
 			foreach(self::$buildin_commands as $k => $v) {
@@ -188,12 +164,12 @@ namespace Model {
 			echo $_SERVER['GINI_APP_PATH']."\n";
 		}
 
-		static function command_ls($argc, $argv) {
+		static function subcommands($argc, $argv) {
 				// list available cli programs
-				$paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'cli');
+				$paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'controller/cli');
 				foreach($paths as $path) {
 					$shortname = \Gini\Core::shortname($path);
-					printf("\033[30;1;4m%s\033[0m:\n", $shortname);
+					// printf("\033[30;1;4m%s\033[0m:\n", $shortname);
 					if (!is_dir($path)) continue;
 
 					$dh = opendir($path);
@@ -201,13 +177,13 @@ namespace Model {
 						while ($name = readdir($dh)) {
 							if ($name[0] == '.') continue;
 							if (!is_file($path . '/' . $name)) continue;
-							printf("   %-10s ", basename($name, EXT));
+							printf("%s\t", basename($name, EXT));
 						}
-						echo "\n\n";
 						closedir($dh);
 					}
 
 				}
+				echo "\n";
 		}
 
 		static function exec($argc, $argv) {
@@ -248,86 +224,93 @@ namespace Model {
 					pcntl_wait($status);
 				}
 				else {
-					$func = "\\CLI\\$cmd::main";
-					if (is_callable($func)) {
-						$GLOBALS['GINI.CURRENT_CLI'] = $cmd;
-						call_user_func($func, count($argv), $argv);
-					}
-					else {
-						exit("\033[1;34mgini\033[0m: '$cmd' is not a gini command. See 'gini help'.\n");
-					}
+					self::dispatch(count($argv), $argv);
 				}
 	
 			}
 		}
 
-		static function shutdown() {
-			if (isset($GLOBALS['GINI.CURRENT_CLI'])) {
-				$cli = $GLOBALS['GINI.CURRENT_CLI'];
-				$func = "\\CLI\\$cli::shutdown";
-				if (is_callable($func)) {
-					call_user_func($func);
-				}
-			}
-		}
+		static function shutdown() { }
 
 		static function exception($e) {
-			if (isset($GLOBALS['GINI.CURRENT_CLI'])) {
-				$cli = $GLOBALS['GINI.CURRENT_CLI'];
+			$message = $e->getMessage();
+			$file = \Model\File::relative_path($e->getFile());
+			$line = $e->getLine();
+			fprintf(STDERR, "\033[314mERROR\033[0m \033[1m%s\033[0m (\033[34m%s\033[0m:$line)\n", $message, $file, $line);
+			if (defined('DEBUG')) {
+				$trace = array_slice($e->getTrace(), 1, 3);
+				foreach ($trace as $n => $t) {
+					fprintf(STDERR, "%3d. %s%s() in %s on line %d\n", $n + 1,
+									$t['class'] ? $t['class'].'::':'', 
+									$t['function'],
+									\Model\File::relative_path($t['file']),
+									$t['line']);
 
-				$func = "\\CLI\\$cli::exception";
-				if (is_callable($func)) {
-					call_user_func($func, $e);
 				}
-				else {
-					$message = $e->getMessage();
-					$file = \Model\File::relative_path($e->getFile());
-					$line = $e->getLine();
-					fprintf(STDERR, "\033[314mERROR\033[0m \033[1m%s\033[0m (\033[34m%s\033[0m:$line)\n", $message, $file, $line);
-					if (defined('DEBUG')) {
-						$trace = array_slice($e->getTrace(), 1, 3);
-						foreach ($trace as $n => $t) {
-							fprintf(STDERR, "%3d. %s%s() in %s on line %d\n", $n + 1,
-											$t['class'] ? $t['class'].'::':'', 
-											$t['function'],
-											\Model\File::relative_path($t['file']),
-											$t['line']);
-
-						}
-						fprintf(STDERR, "\n");
-					}
-				}
+				fprintf(STDERR, "\n");
 			}
 		}
-	}
 
-}
+		static function dispatch($argc, array $argv) {
 
-namespace CLI {
-	
-	abstract class Base {
+			$cmd = reset($argv);
 
-		static function main($argc, $argv) {
-		
-			if ($argc < 2) {	
-				exit("usage: \033[1;34mgini {$argv[0]}\033[0m <command> [<args>]\n");
+			$path = '';
+
+			while (count($argv) > 0) {
+				$arg = array_shift($argv);
+				if (!preg_match('|^[a-z]\w+$|', $arg)) break;
+				if ($path) $path .= '/' . $arg;
+				else $path = $arg;
+				$candidates[$path] = $argv;
+			} 
+
+			$class = NULL;
+			foreach(array_reverse($candidates) as $path => $params){
+				$basename = basename($path);
+				$dirname = dirname($path);
+				$class_namespace = '\\Controller\\CLI\\';
+				if ($dirname != '.') {
+					$class_namespace .= str_replace('/', '_', ucwords($dirname)).'\\';
+				}
+				$class = $class_namespace . ucwords($basename);
+				if (class_exists($class)) break;
+				$class = $class_namespace . 'Controller_' . ucwords($basename);
+				if (class_exists($class)) break;
 			}
-			
-			$command = 'command_'.$argv[1];
-			if (is_callable("static::$command")) {
-				$argv = array_slice($argv, 1); 
-				static::$command(count($argv), $argv);
+
+			if (!$class || !class_exists($class, FALSE)) {
+				exit("\033[1;34mgini\033[0m: '$cmd' is not a gini command. See 'gini help'.\n");
+			}
+
+			_CONF('runtime.controller_path', $path);
+			_CONF('runtime.controller_class', $class);
+
+			$controller = new $class;
+
+			$action = $params[0];
+			if($action && $action[0]!='_' && method_exists($controller, $action)){
+				array_shift($params);
+			} 
+			elseif ($action && $action[0]!='_' && method_exists($controller, 'do_'.$action)) {
+				$action = 'do_'.$action;
+				array_shift($params);
+			}
+			elseif (method_exists($controller, '__index')) {
+				$action = '__index';
 			}
 			else {
-				exit("\033[1;34mgini {$argv[0]}\033[0m: unknown command '{$argv[1]}'. See 'gini {$argv[0]} help'.\n");
+				exit("\033[1;34mgini\033[0m: '$cmd' is not a gini command. See 'gini help'.\n");
 			}
-			
+
+			\Controller\CLI::$CURRENT = $controller;
+			_CONF('runtime.controller_action', $action);
+			_CONF('runtime.controller_params', $params);
+
+			$controller->$action($params);
+
 		}
 
-		static function command_help($argc, $argv) {
-			echo "\033[1;34mgini {$argv[0]}\033[0m: help is unavailable.\n";
-		}
-			
 	}
 
 }

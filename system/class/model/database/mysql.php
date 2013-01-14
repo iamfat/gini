@@ -60,14 +60,19 @@ final class MySQL implements \Model\Database\Driver {
 			}			
 			return implode(',', $s);
 		}
+		elseif (is_null($s)) {
+			return 'NULL';
+		}
 		elseif (is_bool($s) || is_int($s) || is_float($s)) {
 			return $s;
 		}
-		return '\''.$this->escape($s).'\'';
+		return '"'.$this->escape($s).'"';
 	}
 
 	function query($SQL) {
 		$retried = 0;
+ 
+		TRACE("[database] mysql.query = %s", $SQL);
 
 		while (1) {
 			$result = @$this->_h->query($SQL);
@@ -169,7 +174,7 @@ final class MySQL implements \Model\Database\Driver {
 				if ( $type !== $curr_type
 					|| $field['null'] != $curr_field['null']
 					|| $field['default'] != $curr_field['default']
-					|| $field['auto_increment'] != $curr_field['auto_increment']) {
+					|| $field['serial'] != $curr_field['serial']) {
 					$field_sql[] = sprintf('CHANGE %s %s'
 						, $this->quote_ident($key)
 						, $this->field_sql($key, $field));
@@ -249,7 +254,7 @@ final class MySQL implements \Model\Database\Driver {
 				}				
 
 				if (FALSE !== strpos($dr->Extra, 'auto_increment')) {
-					$field['auto_increment'] = TRUE;
+					$field['serial'] = TRUE;
 				}
 
 				$fields[$dr->Field] = $field;
@@ -280,7 +285,7 @@ final class MySQL implements \Model\Database\Driver {
 				, $field['type']
 				, $field['null']? '': ' NOT NULL'
 				, isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']):''
-				, $field['auto_increment'] ? ' AUTO_INCREMENT':''
+				, $field['serial'] ? ' AUTO_INCREMENT':''
 				);
 	}
 	

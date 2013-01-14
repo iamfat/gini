@@ -1,9 +1,7 @@
 <?php
 
-namespace GR\System\Model {
+namespace Model {
 
-	TRY_DECLARE('\Model\Output', __FILE__);
-	
 	class Output {
 
 		public static $AJAX = array();
@@ -28,14 +26,6 @@ namespace GR\System\Model {
 			return rawurlencode($str);
 		}
 		
-	}
-
-}
-
-namespace Model {
-
-	if (DECLARED('\Model\Output', __FILE__)) {
-		class Output extends \GR\System\Model\Output {}
 	}
 
 }

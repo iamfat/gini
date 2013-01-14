@@ -1,10 +1,10 @@
 <?php
 
-namespace CLI {
+namespace Controller {
 
-	class %CLI_NAME% extends \Model\CLI {
+	class %CLI_NAME% extends \Controller\CLI {
 		
-		static function command_bar($argc, $argv) {
+		static function do_method($argv) {
 			//TODO: make your own cli command
 		}
 

@@ -20,6 +20,9 @@ namespace Model {
 		private $_objects;
 		private $_name;
 		private $_oinfo;
+		
+		private $_db_data;
+		private $_db_time;	//上次数据库同步的时间
 
 		protected $_uuid;
 
@@ -60,7 +63,7 @@ namespace Model {
 			return call_user_func_array('\Model\Event::'.$func, $args);		
 		}
 
-		private function inheritance() {
+		function inheritance() {
 			$inheritance = array();
 
 			$rc = new \ReflectionClass($this);
@@ -75,7 +78,7 @@ namespace Model {
 		}
 
 		private static $_structures;
-		private function structure() {
+		function structure() {
 
 			$class_name = get_class($this);
 			if (!isset(self::$_structures[$class_name])) {
@@ -120,13 +123,6 @@ namespace Model {
 			return self::$_structures[$class_name];
 		}
 
-		function db() {
-			$rc = new \ReflectionClass($this);
-			$db_name = $rc->getStaticPropertyValue('_db');
-			
-			return Database::db($db_name);
-		}
-
 		function __construct($criteria = NULL) {
 
 			// 为每个实例化出来的对象赋一个唯一id, 方便事后判断
@@ -134,42 +130,48 @@ namespace Model {
 
 			$structure = $this->structure();
 			foreach ($structure as $k => $v) {
-				$this->$k = NULL;	//empty all public properties
+				unset($this->$k);	//empty all public properties
 			}
 
-			if (!$criteria) return;
+			if ($criteria) {
 
-			// $inheritance = $this->inheritance();
+				if (is_scalar($criteria)) {
+					$criteria = array('id'=>(int)$criteria);
+				}
 
-			if (is_scalar($criteria)) {
-				$criteria = array('id'=>$criteria);
-			}
+				$criteria = $this->normalize_criteria($criteria);
+				$this->_criteria = $criteria;
+				
+				$db = $this->db();
+				//从数据库中获取该数据
+				foreach ($criteria as $k=>$v) {
+					$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
+				}
+				
+				$name = $this->name();
 
-			$criteria = $this->normalize_criteria($criteria);
-			$this->_criteria = $criteria;
-			
-			$db = $this->db();
-			//从数据库中获取该数据
-			foreach ($criteria as $k=>$v) {
-				$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
-			}
-			
-			$name = $this->name();
-
-			// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
-			$SQL = 'SELECT * FROM '.$db->quote_ident($name).' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
-			
-			$result = $db->query($SQL);
-			//只取第一条记录
-			if ($result) {
-				$data = (array) $result->row('assoc');
-			}
-			else {
-				$data = array();
-			}
+				// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
+				$SQL = 'SELECT *  FROM '.$db->quote_ident($name).' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+				
+				$result = $db->query($SQL);
+				//只取第一条记录
+				if ($result) {
+					$data = $result->row('assoc');
+				}
 					
+			}
+
 			//给object赋值
-			$this->set_data($data);
+			$this->_db_data = (array) $data;
+			$this->_db_time = time();
+			$this->set_data((array) $data);
+		}
+
+		function db() {
+			$rc = new \ReflectionClass($this);
+			$db_name = $rc->getStaticPropertyValue('_db');
+			
+			return Database::db($db_name);
 		}
 
 		function normalize_criteria(array $crit) {
@@ -212,7 +214,7 @@ namespace Model {
 					case 'int':
 					case 'bigint':
 					case 'double':
-					case 'date':
+					case 'datetime':
 						$field['type'] = $p;
 						break;
 					case 'bool':
@@ -241,8 +243,8 @@ namespace Model {
 					case 'unique':
 						$indexes['_IDX_'.$k] = array('type' => 'unique', 'fields'=> array($k));
 						break;
-					case 'auto_increment':
-						$field['auto_increment'] = TRUE;
+					case 'serial':
+						$field['serial'] = TRUE;
 						break;
 					case 'index':
 						$indexes['_IDX_'.$k] = array('fields'=>array($k));
@@ -301,14 +303,128 @@ namespace Model {
 			return array('fields' => $fields, 'indexes' => $indexes);
 		}
 		
-		function save($overwrite=TRUE) {
+		function sync() {
+
+			$schema = (array) $this->schema();
 
 			$db = $this->db();
-			$db->adjust_table($this->name(), $this->schema());
+			$db->adjust_table($this->name(), $schema);
 
 			$db->begin_transaction();
+			
+			$success = false;
 
-			$db->commit();
+			$structure = $this->structure();
+
+			$db_data = array();
+			foreach ($structure as $k => $v) {
+				if (array_key_exists('object', $v)) {
+					$oname = $v['object'];
+					$o = $this->$k;
+					if (!isset($oname)) {
+						$db_data[$k.'_name'] = $oname ?: 'object';
+					}
+					$db_data[$k.'_id'] = $o->id ?: 0;
+				}
+				elseif (array_key_exists('array', $v)) {
+					$db_data[$k] = isset($this->$k)
+						? json_encode($this->$k, TRUE) 
+						: ( array_key_exists('null', $v) ? 'NULL' : '{}' );
+				}
+				else {
+					$db_data[$k] = $this->$k;
+					if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
+						$default = $v['default'];
+						if (is_null($default)) {
+							if (isset($v['string'])) {
+								$default = '';
+							}
+							elseif (isset($v['datetime'])) {
+								$default = '0000-00-00 00:00:00';
+							}
+							else {
+								$default = 0;
+							}
+						}
+						$db_data[$k] = $default;
+					}
+				}
+			}
+
+			// diff db_data and this->_db_data
+			$db_data = array_diff_assoc((array)$db_data, (array)$this->_db_data);
+
+			$tbl_name = $this->name();
+			$args = array($tbl_name);
+			$id = (int) $db_data['id'];
+			unset($db_data['id']);
+
+			if ($id > 0) {
+				$SQL.=' UPDATE ';
+
+				foreach($db_data as $k=>$v){
+					$pair[] = $db->quote_ident($k).'='.$db->quote($v);
+				}
+
+				$SQL = 'UPDATE '.$db->quote_ident($this->name()).' SET '.implode(',', $pair).' WHERE '.$db->quote_ident('id').'='.$db->quote($id);
+
+				$args[] = $id;
+			}
+			else {
+				
+				foreach($db_data as $k=>$v){
+					$keys[]=$db->quote_ident($k);
+					if (is_null($v)) {
+					    $vals[] = 'NULL';
+					}
+					elseif (is_float($v)) {
+					    $vals[]= '%f';
+					    $args[]= $v;
+					}
+					elseif (is_bool($v)) {
+					    $vals[]= '%d';
+					    $args[]= $v ? 1 : 0;
+					}
+					elseif (is_int($v)) {
+					    $vals[]= '%d';
+					    $args[]= (int) $v;
+					}
+					else {
+					    $vals[]= '"%s"';
+					    $args[]= $v;
+					}
+				}
+				
+				$SQL = 'INSERT INTO `%s` ('.implode(',', $keys).') VALUES('.implode(',', $vals).')';
+			}
+
+			array_unshift($args, $SQL);
+			$success = call_user_func_array(array($db, 'query'), $args);;
+			if ($success) {
+				if (!$id) {
+					$id = $db->insert_id();
+				}
+				
+				$db->commit();
+
+				// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
+				$SQL = 'SELECT *  FROM '.$db->quote_ident($tbl_name).' WHERE '.$db->quote_ident('id').'='.$db->quote($id).' LIMIT 1'; 
+				
+				$result = $db->query($SQL);
+				if ($result) {
+					$db_data = $result->row('assoc');
+				}
+					
+				//给object赋值
+				$this->_db_data = (array) $db_data;
+				$this->_db_time = time();
+				$this->set_data($this->_db_data);
+			}
+			else {
+				$db->rollback();
+			}
+
+			return $success;
 		}
 
 		static function inject($injection) {
@@ -336,11 +452,13 @@ namespace Model {
 						//object need to be bind later to avoid deadlock.
 						unset($this->$k);
 						if (!isset($oname)) $oname = strval($data[$k.'_name']);
-						$oi = (object) array(
-							'name' => $oname,
-							'id' => $data[$k.'_id']
-						);
-						$this->_oinfo[$k] = $oi;
+						if ($oname) {
+							$oi = (object) array(
+								'name' => $oname,
+								'id' => $data[$k.'_id']
+							);
+							$this->_oinfo[$k] = $oi;
+						}
 					}
 				}
 				elseif (array_key_exists('array', $v)) {
@@ -358,7 +476,7 @@ namespace Model {
 			}
 			return $data;
 		}
-		
+
 		function __get($name) {
 			if (isset($this->_objects[$name])) {
 				return $this->_objects[$name];
@@ -370,14 +488,23 @@ namespace Model {
 				$this->_objects[$name] = $o;
 				return $o;
 			}
+			elseif (isset($this->_extra[$name])) {
+				// try find it in _extra
+				return $this->_extra[$name];
+			}
 		}
 
-		function __set($name, $value) {
-		
+		function __set($name, $value) {		
+			$structure = $this->structure();
 			if (isset($this->_oinfo[$name])) {
 				$this->_objects[$name] = $value;
 			}
-
+			elseif (isset($structure[$name])) {
+				$this->$name = $value;
+			}
+			else {
+				$this->_extra[$name] = $value;
+			}
 		}
 
 	}	

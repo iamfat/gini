@@ -1,15 +1,16 @@
 <?php
 
-namespace CLI {
+namespace Controller\CLI {
 
-	class Test {
+	class Test extends \Controller\CLI {
 
-		static $stat;
-		static function run($class) {
+		private $stat;
+
+		private function run($class) {
 			
 			if (class_exists($class)) {
 				
-				self::$stat['count'] ++;
+				$this->stat['count'] ++;
 
 				// fork process to avoid memory leak
 				$pid = pcntl_fork();
@@ -20,10 +21,10 @@ namespace CLI {
 					//parent process
 					pcntl_wait($status);
 					if ($status == 0) {
-						self::$stat['pass'] ++;
+						$this->stat['pass'] ++;
 					}
 					else {
-						self::$stat['fail'] ++;
+						$this->stat['fail'] ++;
 					}
 					return;
 				}
@@ -45,7 +46,7 @@ namespace CLI {
 				if ($dh) {
 					while ($name = readdir($dh)) {
 						if ($name[0] == '.') continue;
-						self::run($class.'\\'.basename($name, '.php'));
+						$this->run($class.'\\'.basename($name, '.php'));
 					}
 					closedir($dh);
 				}
@@ -54,22 +55,25 @@ namespace CLI {
 
 		}
 
-		static function main($argc, $argv) {
-			if ($argc <= 1 || $argv[1] == 'help') {
-				exit("Usage: \033[1;34mgini test\033[0m [unit/integration/performance/fixtures]/path/to/test\n");
+		function help($argv) {
+			exit("Usage: \033[1;34mgini test\033[0m [unit/integration/performance/fixtures]/path/to/test\n");			
+		}
+
+		function __index($argv) {
+			if (count($argv) < 1) {
+				return $this->help($argv);
 			}
 
-			array_shift($argv);
 			foreach($argv as $arg) {
 				$class = 'test\\'.str_replace('/', '\\', strtolower($arg));
-				self::run($class);
+				$this->run($class);
 			}			
 
-			if (self::$stat['count'] > 0) {
+			if ($this->stat['count'] > 0) {
 				printf("\033[1mRESULTS\033[0m \n");
-				printf("   \033[1m%d\033[0m tests performed!\n", self::$stat['count']);
-				printf("   \033[1m%d\033[0m tests passed!\n", self::$stat['pass']);
-				printf("   \033[1m%d\033[0m tests failed!\n", self::$stat['fail']);
+				printf("   \033[1m%d\033[0m tests performed!\n", $this->stat['count']);
+				printf("   \033[1m%d\033[0m tests passed!\n", $this->stat['pass']);
+				printf("   \033[1m%d\033[0m tests failed!\n", $this->stat['fail']);
 			}
 		}
 		

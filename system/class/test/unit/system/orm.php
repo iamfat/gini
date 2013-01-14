@@ -7,21 +7,40 @@ namespace Test\Unit\System {
 		function setup() {
 			_CONF('database.default', 'gini_ut');
 			_CONF('database.gini_ut.url', 'mysql://genee@localhost/gini_ut');	
+			\Model\Database::db()->drop_table('orm_test3');
 		}
 
-		function test_save() {
+		function test_sync() {
 			$o1 = new \ORM\ORM_Test3();
-			$o1->save();
-			echo $o1->id;
+			$o1->name = "Hello";
+			$o1->gender = 1;
+			$o1->sync();
+
+			$this->assert('check o1 sync', $o1->id > 0);
+
+			$o1->sync();
+			$this->assert('check o1 sync', $o1->id > 0);
+		}
+
+		function test_extra() {
+			$o1 = new \ORM\ORM_Test3();
+			$o1->name = "Hello";
+			$o1->extra_property = "How are you?";
+			$o1->sync();
+
+			$this->assert('check o1->extra_property: '.$o1->extra_property, $o1->extra_property == "How are you?");
+
+			$o2 = new \ORM\ORM_Test3($o1->id);
+			$this->assert('check o1->extra_property == o2->extra_property ', $o1->extra_property == $o2->extra_property);
 		}
 
 		function test_object_late_binding() {
 			$o1 = new \ORM\ORM_Test3(1);
 			$o2 = $o1->friend;
-			
+
 			$this->assert('check o1->_uuid != o2->_uuid', 
 					$this->get_property($o1, '_uuid') != $this->get_property($o2, '_uuid'));
-			
+		
 			$o3 = $o2->friend;
 			$this->assert('check o2->_uuid != o3->_uuid', 
 					$this->get_property($o2, '_uuid') != $this->get_property($o3, '_uuid'));
@@ -57,7 +76,7 @@ namespace Test\Unit\System {
 					'gender'      => array ( 'type' => 'int'),
 					'money'       => array ( 'type' => 'double', 'default' => '0'),
 					'description' => array ('type' => 'text', 'null' => true),
-					'id'          => array ( 'type' => 'bigint', 'auto_increment'=>true ),
+					'id'          => array ( 'type' => 'bigint', 'serial'=>true ),
 					'_extra'      => array ( 'type' => 'text' ),
 				),
 				'indexes' => array (
@@ -72,7 +91,7 @@ namespace Test\Unit\System {
 					'gender'      => array ( 'type' => 'int'),
 					'money'       => array ( 'type' => 'double', 'default' => '0'),
 					'description' => array ( 'type' => 'text', 'null' => true),
-					'id'          => array ( 'type' => 'bigint', 'auto_increment'=>true ),                                                                                                                                            
+					'id'          => array ( 'type' => 'bigint', 'serial'=>true ),                                                                                                                                            
 					'_extra'      => array ( 'type' => 'text' ),
 				),
 				'indexes' => array (
@@ -104,7 +123,7 @@ namespace Test\Unit\System {
 				'gender'      => array('bool'=>NULL),
 				'money'       => array('double'=>NULL,'default'=>'0'),
 				'description' => array('string'=>'*','null'=>NULL),
-				'id'          => array('bigint'=>NULL,'primary'=>NULL,'auto_increment'=>NULL),
+				'id'          => array('bigint'=>NULL,'primary'=>NULL,'serial'=>NULL),
 				'phone'       => array('string'=>'60'),
 				'address'     => array('string'=>NULL),
 				'_extra'          => array('array'=>NULL),
@@ -159,6 +178,8 @@ namespace ORM {
 
 	class ORM_Test3 extends \ORM\Object {
 
+		var $name        = 'string:50';
+		var $gender      = 'bool';
 		var $friend 	 = 'object:orm_test3';
 		var $linked		 = 'object';
 

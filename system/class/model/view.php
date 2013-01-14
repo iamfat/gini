@@ -1,9 +1,7 @@
 <?php
 
-namespace GR\System\Model {
+namespace Model {
 
-	TRY_DECLARE('\Model\View', __FILE__);
-	
 	use \Model\Event;
 	use \Gini\Core;
 
@@ -12,9 +10,6 @@ namespace GR\System\Model {
 		protected $_vars;
 		protected $_path;
 
-		static function setup() {}
-		static function shutdown() {}
-		
 		function __construct($path, $vars=NULL){
 			$this->_path = $path;
 			$this->_vars = (array)$vars;
@@ -96,12 +91,6 @@ namespace GR\System\Model {
 		}
 				
 	}	
-}
-
-namespace Model {
-	if (DECLARED('\Model\View', __FILE__)) {
-		class View extends \GR\System\Model\View {}
-	}
 }
 
 namespace {

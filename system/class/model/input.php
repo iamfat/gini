@@ -1,11 +1,9 @@
 <?php
 
-namespace GR\System\Model {
+namespace Model {
 
 	use \Model\Config;
 	use \Model\URI;
-	
-	TRY_DECLARE('\Model\Input', __FILE__);
 	
 	class Input {
 	
@@ -124,13 +122,5 @@ namespace GR\System\Model {
 		
 	}
 	
-	
-}
-
-namespace Model {
-	
-	if (DECLARED('\Model\Input', __FILE__)) {
-		class Input extends \GR\System\Model\Input {}
-	}
 	
 }

@@ -1,8 +1,8 @@
 <?php
 
-namespace CLI {
+namespace Controller\CLI {
 
-	class CLI extends \CLI\Base {
+	class CLI extends \Controller\CLI {
 		
 		/**
 		 * 初始化模块
@@ -10,10 +10,10 @@ namespace CLI {
 		 * @return void
 		 * @author Jia Huang
 		 **/
-		static function command_new($argc, $argv) {
+		function do_new($argv) {
 
-			if ($argc < 2) {
-				die("usage: cli new <name>\n");
+			if ($argc < 1) {
+				die("usage: gini cli new <name>\n");
 			}
 
 			$name = $argv[1];

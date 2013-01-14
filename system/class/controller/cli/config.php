@@ -1,10 +1,10 @@
 <?php
 
-namespace CLI {
+namespace Controller\CLI {
 	
-	class Config extends \CLI\Base {
+	class Config extends \Controller\CLI {
 
-		static function command_print($argc, $argv) {
+		static function do_print($argv) {
 			echo serialize(\Model\Config::export())."\n";
 			/*
 			if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
@@ -16,7 +16,7 @@ namespace CLI {
 			*/
 		}
 
-		static function command_clean($argc, $argv) {
+		static function do_clean($argv) {
 			$config_file = APP_PATH . '/.config';
 			if (file_exists($config_file)) {
 				if (unlink($config_file)) {

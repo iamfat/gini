@@ -1,15 +1,15 @@
 <?php
 
-namespace CLI {
+namespace Controller\CLI {
 	
 	use \Model\File;
 	use \Gini\Core;
 
-	class I18N extends \CLI\Base {
+	class I18N extends \Controller\CLI {
 
-		static function command_scan($argc, $argv) {
+		static function do_scan($argv) {
 
-			if ($argc < 2) {
+			if (count($argv) < 1) {
 				exit("usage: \033[1;34mgini i18n scan\033[0m <path/to/app> [<locales>]\n");
 			}
 
@@ -71,8 +71,8 @@ namespace CLI {
 			
 		}
 
-		static function command_format($argc, $argv) {
-			if ($argc < 2) {
+		static function do_format($argv) {
+			if (count($argv) < 1) {
 				exit("usage: \033[1;34mgini i18n format\033[0m <locales>\n");
 			}
 

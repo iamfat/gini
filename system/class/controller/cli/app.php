@@ -8,7 +8,7 @@
 * @author Jia Huang
 **/
 
-namespace CLI {
+namespace Controller\CLI {
 
 	use \Gini\Core;
 	use \Model\File;
@@ -26,7 +26,7 @@ $dependencies = '%dependencies%';
 
 PHP;
 
-	class App extends \CLI\Base {
+	class App extends \Controller\CLI {
 		
 		/**
 		 * 初始化模块
@@ -34,7 +34,7 @@ PHP;
 		 * @return void
 		 * @author Jia Huang
 		 **/
-		static function command_new($argc, $argv) {
+		function do_new($argv) {
 
 			if ($argc < 2) {
 				die("usage: app init path/to/app\n");
@@ -75,16 +75,20 @@ PHP;
 			*/
 		}
 
-		static function command_info($argc, $argv) {
-			if ($argc < 2) {
+		function do_info($argv) {
+			if (count($argv) == 0) {
 				die("usage: app info path/to/app\n");
 			}
 
-			$info = \Gini\Core::path_info($argv[1]);
+			$info = \Gini\Core::path_info($argv[0]);
 			foreach($info as $k => $v) {
 				if (is_array($v)) $v = json_encode($v);
 				printf("%s = %s\n", $k, $v);
 			}
+		}
+
+		function __index($argv) {
+			$this->help($argv);
 		}
 	}
 
