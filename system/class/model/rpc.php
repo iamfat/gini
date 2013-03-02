@@ -84,10 +84,10 @@ class RPC {
 			CURLOPT_CONNECTTIMEOUT => $timeout,
 			CURLOPT_TIMEOUT => $timeout,
 			CURLOPT_RETURNTRANSFER => TRUE,
-			CURLOPT_FRESH_CONNECT => TRUE,
+			// CURLOPT_FRESH_CONNECT => FALSE,
 			CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?: 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)',
 			CURLOPT_HTTPHEADER => array(
-				'Content-Type' => 'application/json'
+				'Content-Type' => 'application/json',
 			),
 		));
 

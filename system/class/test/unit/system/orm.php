@@ -6,7 +6,7 @@ namespace Test\Unit\System {
 		
 		function setup() {
 			_CONF('database.default', 'gini_ut');
-			_CONF('database.gini_ut.url', 'mysql://genee@localhost/gini_ut');	
+			_CONF('database.gini_ut.url', 'sqlite3://gini_ut.sqlite');	
 			\Model\Database::db()->drop_table('orm_test3');
 		}
 
@@ -20,6 +20,7 @@ namespace Test\Unit\System {
 
 			$o1->sync();
 			$this->assert('check o1 sync', $o1->id > 0);
+
 		}
 
 		function test_extra() {

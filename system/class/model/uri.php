@@ -1,16 +1,12 @@
 <?php
 
-namespace GR\System\Model {
-
-	TRY_DECLARE('\Model\URI', __FILE__);
-
-	use \Model\Config;
+namespace Model {
 
 	class URI {
 
 		static function url($url=NULL, $query=NULL, $fragment=NULL) {
 			
-			if (!$url) $url = \Model\Input::route();
+			if (!$url) $url = CGI::route();
 		
 			$ui = parse_url($url);
 		
@@ -64,12 +60,6 @@ namespace GR\System\Model {
 			return $url;
 		}
 
-		static function redirect($url='', $query=NULL) {
-		    session_write_close();
-			header('Location: '. URI::url($url, $query), TRUE, 302);
-			exit();
-		}
-		
 		static function encode($text) {
 			return rawurlencode(strtr($text, array('.'=>'\.', '/'=>'\/')));
 		}
@@ -108,24 +98,17 @@ namespace GR\System\Model {
 
 }
 
-namespace Model {
-	if (DECLARED('\Model\URI', __FILE__)) {
-		class URI extends \GR\System\Model\URI {}
-	}
-}
-
 namespace {
-
-	\Model\URI::setup();
 
 	function URL() {
 		$args = func_get_args();
-		return call_user_func_array('\Model\URI::url', $args);
+		return call_user_func_array('\\Model\\URI::url', $args);
 	}
 
 	function MAILTO() {
 		$args = func_get_args();
-		return call_user_func_array('\Model\URI::mailto', $args);
+		return call_user_func_array('\\Model\\URI::mailto', $args);
 	}
+
 
 }

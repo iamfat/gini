@@ -2,12 +2,6 @@
 
 namespace Model {
 
-	use \Gini\Core;
-	use \Model\Config;
-
-	use \Model\Input;
-	use \Model\URI;
-
 	class CGI {
 
 		static function stripslashes(& $value)
@@ -16,26 +10,26 @@ namespace Model {
 					array_map(array(__CLASS__, __FUNCTION__), $value) :
 					stripslashes($value);
 		}
-	
+
 		static $dispatchers = array();
 		static function set_dispatcher($mime, $dispatcher) {
 			$dispatchers[$mime] = $dispatcher;
 		}
 
-		static function main($argc, $argv) {
+		static function main($argv) {
 			$accepts = explode(',', $_SERVER['HTTP_ACCEPT']);
 			while (NULL !== ($accept = array_pop($accepts))) {
 				list($mime,) = explode(';', $accept, 2);
 				$dispatcher = $dispatchers[$mime];
 				if ($dispatcher) {
-					return call_user_func($dispatcher, $argc, $argv);
+					return call_user_func($dispatcher, $argv);
 				}
 			}
 
-			return self::default_dispatcher($argc, $argv);	
+			return self::default_dispatcher($argv);	
 		}
 
-		static function default_dispatcher($argc, $argv) {
+		static function default_dispatcher($argv) {
 			
 			//从末端开始尝试
 			/*
@@ -52,7 +46,8 @@ namespace Model {
 			$candidates = array('index' => $args);
 			while (count($args) > 0) {
 				$arg = array_shift($args);
-				if (!preg_match('|^[a-z]\w+$|', $arg)) break;
+				if (!preg_match('|^[a-z-_][\w-]*$|', $arg)) break;
+				$arg = strtolower(strtr($arg, '-', '_'));
 				if ($path) $path .= '/' . $arg;
 				else $path = $arg;
 				$candidates[$path] = $args;
@@ -127,111 +122,95 @@ namespace Model {
 			}		
 		}
 
-		static $AJAX=array();
-	
-		protected static $form = array();
-		protected static $files = array();
-		protected static $args = array();
-		protected static $get = array();
-	
-		protected static $route;
-		protected static $url;
-	
+		protected static $form, $files, $get, $post;
+		protected static $args, $route;
+
 		static function setup(){
-	
+
+			URI::setup();
+
 			if ((function_exists("get_magic_quotes_gpc") && get_magic_quotes_gpc()) 
 				|| (ini_get('magic_quotes_sybase') && (strtolower(ini_get('magic_quotes_sybase'))!="off")) ){
 				self::stripslashes($_GET);
 				self::stripslashes($_POST);
 				self::stripslashes($_COOKIE);
 			}
-	
-			$route = $_SERVER['PATH_INFO'];
-			if (!$route) $route = $_SERVER['ORIG_PATH_INFO'];
-			$route = preg_replace('/^[\/ ]*|[\/ ]*$|'.preg_quote(_CONF('system.url_suffix')).'$/iu','', $route);
-	
-			self::$route = $route;
+
+			self::$route = $route = ltrim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
+
 			$args = array();
 			if(preg_match_all('|(.*?[^\\\])\/|', $route.'/', $parts)){
 				foreach($parts[1] as $part) {
 					$args[] = strtr($part, array('\/'=>'/'));
 				}
 			}
-	
+
 			self::$args = $args;
+
 			self::$get = $_GET;
-			self::$form = array_merge($_POST, $_GET);
+			self::$post = $_POST;
 			self::$files = $_FILES;
-	
-			$query=$_GET;
-			self::$url = URI::url(self::$route, $query);
-	
-			if($_POST['_ajax']){
-	
-				self::$AJAX['widget']=$_POST['_widget'];			
-				self::$AJAX['object']=$_POST['_object'];
-				self::$AJAX['event']=$_POST['_event'];
-				self::$AJAX['mouse']=$_POST['_mouse'];
-				self::$AJAX['view']=$_POST['_view'];
-	
-				unset(self::$form['_ajax']);
-				unset(self::$form['_data']);
-				unset(self::$form['_widget']);
-				unset(self::$form['_object']);
-				unset(self::$form['_event']);
-				unset(self::$form['_mouse']);
-				unset(self::$form['_view']);
-	
-			}
-	
+			self::$form = array_merge($_POST, $_GET);
+
+			unset($_GET);
+			unset($_POST);
+			unset($_FILES);
 		}
-	
-		static function & get($name=NULL) {
-			if ($name) {
-				return self::$get[$name];
-			} else {
+
+		static function & form($mode = '*') {
+			switch($mode) {
+			case 'g':
 				return self::$get;
-			}
-		}
-	
-		static function & form($name=NULL) {
-			if ($name) {
-				return self::$form[$name];
-			} else {
+			case 'p':
+				return self::$post;
+			default:
 				return self::$form;
 			}
 		}
-	
-		static function & AJAX($name=NULL) {
-			if ($name) {
-				return self::$AJAX[$name];
-			} else {
-				return self::$AJAX;
-			}
+
+		static function & ajax() {
+			return self::$ajax;
 		}
-	
+
 		static function & route($route = NULL) {
 			if (is_null($route)) {
 				return self::$route;
 			}
 			self::$route = $route;
 		}
-	
-		static function & arg($n=0) {
-			return self::$args[$n];
-		}
-	
+
 		static function & args() {
 			return self::$args;
 		}
-	
-		static function & file($name) {
-			return self::$files[$name];
-		}
-	
+
 		static function & files() {
 			return self::$files;
 		}
+
+		static function redirect($url='', $query=NULL) {
+		    session_write_close();
+			header('Location: '. URL($url, $query), TRUE, 302);
+			exit();
+		}
+		
+		static function shutdown() { 
+		}
 	}
+	
+}
+
+namespace {
+
+	function H($str){
+		return htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8');
+	}
+
+	function eH($str) {
+		echo H($str);
+	}
+
+	function e($str) {
+		echo $str;
+	}	
 
 }

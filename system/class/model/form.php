@@ -1,6 +1,6 @@
 <?php
 
-abstract class _Form extends ArrayIterator {
+class Form extends ArrayIterator {
 	
 	static function hidden($name, $value, $extra=NULL) {
 		if ($extra != '') $extra = ' '.$extra;

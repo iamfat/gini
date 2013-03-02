@@ -11,6 +11,7 @@ namespace Gini {
 
 	final class Core {
 
+		static $_G;
 		static $PATH_INFO;
 		static $PATH_TO_SHORTNAME;
 
@@ -82,7 +83,9 @@ namespace Gini {
 			$inserted = FALSE;
 			foreach ((array) self::$PATH_INFO as $b_shortname => $b_info) {
 
-				if (!$inserted && in_array($info->shortname, $b_info->dependencies)) {
+				if (!$inserted && 
+					(in_array($info->shortname, $b_info->dependencies) || $b_shortname == APP_SHORTNAME)
+				) {
 					$path_info[$info->shortname] = $info;
 					$inserted = TRUE;
 				}
@@ -102,31 +105,7 @@ namespace Gini {
 			//定义类后缀与类路径的对应关系
 			$class = strtolower($class);
 			$path = str_replace('\\', '/', $class);
-
-			/*
-			\GR\path\to\class
-			*/
-			list($gr, $class_path) = explode('/', $path, 2);
-			if ($gr == 'gr') {
-
-				for(;;) {
-
-					list($s, $class_path) = explode('/', $class_path, 2);
-					if (!$class_path) break;
-
-					if ($scope) $scope .= '/' . $s;
-					else $scope = $s;
-
-					$file = Core::load(CLASS_DIR, $class_path, $scope);
-					if (class_exists($class, FALSE)) break;
-
-				}				
-
-			}
-			else {
-				Core::load(CLASS_DIR, $path);
-			}
-
+			$file = Core::load(CLASS_DIR, $path);
 		}
 
 		static function load($base, $name, $scope=NULL) {
@@ -236,18 +215,16 @@ namespace Gini {
 		}
 
 		static function exception($e) {
-			if (function_exists('\Application\exception')) {
-				\Application\exception($e);
-			}
+			\Application::exception($e);
 			exit(1);
 		}
 
 		static function error($errno , $errstr, $errfile, $errline, $errcontext) {
-			return Core::exception(new \ErrorException($errstr, $errno, 1, $errfile, $errline));
+			throw new \ErrorException($errstr, $errno, 1, $errfile, $errline);
 		}
 
 		static function assertion($file, $line, $code) {
-			return Core::exception(new \ErrorException($code, 0, 1, $file, $line));
+			throw new \ErrorException($code, 0, 1, $file, $line);
 		}
 
 		static function setup(){
@@ -273,12 +250,14 @@ namespace Gini {
 			if (isset($_SERVER['GINI_APP_PATH'])) {
 				$app_path = realpath($_SERVER['GINI_APP_PATH']);
 				define('APP_PATH', $app_path);
-				$_SERVER['GINI_APP_PATH'] = $app_path;
+				$_SERVER['GINI_APP_PATH'] = APP_PATH;
 				self::import(APP_PATH);
 			}
 			else {
 				define('APP_PATH', SYS_PATH);
 			}
+
+			define('APP_SHORTNAME', self::$PATH_TO_SHORTNAME[APP_PATH]);
 
 			\Application::setup();
 		}
@@ -289,7 +268,6 @@ namespace Gini {
 		}
 
 		static function shutdown() {
-
 			\Application::shutdown();	
 		}
 
@@ -308,9 +286,9 @@ namespace {
 			if (PHP_SAPI == 'cli') {
 				global $_TRACE_INDENTS;
 				vfprintf(STDERR, str_pad(' ', end($_TRACE_INDENTS))
-									. "\033[36m\033[4mTRACE\033[0m $fmt\n", $args);
+									. "\033[36m!\033[0m $fmt\n", $args);
 			}
-			error_log(vsprintf("\033[36m\033[4mTRACE\033[0m $fmt", $args));			
+			error_log(vsprintf("\033[36m!\033[0m $fmt", $args));			
 		}
 	}
 
@@ -345,6 +323,10 @@ namespace {
 		else {
 			\Gini\Core::$_G[$key] = $value;
 		}
+	}
+
+	function V($path, $vars=NULL) {
+		return new \Model\View($path, $vars);
 	}
 
 }

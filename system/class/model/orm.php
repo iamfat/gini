@@ -151,7 +151,7 @@ namespace Model {
 				$name = $this->name();
 
 				// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
-				$SQL = 'SELECT *  FROM '.$db->quote_ident($name).' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+				$SQL = 'SELECT *  FROM '.$db->quote_ident($name) . ' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
 				
 				$result = $db->query($SQL);
 				//只取第一条记录
@@ -179,7 +179,7 @@ namespace Model {
 			$structure = $this->structure();
 
 			foreach ($crit as $k => $v) {
-				if (is_scalar($v)) {
+				if (is_scalar($v) || is_null($v)) {
 					$ncrit[$k] = $v;
 				}
 				elseif ($v instanceof \ORM\Object) {
@@ -308,7 +308,6 @@ namespace Model {
 			$schema = (array) $this->schema();
 
 			$db = $this->db();
-			$db->adjust_table($this->name(), $schema);
 
 			$db->begin_transaction();
 			
@@ -355,8 +354,7 @@ namespace Model {
 			$db_data = array_diff_assoc((array)$db_data, (array)$this->_db_data);
 
 			$tbl_name = $this->name();
-			$args = array($tbl_name);
-			$id = (int) $db_data['id'];
+			$id = (int) ($this->_db_data['id'] ?: $db_data['id']);
 			unset($db_data['id']);
 
 			if ($id > 0) {
@@ -366,40 +364,17 @@ namespace Model {
 					$pair[] = $db->quote_ident($k).'='.$db->quote($v);
 				}
 
-				$SQL = 'UPDATE '.$db->quote_ident($this->name()).' SET '.implode(',', $pair).' WHERE '.$db->quote_ident('id').'='.$db->quote($id);
-
-				$args[] = $id;
+				$SQL = 'UPDATE '.$db->quote_ident($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quote_ident('id').'='.$db->quote($id);
 			}
 			else {
+
+				$keys = array_keys($db_data);
+				$vals = array_values($db_data);
 				
-				foreach($db_data as $k=>$v){
-					$keys[]=$db->quote_ident($k);
-					if (is_null($v)) {
-					    $vals[] = 'NULL';
-					}
-					elseif (is_float($v)) {
-					    $vals[]= '%f';
-					    $args[]= $v;
-					}
-					elseif (is_bool($v)) {
-					    $vals[]= '%d';
-					    $args[]= $v ? 1 : 0;
-					}
-					elseif (is_int($v)) {
-					    $vals[]= '%d';
-					    $args[]= (int) $v;
-					}
-					else {
-					    $vals[]= '"%s"';
-					    $args[]= $v;
-					}
-				}
-				
-				$SQL = 'INSERT INTO `%s` ('.implode(',', $keys).') VALUES('.implode(',', $vals).')';
+				$SQL = 'INSERT INTO '.$db->quote_ident($tbl_name).' ('.$db->quote_ident($keys).') VALUES('.$db->quote($vals).')';
 			}
 
-			array_unshift($args, $SQL);
-			$success = call_user_func_array(array($db, 'query'), $args);;
+			$success = $db->query($SQL);
 			if ($success) {
 				if (!$id) {
 					$id = $db->insert_id();

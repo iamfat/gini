@@ -1,6 +1,8 @@
 <?php
 
-abstract class _Image {
+namespace Model;
+
+class Image {
 
 	private $format;
 	private $filename;

@@ -2,7 +2,7 @@
 
 namespace Model\Auth;
 
-class Database implements \Model\Auth_Handler {
+class Database implements \Model\Auth\Driver {
 
 	private $db_name;
 	private $table;
@@ -15,62 +15,56 @@ class Database implements \Model\Auth_Handler {
 		$this->table = $opt['database.table'] ?: '_auth';
 
 		$db = \Model\Database::db($this->db_name);		
-		$db->prepare_table(
+		$db->adjust_table(
 			$this->table, 
 			array(
 				'fields' => array(
-					'token'=>array('type'=>'varchar(80)', 'null'=>FALSE, 'default'=>''),
+					'username'=>array('type'=>'varchar(80)', 'null'=>FALSE, 'default'=>''),
 					'password'=>array('type'=>'varchar(100)', 'null'=>FALSE, 'default'=>''),				
 				),
 				'indexes' => array(
-					'PRIMARY'=>array('type'=>'primary', 'fields'=>array('token')),
+					'PRIMARY'=>array('type'=>'primary', 'fields'=>array('username')),
 				),
 				'engine' => $opt['database.engine']
 			)
 		);
+
 	}
 	
 	private static function encode($password){
 		// crypt SHA512
-		$salt = '$6$'.Misc::random_password(8, 2).'$';
+		$salt = '$6$'.\Model\Util::random_password(8, 2).'$';
 		return crypt($password, $salt);
 	}
 	
-	function verify($token, $password){
+	function verify($username, $password){
 		$db = \Model\Database::db($this->db_name);
-		$hash = $db->value('SELECT `password` FROM `%s` WHERE `token`="%s"', $this->table, $token);
+		$hash = $db->value('SELECT `password` FROM `%s` WHERE `username`="%s"', $this->table, $username);
 		if ($hash) {
-			if ($hash[0] == '$') {	
-				// crypt method
-				return crypt($password, $hash) == $hash;
-			}
-			else {
-				// old md5 method
-				return $hash == md5($password) || $hash == md5('GINI_'.$password);
-			}
+			return crypt($password, $hash) == $hash;
 		}
 
 		return FALSE;	
 	}
 	
-	function change_password($token, $password){
+	function change_password($username, $password){
 		$db = \Model\Database::db($this->db_name);
-		return FALSE != $db->query('UPDATE `%s` SET `password`="%s" WHERE `token`="%s"', $this->table, self::encode($password), $token);
+		return FALSE != $db->query('UPDATE `%s` SET `password`="%s" WHERE `username`="%s"', $this->table, self::encode($password), $username);
 	}
 	
-	function change_token($token, $token_new){
+	function change_username($username, $username_new){
 		$db = \Model\Database::db($this->db_name);
-		return FALSE != $db->query('UPDATE `%s` SET `token`="%s" WHERE `token`="%s"', $this->table, $token_new, $token);
+		return FALSE != $db->query('UPDATE `%s` SET `username`="%s" WHERE `username`="%s"', $this->table, $username_new, $username);
 	}
 	
-	function add($token, $password){
+	function add($username, $password){
 		$db = \Model\Database::db($this->db_name);
-		return FALSE != $db->query('INSERT INTO `%s` (`token`, `password`) VALUES("%s", "%s")', $this->table, $token, self::encode($password));
+		return FALSE != $db->query('INSERT INTO `%s` (`username`, `password`) VALUES("%s", "%s")', $this->table, $username, self::encode($password));
 	}
 	
-	function remove($token){
+	function remove($username){
 		$db = \Model\Database::db($this->db_name);
-		return FALSE != $db->query('DELETE FROM `%s` WHERE `token`="%s"', $this->table, $token);
+		return FALSE != $db->query('DELETE FROM `%s` WHERE `username`="%s"', $this->table, $username);
 	}
 	
 }

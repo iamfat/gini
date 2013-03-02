@@ -2,11 +2,11 @@
 
 namespace Controller\CGI {
 
-	class Index extends \Controller\CGI\Layout {
+	class Index extends Layout {
 		
 		function __index() {
-			$this->layout->title = 'Gini PHP Framework';
-			$this->layout->body = new \Model\View('body');
+			$this->view->title = 'Gini PHP Framework';
+			$this->view->body = V('phtml/body');
 		}
 		
 	}

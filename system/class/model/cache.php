@@ -81,7 +81,7 @@ namespace Model {
 			* @param $content 缓冲的内容
 			*
 			* @return 无
-		 */
+		*/
 		static function cache_content($path, $content) {
 			$cache_file = self::cache_filename($path);
 			$cache_path =  $_SERVER['DOCUMENT_ROOT'].'/'.$cache_file;

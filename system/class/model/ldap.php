@@ -4,7 +4,7 @@ namespace Model;
 
 use \Model\Config;
 
-abstract class _LDAP {
+class LDAP {
 
 	private $ds;
 
@@ -17,13 +17,15 @@ abstract class _LDAP {
 		$this->options = (array) $opt;
 				
 		$ds = @ldap_connect($this->get_option('host'));
-		if (!$ds) throw new Error_Exception(T('无法连接LDAP, 请检查您的LDAP配置'));
-		
+		if (!$ds) {
+			throw new \ErrorException('LDAP failed');
+		}
+
+		$this->ds = $ds;
+
 		@ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
 		
-		$this->ds = $ds;
 		$this->bind_root();
-		
 	}
 	
 	function __destruct() {
@@ -33,6 +35,10 @@ abstract class _LDAP {
 		}
 	}
 	
+	function is_connected() {
+		return !!$this->ds;
+	}
+
 	function get_option($name, $default=NULL) {
 		if (isset($this->options[$name])) return $this->options[$name];
 		return _CONF('ldap.'.$name) ?: $default;

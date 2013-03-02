@@ -4,19 +4,18 @@ namespace Controller\CGI {
 
 	class Layout extends \Controller\CGI {
 		
-		public $layout;
-		protected $layout_name = 'layout';
+		public $view;
+		protected static $layout_name = 'phtml/layout';
 		
-		function __pre_action($method, &$params) {
-			parent::__pre_action($method, $params);			
-			
-			$this->layout = new \Model\View($this->layout_name);			
+		function __pre_action($action, &$params) {
+			parent::__pre_action($action, $params);	
+			$this->view = V(static::$layout_name);
+			$this->view->title = _CONF('layout.title');	
 		}
 	
-		function __post_action($method, &$params) {
-			parent::__post_action($method, $params);	
-
-			echo $this->layout;
+		function __post_action($action, &$params) {
+			parent::__post_action($action, $params);
+			echo $this->view;
 		}
 	
 	}

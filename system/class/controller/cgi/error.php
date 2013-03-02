@@ -1,10 +1,8 @@
 <?php
 
-namespace GR\System\Controller {
+namespace Controller\CGI {
 
-	TRY_DECLARE('\Controller\Error', __FILE__);
-	
-	class Error extends \Controller\Layout {
+	class Error extends Layout {
 	
 		function __index($code = 404) {
 
@@ -20,18 +18,11 @@ namespace GR\System\Controller {
 				header("Status: 404 Not Found");
 				break;
 			}
-			
-			$this->layout->title = $title;
-			$this->layout->body = new \Model\View('error/'.$code);
+
+			$this->view->title = $title;
+			$this->view->body = V('phtml/error', array('code' => $code));
 		}
 	
 	}
 
-}
-
-namespace Controller {
-	
-	if (DECLARED('\Controller\Error', __FILE__)) {
-		class Error extends \GR\System\Controller\Error {}
-	}
 }

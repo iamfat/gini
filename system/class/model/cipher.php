@@ -1,7 +1,5 @@
 <?php
 
-namespace Model;
-
 final class Cipher {
 
 	static function encrypt($text, $salt, $base64=FALSE, $mode = 'blowfish') {

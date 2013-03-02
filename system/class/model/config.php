@@ -1,64 +1,19 @@
 <?php
 
 namespace Model {
-
+	
 	final class Config {
-
+	
 		static $items = array();
-
-		private static function _load($category, $filename) {
-			if (is_file($filename)) {
-				if (!isset(self::$items[$category])) self::$items[$category] = array();
-
-				$config = & self::$items[$category];
-				$config['#ROOT'] = & self::$items;
-				include($filename);
-				unset($config['#ROOT']);
-			}
-			elseif(is_dir($filename)) {
-				$base = $filename;
-				$dh = opendir($base);
-				if ($dh) {
-					if (substr($base, -1) != '/') {
-						$base .= '/';
-					}
-					while ($file = readdir($dh)) {
-						if ($file[0] == '.') continue;
-						self::_load($category, $base . '/' . $file);
-					}
-					closedir($dh);
-				}
-			}
-		}
-
-		static function load($path, $category=NULL){
-			$base = $path.'/'.CONFIG_DIR;
-			if ($category) {
-				$ffile = $base.'/'.$category.EXT;
-				if (is_file($ffile)) {
-					self::_load($category, $ffile);
-				}
-			}
-			elseif (is_dir($base)) {
-				$dh = opendir($base);
-				if ($dh) {
-					while($file = readdir($dh)) {
-						if ($file[0] == '.') continue;
-						self::_load(basename($file, EXT), $base . '/' . $file);
-					}
-					closedir($dh);
-				}
-			}
-		}
-		
+	
 		static function export() {
 			return self::$items;
 		}
-
+	
 		static function import(& $items){
 			self::$items = $items;
 		}
-
+	
 		static function clear() {
 			self::$items = array();	//清空
 		}
@@ -68,7 +23,7 @@ namespace Model {
 			if ($key === NULL) return self::$items[$category];			
 			return self::$items[$category][$key];
 		}
-
+	
 		static function set($key, $val){
 			list($category, $key) = explode('.', $key, 2);
 			if ($key) {
@@ -101,46 +56,32 @@ namespace Model {
 				self::$items[$category][$key] .= $val;
 			}
 		}
-
+	
 		static function setup() {
 			self::clear();
 			$exp = 300;
 			$config_file = APP_PATH . '/.config';
-			if (!file_exists($config_file) || filemtime($config_file) + $exp < time()) {
-				foreach ((array) \Gini\Core::$PATH_INFO as $path => $info) {
-					if ($info->enabled !== FALSE) {
-						self::load($info->path);
-					}
-				}
-
-				if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
-					$opt = JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES;
-				}
-				else {
-					$opt = 0;
-				}
-				file_put_contents($config_file, json_encode((array)self::$items, $opt));
+			if (!file_exists($config_file)) {
+				throw new ErrorException("Config cache not exists!");
 			}
-			else {
-				self::$items = (array)@json_decode(file_get_contents($config_file), TRUE);
-			}
-
+			self::$items = (array)@json_decode(file_get_contents($config_file), TRUE);
 		}
-
-
+		
 	}
 
 }
 
 namespace {
-
+	
+	use \Model\Config;
+	
 	function _CONF($key, $value=NULL) {
 		if (is_null($value)) {
-			return \Model\Config::get($key);
+			return Config::get($key);
 		}
 		else {
-			\Model\Config::set($key, $value);
+			Config::set($key, $value);
 		}
 	}
-
+	
 }

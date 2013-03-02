@@ -2,9 +2,6 @@
 
 namespace Model {
 
-	use \Model\Event;
-	use \Gini\Core;
-
 	class View {
 
 		protected $_vars;
@@ -39,6 +36,7 @@ namespace Model {
 		}
 			
 		private function __load_view($_path) {
+
 			if ($_path) {
 				ob_start();
 				extract($this->_vars);
@@ -62,41 +60,40 @@ namespace Model {
 			$scope = NULL;
 
 			$locale = _CONF('system.locale');
-			$_path = Core::phar_file_exists(VIEW_DIR, '@'.$locale.'/'.$path.VEXT);
-			if (!$_path) {
-				$_path=Core::phar_file_exists(VIEW_DIR, $path.VEXT);
-			}
 			
+			list($extension, $path) = explode('/', $path, 2);
+			
+			$_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, '@'.$locale.'/'.$path.'.'.$extension);
+			if (!$_path) {
+				$_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, $path.'.'.$extension);	
+			}
+
 			$output = $this->__load_view($_path);
 
-/*
+	/*
 			$event .= "view[{$path}].postrender view.postrender";			
 			$new_output = (string) Event::trigger($event, $this, $output);
 			$output = $new_output ?: (string) $output;
-*/
+	*/
 			
-			return $this->_ob_cache = $output;
+			return $this->_ob_cache = (string) $output;
 						
 		}
 		
 		function set($name, $value=NULL){
-			if(is_array($name)){
+			if (is_array($name)) {
 				array_map(array($this, __FUNCTION__), array_keys($name), array_values($name));
 				return $this;
-			} else {
+			} 
+			else {
 				$this->$name=$value;
 			}
 			
 			return $this;
 		}
+
+		static function setup() { }
 				
-	}	
-}
-
-namespace {
-
-	function V($path, $vars=NULL) {
-		return new \Model\View($path, $vars);
 	}
 
 }

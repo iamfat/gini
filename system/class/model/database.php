@@ -45,7 +45,7 @@ namespace Model\Database {
 			$this->_driver = $driver;
 			$this->_result = $result;
 		}
-		
+
 		function rows($mode='object') {
 			$rows = array();
 			while ($row = $this->row($mode)) {
@@ -98,7 +98,7 @@ namespace Model {
 		static function & db($name=NULL) {
 		
 			$name = $name ?:_CONF('database.default');
-		
+
 			if(!isset(self::$DB[$name])){
 				$url = _CONF('database.'.$name.'.url');
 				if (!$url) {
@@ -128,13 +128,14 @@ namespace Model {
 		function __construct($url=NULL){
 			$this->_url = $url;
 			$url = parse_url($url);
-	
-			$this->_info['driver'] = $url['scheme'] ?: 'mysql';	
+
+			$this->_info['driver'] = $url['scheme'] ?: 'sqlite3';	
 			$this->_info['host']= urldecode($url['host']);
 			$this->_info['port'] = (int)$url['port'];
 			$this->_info['db'] = substr(urldecode($url['path']), 1);
 			$this->_info['user'] = urldecode($url['user']);
 			$this->_info['password']  = isset($url['pass']) ? urldecode($url['pass']) : NULL;
+			$this->_info['path'] = $url['path'];
 			
 			$this->connect();
 		}

@@ -90,6 +90,10 @@ PHP;
 		function __index($argv) {
 			$this->help($argv);
 		}
+
+		function do_ls($argv) {
+			
+		}
 	}
 
 }

@@ -1,5 +1,8 @@
 <?php
 
-namespace Model\Test;
+namespace Model\Test {
 
-class Unit extends \Model\Test { }
+	class Unit extends \Model\Test { }
+	
+}
+

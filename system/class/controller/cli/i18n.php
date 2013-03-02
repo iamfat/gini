@@ -2,9 +2,6 @@
 
 namespace Controller\CLI {
 	
-	use \Model\File;
-	use \Gini\Core;
-
 	class I18N extends \Controller\CLI {
 
 		static function do_scan($argv) {
@@ -14,7 +11,7 @@ namespace Controller\CLI {
 			}
 
 			echo "I18N_PATH=".I18N_PATH."\n";
-			$info = Core::fetch_info($argv[1]);
+			$info = \Gini\Core::fetch_info($argv[1]);
 			if (!isset($info->shortname)) {
 				echo "\033[1;34mgini i18n scan\033[0m: Invalid app path!\n";
 				exit;
@@ -29,7 +26,7 @@ namespace Controller\CLI {
 			$l10n_path = $path . '/l10n';
 			$l10n_template = $l10n_path.'/template.pot';
 
-			File::check_path($l10n_template);
+			\Model\File::check_path($l10n_template);
 			if (file_exists($l10n_template)) unlink($l10n_template);
 
 			$keywords = '--keyword=__:1 --keyword=_D:2 --keyword=_e:1 --keyword=_eD:2 --keyword=_eH:1 --keyword=_HD:1 --keyword=_eHD:1';
@@ -78,11 +75,11 @@ namespace Controller\CLI {
 
 			array_shift($argv);
 			foreach($argv as $locale) {
-				$paths = Core::file_paths('l10n/'.$locale.'.po');
+				$paths = \Gini\Core::file_paths('l10n/'.$locale.'.po');
 				$files = array();
 				foreach($paths as $path) {
 					$dir = dirname(dirname($path));
-					$domain = Core::shortname($dir);
+					$domain = \Gini\Core::shortname($dir);
 					echo "$domain => $path\n";
 					$files[$domain][] = escapeshellarg($path);
 				}
@@ -90,7 +87,7 @@ namespace Controller\CLI {
 				foreach($files as $domain => $domain_files) {
 					$target = I18N_PATH.'/'.$locale.'/LC_MESSAGES/'.$domain.'.mo';
 					echo $target."\n";
-					File::check_path($target);
+					\Model\File::check_path($target);
 					$cmd = sprintf('msgfmt -o %s %s', 
 						escapeshellarg($target),
 						implode(' ', $domain_files)

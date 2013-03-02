@@ -7,7 +7,7 @@ namespace Controller\CLI {
 		private $stat;
 
 		private function run($class) {
-			
+
 			if (class_exists($class)) {
 				
 				$this->stat['count'] ++;

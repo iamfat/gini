@@ -1,6 +1,8 @@
 <?php
 
-abstract class _HTTP {
+namespace Model;
+
+class HTTP {
 	
 	private $_header=array();
 	private $_post=array();

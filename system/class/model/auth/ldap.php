@@ -2,7 +2,7 @@
 
 namespace Model\Auth;
 
-class LDAP implements \Model\Auth_Handler {
+class LDAP implements \Model\Auth\Driver {
 
 	private $ldap;
 	private $options;

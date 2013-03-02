@@ -2,11 +2,7 @@
 
 namespace Model;
 
-if (!class_exists('cURL', false)) {
-	class cURL extends _cURL {};
-}
-
-abstract class _cURL {
+class cURL {
 	
 	static function download($url, $file) {
 	  	$fh = fopen($file, 'wb'); 
@@ -22,5 +18,5 @@ abstract class _cURL {
 			fclose($fh);
 		}
 	}
-	
+
 }

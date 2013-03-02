@@ -1,16 +1,14 @@
 <?php
 
-namespace Controller {
+namespace Controller;
 
-	abstract class CGI {
+abstract class CGI {
 
-		// current controller
-		static $CURRENT;
+	// current controller
+	static $CURRENT;
 
-		function __pre_action($method, &$params) { }
-		
-		function __post_action($method, &$params) { }
-
-	}
+	function __pre_action($action, &$params) { }
+	
+	function __post_action($action, &$params) { }
 
 }

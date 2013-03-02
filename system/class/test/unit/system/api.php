@@ -1,6 +1,6 @@
 <?php
 
-namespace API {
+namespace Controller\API {
 
 	function subtract($a, $b) {
 		return $a - $b;
@@ -10,13 +10,10 @@ namespace API {
 
 namespace Test\Unit\System {
 	
-	use \Model\Config;
-	use \Gini\Core;
-	
 	class API extends \Model\Test\Unit {
 	
 		function setup() {
-	
+
 		}
 		
 		private function call($data) {

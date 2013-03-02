@@ -7,7 +7,7 @@ namespace Model\Test {
 
 namespace Model {
 
-	abstract class Test {
+	class Test {
 		
 		const ANSI_RED = "\033[31m";
 		const ANSI_GREEN = "\033[32m";
@@ -43,7 +43,7 @@ namespace Model {
 
 			$step = 1;
 
-			$this->printf("%3d. setup environment...\n", $step);
+			$this->printf("%3d. setup environment\n", $step);
 			$this->setup();
 
 			$this->_done = array();
@@ -61,7 +61,7 @@ namespace Model {
 			}
 
 
-			$this->printf("%3d. teardown environment...\n", ++$step);
+			$this->printf("%3d. teardown environment\n", ++$step);
 			$this->teardown();
 
 			$this->printf("\n");
@@ -75,7 +75,7 @@ namespace Model {
 
 			try {
 				$this->$test();
-				$status = self::ANSI_GREEN . '√' . self::ANSI_RESET;
+				$status = self::ANSI_GREEN . '√' . self::ANSI_RESET . ' done';
 				$this->_done[$name] = TRUE;
 			}
 			catch (Test\Fail_Exception $e) {
@@ -90,7 +90,7 @@ namespace Model {
 				$this->_done[$name] = FALSE;
 			}
 
-			$this->printf("%3d. run test %-25s %s\n", $step, self::ANSI_HIGHLIGHT.$name.self::ANSI_RESET, $status);
+			$this->printf("%3d. %-50s %s\n", $step, 'run test '.self::ANSI_HIGHLIGHT.$name.self::ANSI_RESET, $status);
 		}
 
 		final function printf() {
