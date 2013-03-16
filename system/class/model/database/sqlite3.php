@@ -68,7 +68,7 @@ namespace Model\Database {
 		function query($SQL) {
 			$retried = 0;
 	 
-			TRACE('[database] sqlite.query = %s', $SQL);
+			TRACE('query = %s', $SQL);
 
 			$result = @$this->_h->query($SQL);
 			if (is_object($result)) return new \Model\Database\Result($this, $result);

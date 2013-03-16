@@ -7,11 +7,12 @@ namespace Test\Unit\System {
 		function setup() {
 			_CONF('database.default', 'gini_ut');
 			_CONF('database.gini_ut.url', 'sqlite3://gini_ut.sqlite');	
-			\Model\Database::db()->drop_table('orm_test3');
 		}
 
 		function test_sync() {
 			$o1 = new \ORM\ORM_Test3();
+			$o1->db()->adjust_table($o1->name(), $o1->schema());
+
 			$o1->name = "Hello";
 			$o1->gender = 1;
 			$o1->sync();
@@ -57,8 +58,8 @@ namespace Test\Unit\System {
 			$o1->id = 1;
 			$o2 = new \ORM\ORM_Test3(array('friend'=>$o1, 'linked'=>$o1));
 			$o2->id = 2;
-			$criteria1 = $o2->criteria();
-			
+			$criteria1 = $o2->normalize_criteria($o2->criteria());
+
 			$expect_criteria1 = array(
 				'friend_id' => $o1->id,
 				'linked_name' => 'orm_test3',
@@ -136,6 +137,7 @@ namespace Test\Unit\System {
 
 		function teardown() {
 			\Model\Database::db()->drop_table('orm_test3');
+			unlink('gini_ut.sqlite');
 		}
 
 	}

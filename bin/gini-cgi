@@ -10,6 +10,7 @@ class Application {
 		\Model\Event::setup();
 		\Model\I18N::setup();
 		\Model\Logger::setup();
+		// \Model\Cookie::setup();
 		\Model\Session::setup();
 		\Model\CGI::setup();
 
@@ -29,6 +30,8 @@ class Application {
 			!method_exists($class, 'shutdown') or call_user_func($class.'::shutdown');
 		}
 		\Model\CGI::shutdown();
+		\Model\Session::shutdown();
+		// \Model\Cookie::shutdown();
 	}
 
 	static function exception($e) {

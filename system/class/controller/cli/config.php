@@ -4,7 +4,7 @@ namespace Controller\CLI {
 	
 	class Config extends \Controller\CLI {
 
-		static function do_print($argv) {
+		static function action_print($argv) {
 			// echo serialize(\Model\Config::export())."\n";
 			$config = \Model\Config::export();
 			
@@ -42,7 +42,7 @@ namespace Controller\CLI {
 		}
 	
 		private static function load($path, $category=NULL){
-			$base = $path.'/'.CONFIG_DIR;
+			$base = $path.'/'.RAW_DIR.'/config';
 			if ($category) {
 				$ffile = $base.'/'.$category.EXT;
 				if (is_file($ffile)) {
@@ -62,7 +62,7 @@ namespace Controller\CLI {
 		}
 		
 
-		static function do_update($argv) {
+		static function action_update($argv) {
 
 			printf("    %-40s", "Updating config cache...");
 

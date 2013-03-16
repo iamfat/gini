@@ -7,6 +7,6 @@ $config['session_lifetime'] = 0;	//浏览器关闭
 $config['session_path'] = '/';
 $config['session_domain'] = NULL;
 $config['tmp_dir'] = sys_get_temp_dir().'/gini/';
-$config['session_name'] = 'gsession';
+// $config['session_name'] = 'gini-session';
 
 // $config['24hour'] = FALSE;

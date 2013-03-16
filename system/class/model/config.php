@@ -66,7 +66,7 @@ namespace Model {
 			}
 			self::$items = (array)@json_decode(file_get_contents($config_file), TRUE);
 		}
-		
+
 	}
 
 }

@@ -92,6 +92,7 @@ namespace Test\Unit\System\Database {
 		function teardown() {
 			$db = $this->db;
 			$db->empty_database();
+			unlink('gini_ut.sqlite');
 		}
 
 	}

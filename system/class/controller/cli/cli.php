@@ -10,7 +10,7 @@ namespace Controller\CLI {
 		 * @return void
 		 * @author Jia Huang
 		 **/
-		function do_new($argv) {
+		function action_new($argv) {
 
 			if ($argc < 1) {
 				die("usage: gini cli new <name>\n");

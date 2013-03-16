@@ -34,7 +34,7 @@ PHP;
 		 * @return void
 		 * @author Jia Huang
 		 **/
-		function do_new($argv) {
+		function action_new($argv) {
 
 			if ($argc < 2) {
 				die("usage: app init path/to/app\n");
@@ -75,7 +75,7 @@ PHP;
 			*/
 		}
 
-		function do_info($argv) {
+		function action_info($argv) {
 			if (count($argv) == 0) {
 				die("usage: app info path/to/app\n");
 			}
@@ -91,7 +91,7 @@ PHP;
 			$this->help($argv);
 		}
 
-		function do_ls($argv) {
+		function action_ls($argv) {
 			
 		}
 	}

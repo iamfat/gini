@@ -1,8 +1,8 @@
 <?php
 
-define('CONFIG_DIR', 'config');
 define('CLASS_DIR', 'class');
 define('VIEW_DIR', 'view');
+define('RAW_DIR', 'raw');
 define('DATA_DIR', 'data');
 define('THIRD_DIR', '3rd');
 

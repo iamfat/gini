@@ -6,7 +6,7 @@ namespace Controller\CLI {
 
 		private $stat;
 
-		private function run($class) {
+		private function _run($class) {
 
 			if (class_exists($class)) {
 				
@@ -46,7 +46,7 @@ namespace Controller\CLI {
 				if ($dh) {
 					while ($name = readdir($dh)) {
 						if ($name[0] == '.') continue;
-						$this->run($class.'\\'.basename($name, '.php'));
+						$this->_run($class.'\\'.basename($name, '.php'));
 					}
 					closedir($dh);
 				}
@@ -55,18 +55,18 @@ namespace Controller\CLI {
 
 		}
 
-		function help($argv) {
+		function help(&$argv) {
 			exit("Usage: \033[1;34mgini test\033[0m [unit/integration/performance/fixtures]/path/to/test\n");			
 		}
 
-		function __index($argv) {
+		function __index(&$argv) {
 			if (count($argv) < 1) {
 				return $this->help($argv);
 			}
 
 			foreach($argv as $arg) {
 				$class = 'test\\'.str_replace('/', '\\', strtolower($arg));
-				$this->run($class);
+				$this->_run($class);
 			}			
 
 			if ($this->stat['count'] > 0) {

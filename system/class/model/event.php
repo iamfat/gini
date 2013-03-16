@@ -97,7 +97,7 @@ final class Event {
 	
 	protected function _bind($return, $weight=0, $key=NULL){
 
-		TRACE('[event] bind("%s", %s, %d, %s)', $this->name, json_encode($return), $weight, $key?:'NULL');
+		TRACE('bind("%s", %s, %d, %s)', $this->name, json_encode($return), $weight, $key?:'NULL');
 
 		$event = array('weight'=>$weight, 'return'=>$return);
 		

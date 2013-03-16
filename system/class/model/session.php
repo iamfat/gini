@@ -15,15 +15,15 @@ namespace Model {
 
 	class Session {
 
+		static function ignore_error($errno, $errstr) { }
+		
 		static function setup(){
 			
-			if (PHP_SAPI == 'cli') return;	
-		
 			$driver = _CONF('system.session_driver') ?: 'buildin';
 
 			if ($driver != 'buildin') {
 				
-				$class = 'Session_'.ucwords($driver);
+				$class = '\\Model\\Session\\'.ucwords($driver);
 
 				self::$driver = new $class;
 
@@ -31,23 +31,33 @@ namespace Model {
 			
 			}
 
-			$session_name = _CONF('system.session_name') ?: 'gini_session';
-			
+			$session_name = _CONF('system.session_name') ?: 'gini-session';
 			ini_set('session.name', $session_name);
-
+			
+			if (PHP_SAPI=='cli') {
+				\Model\Cookie::setup();
+			}
+			
 			session_set_cookie_params (
 				_CONF('system.session_lifetime'),
 				_CONF('system.session_path'),
 				_CONF('system.session_domain')
 			);
 			
-			if ($_POST['qsession']) {
-				session_id($_POST['qsession']);
+			if ($_POST['gini-session']) {
+				session_id($_POST['gini-session']);
 			}
 			
+			set_error_handler('\\Model\\Session::ignore_error', E_ALL ^ E_NOTICE);
 			session_start();
+			restore_error_handler();
+
+			if (PHP_SAPI=='cli') {
+				// close session immediately to avoid deadlock
+				session_write_close();
+			}
 			
-			$now = Date::time();
+			$now = time();
 			foreach((array)$_SESSION['@TIMEOUT'] as $token => $data) {
 				list($ts, $timeout) = $data;
 				if ($now - $ts > $timeout) {
@@ -63,7 +73,6 @@ namespace Model {
 		}
 		
 		static function shutdown(){ 
-			if (PHP_SAPI == 'cli') return;
 
 			foreach((array)$_SESSION['@ONETIME'] as $token => $remove) {
 				if ($remove) {
@@ -72,7 +81,34 @@ namespace Model {
 				}
 			}
 
+			if (PHP_SAPI == 'cli') {
+				
+				$tmp = (array) $_SESSION;
+				
+				set_error_handler('\\Model\\Session::ignore_error', E_ALL ^ E_NOTICE);
+				session_start();
+				restore_error_handler();
+				
+				foreach(array_keys($_SESSION) as $k) {
+					unset($_SESSION[$k]);
+				}
+				
+				foreach(array_keys($tmp) as $k) {
+					$_SESSION[$k] = $tmp[$k];
+				}
+			}
+
+			// 记录session_id
 			session_write_close(); 
+
+			if (PHP_SAPI == 'cli') {
+				if (\Model\Cookie::get(session_name()) != session_id()) {
+					TRACE("%s = %s", session_name(), session_id());
+					\Model\Cookie::set(session_name(), session_id());			
+				}
+				\Model\Cookie::shutdown();
+			}
+			
 		}
 		
 		static function close() { return TRUE; }
@@ -100,7 +136,7 @@ namespace Model {
 		
 		static function make_timeout($token, $timeout = 0) {
 			if ($timeout > 0) {
-				$_SESSION['@TIMEOUT'][$token] = array(Date::time(), (int)$timeout);
+				$_SESSION['@TIMEOUT'][$token] = array(time(), (int)$timeout);
 			}
 			else {
 				unset($_SESSION['@TIMEOUT'][$token]);
@@ -117,14 +153,28 @@ namespace Model {
 			return $token;
 		}
 
-		static function cleanup() {
-			foreach ($_SESSION as $k => &$v) {
-				if ($k[0] != '#') {
-					unset($v);
+		static function cleanup($entire=FALSE) {
+			if ($entire) {
+				session_unset();
+			}
+
+			foreach (array_keys($_SESSION) as $k) {
+				if ($entire || $k[0] != '#') {
+					unset($_SESSION[$k]);
 				}
 			}
-		}
 
+		}
+		
+		static function regenerate_id() {
+			if (PHP_SAPI == 'cli') {
+				session_id(NULL);
+			}
+			elseif (PHP_SAPI != 'cli-server') {
+				session_regenerate_id();
+			}
+		}
+		
 	}
 
 }

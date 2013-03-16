@@ -28,10 +28,6 @@ if (!isset($_SERVER['GINI_APP_PATH'])) {
 	$_SERVER['GINI_APP_PATH'] = SYS_PATH;
 }
 
-if (isset($_SERVER['GINI_DEBUG']) && $_SERVER['GINI_DEBUG']) {
-	define('DEBUG', 1);
-}
-
 $class_path = SYS_PATH . '/class';
 if (file_exists($class_path.'.phar')) {
 	require 'phar://' . $class_path . '.phar/gini/bootstrap.php';

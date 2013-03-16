@@ -71,15 +71,14 @@ namespace Model {
 
 			_CONF('runtime.controller_path', $path);
 			_CONF('runtime.controller_class', $class);
-
 			$controller = new $class;
 
-			$action = $params[0];
+			$action = strtr($params[0], '-', '_');
 			if($action && $action[0]!='_' && method_exists($controller, $action)){
 				array_shift($params);
 			} 
-			elseif ($action && $action[0]!='_' && method_exists($controller, 'do_'.$action)) {
-				$action = 'do_'.$action;
+			elseif ($action && $action[0]!='_' && method_exists($controller, 'action_'.$action)) {
+				$action = 'action_'.$action;
 				array_shift($params);
 			}
 			elseif (method_exists($controller, '__index')) {
@@ -188,7 +187,7 @@ namespace Model {
 		}
 
 		static function redirect($url='', $query=NULL) {
-		    session_write_close();
+		    // session_write_close();
 			header('Location: '. URL($url, $query), TRUE, 302);
 			exit();
 		}

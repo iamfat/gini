@@ -123,6 +123,38 @@ namespace Model {
 			return self::$_structures[$class_name];
 		}
 
+		function fetch($force = FALSE) {
+
+			if ($force || $this->_db_time == 0) {
+
+				if (is_array($this->_criteria) && count($this->_criteria) > 0) {
+
+					$db = $this->db();
+					
+					$criteria = $this->normalize_criteria($this->_criteria);
+
+					//从数据库中获取该数据
+					foreach ($criteria as $k=>$v) {
+						$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
+					}
+					
+					$SQL = 'SELECT * FROM '.$db->quote_ident($this->name()) . ' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+
+					$result = $db->query($SQL);
+					//只取第一条记录
+					if ($result) {
+						$data = $result->row('assoc');
+					}
+				
+				}
+
+				//给object赋值
+				$this->_db_data = (array) $data;
+				$this->_db_time = time();
+				$this->set_data((array) $data);
+			}
+		}
+
 		function __construct($criteria = NULL) {
 
 			// 为每个实例化出来的对象赋一个唯一id, 方便事后判断
@@ -134,41 +166,13 @@ namespace Model {
 			}
 
 			if ($criteria) {
-
-				if (is_scalar($criteria)) {
-					$criteria = array('id'=>(int)$criteria);
-				}
-
-				$criteria = $this->normalize_criteria($criteria);
-				$this->_criteria = $criteria;
-				
-				$db = $this->db();
-				//从数据库中获取该数据
-				foreach ($criteria as $k=>$v) {
-					$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
-				}
-				
-				$name = $this->name();
-
-				// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
-				$SQL = 'SELECT *  FROM '.$db->quote_ident($name) . ' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
-				
-				$result = $db->query($SQL);
-				//只取第一条记录
-				if ($result) {
-					$data = $result->row('assoc');
-				}
-					
+				$this->criteria($criteria);
 			}
 
-			//给object赋值
-			$this->_db_data = (array) $data;
-			$this->_db_time = time();
-			$this->set_data((array) $data);
 		}
 
-		function db() {
-			$rc = new \ReflectionClass($this);
+		static function db() {
+			$rc = new \ReflectionClass(get_called_class());
 			$db_name = $rc->getStaticPropertyValue('_db');
 			
 			return Database::db($db_name);
@@ -193,7 +197,16 @@ namespace Model {
 			return $ncrit;
 		}
 
-		function criteria() {
+		function criteria($criteria = NULL) {
+
+			if ($criteria !== NULL) {
+				//set criteria				
+				if (is_scalar($criteria)) {
+					$criteria = array('id'=>(int)$criteria);
+				}
+				$this->_criteria = (array) $criteria;
+			}
+
 			return $this->_criteria;
 		}
 
@@ -376,24 +389,16 @@ namespace Model {
 
 			$success = $db->query($SQL);
 			if ($success) {
+				
 				if (!$id) {
 					$id = $db->insert_id();
 				}
 				
 				$db->commit();
 
-				// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
-				$SQL = 'SELECT *  FROM '.$db->quote_ident($tbl_name).' WHERE '.$db->quote_ident('id').'='.$db->quote($id).' LIMIT 1'; 
-				
-				$result = $db->query($SQL);
-				if ($result) {
-					$db_data = $result->row('assoc');
-				}
-					
-				//给object赋值
-				$this->_db_data = (array) $db_data;
-				$this->_db_time = time();
-				$this->set_data($this->_db_data);
+				$this->criteria($id);
+				$this->fetch(TRUE);
+
 			}
 			else {
 				$db->rollback();
@@ -416,6 +421,10 @@ namespace Model {
 		}
 
 		function set_data($data) {
+			
+			$this->_objects = array();
+			$this->_oinfo = array();
+
 			foreach ($this->structure() as $k => $v) {
 				if (array_key_exists('object', $v)) {
 					$oname = $v['object'];
@@ -453,12 +462,15 @@ namespace Model {
 		}
 
 		function __get($name) {
+			// 如果之前没有触发数据库查询, 在这里触发一下
+			$this->fetch();
+
 			if (isset($this->_objects[$name])) {
 				return $this->_objects[$name];
 			}
 			elseif (isset($this->_oinfo[$name])) {
 				$oi = $this->_oinfo[$name];
-				$oclass = '\\ORM\\'.$oi->name;
+				$oclass = '\\ORM\\'.ucwords($oi->name);
 				$o = new $oclass($oi->id);
 				$this->_objects[$name] = $o;
 				return $o;
@@ -467,6 +479,8 @@ namespace Model {
 				// try find it in _extra
 				return $this->_extra[$name];
 			}
+
+			return $this->$name;
 		}
 
 		function __set($name, $value) {		
@@ -478,6 +492,8 @@ namespace Model {
 				$this->$name = $value;
 			}
 			else {
+				// 奇怪 如果之前没有强制类型转换 数组赋值会不成功
+				$this->_extra = (array) $this->_extra;
 				$this->_extra[$name] = $value;
 			}
 		}
@@ -485,3 +501,16 @@ namespace Model {
 	}	
 }
 
+namespace {
+
+	function a($name, $criteria = NULL) {
+		$class_name = '\\ORM\\'.ucwords($name);
+		return new $class_name($criteria);
+	}
+
+	// alias to a()
+	function an($name, $criteria = NULL) {
+		return a($name, $criteria);
+	}
+
+}

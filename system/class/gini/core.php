@@ -270,6 +270,24 @@ namespace Gini {
 		static function shutdown() {
 			\Application::shutdown();	
 		}
+		
+		static function debug_mode() {
+			return file_exists(APP_PATH . '/.debug');
+		}
+
+		private static $_trace_regex;
+		static function is_tracable($mod) {
+			if (!isset(self::$_trace_regex)) {
+				self::$_trace_regex = file(APP_PATH . '/.debug', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+			}
+			if (count(self::$_trace_regex) == 0) return TRUE;
+			foreach (self::$_trace_regex as $regex) {
+				if (preg_match('/'.$regex.'/', $mod)) {
+					return TRUE;
+				}
+			}
+			return FALSE;
+		}
 
 	}
 
@@ -280,16 +298,38 @@ namespace {
 	$_TRACE_INDENTS = array();
 
 	function TRACE() {
+		
 		$args = func_get_args();
 		$fmt = array_shift($args);
-		if (defined('DEBUG')) {
-			if (PHP_SAPI == 'cli') {
-				global $_TRACE_INDENTS;
-				vfprintf(STDERR, str_pad(' ', end($_TRACE_INDENTS))
-									. "\033[36m!\033[0m $fmt\n", $args);
+		if (\Gini\Core::debug_mode()) {
+			
+			$trace = array_slice(debug_backtrace(), 1, 1);
+			$trace = $trace[0];
+			$mod = $trace['function'];
+			if (isset($trace['class'])) {
+				$mod = $trace['class'].$trace['type'].$mod;
 			}
-			error_log(vsprintf("\033[36m!\033[0m $fmt", $args));			
+			
+			if (\Gini\Core::is_tracable($mod)) {
+				array_unshift($args, $mod);
+				if (PHP_SAPI == 'cli') {
+					global $_TRACE_INDENTS;
+					$indent = end($_TRACE_INDENTS);
+					if ($ident > 0) {
+						$padding = str_pad(' ', $indent);
+					}
+					else {
+						$padding = '';
+					}
+					vfprintf(STDERR, "$padding\033[32m[%s]\033[0m $fmt\n", $args);
+				}
+				else {
+					error_log(vsprintf("[%s] $fmt", $args));			
+				}
+			}
+			
 		}
+		
 	}
 
 	function TRACE_INDENT_BEGIN($indent) {

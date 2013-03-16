@@ -23,9 +23,9 @@ namespace Model {
 				$params = $data['params'];
 				$id =  $data['id']?: mt_rand();
 				
-				if ($data['jsonrpc'] != '2.0') throw new \API\Exception('This is not an JSON-RPC 2.0 request!');
+				if ($data['jsonrpc'] != '2.0') throw new API\Exception('This is not an JSON-RPC 2.0 request!');
 				
-				if (!$path) throw new \API\Exception('Method must not be empty!');
+				if (!$path) throw new API\Exception('Method must not be empty!');
 			
 				$path_arr = explode('/', $path);
 				$class = '\\Controller\\API\\'.implode('\\', $path_arr);
@@ -36,7 +36,6 @@ namespace Model {
 				}
 				else {
 					$method = array_pop($path_arr);
-					$path = implode('/', $path_arr);
 					if (count($path_arr) > 0) {
 						$class = '\\Controller\\API\\' . implode('\\', $path_arr);
 					}
@@ -45,9 +44,9 @@ namespace Model {
 					}
 	
 					if ($method[0] != '_') {
-						class_exists($class);
-						if (method_exists($class, $method)) {
-							$callback = array($class, $method);
+						$o = new $class;
+						if (method_exists($o, $method)) {
+							$callback = array($o, $method);
 						}	
 						elseif (function_exists($class . '\\' . $method)) {
 							$callback = $class . '\\' . $method;
@@ -79,7 +78,7 @@ namespace Model {
 				}
 				
 			}
-			catch (\API\Exception $e) {
+			catch (API\Exception $e) {
 				TRACE($e->getMessage());
 				$response = array(
 					'jsonrpc' => '2.0', 

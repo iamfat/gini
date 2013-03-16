@@ -71,7 +71,7 @@ namespace Model\Database {
 		function query($SQL) {
 			$retried = 0;
 	 
-			TRACE("[database] mysql.query = %s", $SQL);
+			TRACE("query = %s", $SQL);
 
 			while (1) {
 				$result = @$this->_h->query($SQL);

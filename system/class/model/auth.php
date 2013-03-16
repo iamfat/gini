@@ -44,7 +44,7 @@ namespace Model {
 			// session_unset();
 			Event::trigger('auth.before_login', $username);
 			Session::cleanup();
-			session_regenerate_id();
+			Session::regenerate_id();
 			$_SESSION['auth.username'] = $username;
 			Event::trigger('auth.after_login', $username);
 			return $username;
@@ -54,7 +54,7 @@ namespace Model {
 		static function logout() {
 			$curr_username = self::username();
 			Event::trigger('auth.before_logout', $username);
-			session_unset();
+			Session::cleanup(TRUE);
 			Event::trigger('auth.after_logout', $username);
 		}
 		

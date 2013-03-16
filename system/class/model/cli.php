@@ -215,27 +215,27 @@ final class CLI {
 		}
 		else {	
 			// fork process to avoid memory leak
-			$pid = pcntl_fork();
-			if ($pid == -1) {
-				exit("\033[1;34mgini\033[0m: cannot fork process\n");
-			}
-			elseif ($pid) {
-				//parent process
-				pcntl_wait($status);
-			}
-			else {
-				self::dispatch(count($argv), $argv);
-			}
-
+			// $pid = pcntl_fork();
+			// if ($pid == -1) {
+			// 	exit("\033[1;34mgini\033[0m: cannot fork process\n");
+			// }
+			// elseif ($pid) {
+			// 	//parent process
+			// 	pcntl_wait($status);
+			// }
+			// else {
+			// 	self::dispatch(count($argv), $argv);
+			// }
+			self::dispatch(count($argv), $argv);
 		}
 	}
-
+	
 	static function exception($e) {
 		$message = $e->getMessage();
 		$file = \Model\File::relative_path($e->getFile());
 		$line = $e->getLine();
 		printf("[exception] \033[1m%s\033[0m (\033[34m%s\033[0m:$line)\n", $message, $file, $line);
-		if (defined('DEBUG')) {
+		if (\Gini\Core::debug_mode()) {
 			$trace = array_slice($e->getTrace(), 1, 3);
 			foreach ($trace as $n => $t) {
 				fprintf(STDERR, "%3d. %s%s() in %s on line %d\n", $n + 1,
@@ -290,8 +290,8 @@ final class CLI {
 		if($action && $action[0]!='_' && method_exists($controller, $action)){
 			array_shift($params);
 		} 
-		elseif ($action && $action[0]!='_' && method_exists($controller, 'do_'.$action)) {
-			$action = 'do_'.$action;
+		elseif ($action && $action[0]!='_' && method_exists($controller, 'action_'.$action)) {
+			$action = 'action_'.$action;
 			array_shift($params);
 		}
 		elseif (method_exists($controller, '__index')) {
@@ -309,12 +309,14 @@ final class CLI {
 
 	}
 
+	static function print_array($arr) {
+		print_r($arr);
+	}
+
 	static function setup() {
-		
 	}
 
 	static function shutdown() { 
-
 	}
-
+	
 }

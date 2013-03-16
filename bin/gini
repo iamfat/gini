@@ -33,6 +33,7 @@ class Application {
 			!method_exists($class, 'shutdown') or call_user_func($class.'::shutdown');
 		}
 		\Model\CLI::shutdown();
+		\Model\Session::shutdown();		
 	}
 
 	static function exception($e) {

@@ -4,7 +4,7 @@ namespace Controller\CLI {
 	
 	class I18N extends \Controller\CLI {
 
-		static function do_scan($argv) {
+		static function action_scan($argv) {
 
 			if (count($argv) < 1) {
 				exit("usage: \033[1;34mgini i18n scan\033[0m <path/to/app> [<locales>]\n");
@@ -68,7 +68,7 @@ namespace Controller\CLI {
 			
 		}
 
-		static function do_format($argv) {
+		static function action_format($argv) {
 			if (count($argv) < 1) {
 				exit("usage: \033[1;34mgini i18n format\033[0m <locales>\n");
 			}

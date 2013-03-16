@@ -4,7 +4,7 @@ namespace Controller\CLI {
 	
 	class ORM extends \Controller\CLI {
 
-		function do_update() {
+		function action_update() {
 			// enumerate orms
 
 			$paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
