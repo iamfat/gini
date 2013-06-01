@@ -1,9 +1,5 @@
 system:
-	mkdir -p build
-	gini-pack system build/system.phar
+	mkdir -p build/system
+	gini-pack system/class build/system
+	gini-pack system/view build/system
 
-install:
-	mkdir -p /usr/share/gini
-	mkdir -p /usr/share/gini-apps
-	cp -a bin /usr/share/gini
-	cp -a system /usr/share/gini
