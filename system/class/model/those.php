@@ -149,17 +149,17 @@ namespace Model\Those {
 
 			switch($op) {
 				case '^=': {
-					$field_name .' LIKE "'.$db->escape($value).'%%"';
+					$this->where[] = $field_name .' LIKE "'.$db->escape($value).'%%"';
 				}
 				break;
 
 				case '$=': {
-					$field_name .' LIKE "%%'.$db->escape($value).'"';
+					$this->where[] = $field_name .' LIKE "%%'.$db->escape($value).'"';
 				}
 				break;
 
 				case '*=': {
-					$field_name .' LIKE "%%'.$db->escape($value).'%%"';
+					$this->where[] = $field_name .' LIKE "%%'.$db->escape($value).'%%"';
 				}
 				break;
 
@@ -175,7 +175,7 @@ namespace Model\Those {
 
 							}
 
-							$obj_where[] = $db->make_ident($this->table, $field . '_id') . $op . $db->quote($value->id);
+							$obj_where[] = $db->make_ident($this->table, $field . '_id') . $op . intval($value->id);
 
 							if ($op == '!=') {
 								$this->where[] = $this->pack_where($obj_where, 'OR');
@@ -195,26 +195,45 @@ namespace Model\Those {
 
 		}
 
+		function order_by($field, $mode) {
+			$db = $this->db;
+			$mode = strtolower($mode);
+			switch ($mode) {
+			case 'desc':
+			case 'd':
+				$this->order_by[] =$db->make_ident($this->table, $field) . ' DESC';
+				break;
+			case 'asc':
+			case 'a':
+				$this->order_by[] = $db->make_ident($this->table, $field) . ' ASC';
+				break;
+			}
+		}
+
 		function finish() {
 
 			$db = $this->db;
 			$table = $this->table;
 
-			$SQL = $db->make_ident($this->name).' AS '.$db->quote_ident($this->table);
+			$from_SQL = 'FROM ' . $db->make_ident($this->name).' AS '.$db->quote_ident($this->table);
 
 			if ($this->where) {
-				$SQL .= ' WHERE ' . implode(' ', $this->where);
+				$from_SQL .= ' WHERE ' . implode(' ', $this->where);
+			}
+
+			$this->from_SQL = $from_SQL;
+
+			if ($this->order_by) {
+				$order_SQL = 'ORDER BY ' . implode(', ', $this->order_by);
 			}
 
 			if ($this->limit) {
-				$SQL .= ' LIMIT ' . $this->limit;
+				$limit_SQL = 'LIMIT ' . $this->limit;
 			}
 
-			$this->from_SQL = $SQL;
-
 			$id_col = $db->make_ident($table, 'id');
-			$this->SQL = 'SELECT DISTINCT '.$id_col.' FROM '.$SQL;
-			$this->count_SQL = "SELECT COUNT(DISTINCT $id_col) AS `count` FROM $count_SQL";
+			$this->SQL = "SELECT DISTINCT $id_col $from_SQL $order_SQL $limit_SQL";
+			$this->count_SQL = "SELECT COUNT(DISTINCT $id_col) AS `count` $from_SQL";
 
 		}
 
@@ -237,25 +256,35 @@ namespace Model {
 			$this->node = new Those\Node($name, $this->db);
 		}
 
-		private $_is_fetched = FALSE;
+		function __clone() {
+			parent::__clone();
+			$this->node = clone $this->node;
+		}
+
 		protected function fetch($scope='fetch') {
-			if (!$this->_is_fetched) {
+			if (!$this->SQL) {
 				$this->node->finish();
 				$this->SQL = $this->node->SQL;
 				$this->count_SQL = $this->node->count_SQL;
-				$this->_is_fetched = TRUE;
 			}
 			return parent::fetch($scope);			
 		}
 
 		function limit($start, $per_page = NULL) {
+
+			$those = clone $this;
+			$those->set_fetch_flag('*', FALSE);
+			$those->SQL = NULL;
+			$those->count_SQL = NULL;
+
 			if ($per_page > 0) {
-				$this->node->limit = sprintf("%d, %d", $start, $per_page);
+				$those->node->limit = sprintf("%d, %d", $start, $per_page);
 			}
 			else {
-				$this->node->limit = sprintf("%d", $start);
+				$those->node->limit = sprintf("%d", $start);
 			}
-			return $this;
+
+			return $those;
 		}
 
 		function and_whose($field) {
@@ -365,6 +394,11 @@ namespace Model {
 
 		function is_between($a, $b) {
 			$this->node->between($a, $b);
+			return $this;
+		}
+
+		function sort_by($field, $mode='asc') {
+			$this->node->order_by($field, $mode);
 			return $this;
 		}
 	}

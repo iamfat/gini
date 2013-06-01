@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-require '.bootstrap.php';
+require __DIR__ . '/gini-bootstrap.php';
 
 class Application {
 
@@ -15,7 +15,7 @@ class Application {
 		\Model\CLI::setup();
 
 		if (APP_SHORTNAME != 'system') {
-			$class = '\\'.APP_SHORTNAME;
+			$class = '\\'.str_replace('-', '_', APP_SHORTNAME);
 			!method_exists($class, 'setup') or call_user_func($class.'::setup');
 		}
 
@@ -29,7 +29,7 @@ class Application {
 
 	static function shutdown() {
 		if (APP_SHORTNAME != 'system') {
-			$class = '\\'.APP_SHORTNAME;
+			$class = '\\'.str_replace('-', '_', APP_SHORTNAME);
 			!method_exists($class, 'shutdown') or call_user_func($class.'::shutdown');
 		}
 		\Model\CLI::shutdown();
@@ -39,7 +39,7 @@ class Application {
 	static function exception($e) {
 		\Model\CLI::exception($e);
 		if (APP_SHORTNAME != 'system') {
-			$class = '\\'.APP_SHORTNAME;
+			$class = '\\'.str_replace('-', '_', APP_SHORTNAME);
 			!method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
 		}
 	}

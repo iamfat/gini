@@ -20,7 +20,7 @@ namespace Model {
 	 		self::$domain_loaded = NULL;
 	
 			$full_locale = ($locale ?: 'en_US').'.UTF-8';
-			putenv('LC_ALL='.$full_locale);
+			putenv('LC_MESSAGES='.$full_locale);
 			setlocale(LC_MESSAGES, $full_locale);
 	 	}
 	

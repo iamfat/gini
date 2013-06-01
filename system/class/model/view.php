@@ -35,13 +35,24 @@ namespace Model {
 			return isset($this->_vars[$key]);
 		}
 			
-		private function __load_view($_path) {
+		private function __load_view($_path, $_extension) {
 
 			if ($_path) {
 				ob_start();
-				extract($this->_vars);
 
-				@include($_path);
+				switch ($_extension) {
+				case 'js':
+					echo "(function(){\n";
+					foreach ($this->_vars as $k => $v) {
+						echo "var $k=".json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).";\n";
+					}
+					@include($_path);
+					echo "\n})();";
+					break;
+				default:
+					extract($this->_vars);
+					@include($_path);
+				}
 
 				$output = ob_get_contents();
 				ob_end_clean();
@@ -63,19 +74,20 @@ namespace Model {
 			
 			list($extension, $path) = explode('/', $path, 2);
 			
-			$_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, '@'.$locale.'/'.$path.'.'.$extension);
-			if (!$_path) {
-				$_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, $path.'.'.$extension);	
+			if ($GLOBALS['gini.view_map']) {
+				$_path 
+					= $GLOBALS['gini.view_map'][$extension.'/@'.$locale.'/'.$path] 
+						?: $GLOBALS['gini.view_map'][$extension.'/'.$path];
+			}
+			else {
+				$_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, '@'.$locale.'/'.$path.'.'.$extension);
+				if (!$_path) {
+					$_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, $path.'.'.$extension);	
+				}
 			}
 
-			$output = $this->__load_view($_path);
-
-	/*
-			$event .= "view[{$path}].postrender view.postrender";			
-			$new_output = (string) Event::trigger($event, $this, $output);
-			$output = $new_output ?: (string) $output;
-	*/
-			
+			$output = $this->__load_view($_path, $extension);
+		
 			return $this->_ob_cache = (string) $output;
 						
 		}

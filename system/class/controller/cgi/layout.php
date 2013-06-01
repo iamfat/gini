@@ -13,9 +13,10 @@ namespace Controller\CGI {
 			$this->view->title = _CONF('layout.title');	
 		}
 	
-		function __post_action($action, &$params) {
-			parent::__post_action($action, $params);
-			echo $this->view;
+		function __post_action($action, &$params, $response) {
+			parent::__post_action($action, $params, $response);
+			if (NULL === $response) $response = new \Model\CGI\Response\HTML($this->view);
+			return $response;
 		}
 	
 	}

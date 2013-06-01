@@ -46,31 +46,31 @@ namespace Gini {
 			$dependencies;
 			*/
 
+			if ($path[0] != '/') {
+				// 相对路径
+				$path = $_SERVER['GINI_APP_BASE_PATH'] . '/' . $path;
+			}
+
 			$path = realpath($path);
 
-			$info_script = $path.'/.gini';
+			$info_script = $path.'/gini.json';
 			if (!file_exists($info_script)) return NULL;
 
-			extract((array)@json_decode(@file_get_contents($info_script), TRUE));
+			$info = (object)@json_decode(@file_get_contents($info_script), TRUE);
 
-			if (is_string($dependencies)) {
-				$dependencies = explode(',', $dependencies);
+			$info->dependencies = (array) $info->dependencies;		
+
+			if (!$info->shortname) {
+				$info->shortname = basename($path);
 			}
 
-			$dependencies = (array) $dependencies;		
-			foreach($dependencies as &$d) {
-				$d = trim($d);
+			if ($info->shortname != 'system') {
+				$info->dependencies['system'] = '*';
 			}
 
-			if (!$shortname) {
-				$shortname = basename($path);
-			}
+			$info->path = $path;
 
-			if ($shortname != 'system') {
-				$dependencies[] = 'system';
-			}
-
-			return (object) compact('shortname', 'path', 'name', 'description', 'version', 'dependencies');
+			return $info;
 		}
 
 		static function path_info($shortname) {
@@ -78,13 +78,28 @@ namespace Gini {
 		}
 
 		static function import($path) {
+
+			if ($path[0] != '/') {
+				// 相对路径
+				$path = $_SERVER['GINI_APP_BASE_PATH'] . '/' . $path;
+			}
+
+			$path = realpath($path);
+			if (isset(self::$PATH_TO_SHORTNAME[$path])) return;
+
+			// 先加载dependencies
 			$info = self::fetch_info($path);
+			if (!$info) return;
+						
+			foreach ((array)$info->dependencies as $app => $version) {
+				self::import($app);
+			}
 
 			$inserted = FALSE;
 			foreach ((array) self::$PATH_INFO as $b_shortname => $b_info) {
 
 				if (!$inserted && 
-					(in_array($info->shortname, $b_info->dependencies) || $b_shortname == APP_SHORTNAME)
+					(isset($b_info->dependencies[$info->shortname]) || $b_shortname == APP_SHORTNAME)
 				) {
 					$path_info[$info->shortname] = $info;
 					$inserted = TRUE;
@@ -105,6 +120,14 @@ namespace Gini {
 			//定义类后缀与类路径的对应关系
 			$class = strtolower($class);
 			$path = str_replace('\\', '/', $class);
+
+			if (isset($GLOBALS['gini.class_map'])) {
+				if (isset($GLOBALS['gini.class_map'][$path])) {
+					require_once($GLOBALS['gini.class_map'][$path]);
+				}
+				return;
+			}
+
 			$file = Core::load(CLASS_DIR, $path);
 		}
 
@@ -141,9 +164,6 @@ namespace Gini {
 			}
 			elseif (isset(self::$PATH_INFO[$scope])) {
 				$info = self::$PATH_INFO[$scope];
-				if ($info->enabled === FALSE) {
-					return FALSE;
-				}
 
 				$file_path = 'phar://'.$info->path . '/' . $phar . '.phar/' . $file;
 				if (file_exists($file_path)) return $file_path;
@@ -164,26 +184,16 @@ namespace Gini {
 			}
 			elseif (isset(self::$PATH_INFO[$scope])) {
 				$info = self::$PATH_INFO[$scope];
-				if ($info->enabled === FALSE) {
-					return FALSE;
-				}
-
 				$file_path = $info->path . '/' . $file;
 				if (file_exists($file_path)) return $file_path;
-
 			}
 
 			return NULL;
-
 		}
 
 		static function phar_file_paths($phar, $file) {
 
 			foreach ((array) self::$PATH_INFO as $info) {
-				if ($info->enabled === FALSE) {
-					continue;
-				}
-
 				$file_path = 'phar://' . $info->path . '/' . $phar . '.phar/' . $file;
 				if (file_exists($file_path)) {
 					$file_paths[] = $file_path;
@@ -201,10 +211,6 @@ namespace Gini {
 		static function file_paths($file) {
 
 			foreach ((array) self::$PATH_INFO as $info) {
-				if ($info->enabled === FALSE) {
-					continue;
-				}
-
 				$file_path = $info->path . '/' . $file;
 				if (file_exists($file_path)) {
 					$file_paths[] = $file_path;
@@ -248,10 +254,9 @@ namespace Gini {
 
 			// $_SERVER['GINI_APP_PATH'] = '/var/lib/gini-apps/hello'
 			if (isset($_SERVER['GINI_APP_PATH'])) {
-				$app_path = realpath($_SERVER['GINI_APP_PATH']);
+				$app_path = $_SERVER['GINI_APP_PATH'];
 				define('APP_PATH', $app_path);
-				$_SERVER['GINI_APP_PATH'] = APP_PATH;
-				self::import(APP_PATH);
+				self::import($app_path);
 			}
 			else {
 				define('APP_PATH', SYS_PATH);
@@ -312,6 +317,7 @@ namespace {
 			
 			if (\Gini\Core::is_tracable($mod)) {
 				array_unshift($args, $mod);
+				array_unshift($args, posix_getpid());	//pid
 				if (PHP_SAPI == 'cli') {
 					global $_TRACE_INDENTS;
 					$indent = end($_TRACE_INDENTS);
@@ -321,10 +327,10 @@ namespace {
 					else {
 						$padding = '';
 					}
-					vfprintf(STDERR, "$padding\033[32m[%s]\033[0m $fmt\n", $args);
+					vfprintf(STDERR, "$padding\x1b[32m[%d][%s]\x1b[0m $fmt\n", $args);
 				}
 				else {
-					error_log(vsprintf("[%s] $fmt", $args));			
+					error_log(vsprintf("[%d][%s] $fmt", $args));			
 				}
 			}
 			
@@ -367,6 +373,10 @@ namespace {
 
 	function V($path, $vars=NULL) {
 		return new \Model\View($path, $vars);
+	}
+
+	function import($path) {
+		return \Gini\Core::import($path);
 	}
 
 }

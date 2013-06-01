@@ -11,10 +11,6 @@ namespace Model {
 
 	abstract class ORM {
 
-		const RELA_PREFIX = '_r_';
-		const PROP_PREFIX = '_p_';
-		const JSON_SUFFIX = '_json';
-
 		private static $_injections;
 		private $_criteria;
 		private $_objects;
@@ -23,8 +19,6 @@ namespace Model {
 		
 		private $_db_data;
 		private $_db_time;	//上次数据库同步的时间
-
-		protected $_uuid;
 
 		function __call($method, $params) {
 			if ($method == __FUNCTION__) return;
@@ -66,12 +60,14 @@ namespace Model {
 		function inheritance() {
 			$inheritance = array();
 
-			$rc = new \ReflectionClass($this);
-			while ($rc) {
-				$name = strtolower($rc->getShortName());
-				$inheritance[$name] = $rc->getName();
+			$class = get_class($this);
+			$name = strtolower(join('', array_slice(explode('\\', $class), -1)));
+			$inheritance[$name] = $class;
+
+			foreach (class_parents($this) as $class) {
+				$name = strtolower(join('', array_slice(explode('\\', $class), -1)));
+				$inheritance[$name] = $class;
 				if ($name == 'object') break;
-				$rc = $rc->getParentClass();
 			}
 
 			return $inheritance;	
@@ -156,9 +152,6 @@ namespace Model {
 		}
 
 		function __construct($criteria = NULL) {
-
-			// 为每个实例化出来的对象赋一个唯一id, 方便事后判断
-			$this->_uuid = uniqid();
 
 			$structure = $this->structure();
 			foreach ($structure as $k => $v) {
@@ -297,6 +290,13 @@ namespace Model {
 					$vv = explode(',', $vv);
 					foreach ($vv as &$vvv) {
 						$vvv = trim($vvv);
+						// correct object name
+						if (array_key_exists('object', (array)$structure[$vvv])) {
+							if (!$structure[$vvv]['object']) {
+								$vv[] = $vvv.'_name';
+							}
+							$vvv = $vvv . '_id';
+						}
 					}
 
 					switch($vk) {
@@ -316,14 +316,22 @@ namespace Model {
 			return array('fields' => $fields, 'indexes' => $indexes);
 		}
 		
-		function sync() {
+		function delete() {
+			if (!$this->id) return TRUE;
+
+			$db = $this->db();
+			$tbl_name = $this->name();
+				
+			$SQL = 'DELETE FROM '.$db->quote_ident($tbl_name).' WHERE '.$db->quote_ident('id').'='.$db->quote($this->id);
+			return !!$db->query($SQL);
+		}
+
+		function save() {
 
 			$schema = (array) $this->schema();
 
 			$db = $this->db();
 
-			$db->begin_transaction();
-			
 			$success = false;
 
 			$structure = $this->structure();
@@ -371,13 +379,12 @@ namespace Model {
 			unset($db_data['id']);
 
 			if ($id > 0) {
-				$SQL.=' UPDATE ';
 
 				foreach($db_data as $k=>$v){
 					$pair[] = $db->quote_ident($k).'='.$db->quote($v);
 				}
 
-				$SQL = 'UPDATE '.$db->quote_ident($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quote_ident('id').'='.$db->quote($id);
+				if ($pair) $SQL = 'UPDATE '.$db->quote_ident($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quote_ident('id').'='.$db->quote($id);
 			}
 			else {
 
@@ -387,21 +394,22 @@ namespace Model {
 				$SQL = 'INSERT INTO '.$db->quote_ident($tbl_name).' ('.$db->quote_ident($keys).') VALUES('.$db->quote($vals).')';
 			}
 
-			$success = $db->query($SQL);
+			if ($SQL) {
+				$success = $db->query($SQL);
+			}
+			else {
+				$success = TRUE;
+			}
+
 			if ($success) {
 				
 				if (!$id) {
 					$id = $db->insert_id();
 				}
 				
-				$db->commit();
-
 				$this->criteria($id);
 				$this->fetch(TRUE);
 
-			}
-			else {
-				$db->rollback();
 			}
 
 			return $success;
@@ -484,6 +492,9 @@ namespace Model {
 		}
 
 		function __set($name, $value) {		
+			// 如果之前没有触发数据库查询, 在这里触发一下
+			$this->fetch();
+
 			$structure = $this->structure();
 			if (isset($this->_oinfo[$name])) {
 				$this->_objects[$name] = $value;

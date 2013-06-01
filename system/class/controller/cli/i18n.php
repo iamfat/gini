@@ -4,42 +4,41 @@ namespace Controller\CLI {
 	
 	class I18N extends \Controller\CLI {
 
-		static function action_scan($argv) {
+		static function action_scan(&$argv) {
 
 			if (count($argv) < 1) {
-				exit("usage: \033[1;34mgini i18n scan\033[0m <path/to/app> [<locales>]\n");
+				exit("usage: \x1b[1;34mgini i18n scan\x1b[0m <path/to/app> [<locales>]\n");
 			}
 
-			echo "I18N_PATH=".I18N_PATH."\n";
-			$info = \Gini\Core::fetch_info($argv[1]);
+			$info = \Gini\Core::fetch_info($argv[0]);
 			if (!isset($info->shortname)) {
-				echo "\033[1;34mgini i18n scan\033[0m: Invalid app path!\n";
+				echo "\x1b[1;34mgini i18n scan\x1b[0m: Invalid app path!\n";
 				exit;
 			}
 
 			$path = $info->path;
 			$domain = str_replace('/', '-', $info->shortname);
-
-			$opt = getopt('o:');
-			$i18n_path = isset($opt['o']) ? realpath($opt['o']) : I18N_PATH;
 			
-			$l10n_path = $path . '/l10n';
-			$l10n_template = $l10n_path.'/template.pot';
+			$l10n_path = $path . '/' . RAW_DIR . '/l10n';
+			$l10n_template = $l10n_path . '/template.pot';
 
 			\Model\File::check_path($l10n_template);
 			if (file_exists($l10n_template)) unlink($l10n_template);
 
-			$keywords = '--keyword=__:1 --keyword=_D:2 --keyword=_e:1 --keyword=_eD:2 --keyword=_eH:1 --keyword=_HD:1 --keyword=_eHD:1';
+			$keywords = '--keyword=T:1 --keyword=DT:2 --keyword=NT:1 --keyword=NT:2 --keyword=DNT:2 --keyword=DNT:3';
 			//$package = sprintf('--package-name=%s --package-version=%s', 
-			$cmd = sprintf('find %s -name *.ph* | xargs xgettext -LPHP %s %s -o %s', 
+			$cmd = sprintf('find %s -name *.ph* | xargs xgettext -LPHP %s --from-code=UTF-8 -i --copyright-holder=%s --foreign-user --package-name=%s --package-version=%s --msgid-bugs-address=%s -o %s', 
 					escapeshellarg($path), 
 					$keywords,
-					'--omit-header --from-code utf-8 -i',
+					$info->author ?: 'Anonymous',
+					$info->name,
+					$info->version,
+					$info->email,
 					escapeshellarg($l10n_template)
 					);
 			exec($cmd);
 
-			$locales = array_splice($argv, 2);
+			$locales = array_splice($argv, 1);
 			foreach(glob($l10n_path.'/*.po') as $fname) {
 				$locale = basename($fname, '.po');
 				$locales[] = $locale;
@@ -64,18 +63,19 @@ namespace Controller\CLI {
 			    }
 			   	exec($cmd);
 			}
+
 			//merge po file to different locale directory
 			
 		}
 
 		static function action_format($argv) {
 			if (count($argv) < 1) {
-				exit("usage: \033[1;34mgini i18n format\033[0m <locales>\n");
+				exit("usage: \x1b[1;34mgini i18n format\x1b[0m <locales>\n");
 			}
 
 			array_shift($argv);
 			foreach($argv as $locale) {
-				$paths = \Gini\Core::file_paths('l10n/'.$locale.'.po');
+				$paths = \Gini\Core::file_paths(RAW_DIR . '/l10n/'.$locale.'.po');
 				$files = array();
 				foreach($paths as $path) {
 					$dir = dirname(dirname($path));

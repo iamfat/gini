@@ -74,10 +74,7 @@ namespace Model {
 			$controller = new $class;
 
 			$action = strtr($params[0], '-', '_');
-			if($action && $action[0]!='_' && method_exists($controller, $action)){
-				array_shift($params);
-			} 
-			elseif ($action && $action[0]!='_' && method_exists($controller, 'action_'.$action)) {
+			if ($action && $action[0]!='_' && method_exists($controller, 'action_'.$action)) {
 				$action = 'action_'.$action;
 				array_shift($params);
 			}
@@ -85,17 +82,10 @@ namespace Model {
 				$action = '__index';
 			}
 			else {
-				URI::redirect('error/404');
+				self::redirect('error/404');
 			}
 
-			\Controller\CGI::$CURRENT = $controller;
-			_CONF('runtime.controller_action', $action);
-			_CONF('runtime.controller_params', $params);
-
-			$controller->__pre_action($action, $params);
-			call_user_func_array(array($controller, $action), $params);
-			$controller->__post_action($action, $params);
-			
+			$controller->action($action, $params);
 		}
 
 		static function exception($e) {
@@ -103,7 +93,7 @@ namespace Model {
 			if ($message) {
 				$file = \Model\File::relative_path($e->getFile());
 				$line = $e->getLine();
-				error_log(sprintf("\033[31m\033[4mERROR\033[0m \033[1m%s\033[0m", $message));
+				error_log(sprintf("\x1b[31m\x1b[4mERROR\x1b[0m \x1b[1m%s\x1b[0m", $message));
 				$trace = array_slice($e->getTrace(), 1, 5);
 				foreach ($trace as $n => $t) {
 					error_log(sprintf("    %d) %s%s() in %s on line %d", $n + 1,
@@ -121,19 +111,12 @@ namespace Model {
 			}		
 		}
 
-		protected static $form, $files, $get, $post;
+		protected static $form, $files, $get, $post, $json;
 		protected static $args, $route;
 
 		static function setup(){
 
 			URI::setup();
-
-			if ((function_exists("get_magic_quotes_gpc") && get_magic_quotes_gpc()) 
-				|| (ini_get('magic_quotes_sybase') && (strtolower(ini_get('magic_quotes_sybase'))!="off")) ){
-				self::stripslashes($_GET);
-				self::stripslashes($_POST);
-				self::stripslashes($_COOKIE);
-			}
 
 			self::$route = $route = ltrim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
 
@@ -145,26 +128,35 @@ namespace Model {
 			}
 
 			self::$args = $args;
-
-			self::$get = $_GET;
-			self::$post = $_POST;
-			self::$files = $_FILES;
-			self::$form = array_merge($_POST, $_GET);
-
-			unset($_GET);
-			unset($_POST);
-			unset($_FILES);
 		}
 
 		static function & form($mode = '*') {
+
+			if (!isset(self::$get)) {
+				self::$get = $_GET;
+				self::$post = $_POST;
+				self::$files = $_FILES;
+				self::$form = array_merge($_POST, $_GET);
+			}
+
 			switch($mode) {
-			case 'g':
+			case 'get':
 				return self::$get;
-			case 'p':
+			case 'post':
 				return self::$post;
 			default:
 				return self::$form;
 			}
+		}
+
+		static function & JSON() {
+			if (!isset(self::$json)) {
+				$request = file_get_contents('php://input');
+				self::$json = @json_decode(file_get_contents('php://input'), TRUE);
+				if (!isset(self::$json)) self::$json = array();
+			}
+
+			return self::$json;
 		}
 
 		static function & ajax() {
@@ -196,6 +188,12 @@ namespace Model {
 		}
 	}
 	
+}
+
+namespace Model\CGI {
+	interface Response {
+		function output();
+	}
 }
 
 namespace {

@@ -6,7 +6,7 @@ name GR\System\Controller {
 
 	class JS extends \Model\Controller {
 
-		function index(){
+		function __index(){
 			
 			$content = JS::cache_content($_GET['f']);
 

@@ -6,7 +6,7 @@ name GR\System\Controller {
 
 	class CSS extends \Model\Controller {
 		
-		function index(){
+		function __index(){
 
 			$content = \Model\CSS::cache_content($_GET['f']);
 

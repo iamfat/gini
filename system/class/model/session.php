@@ -19,9 +19,9 @@ namespace Model {
 		
 		static function setup(){
 			
-			$driver = _CONF('system.session_driver') ?: 'buildin';
+			$driver = _CONF('system.session_driver') ?: 'built_in';
 
-			if ($driver != 'buildin') {
+			if ($driver != 'built_in') {
 				
 				$class = '\\Model\\Session\\'.ucwords($driver);
 
@@ -32,16 +32,22 @@ namespace Model {
 			}
 
 			$session_name = _CONF('system.session_name') ?: 'gini-session';
-			ini_set('session.name', $session_name);
-			
+			$host_hash = hash('md4', $_SERVER['HTTP_HOST']);
+			ini_set('session.name', $session_name.'_'.$host_hash);
+
+			if (_CONF('system.session_path')) {
+				session_save_path(_CONF('system.session_path'));
+			}
+
 			if (PHP_SAPI=='cli') {
 				\Model\Cookie::setup();
 			}
 			
+			$cookie_params = (array) _CONF('system.session_cookie');
 			session_set_cookie_params (
-				_CONF('system.session_lifetime'),
-				_CONF('system.session_path'),
-				_CONF('system.session_domain')
+				$cookie_params['lifetime'],
+				$cookie_params['path'],
+				$cookie_params['domain']
 			);
 			
 			if ($_POST['gini-session']) {
@@ -56,7 +62,7 @@ namespace Model {
 				// close session immediately to avoid deadlock
 				session_write_close();
 			}
-			
+
 			$now = time();
 			foreach((array)$_SESSION['@TIMEOUT'] as $token => $data) {
 				list($ts, $timeout) = $data;

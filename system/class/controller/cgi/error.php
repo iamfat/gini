@@ -19,6 +19,11 @@ namespace Controller\CGI {
 				break;
 			}
 
+			if ($_SERVER['HTTP_X_REQUESTED_WITH']) {
+				$this->view = '';
+				return;
+			}
+
 			$this->view->title = $title;
 			$this->view->body = V('phtml/error', array('code' => $code));
 		}

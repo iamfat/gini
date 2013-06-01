@@ -93,10 +93,12 @@ namespace Model {
 				),
 			));
 
-			curl_setopt($ch, CURLOPT_POST, TRUE);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, @json_encode($post_data));
+			$post_data = @json_encode($post_data, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 
-			TRACE(">>> %s: %s", $this->_url, @json_encode($post_data));
+			curl_setopt($ch, CURLOPT_POST, TRUE);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+
+			TRACE(">>> %s: %s", $this->_url, $post_data);
 			$data = curl_exec($ch);
 			TRACE("<<< %s: %s", $this->_url, trim($data));
 			

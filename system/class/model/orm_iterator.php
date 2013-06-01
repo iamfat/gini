@@ -30,18 +30,22 @@ namespace Model {
 			$this->db = call_user_func($db_method);
 		}
 
-		function query($SQL, $count_SQL=NULL) {
-			$this->SQL = $SQL;
+		function __clone() {}
 
-			if (!$count_SQL) {
-				$count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $SQL);
-				$count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM)\s/', '$1 COUNT($2) AS `count` $3', $count_SQL);
-				$count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1.`id`)', $count_SQL);
-				$count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
-				$count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
-			}
+		function query() {
+			$db = $this->db;
+			$args = func_get_args();
+			$this->SQL = $SQL = call_user_func_array(array($db, 'rewrite'), $args);
+
+			$count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $SQL);
+			$count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM)\s/', '$1 COUNT($2) AS `count` $3', $count_SQL);
+			$count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1.`id`)', $count_SQL);
+			$count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
+			$count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
 
 			$this->count_SQL = $count_SQL;
+
+			return $this;
 		}
 
 		private $_fetch_flag;
@@ -50,7 +54,12 @@ namespace Model {
 				$this->_fetch_flag[$scope] = TRUE;
 			}
 			else {
-				unset($this->_fetch_flag[$scope]);
+				if ($scope === '*') {
+					unset($this->_fetch_flag);
+				}
+				else {
+					unset($this->_fetch_flag[$scope]);
+				}
 			}
 		}
 

@@ -62,7 +62,10 @@ namespace Model\Database {
 			elseif (is_null($s)) {
 				return 'NULL';
 			}
-			elseif (is_bool($s) || is_int($s) || is_float($s)) {
+			elseif (is_bool($s)) {
+				return $s ? 1 : 0;
+			}
+			elseif (is_int($s) || is_float($s)) {
 				return $s;
 			}
 			return '\''.$this->escape($s).'\'';

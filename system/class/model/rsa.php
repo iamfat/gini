@@ -41,6 +41,7 @@ namespace Model {
 		}
 
 		function decrypt($code, $base64=TRUE) {
+
 			if ($base64) {
 				$code = base64_decode($code);
 			}
@@ -75,10 +76,16 @@ namespace Model {
 			}
 
 			if ($this->_public_key) {
-				openssl_verify($source, $signature, $this->_public_key);
+				$verified = openssl_verify($source, $signature, $this->_public_key);
 			}
 
-			return $verified;
+			return !!$verified;
+		}
+
+		function public_key() {
+			if ($this->_private_key) {
+				return openssl_pkey_get_details($this->_private_key)['key'];
+			}
 		}
 
 	}

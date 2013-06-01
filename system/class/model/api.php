@@ -13,9 +13,7 @@ namespace Model {
 			self::$_debug = $debug;
 		}
 	
-		static function dispatch($json_str) {
-			// 首先解析body中的json格式
-			$data = @json_decode($json_str, TRUE);
+		static function dispatch(array $data) {
 	
 			try {
 			
@@ -91,7 +89,7 @@ namespace Model {
 	
 			}
 			
-			return @json_encode($response) . "\n";
+			return $response;
 		}
 	
 	}

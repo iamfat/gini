@@ -9,18 +9,19 @@ namespace Test\Unit\System {
 			_CONF('database.gini_ut.url', 'sqlite3://gini_ut.sqlite');	
 		}
 
-		function test_sync() {
+		function test_save() {
 			$o1 = new \ORM\ORM_Test3();
+			$o1->inheritance();
 			$o1->db()->adjust_table($o1->name(), $o1->schema());
 
 			$o1->name = "Hello";
 			$o1->gender = 1;
-			$o1->sync();
+			$o1->save();
 
-			$this->assert('check o1 sync', $o1->id > 0);
+			$this->assert('check o1 save', $o1->id > 0);
 
-			$o1->sync();
-			$this->assert('check o1 sync', $o1->id > 0);
+			$o1->save();
+			$this->assert('check o1 save', $o1->id > 0);
 
 		}
 
@@ -28,7 +29,7 @@ namespace Test\Unit\System {
 			$o1 = new \ORM\ORM_Test3();
 			$o1->name = "Hello";
 			$o1->extra_property = "How are you?";
-			$o1->sync();
+			$o1->save();
 
 			$this->assert('check o1->extra_property: '.$o1->extra_property, $o1->extra_property == "How are you?");
 
@@ -40,16 +41,16 @@ namespace Test\Unit\System {
 			$o1 = new \ORM\ORM_Test3(1);
 			$o2 = $o1->friend;
 
-			$this->assert('check o1->_uuid != o2->_uuid', 
-					$this->get_property($o1, '_uuid') != $this->get_property($o2, '_uuid'));
+			$this->assert('check o1 !== o2', 
+					$o1 !== $o2);
 		
 			$o3 = $o2->friend;
-			$this->assert('check o2->_uuid != o3->_uuid', 
-					$this->get_property($o2, '_uuid') != $this->get_property($o3, '_uuid'));
+			$this->assert('check o2 !== o3', 
+					$o2 !== $o3);
 
 			$o4 = $o2->friend;
-			$this->assert('check o3->_uuid == o4->_uuid', 
-					$this->get_property($o3, '_uuid') == $this->get_property($o4, '_uuid'));
+			$this->assert('check o3 === o4', 
+					$o3 == $o4);
 
 		}
 

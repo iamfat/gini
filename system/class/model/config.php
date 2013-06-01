@@ -60,11 +60,10 @@ namespace Model {
 		static function setup() {
 			self::clear();
 			$exp = 300;
-			$config_file = APP_PATH . '/.config';
-			if (!file_exists($config_file)) {
-				throw new ErrorException("Config cache not exists!");
+			$config_file = APP_PATH . '/cache/config.json';
+			if (file_exists($config_file)) {
+				self::$items = (array)@json_decode(file_get_contents($config_file), TRUE);
 			}
-			self::$items = (array)@json_decode(file_get_contents($config_file), TRUE);
 		}
 
 	}

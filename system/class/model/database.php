@@ -186,19 +186,16 @@ namespace Model {
 		function query() {
 			
 			$args = func_get_args();
-			if (func_num_args()>1) {
+			if (func_num_args() > 1) {
 				$SQL = call_user_func_array(array($this, 'rewrite'), $args);
 			}
 			else {
-				$SQL=$args[0];
+				$SQL = $args[0];
 			}
+
 			//去掉不必要的换行符
 			$SQL = preg_replace('/[\n\r\t]+/', ' ', $SQL);
 		
-			if (_CONF('debug.database')?:FALSE) { 
-				Log::add($SQL, 'database');
-			}
-				
 			self::$query_count++;
 	
 			return $this->_driver->query($SQL);
