@@ -191,15 +191,20 @@ namespace Gini {
 			return NULL;
 		}
 
-		static function phar_file_paths($phar, $file) {
+		static function phar_file_paths($base, $file) {
 
 			foreach ((array) self::$PATH_INFO as $info) {
-				$file_path = 'phar://' . $info->path . '/' . $phar . '.phar/' . $file;
+				$file_path = 'phar://' . $info->path . '/' . $base . '.phar';
+				if ($file) $file_path .= '/' . $file;
+				
 				if (file_exists($file_path)) {
 					$file_paths[] = $file_path;
+					continue;
 				}
 
-				$file_path = $info->path . '/' . $phar . '/' . $file;
+				$file_path = $info->path . '/' . $base;
+				if ($file) $file_path .= '/' . $file;
+
 				if (file_exists($file_path)) {
 					$file_paths[] = $file_path;
 				}

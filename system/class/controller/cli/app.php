@@ -112,8 +112,7 @@ namespace Controller\CLI {
 			}
 		}
 	
-		private function _load_config_dir($path, &$items){
-			$base = $path.'/'.RAW_DIR.'/config';
+		private function _load_config_dir($base, &$items){
 			if (!is_dir($base)) return;
 			
 			$dh = opendir($base);
@@ -152,17 +151,7 @@ namespace Controller\CLI {
 			}
 		}
 
-		private function _update_config_cache() {
-
-			printf("%s\n", "Updating config cache...");
-
-			$config_items = [];
-
-			$pinfo = (array)\Gini\Core::$PATH_INFO;
-			foreach ($pinfo as $p) {
-				$this->_load_config_dir($p->path, $config_items);
-			}
-
+		private function _import_app_config(&$config_items) {
 			$config_dir = APP_PATH . '/' . DATA_DIR . '/config';
 			if (is_dir($config_dir)) {
 				$dh = opendir($config_dir);
@@ -186,6 +175,20 @@ namespace Controller\CLI {
 					closedir($dh);
 				}
 			}
+		}
+
+		private function _update_config_cache() {
+
+			printf("%s\n", "Updating config cache...");
+
+			$config_items = [];
+
+			$paths = \Gini\Core::phar_file_paths(RAW_DIR, 'config');
+			foreach ($paths as $path) {
+				$this->_load_config_dir($path, $config_items);
+			}
+
+			$this->_import_app_config($config_items);
 
 			$config_file = APP_PATH . '/cache/config.json';
 			file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
@@ -195,10 +198,9 @@ namespace Controller\CLI {
 		private function _update_class_cache() {
 			printf("%s\n", "Updating class cache...");
 
-			$pinfo = (array)\Gini\Core::$PATH_INFO;
+			$paths = \Gini\Core::phar_file_paths(CLASS_DIR, '');
 			$class_map = array();
-			foreach ($pinfo as $p) {
-				$class_dir = $p->path . '/' . CLASS_DIR;
+			foreach ($paths as $class_dir) {
 				$this->_prepare_walkthrough($class_dir, '', function($file) use ($class_dir, &$class_map) {
 					if (preg_match('/^(.+)\.php$/', $file, $parts)) {
 						$class_name = trim(strtolower($parts[1]), '/');
@@ -214,10 +216,9 @@ namespace Controller\CLI {
 		private function _update_view_cache() {
 			printf("%s\n", "Updating view cache...");
 
-			$pinfo = (array)\Gini\Core::$PATH_INFO;
+			$paths = \Gini\Core::phar_file_paths(VIEW_DIR, '');
 			$view_map = array();
-			foreach ($pinfo as $p) {
-				$view_dir = $p->path . '/' . VIEW_DIR;
+			foreach ($paths as $view_dir) {
 				$this->_prepare_walkthrough($view_dir, '', function($file) use ($view_dir, &$view_map) {
 					if (preg_match('/^([^\/]+)\/(.+)\.\1$/', $file , $parts)) {
 						$view_name = $parts[1] . '/' .$parts[2];
@@ -343,6 +344,20 @@ namespace Controller\CLI {
 			$this->_merge_assets();
 			$this->_convert_less();
 			$this->_uglify_js();
+		}
+
+		function action_update_config(&$args) {
+
+			printf("%s\n", "Updating config cache...");
+
+			$config_file = APP_PATH . '/cache/config.json';
+			
+			$config_items = (array) json_decode(file_get_contents($config_file), TRUE);
+
+			$this->_import_app_config($config_items);
+
+			file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
+			echo "   \x1b[32mdone.\x1b[0m\n";
 		}
 
 		function action_server(&$args) {
