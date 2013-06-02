@@ -329,7 +329,9 @@ namespace Controller\CLI {
 					$dst_path = $assets_dir . '/' . $file;
 
 					\Model\File::check_path($dst_path);
-					if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+					if (!file_exists($dst_path) 
+						|| filesize($src_path) != filesize($dst_path) 
+						|| filemtime($src_path) > filemtime($dst_path)) {
 						printf("   copy %s\n", $file);
 						\copy($src_path, $dst_path);
 					}
@@ -365,7 +367,7 @@ namespace Controller\CLI {
 			$command 
 				= sprintf("php -S %s -c %s -t %s"
 					, $addr
-					, APP_PATH . '/cli-server.ini'
+					, APP_PATH . '/raw/cli-server.ini'
 					, APP_PATH.'/web');
 			echo $command;
 			//passthru($command);

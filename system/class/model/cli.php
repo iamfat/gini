@@ -29,7 +29,6 @@ final class CLI {
 				}
 				else {
 					$arg .= stripcslashes('\\'.$c);
-					var_dump('\\'.$c);
 				}
 
 				$esc = FALSE;
