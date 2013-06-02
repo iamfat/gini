@@ -4,10 +4,8 @@ namespace Gini;
 
 $GLOBALS['SCRIPT_START_AT'] = microtime(TRUE);
 
-define('GINI_PATH', SYS_PATH.'/class/gini');
-
-require GINI_PATH.'/def.php';
-require GINI_PATH.'/core.php';
+require __DIR__.'/def.php';
+require __DIR__.'/core.php';
 
 Core::setup();
 Core::main();

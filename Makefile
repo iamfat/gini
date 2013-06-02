@@ -4,11 +4,11 @@ all: system
 
 system:
 	mkdir -p build/system
-	deploy/bin/pack system/class build/system/class.phar
-	deploy/bin/pack system/view build/system/view.phar
+	gini-pack system/class build/system/class.phar
+	gini-pack system/view build/system/view.phar
+	cp system/gini.json build/system
 
 install:
-	mkdir -p $TARGET_DIR
-	cp -a bin $TARGET_DIR
-	cp -a data $TARGET_DIR
-	cp -a build/system $TARGET_DIR
+	mkdir -p $(TARGET_DIR)
+	cp -r bin data $(TARGET_DIR)
+	cp -r build/system $(TARGET_DIR)

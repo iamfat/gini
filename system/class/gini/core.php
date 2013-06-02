@@ -164,7 +164,6 @@ namespace Gini {
 			}
 			elseif (isset(self::$PATH_INFO[$scope])) {
 				$info = self::$PATH_INFO[$scope];
-
 				$file_path = 'phar://'.$info->path . '/' . $phar . '.phar/' . $file;
 				if (file_exists($file_path)) return $file_path;
 
@@ -241,7 +240,7 @@ namespace Gini {
 		static function setup(){
 
 			error_reporting(E_ALL & ~E_NOTICE);
-
+			
 			spl_autoload_register('\Gini\Core::autoload');
 			register_shutdown_function ('\Gini\Core::shutdown');
 			set_exception_handler('\Gini\Core::exception');
