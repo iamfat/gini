@@ -151,31 +151,31 @@ namespace Controller\CLI {
 			}
 		}
 
-		private function _import_app_config(&$config_items) {
-			$config_dir = APP_PATH . '/' . DATA_DIR . '/config';
-			if (is_dir($config_dir)) {
-				$dh = opendir($config_dir);
-				if ($dh) {
-					while (FALSE !== ($name = readdir($dh))) {
-						if ($name[0] == '.') continue;
-						if (fnmatch('*.json', $name)) {
-							$file = $config_dir . '/' . $name;
-							$category = basename($name, '.json');
-							$content = file_get_contents($file);
-							$content = preg_replace("#(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|([\s\t](//).*)#", '', $content); 
-							$items= (array)json_decode($content, TRUE);
-							if (JSON_ERROR_NONE != json_last_error()) {
-								TRACE("\x1b[31m%s\x1b[0m on \x1b[4m%s\x1b[0m.", json_last_error_msg(), $name);
-							}
-							else {
-								$config_items[$category] = array_merge((array)$config_items[$category], $items);
-							}
-						}
-					}
-					closedir($dh);
-				}
-			}
-		}
+		// private function _import_app_config(&$config_items) {
+		// 	$config_dir = APP_PATH . '/' . DATA_DIR . '/config';
+		// 	if (is_dir($config_dir)) {
+		// 		$dh = opendir($config_dir);
+		// 		if ($dh) {
+		// 			while (FALSE !== ($name = readdir($dh))) {
+		// 				if ($name[0] == '.') continue;
+		// 				if (fnmatch('*.json', $name)) {
+		// 					$file = $config_dir . '/' . $name;
+		// 					$category = basename($name, '.json');
+		// 					$content = file_get_contents($file);
+		// 					$content = preg_replace("#(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|([\s\t](//).*)#", '', $content); 
+		// 					$items= (array)json_decode($content, TRUE);
+		// 					if (JSON_ERROR_NONE != json_last_error()) {
+		// 						TRACE("\x1b[31m%s\x1b[0m on \x1b[4m%s\x1b[0m.", json_last_error_msg(), $name);
+		// 					}
+		// 					else {
+		// 						$config_items[$category] = array_merge((array)$config_items[$category], $items);
+		// 					}
+		// 				}
+		// 			}
+		// 			closedir($dh);
+		// 		}
+		// 	}
+		// }
 
 		private function _update_config_cache() {
 
@@ -187,8 +187,6 @@ namespace Controller\CLI {
 			foreach ($paths as $path) {
 				$this->_load_config_dir($path, $config_items);
 			}
-
-			$this->_import_app_config($config_items);
 
 			$config_file = APP_PATH . '/cache/config.json';
 			file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
@@ -346,20 +344,6 @@ namespace Controller\CLI {
 			$this->_merge_assets();
 			$this->_convert_less();
 			$this->_uglify_js();
-		}
-
-		function action_update_config(&$args) {
-
-			printf("%s\n", "Updating config cache...");
-
-			$config_file = APP_PATH . '/cache/config.json';
-			
-			$config_items = (array) json_decode(file_get_contents($config_file), TRUE);
-
-			$this->_import_app_config($config_items);
-
-			file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
-			echo "   \x1b[32mdone.\x1b[0m\n";
 		}
 
 		function action_server(&$args) {
