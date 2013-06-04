@@ -321,7 +321,7 @@ namespace Controller\CLI {
 
 			$pinfo = (array)\Gini\Core::$PATH_INFO;
 			foreach ($pinfo as $p) {
-				$src_dir = $p->path . '/web/assets';
+				$src_dir = $p->path . '/' . RAW_DIR . '/assets';
 				$this->_prepare_walkthrough($src_dir, '', function($file) use ($src_dir, $assets_dir) {
 					$src_path = $src_dir . '/' . $file;
 					$dst_path = $assets_dir . '/' . $file;

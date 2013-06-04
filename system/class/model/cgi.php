@@ -198,16 +198,30 @@ namespace Model\CGI {
 
 namespace {
 
-	function H($str){
+	function H(){
+		$args = func_get_args();
+		if (count($args) > 1) {
+			$str = call_user_func_array('sprintf', $args);
+		}
+		else {
+			$str = $args[0];
+		}
 		return htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8');
 	}
 
-	function eH($str) {
-		echo H($str);
+	function eH() {
+		$args = func_get_args();
+		echo call_user_func_array('H', $args);
 	}
 
-	function e($str) {
-		echo $str;
+	function e() {
+		$args = func_get_args();
+		if (count($args) > 1) {
+			call_user_func_array('printf', $args);
+		}
+		else {
+			echo $args[0];
+		}
 	}	
 
 }

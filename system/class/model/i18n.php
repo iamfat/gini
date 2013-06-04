@@ -38,11 +38,8 @@ namespace Model {
 
 namespace {
 
-	function DT() {
-		$args = func_get_args();
-		$domain = array_shift($args);
-		$fmt = array_shift($args);
-	
+	function DT($domain, $fmt, $params=NULL) {
+
 		if (!$fmt) return $fmt;
 	
 		if ($domain) {
@@ -53,14 +50,12 @@ namespace {
 			$fmt = gettext($fmt);
 		}
 	
-		return count($args) > 0 ? vsprintf($fmt, $args) : $fmt;
+		return $params ? strtr($fmt, (array)$params) : $fmt;
 	
 	}
 	
-	function T() {
-		$args = func_get_args();
-		array_unshift($args, 'system');
-		return call_user_func_array('DT', $args);
+	function T($fmt, $params=NULL) {
+		return DT('system', $fmt, $params);
 	}
 	
 	function NT($msgid1, $msgid2, $n) {

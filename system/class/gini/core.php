@@ -46,7 +46,7 @@ namespace Gini {
 			$dependencies;
 			*/
 
-			if ($path[0] != '/') {
+			if ($path[0] != '/' && $path[0] != '.') {
 				// 相对路径
 				$path = $_SERVER['GINI_APP_BASE_PATH'] . '/' . $path;
 			}
