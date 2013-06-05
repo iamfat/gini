@@ -341,6 +341,16 @@ namespace Controller\CLI {
 		}
 
 		function action_update_web(&$args) {
+			$web_dir = APP_PATH . '/web';
+			\Model\File::check_path($web_dir.'/foo');
+
+			$cgi_path = realpath(dirname($_SERVER['_']) . '/gini-cgi');
+			$index_path = $web_dir . '/index.php';
+			if (file_exists($index_path)) {
+				unlink($index_path);
+			}
+			symlink($cgi_path, $index_path);
+
 			$this->_merge_assets();
 			$this->_convert_less();
 			$this->_uglify_js();
