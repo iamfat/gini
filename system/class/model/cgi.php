@@ -209,18 +209,13 @@ namespace {
 		return htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8');
 	}
 
-	function eH() {
-		$args = func_get_args();
-		echo call_user_func_array('H', $args);
-	}
-
-	function e() {
+	function s() {
 		$args = func_get_args();
 		if (count($args) > 1) {
-			call_user_func_array('printf', $args);
+			call_user_func_array('sprintf', $args);
 		}
 		else {
-			echo $args[0];
+			return $args[0];
 		}
 	}	
 
