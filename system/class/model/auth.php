@@ -72,7 +72,8 @@ namespace Model {
 			$username = trim($username);
 			if (!$username) return '';
 			if (!preg_match('/\|[\w.-]+/', $username)) {
-				$default_backend = $default_backend ?: _CONF('auth.default_backend');
+				$default_backend 
+					= $default_backend ?: _CONF('auth.default_backend');
 				$username .= '|'.$default_backend;
 			}
 			return $username;
@@ -115,7 +116,8 @@ namespace Model {
 		function create($password) {
 			if (!$this->driver) return FALSE;
 			if (!$this->username) return FALSE;
-			if ($this->options['readonly'] && !$this->options['allow_create']) return TRUE;
+			if ($this->options['readonly'] 
+				&& !$this->options['allow_create']) return TRUE;
 			return $this->driver->add($this->username, $password);
 		}
 	
@@ -131,7 +133,8 @@ namespace Model {
 			if (!$this->driver) return FALSE;
 			if (!$this->username) return FALSE;
 			if ($this->options['readonly']) return TRUE;
-			$ret = $this->driver->change_username($this->username, $username_new);
+			$ret = $this->driver->change_username(
+						$this->username, $username_new);
 			if ($ret) {
 				$this->username = $username_new;
 			}

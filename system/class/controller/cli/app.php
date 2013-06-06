@@ -255,7 +255,8 @@ namespace Controller\CLI {
 							$css = basename($name, '.less') . '.css';
 							$src_path = $less_dir . '/' . $name;
 							$dst_path = $css_dir . '/' . $css;
-							if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+							if (!file_exists($dst_path) 
+								|| filemtime($src_path) > filemtime($dst_path)) {
 								// lessc -x raw/less/$$LESS.less -o web/assets/css/$$LESS.css ; \
 								printf("   %s => %s\n", $name, $css);
 								$command = sprintf("lessc -x %s -o %s"
@@ -292,7 +293,8 @@ namespace Controller\CLI {
 						if (fnmatch('*.js', $name)) {
 							$src_path = $js_dir . '/' . $name;
 							$dst_path = $ugly_js_dir . '/' . $name;
-							if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+							if (!file_exists($dst_path) 
+								|| filemtime($src_path) > filemtime($dst_path)) {
 								// uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
 								printf("   %s\n", $name);
 								$command = sprintf("uglifyjs %s -o %s"
@@ -398,6 +400,17 @@ namespace Controller\CLI {
 			// $db->adjust_table($this->name(), $schema);
 		}
 
+		function action_pack(&$args) {
+			//pack current app
+			$app_dir = APP_PATH;
+			$package_dir = APP_PATH . '/package';
+			if (!is_dir($package_dir))@mkdir($package_dir,0755,true);
+			passthru("gini-pack $app_dir/class $package_dir/class.phar");
+			passthru("gini-pack $app_dir/view $package_dir/view.phar");
+			
+			copy($app_dir.'/gini.json', $package_dir.'/gini.json');
+			\Model\File::copy_r($app_dir.'/data', $package_dir.'/data');
+		}
 
 	}
 

@@ -10,19 +10,19 @@ final class Event {
 	private $sorted=FALSE;
 	private $name;
 	
-	public $return_value;
-	public $next;
+	private $_return;
+	private $_pass = FALSE;
+	private $_abort = FALSE;
 	
-	private $stop_propagation;
 
 	private function _sort(){
 		
 		uasort($this->queue, function($a, $b){ 
-			if ($a['weight'] != $b['weight']) {
-				return $a['weight'] > $b['weight']; 
+			if ($a->weight != $b->weight) {
+				return $a->weight > $b->weight; 
 			}
 
-			return $a['order'] > $b['order'];
+			return $a->order > $b->order;
 		});
 
 		$this->sorted=TRUE;
@@ -32,17 +32,24 @@ final class Event {
 		$this->name = $name;
 	}
 	
+	function pass() {
+		$this->_pass = TRUE;
+	}
+	
+	function abort() {
+		$this->_abort = TRUE;
+	}
+	
 	private $triggering = FALSE;
-	protected function _trigger(){
+	private function _trigger(array $params){
 
 		if (!$this->sorted) $this->_sort();
 		
-		$args = func_get_args();
-		array_unshift($args, $this);
+		array_unshift($params, $this);
 		
-		foreach($this->queue as &$hook){
-			
-			$return = $hook['return'];
+		foreach($this->queue as $hook){
+
+			$return = $hook->return;
 			// array(object, method)
 			if (is_array($return) && count($return) == 2 && is_object($return[0]) ) {
 				$callback = $return;
@@ -52,61 +59,40 @@ final class Event {
 				$callback = substr($return, 9);
 			}
 			else {
-				$this->stop_propagation = TRUE;
-				$this->return_value = $return;
+				$this->_abort = TRUE;
+				$this->_return = $return;
 				break;
 			}
 			
-			if (is_callable($callback) && FALSE === call_user_func_array($callback, $args)) {
-				$this->stop_propagation = TRUE;
-				break;
+			$this->_pass = FALSE;
+			if (is_callable($callback)) {
+				$return = call_user_func_array($callback, $params);
 			}
 			
+			if (!$this->_pass) {
+				$this->_return = $return;
+			}
+			
+			if ($this->_abort) break;
 		}
 
 	}
 	
-	// protected function _trigger_one(){
-	// 
-	// 	$args = func_get_args();
-	// 	$key = $args[0];
-	// 	$args[0] = $this;
-	// 	
-	// 	$this->stop_propagation = TRUE;
-	// 	
-	// 	$hook = $this->queue[$key];
-	// 	if (isset($hook)) {	
-	// 		$return = $hook['return'];
-	// 		// array(object, method)
-	// 		if (is_array($return) && count($return) == 2 && is_object($return[0]) ) {
-	// 			$callback = $return;
-	// 		}
-	// 		// callback:\Namespace\Class\Method
-	// 		elseif (is_string($return) && 0 == strncmp($return, 'callback:', 9)) {
-	// 			$callback = substr($return, 9);
-	// 		}
-	// 		else {
-	// 			$this->return_value = $return;
-	// 			return;
-	// 		}
-	// 		
-	// 		call_user_func_array($callback, $args);
-	// 	}
-	// 
-	// }
-	
 	protected function _bind($return, $weight=0, $key=NULL){
 
-		TRACE('bind("%s", %s, %d, %s)', $this->name, json_encode($return), $weight, $key?:'NULL');
+		TRACE('bind("%s", %s, %d, %s)', 
+			$this->name, json_encode($return), $weight, $key?:'NULL');
 
-		$event = array('weight'=>$weight, 'return'=>$return);
+		$event = (object) ['weight'=>$weight, 'return'=>$return];
 		
 		if (!$key) {
-			if (is_array($return) && count($return) == 2 && is_object($return[0])) {
+			if (is_array($return) 
+				&& count($return) == 2 && is_object($return[0])) {
 				$class = get_class($return[0]);
 				$key = 'dynamic:'.$class .'.'.$return[1];
 			}
-			elseif (is_string($return) && 0 == strncmp($return, 'callback:', 9)) {
+			elseif (is_string($return) 
+				&& 0 == strncmp($return, 'callback:', 9)) {
 				$key = $return;
 			}
 			else {
@@ -116,9 +102,10 @@ final class Event {
 
 		$key = strtolower($key);		
 		if (!isset($this->queue[$key])) {
-			$event['order'] = count($this->queue);
+			$event->order = count($this->queue);
 		}
-		$this->queue[$key] =  &$event;
+		
+		$this->queue[$key] = $event;
 		
 	}
 	
@@ -134,44 +121,34 @@ final class Event {
 		return is_array($selector) ? $selector : explode(' ', $selector);
 	}
 	
-	static function bind($selector, $callback, $weight=0, $key=NULL) {
-		foreach (self::extract_names($selector) as $name) {
-			self::factory($name)->_bind($callback, $weight, $key);
+	static function bind($events, $callback, $weight=0, $key=NULL) {
+		foreach (self::extract_names($events) as $name) {
+			self::factory($name)
+				->_bind($callback, $weight, $key);
 		}
 	}
 	
-	protected static function & call_wrapper($selector, $method, &$params) {
-		$retval = NULL;
-		foreach (self::extract_names($selector) as $name) {
+	static function trigger() {
+		$return = NULL;
+		$params = func_get_args();
+		$events = array_shift($params);
+		foreach (self::extract_names($events) as $name) {
 			$e = self::factory($name, FALSE);
 			if ($e) {
-				$e->stop_propagation = FALSE;
-				$e->return_value = $retval;
-				call_user_func_array(array($e, $method), $params);
-				$retval = $e->return_value;
-				if ($e->stop_propagation) {
-					if ($retval === NULL) {
-						$retval = FALSE;
-					}
+				$e->_abort = FALSE;
+				$e->_return = $return;
+				$e->_trigger($params);
+				$return = $e->_return;
+				$e->_return = NULL;
+				if ($e->_return) {
 					break;
 				}
 			}
 		}
-		return $retval;
+		
+		return $return;
 	}
 	
-	static function trigger() {
-		$args = func_get_args();
-		$selector = array_shift($args);
-		return static::call_wrapper($selector, '_trigger', $args);
-	}
-	
-	// static function trigger_one() {
-	// 	$args = func_get_args();
-	// 	$selector = array_shift($args);
-	// 	return static::call_wrapper($selector, '_trigger_one', $args);
-	// }
-
 	static function is_binded($name) {
 		return count(static::factory($name)->queue) > 0;
 	}
