@@ -27,4 +27,4 @@ $config['log'] = [
 	'ident' => 'gini',
 	'option' => LOG_ODELAY|LOG_PID,
 	'facility' => LOG_USER,
-]
+];
