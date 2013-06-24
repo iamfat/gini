@@ -1,5 +1,7 @@
 <?php
 
+namespace Model;
+
 /*
 	e.g.
 	
@@ -25,8 +27,7 @@ class Mail {
 	
 	function __construct($sender=NULL){
 		if(is_null($sender)){
-			$sender->email = _CONF('system.email_address');
-			$sender->name = _CONF('system.email_name') ?: $sender->email;
+			$sender = (object)_CONF('system.postmaster');
 		}
 
 		$this->from($sender->email, $sender->name);
@@ -35,9 +36,9 @@ class Mail {
 	private function make_header() {
 		$header = (array) $this->_header;
 
-		$header['User-Agent']='Gini-Q';				
+		$header['User-Agent']='Gini-Mail';				
 		$header['Date']=$this->get_date();
-		$header['X-Mailer']='Gini-Q';		
+		$header['X-Mailer']='Gini-Mail';		
 		$header['X-Priority']='3 (Normal)';
 		$header['Message-ID']=$this->get_message_id();		
 		$header['Mime-Version']='1.0';
@@ -115,7 +116,7 @@ class Mail {
 		$sender = $this->_sender;
 		$reply_to = $this->_reply_to;
 
-		Log::add("邮件:{$subject} 由{$sender}(RT:{$reply_to}) 发送到{$recipients} S:{$success}", 'mail');
+		_LOG("邮件:{$subject} 由{$sender}(RT:{$reply_to}) 发送到{$recipients} S:{$success}", 'mail');
 		$this->clear();
 		return $success;		
 	}

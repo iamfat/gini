@@ -2,8 +2,6 @@
 
 namespace Model;
 
-use \Model\Config;
-
 class LDAP {
 
 	private $ds;

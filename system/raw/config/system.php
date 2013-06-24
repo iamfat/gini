@@ -17,3 +17,14 @@ $config['tmp_dir'] = sys_get_temp_dir().'/gini/';
 // $config['24hour'] = FALSE;
 
 $config['timezone'] = 'Asia/Shanghai';
+
+$config['postmaster'] = [
+	'address' => 'support@geneegroup.com',
+	'name' => 'Genee'
+];
+
+$config['log'] = [
+	'ident' => 'gini',
+	'option' => LOG_ODELAY|LOG_PID,
+	'facility' => LOG_USER,
+]

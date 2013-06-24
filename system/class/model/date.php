@@ -2,11 +2,7 @@
 
 namespace Model;
 
-if (!class_exists('Date', false)) {
-	class Date extends _Date {};
-}
-
-abstract class _Date {
+class Date {
 
 	private static $_time;
 
