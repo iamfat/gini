@@ -154,7 +154,7 @@ namespace Model {
 		}
 		
 		static function temp_token($prefix='', $timeout = 0) {
-			$token = uniqid($prefix, TRUE);
+			$token = uniqid($prefix);
 			if ($timeout > 0) self::make_timeout($token, $timeout);
 			return $token;
 		}
