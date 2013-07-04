@@ -188,6 +188,28 @@ namespace Controller\CLI {
 				$this->_load_config_dir($path, $config_items);
 			}
 
+            //             // update orm.plurals
+            // $paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
+            // foreach($paths as $path) {
+            //     $shortname = \Gini\Core::shortname($path);
+            //     // printf("\x1b[30;1;4m%s\x1b[0m:\n", $shortname);
+            //     if (!is_dir($path)) continue;
+            // 
+            //     $dh = opendir($path);
+            //     if ($dh) {
+            //         while ($name = readdir($dh)) {
+            //             if ($name[0] == '.') continue;
+            //             if (!is_file($path . '/' . $name)) continue;
+            //             $oname = basename($name, '.php');
+            //             $class_name = '\\ORM\\'.$oname;
+            //             if (isset($class_name::$_plural)) {
+            //                 $config_items['orm']['plurals'][$class_name::$_plural] = $oname;
+            //             }
+            //         }
+            //         closedir($dh);
+            //     }
+            // }
+            // 
 			$config_file = APP_PATH . '/cache/config.json';
 			file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
 			echo "   \x1b[32mdone.\x1b[0m\n";

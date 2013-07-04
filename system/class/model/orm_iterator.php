@@ -25,6 +25,8 @@ namespace Model {
 		function name(){return $this->name;}
 
 		function __construct($name){
+            // 查询一下看看是不是复数
+            $name = _CONF('orm.plurals')[$name] ?: $name;
 			$this->name = $name;
 			$db_method = '\\ORM\\'.ucwords($name).'::db';
 			$this->db = call_user_func($db_method);
@@ -66,6 +68,14 @@ namespace Model {
 		protected function is_fetch_flagged($scope) {
 			return isset($this->_fetch_flag['*']) || isset($this->_fetch_flag[$scope]);
 		}
+
+        protected function reset_fetch() {
+            if ($this->SQL) {
+    			$this->set_fetch_flag('*', FALSE);
+    			$this->SQL = NULL;
+    			$this->count_SQL = NULL;
+            }
+        }
 
 		protected function fetch($scope='data') {
 			if ($this->is_fetch_flagged($scope)) return $this;

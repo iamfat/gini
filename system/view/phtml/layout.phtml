@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html>
-	<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<title><?= $title ? H($title) : '' ?></title>
-	<meta http-equiv="Content-Style-Type" content="text/css" />
-	<meta http-equiv="Content-Script-Type" content="text/javascript" />
-	<base href="<?= URL('/') ?>" />
-	<style>
-		body { background-color: #693; padding: 0 1em 1em; font-family: helvetica;}
-		a {text-decoration: none;}
-		h1 { text-align: center; color: #fff;}
-		h1 a { color: #fff;}
-		div.body h3 { color: #360;}
-		div.body { background-color: #fff; width: 800px; margin: 0 auto; padding: 1em 2em; border-radius:.5em;}
-		div.footer { padding-top: 1em; color: #cfc; text-align: center;}
-		.monospace {font-family: monospace;}
-	</style>
+    <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title><?= $title ? H($title) : '' ?></title>
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <base href="<?= URL('/') ?>" />
+    <style>
+        body { background-color: #693; padding: 0 1em 1em; font-family: helvetica;}
+        a {text-decoration: none;}
+        h1 { text-align: center; color: #fff;}
+        h1 a { color: #fff;}
+        div.body h3 { color: #360;}
+        div.body { background-color: #fff; width: 800px; margin: 0 auto; padding: 1em 2em; border-radius:.5em;}
+        div.footer { padding-top: 1em; color: #cfc; text-align: center;}
+        .monospace {font-family: monospace;}
+    </style>
 </head>
 <body>
-	<?= $this->body ?>
+    <?= $this->body ?>
 </body>
 </html>

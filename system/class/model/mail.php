@@ -114,9 +114,9 @@ class Mail {
 		$subject = $this->_subject;
 		$recipients =  $this->_recipients;
 		$sender = $this->_sender;
-		$reply_to = $this->_reply_to;
+        $success = $success ? 'OK' : 'ERR';
 
-		_LOG("邮件:{$subject} 由{$sender}(RT:{$reply_to}) 发送到{$recipients} S:{$success}", 'mail');
+		_LOG("[{$success}] {$sender} => {$recipients}: {$subject}", 'mail');
 		$this->clear();
 		return $success;		
 	}

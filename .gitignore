@@ -5,3 +5,5 @@
 .DS_Store
 .config
 .i18n
+system/web
+system/cache
