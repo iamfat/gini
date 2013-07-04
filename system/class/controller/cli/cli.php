@@ -2,43 +2,43 @@
 
 namespace Controller\CLI {
 
-	class CLI extends \Controller\CLI {
-		
-		/**
-		 * 初始化模块
-		 *
-		 * @return void
-		 * @author Jia Huang
-		 **/
-		function action_new($argv) {
+    class CLI extends \Controller\CLI {
+        
+        /**
+         * 初始化模块
+         *
+         * @return void
+         * @author Jia Huang
+         **/
+        function action_new($argv) {
 
-			if ($argc < 1) {
-				die("usage: gini cli new <name>\n");
-			}
+            if ($argc < 1) {
+                die("usage: gini cli new <name>\n");
+            }
 
-			$name = $argv[1];
+            $name = $argv[1];
 
-			$path = APP_PATH . '/' . CLASS_DIR . '/cli/' . $name . EXT;
-			if (file_exists($path)) {
-				die("CLI script '$name' already exists.\n");
-			}
+            $path = APP_PATH . '/' . CLASS_DIR . '/cli/' . $name . EXT;
+            if (file_exists($path)) {
+                die("CLI script '$name' already exists.\n");
+            }
 
-			\Model\File::check_path($path);
+            \Model\File::check_path($path);
 
-			$template_path = \Gini\Core::phar_file_exists(DATA_DIR, 'templates/cli'.EXT);
-			if ($template_path) {
-				$content = file_get_contents($template_path);
-				$content = strtr($content, array('%CLI_NAME%'=>ucwords($name)));
-				file_put_contents($path, $content);
+            $template_path = \Gini\Core::phar_file_exists(DATA_DIR, 'templates/cli'.EXT);
+            if ($template_path) {
+                $content = file_get_contents($template_path);
+                $content = strtr($content, array('%CLI_NAME%'=>ucwords($name)));
+                file_put_contents($path, $content);
 
-				echo "CLI script '$name' was built succeeded.\n";
-			}
-			else {
-				exit("Failed to found CLI templates!\n");
-			}
+                echo "CLI script '$name' was built succeeded.\n";
+            }
+            else {
+                exit("Failed to found CLI templates!\n");
+            }
 
-		}
+        }
 
-	}
+    }
 
 }

@@ -13,16 +13,16 @@ define('VEXT', '.phtml');
 
 if (PHP_SAPI != 'cli') {
 
-	if (extension_loaded('xcache')) {
-		define('DEFAULT_CACHE', 'xcache');
-	}
-	elseif (extension_loaded('apc')) {
-		define('DEFAULT_CACHE', 'apc');
-	}
+    if (extension_loaded('xcache')) {
+        define('DEFAULT_CACHE', 'xcache');
+    }
+    elseif (extension_loaded('apc')) {
+        define('DEFAULT_CACHE', 'apc');
+    }
 
 }
 
 if (!defined('DEFAULT_CACHE')) {
-	// means no cache...
-	define('DEFAULT_CACHE', 'none');
+    // means no cache...
+    define('DEFAULT_CACHE', 'none');
 }

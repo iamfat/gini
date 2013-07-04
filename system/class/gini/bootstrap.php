@@ -2,7 +2,7 @@
 
 namespace Gini;
 
-$GLOBALS['SCRIPT_START_AT'] = microtime(TRUE);
+$GLOBALS['SCRIPT_START_AT'] = microtime(true);
 
 require __DIR__.'/def.php';
 require __DIR__.'/core.php';
