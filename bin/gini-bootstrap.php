@@ -6,6 +6,8 @@ I18N_PATH=/var/lib/gini-apps/hello/i18n
 GN_DEBUG=0/1
 */
 
+$_SERVER += $_ENV;
+
 $sys_path = realpath(isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] : (dirname(__FILE__).'/../system'));
 $_SERVER['GINI_SYS_PATH'] = $sys_path;
 define('SYS_PATH', $sys_path);
