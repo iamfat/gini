@@ -12,7 +12,7 @@ namespace Model\CGI\Response {
 
         function output() {
             header('Content-Type: application/json');
-            if ($this->_data !== NULL) {
+            if ($this->_data !== null) {
                 file_put_contents('php://output', json_encode($this->_data)."\n");
             }
         }

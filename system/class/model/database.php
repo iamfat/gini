@@ -2,30 +2,17 @@
 
 namespace Model\Database {
 
+    class Exception extends \ErrorException {};
+    
     interface Driver {
-
-        function __construct($info);
-
-        function escape($s);
-        function quote($s);
         function quote_ident($s);
 
-        function query($SQL);
-
-        function insert_id();
-        function affected_rows();
-        function fetch_row($result, $mode);
-        function num_rows($result);
-
         function table_exists($table);
-        function table_status($table);
+            function table_status($table);
         function table_schema($name, $refresh);
 
         function adjust_table($table, $schema);
 
-        function begin_transaction();
-        function commit();
-        function rollback();
         function snapshot($filename, $tbls);
         function empty_database();
 
@@ -33,45 +20,32 @@ namespace Model\Database {
         function drop_table($table);
 
         function restore($filename, &$restore_filename, $tables);
-
     }
 
-    class Result {
+    class Statement {
 
-        private $_driver;
-        private $_result;
+        private $_pdo_st;
         
-        function __construct($driver, $result){
-            $this->_driver = $driver;
-            $this->_result = $result;
+        function __construct($pdo_st){
+            $this->_pdo_st = $pdo_st;
         }
 
-        function rows($mode='object') {
-            $rows = array();
-            while ($row = $this->row($mode)) {
-                $rows[] = $row;
-            }
-            return $rows;
+        function row($style=\PDO::FETCH_OBJ) {
+            return $this->_pdo_st->fetch($style);
         }
         
-        function row($mode='object') {
-            return $this->_driver->fetch_row($this->_result, $mode);
+        function rows($style=\PDO::FETCH_OBJ) {
+            return $this->_pdo_st->fetchAll($style);
         }
         
         function count(){
-            return $this->_driver->num_rows($this->_result);
+            return $this->_pdo_st->rowCount();
         }
 
         function value(){
-            $r = $this->row('num');
+            $r = $this->row(\PDO::FETCH_NUM);
             if (!$r) return null;
             return $r[0];
-        }
-        
-        function object(){
-            $r = $this->row('object');
-            if (!$r) return null;
-            return $r;
         }
         
     }
@@ -80,42 +54,38 @@ namespace Model\Database {
 
 namespace Model {
     
-    use \Model\Config;
-    use \Model\Log;
-    
     final class Database {
     
-        static $DB = array();
-        static $query_count = 0;
-        static $cache_hits = 0;
+        public static $DB = array();
     
         private $_driver;
-        private $_url;
-        private $_info;
-        
-        private $_name;
     
-        static function & db($name=null) {
+        static function db($name=null) {
         
-            $name = $name ?:_CONF('database.default');
-
+            $name = $name ?: 'default';
             if(!isset(self::$DB[$name])){
-                $url = _CONF('database.'.$name.'.url');
-                if (!$url) {
-                    $dbname = _CONF('database.'.$name.'.db');
-                    if (!$dbname) $dbname = _CONF('database.prefix') . $name;
-                    $url = strtr(_CONF('database.root'), array('%database' => $dbname));
+
+                $opt = _CONF('database.'.$name);
+                if (is_string($opt)) {
+                    // 是一个别名
+                    $db = self::db($opt);
                 }
-                self::$DB[$name] = new Database($url);
-                self::$DB[$name]->name($name);
+                else {
+                    if (!is_array($opt)) {
+                        throw new Database\Exception('database "' . $name . '" was not configured correctly!');
+                    }
+
+                    $db = new Database($opt['dsn'], $opt['username'], $opt['password'], $opt['options']);
+                }
+                
+                self::$DB[$name] = $db;
             }
         
             return self::$DB[$name];
         }    
         
         static function shutdown($name=null) {
-            if(!$name) $name = _CONF('database.default');
-        
+            $name = $name ?: 'default';
             if(!isset(self::$DB[$name])){
                 unset(self::$DB[$name]);
             }
@@ -125,40 +95,16 @@ namespace Model {
             self::$DB = array();
         }
         
-        function __construct($url=null){
-            $this->_url = $url;
-            $url = parse_url($url);
-
-            $this->_info['driver'] = $url['scheme'] ?: 'sqlite3';    
-            $this->_info['host']= urldecode($url['host']);
-            $this->_info['port'] = (int)$url['port'];
-            $this->_info['db'] = substr(urldecode($url['path']), 1);
-            $this->_info['user'] = urldecode($url['user']);
-            $this->_info['password']  = isset($url['pass']) ? urldecode($url['pass']) : null;
-            $this->_info['path'] = $url['path'];
-            
-            $this->connect();
+        function __construct($dsn, $username=null, $password=null, $options=null) {
+            list($driver_name,) = explode(':', $dsn, 2); 
+            $driver_class = '\\Model\\Database\\'.ucwords($driver_name);
+            $this->_driver = new $driver_class($dsn, $username, $password, $options);
+            if (!$this->_driver instanceof Database\Driver) {
+                throw new Database\Exception('unknown database driver: '.$driver_name);
+            }
         }
     
-        function info() {
-            return $this->_info;
-        }
-        
-        function connect() {
-            $driver = '\\Model\\Database\\'.$this->_info['driver'];
-            $this->_driver = new $driver($this->_info);
-        }
-        
-        function name($name = null) { return is_null($name) ? $this->_name : $this->_name = $name; }
-        
-        function url() { return $this->_url; }
-    
-        function __call($method, $params) {
-            if ($method == __FUNCTION__) return;
-            return call_user_func_array(array($this->_driver, $method), $params);
-        }
-    
-        function make_ident() {
+        function ident() {
             $args = func_get_args();
             $ident = array();
             foreach($args as $arg) {
@@ -166,70 +112,100 @@ namespace Model {
             }
             return implode('.', $ident);
         }
-            
-        function rewrite(){
-            $args=func_get_args();    
-            $SQL=array_shift($args);
-            foreach($args as $k=>&$v){
-                if (is_bool($s) && is_numeric($s)){
-                } 
-                elseif (is_string($v) && !is_numeric($v)) {
-                    $v=$this->escape($v);
-                } 
-                elseif (is_array($v)){
-                    $v=$this->quote($v);
+
+        function quote_ident($s){
+            if(is_array($s)){
+                foreach($s as &$i){
+                    $i = $this->quote_ident($i);
                 }
-            }
-            return vsprintf($SQL, $args);    
+                return implode(',', $s);
+            }           
+            return $this->_driver->quote_ident($s);
         }
-    
-        function query() {
+        
+        function quote($s) {
+            if(is_array($s)){
+                foreach($s as &$i){
+                    $i=$this->quote($i);
+                }            
+                return implode(',', $s);
+            }
+            elseif (is_null($s)) {
+                return 'NULL';
+            }
+            elseif (is_bool($s)) {
+                return $s ? 1 : 0;
+            }
+            elseif (is_int($s) || is_float($s)) {
+                return $s;
+            }
+            return $this->_driver->quote($s);
+        }
+
+        function attr(int $attr) {
+            return $this->_driver->getAttribute($attr);
+        }
             
+        function insert_id(string $name = null) {
+            return $this->_driver->lastInsertId($name);
+        }
+
+        function query() {
             $args = func_get_args();
-            if (func_num_args() > 1) {
-                $SQL = call_user_func_array(array($this, 'rewrite'), $args);
+            if (count($args) > 1) {
+                // quote all identifiers
+                if (is_array($args[1])) {
+                    $idents = [];
+                    foreach ($args[1] as $k => $v) {
+                        $idents[$k] = $this->_driver->quote_ident($v);
+                    }
+                
+                    $SQL = strtr($args[0], $idents);
+                }
+                else {
+                    $SQL = $args[0];
+                }
+ 
+                if (is_array($args[2])) {
+                    TRACE("prepare = %s", preg_replace('/\s+/', ' ', $SQL));
+                    $st = $this->_driver->prepare($SQL);
+                    if (!$st) return false;
+                
+                    TRACE("execute = %s", json_encode($args[2]));
+                    $success = $st->execute($args[2]); 
+                    if (!$success) return false;
+                    
+                    return new \Model\Database\Statement($st);
+                }
             }
             else {
                 $SQL = $args[0];
             }
 
-            //去掉不必要的换行符
-            $SQL = preg_replace('/[\n\r\t]+/', ' ', $SQL);
-        
-            self::$query_count++;
-    
-            return $this->_driver->query($SQL);
+            TRACE("query = %s", preg_replace('/\s+/', ' ', $SQL));
+            $st = $this->_driver->query($SQL);
+            if (!$st) return false;
+            return new \Model\Database\Statement($st);
         }
     
         function value() {
             $args = func_get_args();
-            $result = call_user_func_array(array($this,'query'), $args);
-            return $result ? $result->value():null;
+            $result = call_user_func_array([$this,'query'], $args);
+            return $result ? $result->value() : null;
         }
         
-        private $_trans_in_progress = false;
         function begin_transaction() {
-            $this->_driver->begin_transaction();
-            $this->_trans_in_progress = true;
-    
+            $this->_driver->beginTransaction();
             return $this;
         }
         
         function commit() {
-            if ($this->_trans_in_progress) {
-                $this->_driver->commit();
-                $this->_trans_in_progress = false;
-            }
-    
+            $this->_driver->commit();
             return $this;
         }
         
         function rollback() {
-            if ($this->_trans_in_progress) {
-                $this->_driver->rollback();
-                $this->_trans_in_progress = false;
-            }
-    
+            $this->_driver->rollBack();
             return $this;
         }
         
@@ -241,20 +217,27 @@ namespace Model {
             return $this->_driver->snapshot($filename, $tables);
         }
         
-        function create_table() {
-            $tables = func_get_args();
-            foreach($tables as $table) {
-                list($table, $engine) = explode(':', $table, 2);
-                if (!$this->table_exists($table)) {
-                    $this->_driver->create_table($table, $engine);
-                }            
-            }
+        function adjust_table($table, $schema) {
+            return $this->_driver->adjust_table($table, $schema);
+        }
+        
+        function create_table($table) {
+            return $this->_driver->create_table($table);
         }
     
-        function drop_table() {
-            $tables = func_get_args();
+        function create_tables(array $tables) {
             foreach($tables as $table) {
-                $this->_driver->drop_table($table);
+                $this->create_table($table);
+            }
+        }
+        
+        function drop_table($table) {
+            $this->_driver->drop_table($table);
+        }
+        
+        function drop_tables(array $tables) {
+            foreach($tables as $table) {
+                $this->drop_table($table);
             }
         }
     
@@ -275,6 +258,9 @@ namespace Model {
             return $this->_driver->restore($filename, $tables);
         }
         
+        function empty_database() {
+            return $this->_driver->empty_database();
+        }
     }
 
     

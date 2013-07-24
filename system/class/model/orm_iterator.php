@@ -15,6 +15,8 @@ namespace Model {
         protected $count;    //实际获得数据数
         
         protected $SQL;
+        protected $SQL_idents;
+        protected $SQL_params;
         protected $count_SQL;
 
         function total_count() {
@@ -35,13 +37,18 @@ namespace Model {
         function __clone() {}
 
         function query() {
+            
             $db = $this->db;
+            
             $args = func_get_args();
-            $this->SQL = $SQL = call_user_func_array(array($db, 'rewrite'), $args);
+
+            $this->SQL = $SQL = $args[0];
+            $this->SQL_idents = $args[1] ?: null;
+            $this->SQL_params = $args[2] ?: null;
 
             $count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $SQL);
-            $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM)\s/', '$1 COUNT($2) AS `count` $3', $count_SQL);
-            $count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1.`id`)', $count_SQL);
+            $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM)\s/', '$1 COUNT($2) AS "count" $3', $count_SQL);
+            $count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1."id")', $count_SQL);
             $count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
             $count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
 
@@ -86,12 +93,12 @@ namespace Model {
                 break;
             default:
                 if ($this->SQL) {
-                    $result = $this->db->query($this->SQL);
+                    $result = $this->db->query($this->SQL, $this->SQL_idents, $this->SQL_params);
 
                     $objects = array();
 
                     if ($result) {
-                        while ($row = $result->row('assoc')) {
+                        while ($row = $result->row(\PDO::FETCH_ASSOC)) {
                             $objects[$row['id']] = true;
                         }
                     }

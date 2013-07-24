@@ -72,7 +72,7 @@ namespace Model {
                 else {
                     $table = $this->_table;
                 }
-                return $db->make_ident($table, $field);
+                return $db->ident($table, $field);
             }
             return $db->quote($v);
         }
@@ -161,12 +161,12 @@ namespace Model {
             $values = func_get_args();
 
             $db = $this->db;
-            $field_name = $db->make_ident($this->_table, $this->_field);
+            $field_name = $db->ident($this->_table, $this->_field);
 
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'INNER JOIN '.$db->make_ident($this->name).' AS '.$db->quote_ident($this->_table) 
-                        . ' ON ' . $field_name . '=' . $db->make_ident($v->_table, 'id');
+                $this->_join[] = 'INNER JOIN '.$db->ident($this->name).' AS '.$db->quote_ident($this->_table) 
+                        . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
@@ -188,12 +188,12 @@ namespace Model {
             $values = func_get_args();
             
             $db = $this->db;
-            $field_name = $db->make_ident($this->_table, $this->_field);
+            $field_name = $db->ident($this->_table, $this->_field);
             
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'LEFT JOIN '.$db->make_ident($this->name).' AS '.$db->quote_ident($this->_table)
-                        . ' ON ' . $field_name . '=' . $db->make_ident($v->_table, 'id');
+                $this->_join[] = 'LEFT JOIN '.$db->ident($this->name).' AS '.$db->quote_ident($this->_table)
+                        . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
@@ -217,21 +217,21 @@ namespace Model {
             assert($this->_field);
 
             $db = $this->db;
-            $field_name = $db->make_ident($this->_table, $this->_field);
+            $field_name = $db->ident($this->_table, $this->_field);
 
             switch($op) {
                 case '^=': {
-                    $this->_where[] = $field_name .' LIKE "'.$db->escape($v).'%%"';
+                    $this->_where[] = $field_name .' LIKE '.$db->quote($v.'%');
                 }
                 break;
 
                 case '$=': {
-                    $this->_where[] = $field_name .' LIKE "%%'.$db->escape($v).'"';
+                    $this->_where[] = $field_name .' LIKE '.$db->quote('%'.$v);
                 }
                 break;
 
                 case '*=': {
-                    $this->_where[] = $field_name .' LIKE "%%'.$db->escape($v).'%%"';
+                    $this->_where[] = $field_name .' LIKE '.$db->quote('%'.$v.'%');
                 }
                 break;
 
@@ -243,11 +243,11 @@ namespace Model {
                         $structure = $o->structure();
                         if (array_key_exists('object', $structure[$field])) {
                             if (!$structure[$field]['object']) {
-                                $obj_where[] = $db->make_ident($this->_table, $field . '_name') . $op . $db->quote($v->name());
+                                $obj_where[] = $db->ident($this->_table, $field . '_name') . $op . $db->quote($v->name());
 
                             }
 
-                            $obj_where[] = $db->make_ident($this->_table, $field . '_id') . $op . intval($v->id);
+                            $obj_where[] = $db->ident($this->_table, $field . '_id') . $op . intval($v->id);
 
                             if ($op == '!=') {
                                 $this->_where[] = $this->pack_where($obj_where, 'OR');
@@ -309,7 +309,7 @@ namespace Model {
         function is_between($a, $b) {
             assert($this->_field);
             $db = $this->db;
-            $field_name = $db->make_ident($this->_table, $this->_field);
+            $field_name = $db->ident($this->_table, $this->_field);
             $this->_where[] = '(' . $field_name . '>=' . $this->get_value($a) . 
                              ' AND ' . $field_name . '<' . $this->get_value($b) . ')';
             return $this;
@@ -323,11 +323,11 @@ namespace Model {
             switch ($mode) {
             case 'desc':
             case 'd':
-                $this->_order_by[] = $db->make_ident($this->_table, $field) . ' DESC';
+                $this->_order_by[] = $db->ident($this->_table, $field) . ' DESC';
                 break;
             case 'asc':
             case 'a':
-                $this->_order_by[] = $db->make_ident($this->_table, $field) . ' ASC';
+                $this->_order_by[] = $db->ident($this->_table, $field) . ' ASC';
                 break;
             }
 
@@ -339,7 +339,7 @@ namespace Model {
             $db = $this->db;
             $table = $this->_table;
 
-            $from_SQL = 'FROM ' . $db->make_ident($this->name).' AS '.$db->quote_ident($this->_table);
+            $from_SQL = 'FROM ' . $db->ident($this->name).' AS '.$db->quote_ident($this->_table);
 
             if ($this->_where) {
                 $from_SQL .= ' WHERE ' . implode(' ', $this->_where);
@@ -355,9 +355,9 @@ namespace Model {
                 $limit_SQL = 'LIMIT ' . $this->_limit;
             }
 
-            $id_col = $db->make_ident($table, 'id');
+            $id_col = $db->ident($table, 'id');
             $this->SQL = "SELECT DISTINCT $id_col $from_SQL $order_SQL $limit_SQL";
-            $this->count_SQL = "SELECT COUNT(DISTINCT $id_col) AS `count` $from_SQL";
+            $this->count_SQL = 'SELECT COUNT(DISTINCT $id_col) AS "count" '.$from_SQL;
 
             return $this;
         }

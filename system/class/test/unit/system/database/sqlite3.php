@@ -22,9 +22,7 @@ namespace Test\Unit\System\Database {
         function test_create_table() {
             $db = $this->db;
 
-            $db->create_table('test1');
-            $db->create_table('test2:innodb');
-            $db->create_table('test3');
+            $db->create_tables(['test1', 'test2:innodb', 'test3']);
 
             $this->assert('table_exists(test1)', $db->table_exists('test1'));
             $this->assert('table_exists(test2)', $db->table_exists('test2'));
@@ -81,7 +79,7 @@ namespace Test\Unit\System\Database {
 
             $db = $this->db;
 
-            $db->drop_table('test1', 'test2');
+            $db->drop_tables(['test1', 'test2']);
 
             $this->assert('!table_exists(test1)', !$db->table_exists('test1'));
             $this->assert('!table_exists(test2)', !$db->table_exists('test2'));

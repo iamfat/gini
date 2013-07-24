@@ -2,123 +2,29 @@
 
 namespace Model\Database {
 
-    final class MySQL implements Driver {
+    final class MySQL extends \PDO implements Driver {
+
+        private $_options;
 
         private $_table_status = null;
         private $_table_schema = null;
-
-        private $_info;
-
-        private $_h;
-
-        function __construct($info){
-            $this->_info = $info;
-            $this->connect();
-        }
-        
-        function connect() {
-
-            $this->_h = new \mysqli(
-                $this->_info['host'], 
-                $this->_info['user'], $this->_info['password'],
-                $this->_info['db'],
-                $this->_info['port']
-            );
-
-            if ($this->_h->connect_errno) {
-                throw new \ErrorException('database connect error');
-            } 
-            else {
-                $this->_h->set_charset('utf8');
-            }
-
-        }
-        
-        function is_connected() {
-            return $this->_h ? $this->_h->connect_errno == 0 : false;
-        }
-
-        function escape($s) {
-            return $this->_h ? $this->_h->escape_string($s) : addslashes($s);
-        }
-
-        function quote_ident($s){
-            if (is_array($s)) {
-                foreach($s as &$i){
-                    $i = $this->quote_ident($i);
-                }
-                return implode(',', $s);
-            }        
-            return '`'.$this->escape($s).'`';
-        }
-        
-        function quote($s) {
-            if(is_array($s)){
-                foreach($s as &$i){
-                    $i=$this->quote($i);
-                }            
-                return implode(',', $s);
-            }
-            elseif (is_null($s)) {
-                return 'null';
-            }
-            elseif (is_bool($s)) {
-                return $s ? 1 : 0;
-            }
-            elseif (is_int($s) || is_float($s)) {
-                return $s;
-            }
-            return '\''.$this->escape($s).'\'';
-        }
-
-        function query($SQL) {
-            $retried = 0;
-     
-            TRACE("query = %s", $SQL);
-
-            while (1) {
-                $result = @$this->_h->query($SQL);
-                if (is_object($result)) return new \Model\Database\Result($this, $result);
-
-                if ($this->_h->errno != 2006) break;
-                if ($retried > 0) {
-                    trigger_error('database gone away!');
-                }
-
-                $this->connect();
-                $retried ++;
-            }
-
-            return $result;
-        }
-
-        function insert_id() {
-            return @$this->_h->insert_id;
-        }
-
-        function affected_rows() {
-            return @$this->_h->affected_rows;
-        }
 
         private function _update_table_status($table=null) {
             if ($table || !$this->_table_status) {
                 
                 if ($table && $table != '*') {
                     unset($this->_table_status[$table]);
-                    $SQL = sprintf('SHOW TABLE STATUS FROM `%s` WHERE `Name`="%s"', 
-                            $this->_h->escape_string($this->_info['db']), 
-                            $this->_h->escape_string($table)
-                            );
+                    $SQL = sprintf('SHOW TABLE STATUS FROM %s WHERE "Name"=%s', 
+                            $this->quote_ident($this->name), $this->quote($table));
                 }
                 else {
                     $this->_table_status = null;
-                    $SQL = sprintf('SHOW TABLE STATUS FROM `%s`', 
-                            $this->_h->escape_string($this->_info['db'])
-                            );
+                    $SQL = sprintf('SHOW TABLE STATUS FROM %s', 
+                            $this->quote_ident($this->name));
                 }
 
                 $rs = $this->query($SQL);
-                while ($r = $rs->row()) {
+                while ($r = $rs->fetchObject()) {
                     $this->_table_status[$r->Name] = (object) array(
                         'engine' => strtolower($r->Engine),
                         'collation' => $r->Collation,
@@ -127,7 +33,20 @@ namespace Model\Database {
             }
         }
 
-        function table_exists($table){
+        function __construct($dsn, $username=null, $password=null, $options=null) {
+            $options = (array)$options;
+            $options += [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''];
+            parent::__construct($dsn, $username, $password, $options);
+            $this->_options = $options;
+            //enable ANSI mode
+            $this->query('SET sql_mode=\'ANSI\'');
+        }
+        
+        function quote_ident($name) {
+            return '"'.addslashes($name).'"';
+        }
+        
+        function table_exists($table) {
             return isset($this->_table_status[$table]);
         }
 
@@ -151,7 +70,7 @@ namespace Model\Database {
             
             // $remove_nonexistent = _CONF('database.remove_nonexistent') ?: false;
             
-            if (!$this->table_exists($table)){
+            if (!$this->table_exists($table)) {
                 $this->create_table($table);
             }
 
@@ -230,7 +149,9 @@ namespace Model\Database {
             }
 
             if (count($field_sql)>0) {
-                $this->query('ALTER TABLE '.$this->quote_ident($table).' '.implode(', ', $field_sql));
+                $SQL = sprintf('ALTER TABLE %s %s', 
+                    $this->quote_ident($table), implode(', ', $field_sql));
+                $this->query($SQL);
                 $this->table_schema($table, true);
             }
 
@@ -240,10 +161,10 @@ namespace Model\Database {
             
             if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
 
-                $ds = $this->query(sprintf('SHOW FIELDS FROM `%s`', $this->_h->escape_string($name)));
+                $ds = $this->query(sprintf('SHOW FIELDS FROM "%s"', $name));
 
                 $fields=array();
-                if ($ds) while($dr = $ds->row('object')) {
+                if ($ds) while($dr = $ds->fetchObject()) {
 
                     $field = array('type' => $this->_normalize_type($dr->Type));
 
@@ -266,9 +187,9 @@ namespace Model\Database {
             }
             
             if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
-                $ds = $this->query(sprintf('SHOW INDEX FROM `%s`', $this->_h->escape_string($name)));
+                $ds = $this->query(sprintf('SHOW INDEX FROM %s', $this->quote_ident($name)));
                 $indexes = array();
-                if ($ds) while($row = $ds->row('object')) {
+                if ($ds) while($row = $ds->fetchObject()) {
                     $indexes[$row->Key_name]['fields'][] = $row->Column_name;
                     if (!$row->Non_unique) {
                         $indexes[$row->Key_name]['type'] = $row->Key_name == 'PRIMARY' ? 'primary' : 'unique';
@@ -331,13 +252,22 @@ namespace Model\Database {
             }
         }
         
-        function create_table($table, $engine=null) {
+        function create_table($table) {
+
+            if (isset($this->_options['engine'][$table])) {
+                $engine = $this->_options['engine'][$table];
+            }
+            elseif (isset($this->_options['engine']['*'])) {
+                $engine = $this->_options['engine']['*'];
+            }
+            else {
+                $engine = 'innodb';  //innodb as default db
+            }
              
-            $engine = $engine ?: 'innodb';    //innodb as default db
-            
-            $SQL = sprintf('CREATE TABLE IF NOT EXISTS `%s` (`%s` int NOT null) ENGINE = %s DEFAULT CHARSET = utf8', 
-                        $this->_h->escape_string($table), '_FOO', 
-                        $this->_h->escape_string($engine)
+            $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s (%s INT NOT NULL) ENGINE = %s DEFAULT CHARSET = utf8', 
+                        $this->quote_ident($table), 
+                        $this->quote_ident('_FOO'), 
+                        $this->quote($engine)
                         );
             $rs = $this->query($SQL);
             $this->_update_table_status($table);
@@ -346,20 +276,6 @@ namespace Model\Database {
         
         }
 
-        function begin_transaction() {
-            @$this->_h->autocommit(false);
-        }
-        
-        function commit() {
-            @$this->_h->commit();
-            @$this->_h->autocommit(true);
-        }
-        
-        function rollback() {
-            @$this->_h->rollback();
-            @$this->_h->autocommit(true);
-        }
-        
         function drop_table($table) {
             $this->query('DROP TABLE '.$this->quote_ident($table));
             $this->_update_table_status($table);
@@ -391,7 +307,7 @@ namespace Model\Database {
         
         function empty_database() {
             $rs = $this->query('SHOW TABLES');
-            while ($r = $rs->row('num')) {
+            while ($r = $rs->fetch(\PDO::FETCH_NUM)) {
                 $tables[] = $r[0];
             }
             $this->query('DROP TABLE '.$this->quote_ident($tables));
@@ -411,25 +327,6 @@ namespace Model\Database {
             return $ret == 0;
         }
         
-        function fetch_row($result, $mode='object') {
-            if (!is_object($result)) return array();
-
-            if ($mode == 'assoc') {
-                return $result->fetch_assoc();
-            }
-            elseif ($mode == 'num') {
-                return $result->fetch_row();
-            }
-            elseif ($mode == 'object') {
-                return $result->fetch_object();
-            }
-
-            return $result->fetch_array(MYSQL_BOTH);        
-        }
-
-        function num_rows($result) {
-            return is_object($result) ? $result->num_rows : 0;
-        }
     }
 
 }

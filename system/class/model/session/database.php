@@ -27,9 +27,9 @@ abstract class _Session_Database implements Session_Handler {
     
     function read($id) {
         $db = Database::factory($this->db_name);
-        $val = $db->value('SELECT data FROM `_session` WHERE id="%s"', $id);
+        $val = $db->value('SELECT "data" FROM "_session" WHERE "id"=?', null, [$id]);
         if ($val) {
-            $db->query('UPDATE `_session` SET mtime = %d WHERE id="%s"', Date::time(), $id);
+            $db->query('UPDATE "_session" SET "mtime"=? WHERE "id"=?', null, [time(), $id]);
         }
         return $val;
     }
@@ -37,14 +37,16 @@ abstract class _Session_Database implements Session_Handler {
     function write($id, $data){
         $now = Date::time();
         $db = Database::factory($this->db_name);
-        $ret= $db->query('INSERT INTO `_session` (id, data, mtime) VALUES ("%s", "%s", %d) ON DUPLICATE KEY UPDATE data="%s", mtime=%d', $id, $data, $now, $data, $now);
+        $ret= $db->query('REPLACE INTO "_session" ("id", "data", "mtime") VALUES (:id, :data, :mtime)', 
+                    null, 
+                    [':id'=>$id, ':data'=>$data, ':mtime'=>$now]);
 
         return !is_null($ret);
     }
 
     function destroy($id){
         $db = Database::factory($this->db_name);
-        return $db->query('DELETE FROM `_session` WHERE id="%s"', $id);
+        return $db->query('DELETE FROM "_session" WHERE "id"=?', null, [$id]);
     }
     
     function gc($max_life_time){
@@ -53,7 +55,7 @@ abstract class _Session_Database implements Session_Handler {
         
         $exp_time = Date::time() - $max_life_time;
         $db = Database::factory($this->db_name);
-        $ret = $db->query('DELETE FROM `_session` WHERE mtime < %d', $exp_time);
+        $ret = $db->query('DELETE FROM "_session" WHERE "mtime"<?', null, [$exp_time]);
 
         return !is_null($ret);
     }

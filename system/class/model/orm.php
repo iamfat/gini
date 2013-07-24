@@ -139,7 +139,7 @@ namespace Model {
                     $result = $db->query($SQL);
                     //只取第一条记录
                     if ($result) {
-                        $data = $result->row('assoc');
+                        $data = $result->row(\PDO::FETCH_ASSOC);
                     }
                 
                 }

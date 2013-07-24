@@ -4,9 +4,7 @@
 
 namespace Model\Database {
 
-    use \Model\Config;
-
-    final class SQLite3 implements Driver {
+    final class SQLite3 extends \PDO implements Driver {
 
         private $_table_status = null;
         private $_table_schema = null;
@@ -20,80 +18,20 @@ namespace Model\Database {
             $this->connect();
         }
         
-        function connect() {
-            $path = $this->_info['host'];
-            if ($this->_info['path']) {
-                $path .= '/' . $this->_info['path'];
-            }
-            if (!$path) {
-                $path = sys_get_temp_dir() . '/gini.sqlite3';
-            }
-            $this->_h = new \SQLite3($path, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, $this->_info['user']);
-        }
-        
-        function is_connected() {
-            return true;
-        }
-
-        function escape($s) {
-            return $this->_h ? $this->_h->escapeString($s) : addslashes($s);
-        }
-
         function quote_ident($s){
-            if (is_array($s)) {
-                foreach($s as &$i){
-                    $i = $this->quote_ident($i);
-                }
-                return implode(',', $s);
-            }        
-            return '"'.$this->escape($s).'"';
+            return '"'.addslashes($s).'"';
         }
         
-        function quote($s) {
-            if(is_array($s)){
-                foreach($s as &$i){
-                    $i=$this->quote($i);
-                }            
-                return implode(',', $s);
-            }
-            elseif (is_null($s)) {
-                return 'null';
-            }
-            elseif (is_bool($s) || is_int($s) || is_float($s)) {
-                return $s;
-            }
-            return '\''.$this->escape($s).'\'';
-        }
-
-        function query($SQL) {
-            $retried = 0;
-     
-            TRACE('query = %s', $SQL);
-
-            $result = @$this->_h->query($SQL);
-            if (is_object($result)) return new \Model\Database\Result($this, $result);
-
-            return $result;
-        }
-
-        function insert_id() {
-            return @$this->_h->lastInsertRowID();
-        }
-
-        function affected_rows() {
-            return -1;
-        }
-
         private function _update_table_status($table=null) {
             if ($table || !$this->_table_status) {
                 
                 if ($table && $table != '*') {
                     unset($this->_table_status[$table]);
-                    $SQL = sprintf("SELECT name FROM sqlite_master WHERE type='table' AND name='%s'", $this->escape($table));
+                    $SQL = sprintf('SELECT "name" FROM "sqlite_master" WHERE "type"=\'table\' AND name=%s', $this->quote($table));
                 }
                 else {
                     $this->_table_status = null;
-                    $SQL = "SELECT name FROM sqlite_master WHERE type='table'";
+                    $SQL = 'SELECT "name" FROM "sqlite_master" WHERE "type"=\'table\'';
                 }
 
                 $rs = $this->query($SQL);
@@ -173,13 +111,13 @@ namespace Model\Database {
                 }
                 $index_modified = true;
 
-                $field_sql = array();
-                $field_names = array();
-                $field_values = array();
+                $field_sql = [];
+                $field_names = [];
+                $field_values = [];
 
                 foreach ($fields as $key=>$field) {
                     $field_sql[] = $this->field_sql($key, $field);
-                    $field_names[] = $key;
+                    $field_names[] = $this->quote_ident($key);
                     if (isset($curr_fields[$key])) {
                         $field_values[] = $this->quote_ident($key);
                     }
@@ -214,8 +152,8 @@ namespace Model\Database {
                 // 2. 移动数据
                 if ($this->table_exists($table) && count($fields) > 0) {
                     $SQL = sprintf('INSERT INTO %s (%s) SELECT %s FROM %s',
-                        $this->quote_ident('_new_'.$table), $this->quote_ident($field_names),
-                        implode(',', $field_values), $this->quote_ident($table)
+                        $this->quote_ident('_new_'.$table), 
+                        implode(',', $field_names), implode(',', $field_values), $this->quote_ident($table)
                         );
                     $this->query($SQL);
 
@@ -273,11 +211,11 @@ namespace Model\Database {
             if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
 
                 $ds = $this->query(sprintf('SELECT sql FROM sqlite_master WHERE type=\'table\' AND name=%s', $this->quote($name)));
-                $table_sql = $ds->row('object')->sql;
+                $table_sql = $ds->fetchObject()->sql;
                 
                 $ds = $this->query(sprintf('PRAGMA table_info(%s)', $this->quote_ident($name)));
                 // cid, name, type, notnull, dflt_value, pk
-                while($dr = $ds->row('object')) {
+                while($dr = $ds->fetchObject()) {
 
                     $field = array('type' => $this->_normalize_type($dr->type));
 
@@ -315,14 +253,14 @@ namespace Model\Database {
             if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
                 $ds = $this->query(sprintf('PRAGMA index_list("%s")', $this->escape($name)));
 
-                if ($ds) while($row = $ds->row('object')) {
+                if ($ds) while($row = $ds->fetchObject()) {
                     list($tname,$index_name) = explode('__', $row->name, 2);
                     if ($tname != $name) continue;
                     if ($row->unique) {
                         $indexes[$index_name]['type'] = 'unique';
                     }
                     $ds2 = $this->query(sprintf('PRAGMA index_info("%s")', $this->escape($row->name)));
-                    if ($ds2) while ($row2 = $ds2->row('object')) {
+                    if ($ds2) while ($row2 = $ds2->fetchObject()) {
                         $indexes[$index_name]['fields'][] = $row2->name;
                     }
                 }
@@ -357,9 +295,7 @@ namespace Model\Database {
              
             $engine = $engine ?: 'innodb';    //innodb as default db
             
-            $SQL = sprintf('CREATE TABLE IF NOT EXISTS `%s` (`%s` int NOT null)', 
-                        $this->escape($table), '_FOO'
-                        );
+            $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s ("_FOO" int NOT null)', $this->quote_ident($table));
             $rs = $this->query($SQL);
             $this->_update_table_status($table);
             
@@ -388,43 +324,20 @@ namespace Model\Database {
         }
         
         function snapshot($filename, $tables) {
-            
-            $tables = (array)$tables;
-            foreach ($tables as &$table) {
-                $table = escapeshellarg($table);
-            }
-        
-            $table_str = implode(' ', $tables);
-        
-            $dump_command = sprintf('/usr/bin/mysqldump -h %s -u %s %s %s %s > %s', 
-                    escapeshellarg($this->_info['host']),
-                    escapeshellarg($this->_info['user']),
-                    $this->_info['password'] ? '-p'.escapeshellarg($this->_info['password']) :'',
-                    escapeshellarg($this->_info['db']),
-                    $table_str,
-                    escapeshellarg($filename)
-                    );    
-            exec($dump_command, $output=null, $ret);
-            return $ret == 0;
+            // TODO
+            // NOT IMPLEMENTED
+            return false;
         }
         
         function restore($filename, &$retore_filename, $tables) {
-            
-            $import_command = sprintf('/usr/bin/mysql -h %s -u %s %s %s < %s', 
-                    escapeshellarg($this->_info['host']),
-                    escapeshellarg($this->_info['user']),
-                    $this->_info['password'] ? '-p'.escapeshellarg($this->_info['password']) :'',
-                    escapeshellarg($this->_info['db']),
-                    escapeshellarg($filename)
-                    );    
-            exec($import_command, $output=null, $ret);
-            
-            return $ret == 0;
+            // TODO
+            // NOT IMPLEMENTED
+            return false;
         }
         
         function empty_database() {
             $rs = $this->query("SELECT name FROM sqlite_master WHERE type='table'");
-            while ($r = $rs->row('num')) {
+            while ($r = $rs->fetch(\PDO::FETCH_NUM)) {
                 if (strncmp($r[0], 'sqlite_', 7) == 0) continue;
                 $tables[] = $r[0];
             }
@@ -434,26 +347,6 @@ namespace Model\Database {
             }
         }
         
-        function fetch_row($result, $mode='object') {
-            if (!is_object($result)) return array();
-
-            if ($mode == 'assoc') {
-                return $result->fetchArray(SQLITE3_ASSOC);
-            }
-            elseif ($mode == 'num') {
-                return $result->fetchArray(SQLITE3_NUM);
-            }
-            elseif ($mode == 'object') {
-                $arr = $result->fetchArray(SQLITE3_ASSOC);
-                return $arr ? (object)$arr : null;
-            }
-
-            return $result->fetchArray(SQLITE3_BOTH);        
-        }
-
-        function num_rows($result) {
-            return is_object($result) ? $result->num_rows : 0;
-        }
     }
 
 }

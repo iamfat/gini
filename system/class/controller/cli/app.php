@@ -418,8 +418,6 @@ namespace Controller\CLI {
             }
 
             echo "   \x1b[32mdone.\x1b[0m\n";
-
-            // $db->adjust_table($this->name(), $schema);
         }
 
         function action_pack(&$args) {

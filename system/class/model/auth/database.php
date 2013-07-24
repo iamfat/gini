@@ -39,7 +39,9 @@ class Database implements \Model\Auth\Driver {
     
     function verify($username, $password){
         $db = \Model\Database::db($this->db_name);
-        $hash = $db->value('SELECT `password` FROM `%s` WHERE `username`="%s"', $this->table, $username);
+        $hash = $db->value('SELECT "password" FROM :table WHERE "username"=:username', 
+                    [':table'=>$this->table], 
+                    [':username'=>$username]);
         if ($hash) {
             return crypt($password, $hash) == $hash;
         }
@@ -49,22 +51,30 @@ class Database implements \Model\Auth\Driver {
     
     function change_password($username, $password){
         $db = \Model\Database::db($this->db_name);
-        return false != $db->query('UPDATE `%s` SET `password`="%s" WHERE `username`="%s"', $this->table, self::encode($password), $username);
+        return false !== $db->execute('UPDATE :table SET "password"=:password WHERE "username"=:username', 
+                                [':table'=>$this->table], 
+                                [':password'=>self::encode($password), ':username'=>$username]);
     }
     
     function change_username($username, $username_new){
         $db = \Model\Database::db($this->db_name);
-        return false != $db->query('UPDATE `%s` SET `username`="%s" WHERE `username`="%s"', $this->table, $username_new, $username);
+        return false !== $db->query('UPDATE :table SET "username"=:new_username WHERE "username"=:old_username', 
+                            [':table'=>$this->table], 
+                            [':new_username'=>$username_new, ':old_username'=>$username]);
     }
     
     function add($username, $password){
         $db = \Model\Database::db($this->db_name);
-        return false != $db->query('INSERT INTO `%s` (`username`, `password`) VALUES("%s", "%s")', $this->table, $username, self::encode($password));
+        return false !== $db->query('INSERT INTO :table ("username", "password") VALUES(:username, :password)',
+                            [':table'=>$this->table],
+                            [':username'=>$username, ':password'=>self::encode($password)]);
     }
     
     function remove($username){
         $db = \Model\Database::db($this->db_name);
-        return false != $db->query('DELETE FROM `%s` WHERE `username`="%s"', $this->table, $username);
+        return false !== $db->query('DELETE FROM :table WHERE "username"=:username',
+                            [':table'=>$this->table], 
+                            [':username'=>$username]);
     }
     
 }
