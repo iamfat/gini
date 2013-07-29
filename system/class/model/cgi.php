@@ -93,7 +93,7 @@ namespace Model {
             if ($message) {
                 $file = \Model\File::relative_path($e->getFile());
                 $line = $e->getLine();
-                error_log(sprintf("\x1b[31m\x1b[4mERROR\x1b[0m \x1b[1m%s\x1b[0m", $message));
+                error_log(sprintf("\e[31m\e[4mERROR\e[0m \e[1m%s\e[0m", $message));
                 $trace = array_slice($e->getTrace(), 1, 5);
                 foreach ($trace as $n => $t) {
                     error_log(sprintf("    %d) %s%s() in %s on line %d", $n + 1,

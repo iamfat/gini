@@ -67,7 +67,7 @@ namespace Controller\CLI {
                 );
 
             foreach($prompt as $k => $v) {
-                $data[$k] = readline($v . " [\x1b[31m" . ($default[$k]?:'N/A') . "\x1b[0m]: ");
+                $data[$k] = readline($v . " [\e[31m" . ($default[$k]?:'N/A') . "\e[0m]: ");
                 if (!$data[$k]) $data[$k] = $default[$k];
             }
 
@@ -165,7 +165,7 @@ namespace Controller\CLI {
         //                     $content = preg_replace("#(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|([\s\t](//).*)#", '', $content); 
         //                     $items= (array)json_decode($content, true);
         //                     if (JSON_ERROR_NONE != json_last_error()) {
-        //                         TRACE("\x1b[31m%s\x1b[0m on \x1b[4m%s\x1b[0m.", json_last_error_msg(), $name);
+        //                         TRACE("\e[31m%s\e[0m on \e[4m%s\e[0m.", json_last_error_msg(), $name);
         //                     }
         //                     else {
         //                         $config_items[$category] = array_merge((array)$config_items[$category], $items);
@@ -192,7 +192,7 @@ namespace Controller\CLI {
             // $paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
             // foreach($paths as $path) {
             //     $shortname = \Gini\Core::shortname($path);
-            //     // printf("\x1b[30;1;4m%s\x1b[0m:\n", $shortname);
+            //     // printf("\e[30;1;4m%s\e[0m:\n", $shortname);
             //     if (!is_dir($path)) continue;
             // 
             //     $dh = opendir($path);
@@ -212,7 +212,7 @@ namespace Controller\CLI {
             // 
             $config_file = APP_PATH . '/cache/config.json';
             file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
-            echo "   \x1b[32mdone.\x1b[0m\n";
+            echo "   \e[32mdone.\e[0m\n";
         }
 
         private function _update_class_cache() {
@@ -230,7 +230,7 @@ namespace Controller\CLI {
             }
 
             file_put_contents(APP_PATH.'/cache/class_map.json', json_encode($class_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES| JSON_PRETTY_PRINT));
-            echo "   \x1b[32mdone.\x1b[0m\n";
+            echo "   \e[32mdone.\e[0m\n";
         }
 
         private function _update_view_cache() {
@@ -248,7 +248,7 @@ namespace Controller\CLI {
             }
 
             file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES| JSON_PRETTY_PRINT));
-            echo "   \x1b[32mdone.\x1b[0m\n";
+            echo "   \e[32mdone.\e[0m\n";
         }
 
         function action_update(&$args) {
@@ -294,7 +294,7 @@ namespace Controller\CLI {
 
             }
 
-            echo "   \x1b[32mdone.\x1b[0m\n";
+            echo "   \e[32mdone.\e[0m\n";
         }
 
         private function _uglify_js() {
@@ -334,7 +334,7 @@ namespace Controller\CLI {
 
             // \Model\File::check_path(APP_PATH.'/cache/view_map.json');
             // file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES| JSON_PRETTY_PRINT));
-            echo "   \x1b[32mdone.\x1b[0m\n";
+            echo "   \e[32mdone.\e[0m\n";
         }
 
         private function _merge_assets() {
@@ -361,7 +361,7 @@ namespace Controller\CLI {
                 });
             }
 
-            echo "   \x1b[32mdone.\x1b[0m\n";
+            echo "   \e[32mdone.\e[0m\n";
         }
 
         function action_update_web(&$args) {
@@ -398,7 +398,7 @@ namespace Controller\CLI {
             $paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
             foreach($paths as $path) {
                 $shortname = \Gini\Core::shortname($path);
-                // printf("\x1b[30;1;4m%s\x1b[0m:\n", $shortname);
+                // printf("\e[30;1;4m%s\e[0m:\n", $shortname);
                 if (!is_dir($path)) continue;
 
                 $dh = opendir($path);
@@ -417,19 +417,7 @@ namespace Controller\CLI {
                 }
             }
 
-            echo "   \x1b[32mdone.\x1b[0m\n";
-        }
-
-        function action_pack(&$args) {
-            //pack current app
-            $app_dir = APP_PATH;
-            $package_dir = APP_PATH . '/package';
-            if (!is_dir($package_dir))@mkdir($package_dir,0755,true);
-            passthru("gini-pack $app_dir/class $package_dir/class.phar");
-            passthru("gini-pack $app_dir/view $package_dir/view.phar");
-            
-            copy($app_dir.'/gini.json', $package_dir.'/gini.json');
-            \Model\File::copy_r($app_dir.'/data', $package_dir.'/data');
+            echo "   \e[32mdone.\e[0m\n";
         }
 
     }

@@ -152,10 +152,10 @@ final class CLI {
     }
 
     static function command_help($argv) {
-        echo "usage: \x1b[1;34mgini\x1b[0m <command> [<args>]\n\n";
+        echo "usage: \e[1;34mgini\e[0m <command> [<args>]\n\n";
         echo "The most commonly used git commands are:\n";
         foreach(self::$built_in_commands as $k => $v) {
-            printf("   \x1b[1;34m%-10s\x1b[0m %s\n", $k, $v);
+            printf("   \e[1;34m%-10s\e[0m %s\n", $k, $v);
         }
     }
 
@@ -168,7 +168,7 @@ final class CLI {
             $paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'controller/cli');
             foreach($paths as $path) {
                 $shortname = \Gini\Core::shortname($path);
-                // printf("\x1b[30;1;4m%s\x1b[0m:\n", $shortname);
+                // printf("\e[30;1;4m%s\e[0m:\n", $shortname);
                 if (!is_dir($path)) continue;
 
                 $dh = opendir($path);
@@ -202,7 +202,7 @@ final class CLI {
             $cmd = substr($cmd, 1);
             $_SERVER['GINI_APP_PATH'] = $app_base_path . '/' .$cmd;
             if (!is_dir($_SERVER['GINI_APP_PATH'] )) {
-                exit("\x1b[1;34mgini\x1b[0m: missing app '$cmd'.\n");
+                exit("\e[1;34mgini\e[0m: missing app '$cmd'.\n");
             }
 
             array_shift($argv);
@@ -216,7 +216,7 @@ final class CLI {
             // fork process to avoid memory leak
             // $pid = pcntl_fork();
             // if ($pid == -1) {
-            //     exit("\x1b[1;34mgini\x1b[0m: cannot fork process\n");
+            //     exit("\e[1;34mgini\e[0m: cannot fork process\n");
             // }
             // elseif ($pid) {
             //     //parent process
@@ -233,7 +233,7 @@ final class CLI {
         $message = $e->getMessage();
         $file = \Model\File::relative_path($e->getFile());
         $line = $e->getLine();
-        printf("[exception] \x1b[1m%s\x1b[0m (\x1b[34m%s\x1b[0m:$line)\n", $message, $file, $line);
+        printf("[exception] \e[1m%s\e[0m (\e[34m%s\e[0m:$line)\n", $message, $file, $line);
         if (\Gini\Core::debug_mode()) {
             $trace = array_slice($e->getTrace(), 1, 3);
             foreach ($trace as $n => $t) {
@@ -279,7 +279,7 @@ final class CLI {
         }
 
         if (!$class || !class_exists($class, false)) {
-            exit("\x1b[1;34mgini\x1b[0m: '$cmd' is not a gini command. See 'gini help'.\n");
+            exit("\e[1;34mgini\e[0m: '$cmd' is not a gini command. See 'gini help'.\n");
         }
 
         _CONF('runtime.controller_path', $path);
@@ -296,7 +296,7 @@ final class CLI {
             $action = '__index';
         }
         else {
-            exit("\x1b[1;34mgini\x1b[0m: '$cmd' is not a gini command. See 'gini help'.\n");
+            exit("\e[1;34mgini\e[0m: '$cmd' is not a gini command. See 'gini help'.\n");
         }
 
         $controller->$action($params);

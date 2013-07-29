@@ -56,7 +56,7 @@ namespace Controller\CLI {
         }
 
         function action_help(&$argv) {
-            exit("Usage: \x1b[1;34mgini test\x1b[0m [unit/integration/performance/fixtures]/path/to/test\n");            
+            exit("Usage: \e[1;34mgini test\e[0m [unit/integration/performance/fixtures]/path/to/test\n");            
         }
 
         function __index(&$argv) {
@@ -70,10 +70,10 @@ namespace Controller\CLI {
             }            
 
             if ($this->stat['count'] > 0) {
-                printf("\x1b[1mRESULTS\x1b[0m \n");
-                printf("   \x1b[1m%d\x1b[0m tests performed!\n", $this->stat['count']);
-                printf("   \x1b[1m%d\x1b[0m tests passed!\n", $this->stat['pass']);
-                printf("   \x1b[1m%d\x1b[0m tests failed!\n", $this->stat['fail']);
+                printf("\e[1mRESULTS\e[0m \n");
+                printf("   \e[1m%d\e[0m tests performed!\n", $this->stat['count']);
+                printf("   \e[1m%d\e[0m tests passed!\n", $this->stat['pass']);
+                printf("   \e[1m%d\e[0m tests failed!\n", $this->stat['fail']);
             }
         }
         

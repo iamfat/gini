@@ -331,7 +331,7 @@ namespace {
                     else {
                         $padding = '';
                     }
-                    vfprintf(STDERR, "$padding\x1b[32m[%d][%s]\x1b[0m $fmt\n", $args);
+                    vfprintf(STDERR, "$padding\e[32m[%d][%s]\e[0m $fmt\n", $args);
                 }
                 else {
                     error_log(vsprintf("[%d][%s] $fmt", $args));            

@@ -7,12 +7,12 @@ namespace Controller\CLI {
         static function action_scan(&$argv) {
 
             if (count($argv) < 1) {
-                exit("usage: \x1b[1;34mgini i18n scan\x1b[0m <path/to/app> [<locales>]\n");
+                exit("usage: \e[1;34mgini i18n scan\e[0m <path/to/app> [<locales>]\n");
             }
 
             $info = \Gini\Core::fetch_info($argv[0]);
             if (!isset($info->shortname)) {
-                echo "\x1b[1;34mgini i18n scan\x1b[0m: Invalid app path!\n";
+                echo "\e[1;34mgini i18n scan\e[0m: Invalid app path!\n";
                 exit;
             }
 
@@ -70,7 +70,7 @@ namespace Controller\CLI {
 
         static function action_format($argv) {
             if (count($argv) < 1) {
-                exit("usage: \x1b[1;34mgini i18n format\x1b[0m <locales>\n");
+                exit("usage: \e[1;34mgini i18n format\e[0m <locales>\n");
             }
 
             array_shift($argv);

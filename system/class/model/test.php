@@ -9,12 +9,12 @@ namespace Model {
 
     class Test {
         
-        const ANSI_RED = "\x1b[31m";
-        const ANSI_GREEN = "\x1b[32m";
-        const ANSI_YELLOW = "\x1b[33m";
+        const ANSI_RED = "\e[31m";
+        const ANSI_GREEN = "\e[32m";
+        const ANSI_YELLOW = "\e[33m";
 
-        const ANSI_RESET = "\x1b[0m";
-        const ANSI_HIGHLIGHT = "\x1b[1m\x1b[4m";
+        const ANSI_RESET = "\e[0m";
+        const ANSI_HIGHLIGHT = "\e[1m\e[4m";
 
         var $_fails = array();
         var $_done = array();
@@ -23,7 +23,7 @@ namespace Model {
 
             TRACE_INDENT_BEGIN(5);
 
-            $this->printf("\x1b[34m==>\x1b[0m start test %s\n", self::ANSI_HIGHLIGHT.get_class($this).self::ANSI_RESET);
+            $this->printf("\e[34m==>\e[0m start test %s\n", self::ANSI_HIGHLIGHT.get_class($this).self::ANSI_RESET);
 
             if (!is_callable(array($this, 'setup'))) {
                 $this->_fails[] = array(
@@ -79,11 +79,11 @@ namespace Model {
                 $this->_done[$name] = true;
             }
             catch (Test\Fail_Exception $e) {
-                $status = self::ANSI_RED . '×'.self::ANSI_RESET."  \x1b[1;31m".$e->getMessage().self::ANSI_RESET;
+                $status = self::ANSI_RED . '×'.self::ANSI_RESET."  \e[1;31m".$e->getMessage().self::ANSI_RESET;
                 $this->_done[$name] = false;
             }
             catch (Test\Cancel_Exception $e) {
-                $status = self::ANSI_YELLOW . '-' . self::ANSI_RESET."  \x1b[1;33m".$e->getMessage().self::ANSI_RESET;
+                $status = self::ANSI_YELLOW . '-' . self::ANSI_RESET."  \e[1;33m".$e->getMessage().self::ANSI_RESET;
                 $this->_fails[] = array(
                     'name' => sprintf('test %s is canceled', $name),
                 );
