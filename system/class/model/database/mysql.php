@@ -6,8 +6,9 @@ namespace Model\Database {
 
         private $_options;
 
-        private $_table_status = null;
-        private $_table_schema = null;
+        private $_dbname;
+        private $_table_status;
+        private $_table_schema;
 
         private function _update_table_status($table=null) {
             if ($table || !$this->_table_status) {
@@ -15,12 +16,12 @@ namespace Model\Database {
                 if ($table && $table != '*') {
                     unset($this->_table_status[$table]);
                     $SQL = sprintf('SHOW TABLE STATUS FROM %s WHERE "Name"=%s', 
-                            $this->quote_ident($this->name), $this->quote($table));
+                            $this->quote_ident($this->_dbname), $this->quote($table));
                 }
                 else {
                     $this->_table_status = null;
                     $SQL = sprintf('SHOW TABLE STATUS FROM %s', 
-                            $this->quote_ident($this->name));
+                            $this->quote_ident($this->_dbname));
                 }
 
                 $rs = $this->query($SQL);
@@ -38,6 +39,11 @@ namespace Model\Database {
             $options += [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''];
             parent::__construct($dsn, $username, $password, $options);
             $this->_options = $options;
+
+            if (preg_match('/dbname\s*=\s*(\w+)/', $dsn, $parts)) {
+                $this->_dbname = $parts[1];
+            }
+
             //enable ANSI mode
             $this->query('SET sql_mode=\'ANSI\'');
         }
