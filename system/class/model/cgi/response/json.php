@@ -4,17 +4,21 @@ namespace Model\CGI\Response {
 
     class JSON implements \Model\CGI\Response {
 
-        private $_data;
+        private $_content;
 
-        function __construct($data) {
-            $this->_data = $data;
+        function __construct($content) {
+            $this->_content = $content;
         }
 
         function output() {
             header('Content-Type: application/json');
-            if ($this->_data !== null) {
-                file_put_contents('php://output', json_encode($this->_data)."\n");
+            if ($this->_content !== null) {
+                file_put_contents('php://output', json_encode($this->_content)."\n");
             }
+        }
+        
+        function content() {
+            return $this->_content;
         }
 
     }

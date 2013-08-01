@@ -4,15 +4,19 @@ namespace Model\CGI\Response {
 
     class JS implements \Model\CGI\Response {
 
-        private $_data;
+        private $_content;
 
-        function __construct($data) {
-            $this->_data = $data;
+        function __construct($content) {
+            $this->_content = $content;
         }
 
         function output() {
             header('Content-Type: text/javascript');
-            file_put_contents('php://output', $this->_data);
+            file_put_contents('php://output', (string) $this->_content);
+        }
+
+        function content() {
+            return $this->_content;
         }
 
     }

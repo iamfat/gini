@@ -4,15 +4,19 @@ namespace Model\CGI\Response {
 
     class HTML {
 
-        private $_data;
+        private $_content;
 
-        function __construct($view) {
-            $this->_data = (string) $view;
+        function __construct($content) {
+            $this->_content = $content;
         }
 
         function output() {
             header('Content-Type: text/html');
-            file_put_contents('php://output', $this->_data);
+            file_put_contents('php://output', (string) $this->_content);
+        }
+        
+        function content() {
+            return $this->_content;
         }
 
     }

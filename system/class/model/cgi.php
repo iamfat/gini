@@ -11,25 +11,7 @@ namespace Model {
                     stripslashes($value);
         }
 
-        static $dispatchers = [];
-        static function set_dispatcher($mime, $dispatcher) {
-            $dispatchers[$mime] = $dispatcher;
-        }
-
-        static function main($argv) {
-            $accepts = explode(',', $_SERVER['HTTP_ACCEPT']);
-            while (null !== ($accept = array_pop($accepts))) {
-                list($mime,) = explode(';', $accept, 2);
-                $dispatcher = $dispatchers[$mime];
-                if ($dispatcher) {
-                    return call_user_func($dispatcher, $argv);
-                }
-            }
-
-            return self::default_dispatcher($argv);    
-        }
-
-        static function default_dispatcher($argv) {
+        static function main(& $argv) {
             
             //从末端开始尝试
             /*
@@ -41,7 +23,19 @@ namespace Model {
                 home/page.php        Controller\Page::index('edit', 1)
             */
 
-            $args = (array) self::args();
+            $response = self::request(self::$route, ['get'=>$_GET, 'post'=>$_POST, 'files'=>$_FILES])->execute();
+            if ($response) $response->output();
+        }
+        
+        static function request($route, array $form = array()) {
+            
+            $args = [];
+            if(preg_match_all('|(.*?[^\\\])\/|', $route.'/', $parts)){
+                foreach($parts[1] as $part) {
+                    $args[] = strtr($part, array('\/'=>'/'));
+                }
+            }
+
             $path = '';
             $candidates = array('index' => $args);
             while (count($args) > 0) {
@@ -67,7 +61,7 @@ namespace Model {
                 if (class_exists($class)) break;
             }
 
-            if (!$class || !class_exists($class, false)) URI::redirect('error/404');
+            if (!$class || !class_exists($class, false)) self::redirect('error/404');
 
             _CONF('runtime.controller_path', $path);
             _CONF('runtime.controller_class', $class);
@@ -85,13 +79,17 @@ namespace Model {
                 self::redirect('error/404');
             }
 
-            $controller->action($action, $params);
+            $controller->action = $action;
+            $controller->params = $params;
+            $controller->form = $form;
+
+            return $controller;     
         }
 
         static function exception($e) {
             $message = $e->getMessage();
             if ($message) {
-                $file = \Model\File::relative_path($e->getFile());
+                $file = File::relative_path($e->getFile());
                 $line = $e->getLine();
                 error_log(sprintf("\e[31m\e[4mERROR\e[0m \e[1m%s\e[0m", $message));
                 $trace = array_slice($e->getTrace(), 1, 5);
@@ -99,7 +97,7 @@ namespace Model {
                     error_log(sprintf("    %d) %s%s() in %s on line %d", $n + 1,
                                     $t['class'] ? $t['class'].'::':'', 
                                     $t['function'],
-                                    \Model\File::relative_path($t['file']),
+                                    File::relative_path($t['file']),
                                     $t['line']));
 
                 }
@@ -111,61 +109,22 @@ namespace Model {
             }        
         }
 
-        protected static $form, $files, $get, $post;
-        protected static $args, $route;
+        protected static $route;
 
         static function setup(){
-
             URI::setup();
-
-            self::$route = $route = ltrim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
-
-            $args = array();
-            if(preg_match_all('|(.*?[^\\\])\/|', $route.'/', $parts)){
-                foreach($parts[1] as $part) {
-                    $args[] = strtr($part, array('\/'=>'/'));
-                }
-            }
-
-            self::$args = $args;
-        }
-
-        static function & form($mode = '*') {
-
-            if (!isset(self::$get)) {
-                self::$get = $_GET;
-                self::$post = $_POST;
-                self::$files = $_FILES;
-                self::$form = array_merge($_POST, $_GET);
-            }
-
-            switch($mode) {
-            case 'get':
-                return self::$get;
-            case 'post':
-                return self::$post;
-            default:
-                return self::$form;
-            }
+            self::$route = ltrim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
         }
 
         static function content() {
             return file_get_contents('php://input');
         }
 
-        static function & route($route = null) {
+        static function route($route = null) {
             if (is_null($route)) {
                 return self::$route;
             }
             self::$route = $route;
-        }
-
-        static function & args() {
-            return self::$args;
-        }
-
-        static function & files() {
-            return self::$files;
         }
 
         static function redirect($url='', $query=null) {
@@ -183,6 +142,7 @@ namespace Model {
 namespace Model\CGI {
     interface Response {
         function output();
+        function content();
     }
 }
 
