@@ -48,7 +48,19 @@ namespace Model\Database {
             $this->query('SET sql_mode=\'ANSI\'');
         }
         
+        function query($SQL) {
+            TRACE('%s', $SQL);
+            return parent::query($SQL);
+        }
+        
         function quote_ident($name) {
+            if (is_array($name)) {
+                $v = [];
+                foreach($name as $n) {
+                    $v[] = $this->quote_ident($n);
+                }
+                return implode(',', $v);
+            }
             return '"'.addslashes($name).'"';
         }
         
@@ -132,11 +144,12 @@ namespace Model\Database {
 
             $curr_indexes = $curr_schema['indexes'];
             $missing_indexes = array_diff_key($indexes, $curr_indexes);
+
             foreach($missing_indexes as $key=>$val) {
                 $field_sql[] = sprintf('ADD %s'
                     , $this->alter_index_sql($key, $val));
             }
-            
+
             foreach($curr_indexes as $key=>$curr_val) {
                 $val = & $indexes[$key];
                 if ($val) {
@@ -212,7 +225,7 @@ namespace Model\Database {
             return sprintf('%s %s%s%s%s'
                     , $this->quote_ident($key)
                     , $field['type']
-                    , $field['null']? '': ' NOT null'
+                    , $field['null']? '': ' NOT NULL'
                     , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']):''
                     , $field['serial'] ? ' AUTO_INCREMENT':''
                     );

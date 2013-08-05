@@ -286,7 +286,7 @@ namespace Model\Database {
             return sprintf('%s %s%s%s'
                     , $this->quote_ident($key)
                     , $this->_normalize_type($field['type'])
-                    , $field['null']? '': ' NOT null'
+                    , $field['null']? '': ' NOT NULL'
                     , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']):''
                     );
         }
@@ -295,7 +295,7 @@ namespace Model\Database {
              
             $engine = $engine ?: 'innodb';    //innodb as default db
             
-            $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s ("_FOO" int NOT null)', $this->quote_ident($table));
+            $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s ("_FOO" int NOT NULL)', $this->quote_ident($table));
             $rs = $this->query($SQL);
             $this->_update_table_status($table);
             

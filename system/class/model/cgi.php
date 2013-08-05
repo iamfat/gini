@@ -29,12 +29,7 @@ namespace Model {
         
         static function request($route, array $form = array()) {
             
-            $args = [];
-            if(preg_match_all('|(.*?[^\\\])\/|', $route.'/', $parts)){
-                foreach($parts[1] as $part) {
-                    $args[] = strtr($part, array('\/'=>'/'));
-                }
-            }
+            $args = explode('/', $route);
 
             $path = '';
             $candidates = array('index' => $args);
@@ -113,7 +108,7 @@ namespace Model {
 
         static function setup(){
             URI::setup();
-            self::$route = ltrim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
+            self::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
         }
 
         static function content() {

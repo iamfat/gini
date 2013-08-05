@@ -201,7 +201,7 @@ namespace Model {
                     $this->_where = array_merge($this->_where, $v->_where);
                     $this->_where[] = 'AND';
                 }
-                $this->_where[] = $field_name . ' IS NOT null';
+                $this->_where[] = $field_name . ' IS NOT NULL';
             }
             else {
                 foreach ($values as $v) {
