@@ -251,7 +251,7 @@ namespace Controller\CLI {
             echo "   \e[32mdone.\e[0m\n";
         }
 
-        function action_update(&$args) {
+        function action_update_cache(&$args) {
             \Model\File::check_path(APP_PATH.'/cache/foo');
             $this->_update_class_cache();
             $this->_update_view_cache();
