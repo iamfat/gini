@@ -1,39 +1,40 @@
 <?php
 
 namespace Model\RPC {
+    
     class Exception extends \Exception {}
+    
+    class Cookie {
+        public $file;
+        
+        function __construct() {
+            $this->file = tempnam(sys_get_temp_dir(), 'rpc.cookie.');
+        }
+        
+        function __destruct() {
+             if ($this->file && file_exists($this->file)) unlink($this->file);
+        }
+    }
+
 }
 
 namespace Model {
-
-    register_shutdown_function('\\Model\\RPC::remove_cookie_file');
 
     class RPC {
 
         private $_url;
         private $_path;
+        private $_cookie;
+        private $_uniqid = 0;
 
-        public $sess_id;
-
-        static function cookie_file($id=0) {
-            static $files;
-            if ($files[$id] === null) {
-                $files[$id] = $file = tempnam(sys_get_temp_dir(), 'rpc.cookie.');
-            }
-            return $files[$id];
-        }
-
-        static function remove_cookie_file() {
-            @unlink(self::cookie_file());
-        }
-        
-        function __construct($url, $path=null) {
+        function __construct($url, $path=null, $cookie=null) {
             $this->_url = $url;
             $this->_path = $path;
+            $this->_cookie = $cookie ?: new RPC\Cookie;
         }
-
+        
         function __get($name) {
-            return new RPC($this->_url, $this->_path ? $this->_path . '/' . $name : $name);
+            return new RPC($this->_url, $this->_path ? $this->_path . '/' . $name : $name, $this->_cookie);
         }
 
         function __call($method, $params) {
@@ -41,7 +42,7 @@ namespace Model {
 
             if ($this->_path) $method = $this->_path . '/' . $method;
 
-            $id = uniqid();
+            $id = base_convert($this->_uniqid ++, 10, 36);
 
             $raw_data = $this->post(array(
                 'jsonrpc' => '2.0',
@@ -72,7 +73,7 @@ namespace Model {
 
         function post($post_data, $timeout = 5) {
 
-            $cookie_file = self::cookie_file($this->sess_id);
+            $cookie_file = $this->_cookie->file;
 
             $ch = curl_init();
 
