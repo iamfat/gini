@@ -40,7 +40,7 @@ namespace Model {
                 if ($path) $path .= '/' . $arg;
                 else $path = $arg;
                 $candidates[$path] = $args;
-            } 
+            }
 
             $class = null;
             foreach(array_reverse($candidates) as $path => $params){
@@ -54,6 +54,10 @@ namespace Model {
                 if (class_exists($class)) break;
                 $class = $class_namespace . 'Controller_' . ucwords($basename);
                 if (class_exists($class)) break;
+                if ($basename != 'index') {
+                    $class = $class_namespace . 'Index';
+                    if (class_exists($class)) break;
+                }
             }
 
             if (!$class || !class_exists($class, false)) self::redirect('error/404');
