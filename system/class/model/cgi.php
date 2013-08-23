@@ -56,7 +56,10 @@ namespace Model {
                 if (class_exists($class)) break;
                 if ($basename != 'index') {
                     $class = $class_namespace . 'Index';
-                    if (class_exists($class)) break;
+                    if (class_exists($class)) {
+                        array_unshift($params, $basename);
+                        break;
+                    }
                 }
             }
 
