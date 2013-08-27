@@ -357,7 +357,7 @@ namespace Model {
 
             $id_col = $db->ident($table, 'id');
             $this->SQL = "SELECT DISTINCT $id_col $from_SQL $order_SQL $limit_SQL";
-            $this->count_SQL = 'SELECT COUNT(DISTINCT $id_col) AS "count" '.$from_SQL;
+            $this->count_SQL = "SELECT COUNT(DISTINCT $id_col) AS \"count\" $from_SQL";
 
             return $this;
         }
