@@ -395,26 +395,19 @@ namespace Controller\CLI {
             // enumerate orms
             printf("Updating database structures according ORM definition...\n");
 
-            $paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
-            foreach($paths as $path) {
-                $shortname = \Gini\Core::shortname($path);
-                // printf("\e[30;1;4m%s\e[0m:\n", $shortname);
-                if (!is_dir($path)) continue;
+            $orm_dirs = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
+            foreach($orm_dirs as $orm_dir) {
+                if (!is_dir($orm_dir)) continue;
 
-                $dh = opendir($path);
-                if ($dh) {
-                    while ($name = readdir($dh)) {
-                        if ($name[0] == '.') continue;
-                        if (!is_file($path . '/' . $name)) continue;
-                        $oname = ucwords(basename($name, EXT));
-                        if ($oname == 'Object') continue;
-                        printf("   %s\n", $oname);
-                        $class_name = '\\ORM\\'.$oname;
-                        $o = new $class_name();
-                        $o->db()->adjust_table($o->name(), $o->schema());
-                    }
-                    closedir($dh);
-                }
+                $this->_prepare_walkthrough($orm_dir, '', function($file) use ($orm_dir) {
+                    $oname = preg_replace('|.php$|', '', $file);
+                    if ($oname == 'object') return;
+                    printf("   %s\n", $oname);
+                    $class_name = '\\ORM\\'.str_replace('/', '\\', $oname);
+                    $o = new $class_name();
+                    $o->db()->adjust_table($o->name(), $o->schema());
+                });
+
             }
 
             echo "   \e[32mdone.\e[0m\n";
