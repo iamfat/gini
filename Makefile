@@ -10,6 +10,7 @@ system: .FORCE
 install:
 	@mkdir -p $(TARGET_DIR)
 	@cp -r bin data $(TARGET_DIR)
+	@rm -r $(TARGET_DIR)/system
 	@cp -r .system.build $(TARGET_DIR)/system
 
 clean:
