@@ -423,7 +423,8 @@ namespace Model {
 
         function name() {
             if (!isset($this->_name)) {
-                $this->_name = strtolower(basename(str_replace('\\', '/', get_class($this))));
+                list(,$name) = explode('_', strtolower(str_replace('\\', '_', get_class($this))), 2);
+                $this->_name = $name;
             }
             return $this->_name;
         }
@@ -515,6 +516,7 @@ namespace Model {
 namespace {
 
     function a($name, $criteria = null) {
+        $name = str_replace('/', '\\', $name);
         $class_name = '\\ORM\\'.ucwords($name);
         return new $class_name($criteria);
     }
