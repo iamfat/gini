@@ -324,7 +324,7 @@ namespace {
                 array_unshift($args, posix_getpid());    //pid
                 if (PHP_SAPI == 'cli') {
                     global $_TRACE_INDENTS;
-                    $indent = end($_TRACE_INDENTS);
+                    $indent = count($_TRACE_INDENTS) > 0 ? end($_TRACE_INDENTS) : 0;
                     if ($ident > 0) {
                         $padding = str_pad(' ', $indent);
                     }
