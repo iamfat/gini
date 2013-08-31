@@ -7,6 +7,7 @@ namespace Model {
         protected $db;
 
         protected $name;
+        protected $table_name;
         
         protected $current_id;
         protected $objects = array();
@@ -30,8 +31,8 @@ namespace Model {
             // 查询一下看看是不是复数
             $name = _CONF('orm.plurals')[$name] ?: $name;
             $this->name = $name;
-            $db_method = '\\ORM\\'.ucwords($name).'::db';
-            $this->db = call_user_func($db_method);
+            $this->table_name = str_replace('/', '_', $name);
+            $this->db = a($name)->db();
         }
 
         function __clone() {}
@@ -124,8 +125,7 @@ namespace Model {
 
         function object($id) {
             if ($this->objects[$id] === true) {
-                $class_name = '\\ORM\\'.ucwords($this->name);
-                $this->objects[$id] = new $class_name($id);
+                $this->objects[$id] = a($this->name, $id);
             }
             return $this->objects[$id];
         }

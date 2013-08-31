@@ -23,7 +23,7 @@ namespace Model {
 
             if ($driver != 'built_in') {
                 
-                $class = '\\Model\\Session\\'.ucwords($driver);
+                $class = '\\Model\\Session\\'.$driver;
 
                 self::$driver = new $class;
 

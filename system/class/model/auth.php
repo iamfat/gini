@@ -109,7 +109,7 @@ namespace Model {
     
             $this->options = $opt;
             $this->username = $username;
-            $class = '\\Model\\Auth\\'.ucwords($opt['driver']);
+            $class = '\\Model\\Auth\\'.$opt['driver'];
             $this->driver = new $class($opt);
         }
     

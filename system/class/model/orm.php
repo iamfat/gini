@@ -15,6 +15,7 @@ namespace Model {
         private $_criteria;
         private $_objects;
         private $_name;
+        private $_table_name;
         private $_oinfo;
         
         private $_db_data;
@@ -134,7 +135,7 @@ namespace Model {
                         $where[] = $db->quote_ident($k) . '=' . $db->quote($v);
                     }
                     
-                    $SQL = 'SELECT * FROM '.$db->quote_ident($this->name()) . ' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+                    $SQL = 'SELECT * FROM '.$db->quote_ident($this->table_name()) . ' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
 
                     $result = $db->query($SQL);
                     //只取第一条记录
@@ -258,7 +259,7 @@ namespace Model {
                         // 需要添加新的$field
                         if (!$pv) {
                             $fields[$k.'_name'] = array(
-                                'type' => 'varchar(40)',
+                                'type' => 'varchar(120)',
                             );
                         }
                         $fields[$k.'_id'] = array(
@@ -320,7 +321,7 @@ namespace Model {
             if (!$this->id) return true;
 
             $db = $this->db();
-            $tbl_name = $this->name();
+            $tbl_name = $this->table_name();
                 
             $SQL = 'DELETE FROM '.$db->quote_ident($tbl_name).' WHERE '.$db->quote_ident('id').'='.$db->quote($this->id);
             return !!$db->query($SQL);
@@ -374,7 +375,7 @@ namespace Model {
             // diff db_data and this->_db_data
             $db_data = array_diff_assoc((array)$db_data, (array)$this->_db_data);
 
-            $tbl_name = $this->name();
+            $tbl_name = $this->table_name();
             $id = (int) ($this->_db_data['id'] ?: $db_data['id']);
             unset($db_data['id']);
 
@@ -421,12 +422,24 @@ namespace Model {
             unset(self::$_structures[get_called_class()]);
         }
 
+        private function _prepare_name() {
+            list(,$name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 2);
+            $this->_name = $name;
+            $this->_table_name = str_replace('/', '_', $name);
+        }
+
         function name() {
             if (!isset($this->_name)) {
-                list(,$name) = explode('_', strtolower(str_replace('\\', '_', get_class($this))), 2);
-                $this->_name = $name;
-            }
+                $this->_prepare_name();
+             }
             return $this->_name;
+        }
+        
+        function table_name() {
+            if (!isset($this->_table_name)) {
+                $this->_prepare_name();
+            }
+            return $this->_table_name;
         }
 
         function set_data($data) {
@@ -479,8 +492,7 @@ namespace Model {
             }
             elseif (isset($this->_oinfo[$name])) {
                 $oi = $this->_oinfo[$name];
-                $oclass = '\\ORM\\'.ucwords($oi->name);
-                $o = new $oclass($oi->id);
+                $o = a($oi->name, $oi->id);
                 $this->_objects[$name] = $o;
                 return $o;
             }
@@ -517,7 +529,7 @@ namespace {
 
     function a($name, $criteria = null) {
         $name = str_replace('/', '\\', $name);
-        $class_name = '\\ORM\\'.ucwords($name);
+        $class_name = '\\ORM\\'.$name;
         return new $class_name($criteria);
     }
 

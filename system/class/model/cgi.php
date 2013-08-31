@@ -48,11 +48,11 @@ namespace Model {
                 $dirname = dirname($path);
                 $class_namespace = '\\Controller\\CGI\\';
                 if ($dirname != '.') {
-                    $class_namespace .= str_replace('/', '_', ucwords($dirname)).'\\';
+                    $class_namespace .= str_replace('/', '_', $dirname).'\\';
                 }
-                $class = $class_namespace . ucwords($basename);
+                $class = $class_namespace . $basename;
                 if (class_exists($class)) break;
-                $class = $class_namespace . 'Controller_' . ucwords($basename);
+                $class = $class_namespace . 'Controller_' . $basename;
                 if (class_exists($class)) break;
                 if ($basename != 'index') {
                     $class = $class_namespace . 'Index';

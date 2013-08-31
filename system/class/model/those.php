@@ -165,7 +165,7 @@ namespace Model {
 
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'INNER JOIN '.$db->ident($this->name).' AS '.$db->quote_ident($this->_table) 
+                $this->_join[] = 'INNER JOIN '.$db->ident($this->table_name).' AS '.$db->quote_ident($this->_table) 
                         . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
@@ -192,7 +192,7 @@ namespace Model {
             
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'LEFT JOIN '.$db->ident($this->name).' AS '.$db->quote_ident($this->_table)
+                $this->_join[] = 'LEFT JOIN '.$db->ident($this->table_name).' AS '.$db->quote_ident($this->_table)
                         . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
@@ -237,13 +237,12 @@ namespace Model {
 
                 case '=': case '!=': {                    
                     if ($v instanceof \ORM\Object) {
-                        $class_name = '\\ORM\\'.ucwords($this->name);
-                        $o = new $class_name;
+                        $o = a($this->name);
                         $field = $this->_field;
                         $structure = $o->structure();
                         if (array_key_exists('object', $structure[$field])) {
                             if (!$structure[$field]['object']) {
-                                $obj_where[] = $db->ident($this->_table, $field . '_name') . $op . $db->quote($v->name());
+                                $obj_where[] = $db->ident($this->_table, $field . '_name') . $op . $db->quote($v->table_name());
 
                             }
 
@@ -339,7 +338,7 @@ namespace Model {
             $db = $this->db;
             $table = $this->_table;
 
-            $from_SQL = 'FROM ' . $db->ident($this->name).' AS '.$db->quote_ident($this->_table);
+            $from_SQL = 'FROM ' . $db->ident($this->table_name).' AS '.$db->quote_ident($this->_table);
 
             if ($this->_where) {
                 $from_SQL .= ' WHERE ' . implode(' ', $this->_where);

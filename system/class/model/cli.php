@@ -268,12 +268,12 @@ final class CLI {
             $dirname = dirname($path);
             $class_namespace = '\\Controller\\CLI\\';
             if ($dirname != '.') {
-                $class_namespace .= str_replace('/', '_', ucwords($dirname)).'\\';
+                $class_namespace .= str_replace('/', '_', $dirname).'\\';
             }
-            $class = $class_namespace . ucwords($basename);
+            $class = $class_namespace . $basename;
             $class = str_replace('-', '_', $class);
             if (class_exists($class)) break;
-            $class = $class_namespace . 'Controller_' . ucwords($basename);
+            $class = $class_namespace . 'Controller_' . $basename;
             $class = str_replace('-', '_', $class);
             if (class_exists($class)) break;
         }

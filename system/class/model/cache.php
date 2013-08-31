@@ -50,7 +50,7 @@ namespace Model {
         }
         
         function __construct($name=null) {
-            $class = '\\Model\\Cache\\'.ucwords($name);
+            $class = '\\Model\\Cache\\'.$name;
             $this->driver = new $class;
         }
 
