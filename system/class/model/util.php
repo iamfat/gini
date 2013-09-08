@@ -41,12 +41,12 @@ namespace Model {
             $arr += $new_arr;
         }
         
-        static function array_merge_deep(array &$arr, array & $arr1){
+        static function array_merge_deep(array $arr, array $arr1){
             foreach($arr1 as $k=>&$v){
                 if (is_string($k)) {
                     if (isset($arr[$k]) && is_array($v)) {
                         if(!is_array($arr[$k])) $arr[$k]=array();
-                        self::array_merge_deep($arr[$k], $v);
+                        $arr[$k] = self::array_merge_deep($arr[$k], $v);
                     } 
                     else {
                         $arr[$k] = $v;
@@ -56,6 +56,8 @@ namespace Model {
                     $arr[] = $v;
                 }
             }
+            
+            return $arr;
         }
 
         private static $_key_prefix;

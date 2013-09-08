@@ -92,34 +92,34 @@ namespace Controller\CLI {
             
         }
 
-        private function _load_config_category($category, $filename, &$items) {
-            if (is_file($filename)) {
-                if (!isset($items[$category])) $items[$category] = [];    
-                $config = & $items[$category];
-                include($filename);
-            }
-            elseif(is_dir($filename)) {
-                $base = $filename;
-                $dh = opendir($base);
-                if ($dh) {
-                    if (substr($base, -1) != '/') $base .= '/';
-                    while ($file = readdir($dh)) {
-                        if ($file[0] == '.') continue;
-                        $this->_load_config_category($category, $base . '/' . $file);
-                    }
-                    closedir($dh);
-                }
-            }
-        }
-    
         private function _load_config_dir($base, &$items){
             if (!is_dir($base)) return;
             
             $dh = opendir($base);
             if ($dh) {
-                while($file = readdir($dh)) {
-                    if ($file[0] == '.') continue;
-                    $this->_load_config_category(basename($file, EXT), $base . '/' . $file, $items);
+                while($name = readdir($dh)) {
+                    if ($name[0] == '.') continue;
+                    
+                    $file = $base . '/' . $name;
+                    if (!is_file($file)) continue;
+                    
+                    $category = pathinfo($name, PATHINFO_FILENAME);
+                    if (!isset($items[$category])) $items[$category] = [];    
+
+                    switch (pathinfo($name, PATHINFO_EXTENSION)) {
+                    case 'php':
+                        $config = & $items[$category];
+                        call_user_func(function() use (&$config, $file) {
+                            include($file);
+                        });
+                        break;
+                    case 'yml':
+                    case 'yaml':
+                        $config = (array) yaml_parse_file($file);
+                        $items[$category] = \Model\Util::array_merge_deep($items[$category], $config);
+                        break;
+                    }
+
                 }
                 closedir($dh);
             }
@@ -411,6 +411,19 @@ namespace Controller\CLI {
             }
 
             echo "   \e[32mdone.\e[0m\n";
+        }
+
+        function action_print_config() {
+
+            $config_items = [];
+
+            $paths = \Gini\Core::phar_file_paths(RAW_DIR, 'config');
+            foreach ($paths as $path) {
+                $this->_load_config_dir($path, $config_items);
+            }
+            
+            echo yaml_emit($config_items, YAML_UTF8_ENCODING);
+
         }
 
     }

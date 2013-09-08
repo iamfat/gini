@@ -18,13 +18,13 @@ namespace Model {
             self::$items = array();    //清空
         }
         
-        static function & get($key){
+        static function & get($key) {
             list($category, $key) = explode('.', $key, 2);
             if ($key === null) return self::$items[$category];            
             return self::$items[$category][$key];
         }
     
-        static function set($key, $val){
+        static function set($key, $val) {
             list($category, $key) = explode('.', $key, 2);
             if ($key) {
                 if ($val === null) {
