@@ -211,7 +211,7 @@ namespace Controller\CLI {
             // }
             // 
             $config_file = APP_PATH . '/cache/config.json';
-            file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
+            file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
 
@@ -229,7 +229,7 @@ namespace Controller\CLI {
                 });
             }
 
-            file_put_contents(APP_PATH.'/cache/class_map.json', json_encode($class_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES| JSON_PRETTY_PRINT));
+            file_put_contents(APP_PATH.'/cache/class_map.json', json_encode($class_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
 
@@ -247,7 +247,7 @@ namespace Controller\CLI {
                 });
             }
 
-            file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES| JSON_PRETTY_PRINT));
+            file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
 
@@ -413,7 +413,7 @@ namespace Controller\CLI {
             echo "   \e[32mdone.\e[0m\n";
         }
 
-        function action_print_config() {
+        function action_print_config(&$args) {
 
             $config_items = [];
 
@@ -422,7 +422,12 @@ namespace Controller\CLI {
                 $this->_load_config_dir($path, $config_items);
             }
             
-            echo yaml_emit($config_items, YAML_UTF8_ENCODING);
+            if ($args[0]) {
+                echo yaml_emit($config_items[$args[0]], YAML_UTF8_ENCODING);
+            }
+            else {
+                echo yaml_emit($config_items, YAML_UTF8_ENCODING);
+            }
 
         }
 
