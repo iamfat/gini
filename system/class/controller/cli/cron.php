@@ -22,9 +22,14 @@ namespace Controller\CLI {
         }
 
         function action_export(&$args) {
+            
+            if ($args[0]) {
+                $user = $args[0];
+            }
+            
             foreach ((array)_CONF('cron') as $cron) {
-                printf("\n# %s\n", $cron['comment']);
-                printf("%s gini @%s %s\n\n", $cron['interval'], APP_SHORTNAME, $cron['command']);
+                if ($cron['comment']) printf("# %s\n", $cron['comment']);
+                printf("%s%s\tgini @%s %s\n\n", $cron['interval'], $user ? "\t$user":'', APP_SHORTNAME, $cron['command']);
             }
         }
 
