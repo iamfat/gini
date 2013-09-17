@@ -404,7 +404,7 @@ namespace Controller\CLI {
                     printf("   %s\n", $oname);
                     $class_name = '\\ORM\\'.str_replace('/', '\\', $oname);
                     $o = new $class_name();
-                    $o->db()->adjust_table($o->name(), $o->schema());
+                    $o->db()->adjust_table($o->table_name(), $o->schema());
                 });
 
             }

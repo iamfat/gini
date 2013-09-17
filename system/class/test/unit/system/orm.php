@@ -12,7 +12,7 @@ namespace Test\Unit\System {
         function test_save() {
             $o1 = new \ORM\ORM_Test3();
             $o1->inheritance();
-            $o1->db()->adjust_table($o1->name(), $o1->schema());
+            $o1->db()->adjust_table($o1->table_name(), $o1->schema());
 
             $o1->name = "Hello";
             $o1->gender = 1;

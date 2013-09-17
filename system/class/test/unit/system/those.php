@@ -45,13 +45,13 @@ namespace Test\Unit\System {
             // (user#1, billing_account[lab=lab#1]<department) billing_department
             // $account = new \ORM\Account;
             $user = a('user');
-            $user->db()->adjust_table($user->name(), $user->schema());
+            $user->db()->adjust_table($user->table_name(), $user->schema());
 
             $lab = a('lab');
-            $lab->db()->adjust_table($lab->name(), $lab->schema());
+            $lab->db()->adjust_table($lab->table_name(), $lab->schema());
             
             $account = a('account');
-            $account->db()->adjust_table($account->name(), $account->schema());
+            $account->db()->adjust_table($account->table_name(), $account->schema());
             
             $departments = those('department')
                 ->which_is('department')->of(
