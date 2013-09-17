@@ -113,7 +113,7 @@ final class CLI {
             do {
                 // load $_SERVER from shared memo-cliry
                 $_SERVER['__RELAUNCH_PROCESS'] = 1;
-                $ph = proc_open($_SERVER['_'], array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER);
+                $ph = proc_open($_SERVER['SCRIPT_FILENAME'], array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER);
                 if (is_resource($ph)) {
                     $code = proc_close($ph);
                     $_SERVER = (array) json_decode(@file_get_contents($env_file), true);
@@ -206,7 +206,7 @@ final class CLI {
             }
 
             array_shift($argv);
-            $eargv = array(escapeshellcmd($_SERVER['_']));
+            $eargv = array(escapeshellcmd($_SERVER['SCRIPT_FILENAME']));
             foreach ($argv as $arg) {
                 $eargv[] = escapeshellcmd($arg);
             }
