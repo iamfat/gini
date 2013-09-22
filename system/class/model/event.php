@@ -161,7 +161,7 @@ final class Event {
                 }
                 // $config['xxx'] = array('return'=>'callback:xxx_func', );
                 if (is_array($hook) && isset($hook['return'])) {
-                    $callback = $hook['return'];
+                    $return = $hook['return'];
                     $weight = $hook['weight'];
                 }
                 else {
