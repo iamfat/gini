@@ -195,8 +195,8 @@ final class CLI {
         }
         // @app: automatically set APP_PATH and run
         elseif ($cmd[0] == '@') {
-            $app_base_path = realpath( isset($_SERVER['GINI_APP_BASE_PATH']) ? 
-                                $_SERVER['GINI_APP_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..'
+            $app_base_path = realpath( isset($_SERVER['GINI_MODULE_BASE_PATH']) ? 
+                                $_SERVER['GINI_MODULE_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..'
                              );
 
             $cmd = substr($cmd, 1);

@@ -1,18 +1,11 @@
 <?php
-/*
-SYS_PATH=/usr/share/gini/system
-APP_PATH=/var/lib/gini-apps/hello
-I18N_PATH=/var/lib/gini-apps/hello/i18n
-GN_DEBUG=0/1
-*/
-
 $_SERVER += $_ENV;
 
 $sys_path = realpath(isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] : (dirname(__FILE__).'/../system'));
 $_SERVER['GINI_SYS_PATH'] = $sys_path;
 define('SYS_PATH', $sys_path);
 
-// locate GINI_APP_PATH and GINI_APP_BASE_PATH, contain info.php
+// locate GINI_APP_PATH and GINI_MODULE_BASE_PATH, contain info.php
 if (!isset($_SERVER['GINI_APP_PATH'])) {
     $cwd = getcwd();
     $path_arr = explode('/', $cwd);
@@ -21,12 +14,14 @@ if (!isset($_SERVER['GINI_APP_PATH'])) {
         $base = implode('/', array_slice($path_arr, 0, $i));
         if (file_exists($base . '/gini.json')) {
             $_SERVER['GINI_APP_PATH'] = $base;
-            if (!isset($_SERVER['GINI_APP_BASE_PATH'])) {
-                $_SERVER['GINI_APP_BASE_PATH'] = dirname($base);
-            }
+            chdir($_SERVER['GINI_APP_PATH']);
             break;
         }
     }
+}
+
+if (!isset($_SERVER['GINI_MODULE_BASE_PATH'])) {
+    $_SERVER['GINI_MODULE_BASE_PATH'] = '/usr/local/share/gini-modules';
 }
 
 if (!isset($_SERVER['GINI_APP_PATH'])) {

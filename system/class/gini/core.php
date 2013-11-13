@@ -48,7 +48,7 @@ namespace Gini {
 
             if ($path[0] != '/' && $path[0] != '.') {
                 // 相对路径
-                $path = $_SERVER['GINI_APP_BASE_PATH'] . '/' . $path;
+                $path = $_SERVER['GINI_MODULE_BASE_PATH'] . '/' . $path;
             }
 
             $path = realpath($path);
@@ -77,11 +77,18 @@ namespace Gini {
             return self::$PATH_INFO[$shortname] ?: null;
         }
 
-        static function import($path) {
+        static function import($path, $parent=null) {
 
             if ($path[0] != '/') {
                 // 相对路径
-                $path = $_SERVER['GINI_APP_BASE_PATH'] . '/' . $path;
+                if ($parent) {
+                    $npath = $parent->path . '/modules/'.$path;
+                }
+                else {
+                    $npath = 'modules/'.$path;
+                }
+
+                $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
             }
 
             $path = realpath($path);
@@ -90,9 +97,11 @@ namespace Gini {
             // 先加载dependencies
             $info = self::fetch_info($path);
             if (!$info) return;
+            
+            $info->path = $path;
                         
             foreach ((array)$info->dependencies as $app => $version) {
-                self::import($app);
+                self::import($app, $info);
             }
 
             $inserted = false;
@@ -111,7 +120,7 @@ namespace Gini {
             if (!$inserted) {
                 $path_info[$info->shortname] = $info;
             }
-
+            
             self::$PATH_INFO = $path_info;
             self::$PATH_TO_SHORTNAME[$path] = $info->shortname;
         }
@@ -225,6 +234,11 @@ namespace Gini {
         }
 
         static function exception($e) {
+            foreach (array_reverse(\Gini\Core::$PATH_INFO) as $name => $info) {
+                $class = '\\'.str_replace('-', '_', $name);
+                !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
+            }
+
             \Application::exception($e);
             exit(1);
         }
@@ -269,6 +283,11 @@ namespace Gini {
             define('APP_SHORTNAME', self::$PATH_TO_SHORTNAME[APP_PATH]);
 
             \Application::setup();
+            foreach (self::$PATH_INFO as $name => $info) {
+                $class = '\\'.str_replace('-', '_', $name);
+                !method_exists($class, 'setup') or call_user_func($class.'::setup');
+            }
+
         }
 
         static function main() {
@@ -277,6 +296,11 @@ namespace Gini {
         }
 
         static function shutdown() {
+            foreach (array_reverse(self::$PATH_INFO) as $name => $info) {
+                $class = '\\'.str_replace('-', '_', $name);
+                !method_exists($class, 'shutdown') or call_user_func($class.'::shutdown');
+            }
+
             \Application::shutdown();    
         }
         

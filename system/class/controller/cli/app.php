@@ -224,6 +224,7 @@ namespace Controller\CLI {
                 $this->_prepare_walkthrough($class_dir, '', function($file) use ($class_dir, &$class_map) {
                     if (preg_match('/^(.+)\.php$/', $file, $parts)) {
                         $class_name = trim(strtolower($parts[1]), '/');
+                        $class_name = strtr($class_name, '-', '_');
                         $class_map[$class_name] = $class_dir . '/' . $file;
                     }
                 });
