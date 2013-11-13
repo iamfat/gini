@@ -32,6 +32,14 @@ namespace {
         }
 
     }
+    
+    if (!function_exists('mb_str_pad')) {
+        
+        function mb_str_pad( $input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT) {
+            $diff = mb_strwidth( $input ) - mb_strlen( $input );
+            return str_pad( $input, $pad_length + $diff, $pad_string, $pad_type );
+        }
+    }
 
 }
 
@@ -76,7 +84,7 @@ namespace Controller\CLI {
         }
 
         function action_info(&$args) {
-            $path = $argv[0] ?: basename($_SERVER['PWD']);
+            $path = $args[0] ?: APP_SHORTNAME;
 
             $info = \Gini\Core::path_info($path);
             if ($info) {
@@ -88,7 +96,15 @@ namespace Controller\CLI {
 
         }
 
-        function action_ls(&$args) {
+        function action_modules(&$args) {
+            
+            foreach (\Gini\Core::$PATH_INFO as $name => $info) {
+                printf("%s %s %s\n", 
+                    mb_str_pad($name, 20, ' '), 
+                    mb_str_pad($info->name, 30, ' '), 
+                    $info->path);
+            }
+            
             
         }
 

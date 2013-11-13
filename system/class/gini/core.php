@@ -79,6 +79,8 @@ namespace Gini {
 
         static function import($path, $parent=null) {
 
+            if (isset(self::$PATH_INFO[$path])) return;
+
             if ($path[0] != '/') {
                 // 相对路径
                 if ($parent) {
@@ -270,7 +272,6 @@ namespace Gini {
 
             self::import(SYS_PATH);
 
-            // $_SERVER['GINI_APP_PATH'] = '/var/lib/gini-apps/hello'
             if (isset($_SERVER['GINI_APP_PATH'])) {
                 $app_path = $_SERVER['GINI_APP_PATH'];
                 define('APP_PATH', $app_path);
