@@ -81,17 +81,25 @@ namespace Model {
             return '<a href="mailto:'.$mail.'"'.$extra.'>'.$name.'</a>';
         }
 
-        protected static $_base;
+        protected static $_base, $_rurl;
         static function setup() {
             $host = $_SERVER['HTTP_HOST'];
             $scheme = $_SERVER['HTTPS'] ? 'https':'http';
             $dir = dirname($_SERVER['SCRIPT_NAME']);
             if (substr($dir, -1) != '/') $dir .= '/';
-            self::$_base = $scheme.'://'.$host.$dir;                    
+            self::$_base = $scheme.'://'.$host.$dir;     
+            
+            self::$_rurl = \Gini\Core::path_info(APP_SHORTNAME)->rurl;               
         }
 
         static function base() {
             return self::$_base;
+        }
+        
+        static function rurl($path, $type) {
+            $base = self::$_rurl[$type] ?: (self::$_rurl['*'] ?: '');
+            if (substr($base, -1) != '/') $base .= '/';
+            return $base . $path;
         }
             
     }
@@ -110,5 +118,8 @@ namespace {
         return call_user_func_array('\\Model\\URI::mailto', $args);
     }
 
-
+    function RURL($path, $type) {
+        return \Model\URI::rurl($path, $type);
+    }
+    
 }
