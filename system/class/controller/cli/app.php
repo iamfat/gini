@@ -167,32 +167,6 @@ namespace Controller\CLI {
             }
         }
 
-        // private function _import_app_config(&$config_items) {
-        //     $config_dir = APP_PATH . '/' . DATA_DIR . '/config';
-        //     if (is_dir($config_dir)) {
-        //         $dh = opendir($config_dir);
-        //         if ($dh) {
-        //             while (false !== ($name = readdir($dh))) {
-        //                 if ($name[0] == '.') continue;
-        //                 if (fnmatch('*.json', $name)) {
-        //                     $file = $config_dir . '/' . $name;
-        //                     $category = basename($name, '.json');
-        //                     $content = file_get_contents($file);
-        //                     $content = preg_replace("#(/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/)|([\s\t](//).*)#", '', $content); 
-        //                     $items= (array)json_decode($content, true);
-        //                     if (JSON_ERROR_NONE != json_last_error()) {
-        //                         TRACE("\e[31m%s\e[0m on \e[4m%s\e[0m.", json_last_error_msg(), $name);
-        //                     }
-        //                     else {
-        //                         $config_items[$category] = array_merge((array)$config_items[$category], $items);
-        //                     }
-        //                 }
-        //             }
-        //             closedir($dh);
-        //         }
-        //     }
-        // }
-
         private function _update_config_cache() {
 
             printf("%s\n", "Updating config cache...");
@@ -203,29 +177,14 @@ namespace Controller\CLI {
             foreach ($paths as $path) {
                 $this->_load_config_dir($path, $config_items);
             }
-
-            //             // update orm.plurals
-            // $paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
-            // foreach($paths as $path) {
-            //     $shortname = \Gini\Core::shortname($path);
-            //     // printf("\e[30;1;4m%s\e[0m:\n", $shortname);
-            //     if (!is_dir($path)) continue;
-            // 
-            //     $dh = opendir($path);
-            //     if ($dh) {
-            //         while ($name = readdir($dh)) {
-            //             if ($name[0] == '.') continue;
-            //             if (!is_file($path . '/' . $name)) continue;
-            //             $oname = basename($name, '.php');
-            //             $class_name = '\\ORM\\'.$oname;
-            //             if (isset($class_name::$_plural)) {
-            //                 $config_items['orm']['plurals'][$class_name::$_plural] = $oname;
-            //             }
-            //         }
-            //         closedir($dh);
-            //     }
-            // }
-            // 
+            
+            if (isset($_SERVER['GINI_ENV'])) {
+                $paths = \Gini\Core::phar_file_paths(RAW_DIR, 'config/@'.$_SERVER['GINI_ENV']);
+                foreach ($paths as $path) {
+                    $this->_load_config_dir($path, $config_items);
+                }
+            }
+            
             $config_file = APP_PATH . '/cache/config.json';
             file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
