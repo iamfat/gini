@@ -118,7 +118,7 @@ final class Event {
     }
 
     static function & extract_names($selector) {
-        return is_array($selector) ? $selector : explode(' ', $selector);
+        return is_array($selector) ? $selector : [$selector];
     }
     
     static function bind($events, $callback, $weight=0, $key=null) {
