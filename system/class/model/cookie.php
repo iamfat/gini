@@ -36,7 +36,7 @@ namespace Model {
         }
         
         static function setup() {
-            self::$_cookie_file = sys_get_temp_dir().'/cookie_'.strtr(trim(`tty`, "/\n"), '/', '_');
+            self::$_cookie_file = sys_get_temp_dir().'/cookie_'.posix_getsid(0);
             if (file_exists(self::$_cookie_file)) {
                 self::$_cookie = (array)json_decode(file_get_contents(self::$_cookie_file), true);
             }

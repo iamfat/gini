@@ -36,7 +36,7 @@ namespace Model {
             while (count($args) > 0) {
                 $arg = array_shift($args);
                 if (!preg_match('|^[a-z-_][\w-]*$|', $arg)) break;
-                $arg = strtolower(strtr($arg, '-', '_'));
+                $arg = strtolower($arg);
                 if ($path) $path .= '/' . $arg;
                 else $path = $arg;
                 $candidates[$path] = $args;
@@ -44,11 +44,11 @@ namespace Model {
 
             $class = null;
             foreach(array_reverse($candidates) as $path => $params){
-                $basename = basename($path);
+                $basename = strtr(basename($path), '-', '_') ;
                 $dirname = dirname($path);
                 $class_namespace = '\\Controller\\CGI\\';
                 if ($dirname != '.') {
-                    $class_namespace .= str_replace('/', '\\', $dirname).'\\';
+                    $class_namespace .= strtr($dirname, ['-'=>'_', '/'=>'\\']).'\\';
                 }
                 $class = $class_namespace . $basename;
                 if (class_exists($class)) break;
@@ -84,6 +84,7 @@ namespace Model {
             $controller->action = $action;
             $controller->params = $params;
             $controller->form = $form;
+            $controller->route = $path;
 
             return $controller;     
         }
