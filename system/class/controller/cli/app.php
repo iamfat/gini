@@ -255,9 +255,9 @@ namespace Controller\CLI {
                             $dst_path = $css_dir . '/' . $css;
                             if (!file_exists($dst_path) 
                                 || filemtime($src_path) > filemtime($dst_path)) {
-                                // lessc -x raw/less/$$LESS.less -o web/assets/css/$$LESS.css ; \
+                                // lessc -x raw/less/$$LESS.less web/assets/css/$$LESS.css ; \
                                 printf("   %s => %s\n", $name, $css);
-                                $command = sprintf("lessc -x %s -o %s"
+                                $command = sprintf("lessc -x %s %s"
                                     , escapeshellarg($src_path)
                                     , escapeshellarg($dst_path)
                                     );

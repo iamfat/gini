@@ -33,7 +33,7 @@ namespace Controller\CLI {
                     $info->author ?: 'Anonymous',
                     $info->name,
                     $info->version,
-                    $info->email,
+                    $info->email ?: 'l10n@geneegroup.com',
                     escapeshellarg($l10n_template)
                     );
             exec($cmd);
