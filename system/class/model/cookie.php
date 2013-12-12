@@ -36,7 +36,7 @@ namespace Model {
         }
         
         static function setup() {
-            self::$_cookie_file = sys_get_temp_dir().'/cookie_'.posix_getsid(0);
+            self::$_cookie_file = sys_get_temp_dir().'/gini-cookie/'.posix_getpwuid(posix_getuid())['name'].'/cookie_'.posix_getsid(0);
             if (file_exists(self::$_cookie_file)) {
                 self::$_cookie = (array)json_decode(file_get_contents(self::$_cookie_file), true);
             }
@@ -59,6 +59,9 @@ namespace Model {
         
         static function shutdown() {
             if (self::$_cookie_file) {
+                if (!file_exists(self::$_cookie_file)) {
+                    \Model\File::check_path(self::$_cookie_file);
+                }
                 $content = json_encode((array)self::$_cookie, true);
                 file_put_contents(self::$_cookie_file, $content);
                 TRACE('%s', $content);
