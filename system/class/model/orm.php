@@ -521,6 +521,19 @@ namespace Model {
                 $this->_extra[$name] = $value;
             }
         }
+        
+        // 返回localized name
+        function _T($name, $locale=null) {
+            // 如果之前没有触发数据库查询, 在这里触发一下
+            $this->fetch();
+ 
+            // if _CONF('system.locale') == 'zh_CN', $object->T('name') will access $object->_extra['i18n'][zh_CN]['name']
+            if (!isset($locale)) $locale = _CONF('system.locale');
+            if (isset($this->_extra['@i18n'][$locale][$name])) {
+                return $this->_extra['@i18n'][$locale][$name];
+            }
+            return $this->$name;
+        }
 
     }    
 }

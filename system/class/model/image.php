@@ -383,11 +383,11 @@ class Image {
         
         //检查文件是否存在
         if(!file_exists($filename)) {
-            throw new Error_Exception(T('文件:file无法找到.', array(':file'=>$filename)));
+            throw new Error_Exception(T('Image file ":file" not found.', array(':file'=>$filename)));
         }
         //检查文件是否可读
         elseif(!is_readable($filename)) {
-            throw new Error_Exception(T('文件:file无法读取.', array(':file'=>$filename)));
+            throw new Error_Exception(T('Unreadable image file ":file".', array(':file'=>$filename)));
         }
         
         if (!$format) $format = File::extension($filename);
@@ -401,7 +401,7 @@ class Image {
         case 'png':
             $image->format = 'png'; break;
         default:
-            throw new Error_Exception(T('文件:file不是可识别的图片格式(GIF/JPG/PNG)', array(':file'=>$filename)));
+            throw new Error_Exception(T('Unrecognized image (GIF/JPG/PNG) ":file".', array(':file'=>$filename)));
         }
 
         $image->filename=$filename;
@@ -420,7 +420,7 @@ class Image {
         }
         
         if (!$image->im) {
-            throw new Error_Exception(T('文件:file不是可识别的图片格式(GIF/JPG/PNG)', array(':file'=>$filename)));
+            throw new Error_Exception(T('Unrecognized image ":file".', array(':file'=>$filename)));
         }
         
         $size = GetImageSize($image->filename);
@@ -442,7 +442,7 @@ class Image {
         
         $image->im = @imagecreatefromstring($data);
         if (!$image->im) {
-            throw new Error_Exception(T('不可识别的图片数据'));
+            throw new Error_Exception(T('Unrecognized image data.'));
         }
         
         $image->format = 'png';

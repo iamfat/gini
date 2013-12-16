@@ -24,12 +24,12 @@ class Date {
         if($dfrom > 0) 
             $sfrom = Date::format($dfrom, $from_format);
         else
-            $sfrom = T('最初');
+            $sfrom = T('Past');
         
         if($dto > 0)
             $sto = Date::relative($dto, $dfrom);
         else
-            $sto = T('现在');
+            $sto = T('Present');
             
         return $sfrom.' ~ '.$sto;
     }
@@ -39,12 +39,12 @@ class Date {
         if($dfrom > 0)
             $sfrom=Date::fuzzy($dfrom, $detail);
         else
-            $sfrom=T('最初');
+            $sfrom=T('Past');
         
         if($dto > 0)
             $sto=Date::fuzzy($dto, $detail);
         else
-            $sto=T('现在');
+            $sto=T('Present');
             
         return $sfrom.' ~ '.$sto;
     }
@@ -98,12 +98,12 @@ class Date {
     }
 
     protected static $UNITS = array(
-        's'=>'秒',
-        'i'=>'分钟',
-        'h'=>'小时',
-        'd'=>'天',
-        'm'=>'月',
-        'y'=>'年',
+        's'=>'second',
+        'i'=>'minute',
+        'h'=>'hour',
+        'd'=>'day',
+        'm'=>'month',
+        'y'=>'year',
     );
 
     protected static $UNIT_FACTORS = array(
@@ -180,7 +180,7 @@ class Date {
     }
 
     static function fuzzy($time, $detail=false, $now = 0) {
-        if(!$time)return T('早些时候');
+        if(!$time)return T('very beginning');
     
         if(!$now) $now = Date::time();
     
@@ -205,10 +205,10 @@ class Date {
                     return Date::format($time, $time_format);
                 }
                 elseif ($hours==1) {
-                    return T('一个多小时前');
+                    return T('more than an hour ago');
                 }
                     
-                return T('几分钟前');
+                return T('few minutes ago');
         
             } elseif (date('Y', $now) == date('Y', $time)) {
                 return Date::format($time, 'm/d '.$time_format);
@@ -218,8 +218,8 @@ class Date {
         }
         
         if($nd['year']==$td['year']){
-            if($nd['yday']==$td['yday']) return T('今天');
-            elseif($nd['yday']-1==$td['yday']) return T('昨天');
+            if($nd['yday']==$td['yday']) return T('today');
+            elseif($nd['yday']-1==$td['yday']) return T('yesterday');
             return Date::format($time, 'm/d');
         }
         
