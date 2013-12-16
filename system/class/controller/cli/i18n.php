@@ -83,6 +83,7 @@ namespace Controller\CLI {
 
             foreach($argv as $locale) {
                 $pofile = I18N_PATH.'/'.$locale.'/LC_MESSAGES/'.$appname.'.po';
+                \Model\File::check_path($pofile);
                 $paths = \Gini\Core::file_paths(RAW_DIR . '/l10n/'.$locale.'.po');
                 echo "merge: $appname.po\n";
                 $cmd = sprintf('msgcat -o %1$s %2$s', 
