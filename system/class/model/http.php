@@ -4,21 +4,26 @@ namespace Model;
 
 class HTTP {
     
-    private $_header=array();
-    private $_post=array();
+    private $_header=[];
+    private $_post=[];
+    private $_get=[];
     
     static function instance() {
         return new HTTP;
     }
     
-    function header($name , $value){
+    function header($name , $value) {
         $this->_header[$name]=$value;
         return $this;
     }
     
-    function post($query){
-        $this->_post=array_merge($this->_post, $query);
-        return $this;
+    function get($url, $query=null) {
+        return $this->request(\Model\URI::url($url, $query));
+    }
+    
+    function post($url, $query) {
+        $this->_post = $query;
+        return $this->request($url);
     }
     
     function clean(){
@@ -101,7 +106,7 @@ class HTTP {
 
         if ($this->_post) {
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($this->_post));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, is_array($this->_post) ? http_build_query($this->_post) : $this->_post);
         }
         
         $data = curl_exec($ch);
@@ -111,7 +116,7 @@ class HTTP {
         $errno = curl_errno($ch);
         if ($errno || !$data) {
             $err = curl_error($ch);
-            Log::add("CURL ERROR($errno $err): $url ", 'error');
+            _LOG("CURL ERROR($errno $err): $url ", 'error');
             curl_close($ch);
             return null;
         }
@@ -119,10 +124,6 @@ class HTTP {
         $info = curl_getinfo($ch);
 
         curl_close($ch);
-        
-        $response->header = array();
-        $response->body = null;
-        $response->error = false;
         
         list($header, $body)=explode("\n\n", str_replace("\r", "", $data), 2);
         $response=new HTTP_Response;
@@ -146,7 +147,7 @@ class HTTP {
 
 class HTTP_Response {
 
-    public $header=array();
+    public $header=[];
     public $status=null;
     public $body=null;
     
