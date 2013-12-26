@@ -20,8 +20,7 @@ abstract class CGI {
 
         $this->__pre_action($action, $params);
         $response = call_user_func_array(array($this, $action), $params);
-        $response = $this->__post_action($action, $params, $response) ?: $response;
-        return $response ?: new \Model\CGI\Response\HTML('');
+        return $this->__post_action($action, $params, $response) ?: $response;
     }
     
     function form($mode = '*') {
