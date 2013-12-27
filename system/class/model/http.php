@@ -6,29 +6,27 @@ class HTTP {
     
     private $_header=[];
     private $_post=[];
-    private $_get=[];
-    
-    static function instance() {
-        return new HTTP;
-    }
     
     function header($name , $value) {
         $this->_header[$name]=$value;
         return $this;
     }
     
-    function get($url, $query=null) {
-        return $this->request(\Model\URI::url($url, $query));
+    function get($url, $query=null, $timeout=5) {
+        $qpos = strpos($url, '?');
+        $url .= ($qpos === false) ? '?' : '&';
+        $url .= is_string($query) ? $query : http_build_query($query);
+        return $this->request($url, $timeout);
     }
     
-    function post($url, $query) {
+    function post($url, $query, $timeout=5) {
         $this->_post = $query;
-        return $this->request($url);
+        return $this->request($url, $timeout);
     }
     
     function clean(){
-        $this->_header=array();
-        $this->_post=array();
+        $this->_header = [];
+        $this->_post = [];
     }
 
     function cookie() {
@@ -64,7 +62,7 @@ class HTTP {
         return $this;
     }
 
-    function & request($url, $timeout=5){
+    function request($url, $timeout=5){
         $ch = curl_init();
         curl_setopt_array($ch, array(
             CURLOPT_SSL_VERIFYPEER => false,
@@ -125,21 +123,7 @@ class HTTP {
 
         curl_close($ch);
         
-        list($header, $body)=explode("\n\n", str_replace("\r", "", $data), 2);
-        $response=new HTTP_Response;
-        
-        $response->body=trim($body);
- 
-        $header = explode("\n", $header);
-        $status = array_shift($header);
-        $response->status = $info['http_code'];
-
-        foreach($header as $h){
-            list($k, $v)=explode(': ', $h, 2);
-            if($k)$response->header[$k]=$v;
-        }
-        
-        return $response;
+        return new HTTP_Response($data, $info['http_code']);
     }
 
     
@@ -151,31 +135,24 @@ class HTTP_Response {
     public $status=null;
     public $body=null;
     
-    /**
-     * Pull the href attribute out of an html link element.
-     */
-    function link_href($rel) {
-      $rel = preg_quote($rel);
-      preg_match('|<link\s+rel=["\'](.*)'. $rel .'(.*)["\'](.*)/?>|iU', $this->body, $matches);
-      if (isset($matches[3])) {
-        preg_match('|href=["\']([^"]+)["\']|iU', $matches[3], $href);
-        return trim($href[1]);
-      }
-      return false;
-    }
-    
-    /**
-     * Pull the http-equiv attribute out of an html meta element
-     */
-    function meta_httpequiv($equiv) {
-      preg_match('|<meta\s+http-equiv=["\']'. $equiv .'["\'](.*)/?>|iU', $this->body, $matches);
-      if (isset($matches[1])) {
-        preg_match('|content=["\']([^"]+)["\']|iU', $matches[1], $content);
-        if (isset($content[1])) {
-          return $content[1];
+    function __construct($data, $status) {
+        list($header, $body)=explode("\n\n", str_replace("\r", "", $data), 2);
+        
+        $this->body=trim($body);
+ 
+        $header = explode("\n", $header);
+        $status = array_shift($header);
+        $this->status = $status;
+
+        foreach ($header as $h) {
+            list($k, $v) = explode(': ', $h, 2);
+            if ($k) {
+                $this->header[$k] = $v;
+            }
         }
-      }
-      return false;
     }
     
+    function __toString() {
+        return $this->body;
+    }
 }
