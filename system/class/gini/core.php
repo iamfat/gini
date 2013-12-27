@@ -117,6 +117,7 @@ namespace Gini {
             if (isset(self::$PATH_INFO[$path])) return;
             
             foreach ((array)$info->dependencies as $app => $version) {
+                if (!$app) continue;
                 self::import($app, $info);
             }
 
