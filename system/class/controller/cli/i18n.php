@@ -4,12 +4,12 @@ namespace Controller\CLI {
     
     class I18N extends \Controller\CLI {
 
-        function action_help(&$argv) {
+        function action_help($argv) {
             echo "gini i18n scan [<locales>]\n";
             echo "gini i18n format <locales>\n";
         }
 
-        function action_scan(&$argv) {
+        function action_scan($argv) {
 
             if (count($argv) < 1) {
                 exit("usage: \e[1;34mgini i18n scan\e[0m [<locales>]\n");
@@ -74,7 +74,7 @@ namespace Controller\CLI {
             
         }
 
-        function action_format(&$argv) {
+        function action_format($argv) {
             if (count($argv) < 1) {
                 exit("usage: \e[1;34mgini i18n format\e[0m <locales>\n");
             }

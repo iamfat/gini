@@ -53,7 +53,7 @@ namespace Controller\CLI {
          * @return void
          * @author Jia Huang
          **/
-        function action_init(&$args) {
+        function action_init($args) {
 
             $path = $_SERVER['PWD'];
 
@@ -83,7 +83,7 @@ namespace Controller\CLI {
             file_put_contents($path . '/gini.json', $gini_json);
         }
 
-        function action_info(&$args) {
+        function action_info($args) {
             $path = $args[0] ?: APP_SHORTNAME;
 
             $info = \Gini\Core::path_info($path);
@@ -96,7 +96,7 @@ namespace Controller\CLI {
 
         }
 
-        function action_modules(&$args) {
+        function action_modules($args) {
             
             foreach (\Gini\Core::$PATH_INFO as $name => $info) {
                 printf("%s %s %s\n", 
@@ -227,7 +227,7 @@ namespace Controller\CLI {
             echo "   \e[32mdone.\e[0m\n";
         }
 
-        function action_update_cache(&$args) {
+        function action_update_cache($args) {
             \Model\File::check_path(APP_PATH.'/cache/foo');
             $this->_update_class_cache();
             $this->_update_view_cache();
@@ -340,7 +340,7 @@ namespace Controller\CLI {
             echo "   \e[32mdone.\e[0m\n";
         }
 
-        function action_update_web(&$args) {
+        function action_update_web($args) {
             $web_dir = APP_PATH . '/web';
             \Model\File::check_path($web_dir.'/foo');
             $cgi_path = realpath(dirname($_SERVER['SCRIPT_FILENAME']) . '/gini-cgi');
@@ -355,7 +355,7 @@ namespace Controller\CLI {
             $this->_uglify_js();
         }
 
-        function action_server(&$args) {
+        function action_server($args) {
             $addr = $args[0] ?: 'localhost:3000';
             $command 
                 = sprintf("php -S %s -c %s -t %s"
@@ -366,7 +366,7 @@ namespace Controller\CLI {
             //passthru($command);
         }
 
-        function action_update_orm(&$args) {
+        function action_update_orm($args) {
             // enumerate orms
             printf("Updating database structures according ORM definition...\n");
 
@@ -388,7 +388,7 @@ namespace Controller\CLI {
             echo "   \e[32mdone.\e[0m\n";
         }
 
-        function action_print_config(&$args) {
+        function action_print_config($args) {
 
             $config_items = [];
 

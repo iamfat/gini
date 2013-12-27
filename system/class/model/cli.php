@@ -298,9 +298,10 @@ final class CLI {
         else {
             exit("\e[1;34mgini\e[0m: '$cmd' is not a gini command. See 'gini help'.\n");
         }
-
-        $controller->$action($params);
-
+        
+        $controller->action = $action;
+        $controller->params = $params;
+        $controller->execute();
     }
 
     static function print_array($arr) {

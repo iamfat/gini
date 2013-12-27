@@ -4,7 +4,7 @@ namespace Controller\CLI {
     
     class Cron extends \Controller\CLI {
 
-        function __index(&$args) {
+        function __index($args) {
             $helps = array(
                 'list' => 'List crons',
                 'export' => 'Export to STDIN in crontab syntax'
@@ -15,13 +15,13 @@ namespace Controller\CLI {
             }
         }
 
-        function action_list(&$args) {
+        function action_list($args) {
             foreach ((array)_CONF('cron') as $cron) {
                 printf("gini @%s %s\n", APP_SHORTNAME, $cron['command']);
             }
         }
 
-        function action_export(&$args) {
+        function action_export($args) {
             
             if ($args[0]) {
                 $user = $args[0];

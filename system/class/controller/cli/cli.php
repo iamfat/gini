@@ -12,7 +12,7 @@ namespace Controller\CLI {
          **/
         function action_new($argv) {
 
-            if ($argc < 1) {
+            if (count($argv) < 1) {
                 die("usage: gini cli new <name>\n");
             }
 
