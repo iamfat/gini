@@ -64,7 +64,7 @@ namespace Gini {
                 $info->shortname = basename($path);
             }
 
-            if ($info->shortname != 'system') {
+            if ($info->shortname != 'system' && !isset($info->dependencies['system'])) {
                 $info->dependencies['system'] = '*';
             }
 
@@ -79,29 +79,43 @@ namespace Gini {
 
         static function import($path, $parent=null) {
 
-            if (isset(self::$PATH_INFO[$path])) return;
-
-            if ($path[0] != '/') {
-                // 相对路径
-                if ($parent) {
-                    $npath = $parent->path . '/modules/'.$path;
-                }
-                else {
-                    $npath = 'modules/'.$path;
-                }
-
-                $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
-            }
-
-            $path = realpath($path);
-            if (isset(self::$PATH_TO_SHORTNAME[$path])) return;
-
-            // 先加载dependencies
-            $info = self::fetch_info($path);
-            if (!$info) return;
+            TRACE("import($path)");
             
-            $info->path = $path;
-                        
+            if (isset(self::$PATH_INFO[$path])) {
+                $info = self::$PATH_INFO[$path];
+                $path = $info->path;
+            }
+            else {
+                if ($path[0] != '/') {
+                    // 相对路径
+                    if ($parent) {
+                        $npath = $parent->path . '/modules/'.$path;
+                    }
+                    else {
+                        $npath = 'modules/'.$path;
+                    }
+
+                    $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
+                }
+
+                $path = realpath($path);
+                $info = self::fetch_info($path);
+                $info->path = $path;
+            }
+            
+            if (!$info) return;
+ 
+            if ($parent && isset($parent->dependencies[$info->shortname])) {
+                $version_required = $parent->dependencies[$info->shortname];
+                if ($version_required != '*' && preg_match('/^\s*(<=|>=|<|>|=)?\s*(.+)$/', $version_required, $parts)) {
+                    if (!version_compare($info->version, $parts[2], $parts[1] ?: '>=')) {
+                        throw new \Exception("{$info->shortname}{$version_required} required but not match!");
+                    }
+                }
+            }
+            
+            if (isset(self::$PATH_INFO[$path])) return;
+            
             foreach ((array)$info->dependencies as $app => $version) {
                 self::import($app, $info);
             }
@@ -236,7 +250,7 @@ namespace Gini {
         }
 
         static function exception($e) {
-            foreach (array_reverse(\Gini\Core::$PATH_INFO) as $name => $info) {
+            foreach (array_reverse((array) self::$PATH_INFO) as $name => $info) {
                 $class = '\\'.str_replace('-', '_', $name);
                 !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
             }
@@ -275,7 +289,7 @@ namespace Gini {
             if (isset($_SERVER['GINI_APP_PATH'])) {
                 $app_path = $_SERVER['GINI_APP_PATH'];
                 define('APP_PATH', $app_path);
-                self::import($app_path);
+                self::import(APP_PATH);
             }
             else {
                 define('APP_PATH', SYS_PATH);
