@@ -302,13 +302,13 @@ namespace Model {
 
                     switch($vk) {
                     case 'unique':
-                        $indexes['_MIDX_'.$k] = array('type' => 'unique', 'fields'=>$vv);
+                        $indexes['_MIDX_'.$k] = ['type' => 'unique', 'fields'=>$vv];
                         break;
                     case 'primary':
-                        $indexes['PRIMARY'] = array('type' => 'primary', 'fields'=>$vv);
+                        $indexes['PRIMARY'] = ['type' => 'primary', 'fields'=>$vv];
                         break;
                     default:
-                        $indexes['_MIDX_'.$k] = array('type' => 'unique', 'fields'=>$vv);
+                        $indexes['_MIDX_'.$k] = ['fields'=>$vv];
                     }
 
                 }
