@@ -36,13 +36,28 @@ namespace Model {
 
 namespace {
 
+    function __strip_ctx($s) {
+        list($c, $t) = explode("\004", $s, 2);
+        return $t ?: $c;
+    }
+
     function T($fmt, $params=null) {
         if (!$fmt) return $fmt;
         if (is_array($fmt)) {
-            $fmt = ngettext($fmt[0], $fmt[1], $fmt[2]);
+            $a = __strip_ctx($fmt[0]);  //msgid
+            $b = __strip_ctx($fmt[1]);  //plural msgid
+            $c = ngettext($fmt[0], $fmt[1], $fmt[2]);
+            if ($c == $fmt[0] || $c == $fmt[1]) {
+                $fmt = $fmt[2] == 1 ? $a : $b;
+            }
+            else {
+                $fmt = $c;
+            }
         }
         else {
-            $fmt = gettext($fmt);
+            $a = __strip_ctx($fmt);
+            $b = gettext($fmt);
+            $fmt = ($b == $fmt) ? $a : $b;
         }
         return $params ? strtr($fmt, (array)$params) : $fmt;
     }

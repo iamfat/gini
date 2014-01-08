@@ -30,9 +30,9 @@ namespace Controller\CLI {
             \Model\File::check_path($l10n_template);
             if (file_exists($l10n_template)) unlink($l10n_template);
 
-            $keywords = '--keyword=T:1';
+            $keywords = '--keyword=T';
             //$package = sprintf('--package-name=%s --package-version=%s', 
-            $cmd = sprintf('find %s -name "*.php" -o -name "*.phtml" | xargs xgettext -LPHP %s --from-code=UTF-8 -i --copyright-holder=%s --foreign-user --package-name=%s --package-version=%s --msgid-bugs-address=%s -o %s', 
+            $cmd = sprintf('cd %s && find . -name "*.php" -o -name "*.phtml" | xargs xgettext -LPHP %s --from-code=UTF-8 -i --copyright-holder=%s --foreign-user --package-name=%s --package-version=%s --msgid-bugs-address=%s -o %s', 
                     escapeshellarg($path), 
                     $keywords,
                     $info->author ?: 'Anonymous',
@@ -42,6 +42,12 @@ namespace Controller\CLI {
                     escapeshellarg($l10n_template)
                     );
             passthru($cmd);
+            
+            // extract msgid ""{context}\004{txt} to msgctxt and msgid
+            $cmd = sprintf("sed 's/msgid   \"\\(.*\\)'\004'/msgctxt \"\\1\"\\'$'\\nmsgid \"/g' %s", 
+                    escapeshellarg($l10n_template));
+            //echo $cmd . "\n"; die;
+            file_put_contents($l10n_template, `$cmd`);
 
             $locales = $argv;
             foreach(glob($l10n_path.'/*.po') as $fname) {
@@ -62,7 +68,7 @@ namespace Controller\CLI {
                            escapeshellarg($locale));
                 }
                 else {
-                       $cmd = sprintf('msgmerge --update --suffix=none -q %1$s %2$s', 
+                       $cmd = sprintf('msgmerge --update --suffix=none --no-fuzzy-matching -q %1$s %2$s', 
                            escapeshellarg($l10n_pofile), 
                            escapeshellarg($l10n_template));
                 }
