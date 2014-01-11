@@ -44,12 +44,12 @@ namespace Model {
 
             $id = base_convert($this->_uniqid ++, 10, 36);
 
-            $raw_data = $this->post(array(
+            $raw_data = $this->post([
                 'jsonrpc' => '2.0',
                 'method' => $method,
                 'params' => $params,
                 'id' => $id,
-            ));
+            ]);
 
             $data = @json_decode($raw_data, true);
             if (!isset($data['result'])) {

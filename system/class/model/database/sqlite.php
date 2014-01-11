@@ -4,7 +4,7 @@
 
 namespace Model\Database {
 
-    final class SQLite3 extends \PDO implements Driver {
+    final class SQLite extends \PDO implements Driver {
 
         private $_table_status = null;
         private $_table_schema = null;
@@ -13,11 +13,6 @@ namespace Model\Database {
 
         private $_h;
 
-        function __construct($info){
-            $this->_info = $info;
-            $this->connect();
-        }
-        
         function quote_ident($s){
             return '"'.addslashes($s).'"';
         }

@@ -3,28 +3,28 @@
 /*
 
 $user = those('user')
-            ->whose('id')->is_in(1, 2, 3)
-            ->or_whose('atime')->is_greater_than(3)
-            ->and_whose('age')->is_between(5, 15);
+->whose('id')->is_in(1, 2, 3)
+->or_whose('atime')->is_greater_than(3)
+->and_whose('age')->is_between(5, 15);
 
 $user = those('user')
-            ->who_is('employer')->of(
-                those('user')
-                    ->whose('name')->begins_with('Zhang')
-                    ->and_whose('room')->is_in(
-                        those('room')->whose('building')->is(1)
-                    )
-            );
+->who_is('employer')->of(
+those('user')
+->whose('name')->begins_with('Zhang')
+->and_whose('room')->is_in(
+those('room')->whose('building')->is(1)
+)
+);
 
 $user = those users who is the employer of 
-            those users whose name begins with Zhang and whose room is in 
-                those room whose building is Building(1).
+those users whose name begins with Zhang and whose room is in 
+those room whose building is Building(1).
 
 $user = those('users')
-            ->alias('father')
-            ->whose('friend')->is_in(
-                those('users')->whose('parent_name')->is('@father.name')
-            );
+->alias('father')
+->whose('friend')->is_in(
+those('users')->whose('parent_name')->is('@father.name')
+);
 
 */
 
@@ -42,6 +42,10 @@ namespace Model {
         function uniqid() {
             return (self::$_uniqid++);
         }
+        
+        static function reset() {
+            self::$_uniqid = 0;
+        }
 
         static function setup() {
 
@@ -49,7 +53,7 @@ namespace Model {
 
         function __construct($name) {
             parent::__construct($name);
-           $this->_table = 't'.$this->uniqid();
+            $this->_table = 't'.$this->uniqid();
         }
 
         protected function fetch($scope='fetch') {
@@ -120,7 +124,7 @@ namespace Model {
         function who_is($field) {
             $this->reset_fetch();
             $this->_field = $field;
-             return $this;
+            return $this;
         }
 
         function which_is($field) {
@@ -128,7 +132,7 @@ namespace Model {
         }
 
         function and_who_is($field) {
-             return $this->who_is($field);
+            return $this->who_is($field);
         }
 
         function and_which_is($field) {
@@ -166,7 +170,7 @@ namespace Model {
             $v = reset($values);
             if ($v instanceof Those) {
                 $this->_join[] = 'INNER JOIN '.$db->ident($this->table_name).' AS '.$db->quote_ident($this->_table) 
-                        . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
+                    . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
@@ -193,7 +197,7 @@ namespace Model {
             $v = reset($values);
             if ($v instanceof Those) {
                 $this->_join[] = 'LEFT JOIN '.$db->ident($this->table_name).' AS '.$db->quote_ident($this->_table)
-                        . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
+                    . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
@@ -235,7 +239,7 @@ namespace Model {
                 }
                 break;
 
-                case '=': case '!=': {                    
+                case '=': case '<>': {                    
                     if ($v instanceof \ORM\Object) {
                         $o = a($this->name);
                         $field = $this->_field;
@@ -248,7 +252,7 @@ namespace Model {
 
                             $obj_where[] = $db->ident($this->_table, $field . '_id') . $op . intval($v->id);
 
-                            if ($op == '!=') {
+                            if ($op == '<>') {
                                 $this->_where[] = $this->pack_where($obj_where, 'OR');
                             }
                             else {
@@ -274,7 +278,7 @@ namespace Model {
         }
 
         function is_not($v) {
-            return $this->match('!=', $v);
+            return $this->match('<>', $v);
         }
 
         function begins_with($v) {
@@ -310,7 +314,7 @@ namespace Model {
             $db = $this->db;
             $field_name = $db->ident($this->_table, $this->_field);
             $this->_where[] = '(' . $field_name . '>=' . $this->get_value($a) . 
-                             ' AND ' . $field_name . '<' . $this->get_value($b) . ')';
+                ' AND ' . $field_name . '<' . $this->get_value($b) . ')';
             return $this;
         }
 
@@ -320,12 +324,12 @@ namespace Model {
             $db = $this->db;            
             $mode = strtolower($mode);
             switch ($mode) {
-            case 'desc':
-            case 'd':
+                case 'desc':
+                case 'd':
                 $this->_order_by[] = $db->ident($this->_table, $field) . ' DESC';
                 break;
-            case 'asc':
-            case 'a':
+                case 'asc':
+                case 'a':
                 $this->_order_by[] = $db->ident($this->_table, $field) . ' ASC';
                 break;
             }
@@ -355,8 +359,8 @@ namespace Model {
             }
 
             $id_col = $db->ident($table, 'id');
-            $this->SQL = "SELECT DISTINCT $id_col $from_SQL $order_SQL $limit_SQL";
-            $this->count_SQL = "SELECT COUNT(DISTINCT $id_col) AS \"count\" $from_SQL";
+            $this->SQL = trim("SELECT DISTINCT $id_col $from_SQL $order_SQL $limit_SQL");
+            $this->count_SQL = trim("SELECT COUNT(DISTINCT $id_col) AS \"count\" $from_SQL");
 
             return $this;
         }

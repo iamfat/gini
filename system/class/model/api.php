@@ -24,7 +24,7 @@ namespace Model {
                     || !$data['method']
                     || $data['jsonrpc'] != '2.0') throw new API\Exception('Invalid Request', -32600);
 
-                $path = strtolower($data['method']);
+                $path = strtolower(strtr($data['method'], ['.'=>'/', '::'=>'/']));
                 $params = $data['params'];
                 
                 $path_arr = explode('/', $path);
