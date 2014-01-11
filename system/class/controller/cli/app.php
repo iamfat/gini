@@ -83,6 +83,20 @@ namespace Controller\CLI {
             file_put_contents($path . '/gini.json', $gini_json);
         }
 
+        function action_help($args) {
+            echo "gini app init\n";
+            echo "gini app modules\n";
+            echo "gini app update-cache\n";
+            echo "gini app update-web\n";
+            echo "gini app update-orm\n";
+            echo "gini app print-config\n";
+            echo "gini app server <host:port>\n";
+        }
+
+        function __index($args) {
+            $this->action_help($args);
+        }
+
         function action_info($args) {
             $path = $args[0] ?: APP_SHORTNAME;
 
@@ -101,8 +115,9 @@ namespace Controller\CLI {
             foreach (\Gini\Core::$PATH_INFO as $name => $info) {
                 printf("%s %s %s\n", 
                     mb_str_pad($name, 20, ' '), 
-                    mb_str_pad($info->name, 30, ' '), 
-                    $info->path);
+                    mb_str_pad($info->version, 10, ' '),
+                    mb_str_pad($info->name, 30, ' ')
+                );
             }
             
             

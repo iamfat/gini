@@ -8,7 +8,7 @@ namespace Model\Database {
         function quote_ident($s);
 
         function table_exists($table);
-            function table_status($table);
+        function table_status($table);
         function table_schema($name, $refresh);
 
         function adjust_table($table, $schema);

@@ -87,6 +87,7 @@ namespace Gini {
             }
             else {
                 if ($path[0] != '/') {
+                    $shortname = $path;
                     // 相对路径
                     if ($parent) {
                         $npath = $parent->path . '/modules/'.$path;
@@ -97,9 +98,15 @@ namespace Gini {
 
                     $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
                 }
-
+                else {
+                    $shortname = basename($path);
+                }
+                
                 $path = realpath($path);
                 $info = self::fetch_info($path);
+                if ($info === null) {
+                    throw new \Exception("{$shortname} required but missing!");
+                }
                 $info->path = $path;
             }
             
