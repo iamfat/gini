@@ -36,4 +36,10 @@ abstract class CGI {
         }
     }
     
+    function redirect($url='', $query=null) {
+        // session_write_close();
+        header('Location: '. URL($url, $query), true, 302);
+        exit();
+    }
+    
 }

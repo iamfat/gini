@@ -147,7 +147,7 @@ namespace Controller\CLI {
                     case 'yml':
                     case 'yaml':
                         $config = (array) yaml_parse_file($file);
-                        $items[$category] = \Model\Util::array_merge_deep($items[$category], $config);
+                        $items[$category] = \Gini\Util::array_merge_deep($items[$category], $config);
                         break;
                     }
 
@@ -243,7 +243,7 @@ namespace Controller\CLI {
         }
 
         function action_update_cache($args) {
-            \Model\File::check_path(APP_PATH.'/cache/foo');
+            \Gini\File::check_path(APP_PATH.'/cache/foo');
             $this->_update_class_cache();
             $this->_update_view_cache();
             $this->_update_config_cache();
@@ -253,7 +253,7 @@ namespace Controller\CLI {
             printf("%s\n", "Converting LESS to CSS...");
 
             $css_dir = APP_PATH . '/web/assets/css';
-            \Model\File::check_path($css_dir . '/foo');
+            \Gini\File::check_path($css_dir . '/foo');
 
             $pinfo = (array)\Gini\Core::$PATH_INFO;
             $less_map = array();
@@ -292,7 +292,7 @@ namespace Controller\CLI {
             printf("%s\n", "Uglifying JS...");
 
             $ugly_js_dir = APP_PATH . '/web/assets/js';
-            \Model\File::check_path($ugly_js_dir . '/foo');
+            \Gini\File::check_path($ugly_js_dir . '/foo');
 
             $pinfo = (array)\Gini\Core::$PATH_INFO;
             $less_map = array();
@@ -323,7 +323,7 @@ namespace Controller\CLI {
 
             }
 
-            // \Model\File::check_path(APP_PATH.'/cache/view_map.json');
+            // \Gini\File::check_path(APP_PATH.'/cache/view_map.json');
             // file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES| JSON_PRETTY_PRINT));
             echo "   \e[32mdone.\e[0m\n";
         }
@@ -332,7 +332,7 @@ namespace Controller\CLI {
     
             printf("%s\n", "Merging all assets...");
             $assets_dir = APP_PATH.'/web/assets';
-            \Model\File::check_path($assets_dir.'/foo');
+            \Gini\File::check_path($assets_dir.'/foo');
 
             $pinfo = (array)\Gini\Core::$PATH_INFO;
             foreach ($pinfo as $p) {
@@ -341,7 +341,7 @@ namespace Controller\CLI {
                     $src_path = $src_dir . '/' . $file;
                     $dst_path = $assets_dir . '/' . $file;
 
-                    \Model\File::check_path($dst_path);
+                    \Gini\File::check_path($dst_path);
                     if (!file_exists($dst_path) 
                         || filesize($src_path) != filesize($dst_path) 
                         || filemtime($src_path) > filemtime($dst_path)) {
@@ -357,7 +357,7 @@ namespace Controller\CLI {
 
         function action_update_web($args) {
             $web_dir = APP_PATH . '/web';
-            \Model\File::check_path($web_dir.'/foo');
+            \Gini\File::check_path($web_dir.'/foo');
             $cgi_path = realpath(dirname($_SERVER['SCRIPT_FILENAME']) . '/gini-cgi');
             $index_path = $web_dir . '/index.php';
             if (file_exists($index_path)) {
@@ -402,6 +402,27 @@ namespace Controller\CLI {
 
             echo "   \e[32mdone.\e[0m\n";
         }
+
+        function action_update($args) {
+            if (count($args) == 0) $args = ['cache', 'orm', 'web'];
+
+            if (in_array('cache', $args)) {
+                $this->action_update_cache($args);
+                echo "\n";
+            }
+
+            if (in_array('orm', $args)) {
+                $this->action_update_orm($args);
+                echo "\n";
+            }
+
+            if (in_array('web', $args)) {
+                $this->action_update_web($args);
+                echo "\n";
+            }
+
+        }
+
 
         function action_print_config($args) {
 

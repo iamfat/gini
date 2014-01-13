@@ -23,7 +23,7 @@ namespace Gini\PHPUnit\RPC {
                     'id' => uniqid(),
                 ];
                 
-            $response = \Model\API::dispatch($apiData);
+            $response = \Gini\API::dispatch($apiData);
             $this->assertSame($params[0], $response['result'], 'call '.$method);
         }
         

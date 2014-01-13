@@ -1,32 +1,28 @@
 <?php
 
-require __DIR__ . '/gini-bootstrap.php';
+namespace Gini {
+    
+    require __DIR__ . '/gini-bootstrap.php';
 
-class Application {
+    class Application {
 
-	static function setup() {
-		\Model\Cache::setup();
-		\Model\Config::setup();
-		\Model\Event::setup();
-		\Model\I18N::setup();
-		\Model\Logger::setup();
-		// \Model\Cookie::setup();
-		\Model\Session::setup();
-		\Model\CGI::setup();
-	}
+    	static function setup() {
+    		CGI::setup();
+    	}
 
-	static function main($argv) {
-		\Model\CGI::main($argv);					// 分派控制器
-	}
+    	static function main($argv) {
+    		CGI::main($argv);					// 分派控制器
+    	}
 
-	static function shutdown() {
-		\Model\CGI::shutdown();
-		\Model\Session::shutdown();
-		// \Model\Cookie::shutdown();
-	}
+    	static function shutdown() {
+    		CGI::shutdown();
+    	}
 
-	static function exception($e) {
-		\Model\CGI::exception($e);
-	}
+    	static function exception($e) {
+    		CGI::exception($e);
+    	}
+
+    }
 
 }
+

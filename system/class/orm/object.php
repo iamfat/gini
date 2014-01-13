@@ -3,7 +3,7 @@
 
 namespace ORM;
 
-class Object extends \Model\ORM {
+class Object extends \Gini\ORM {
 
     var $id = 'bigint,primary,serial';
     var $_extra = 'array';
@@ -25,8 +25,8 @@ class Object extends \Model\ORM {
     function __call($method, $params) {
         if ($method == __CLASS__) return;
         
-        if (method_exists('\\Model\\Those', $method)) {
-            if (!$this->those) $this->those = new \Model\Those($this->name());
+        if (method_exists('\\Gini\\Those', $method)) {
+            if (!$this->those) $this->those = new \Gini\Those($this->name());
             call_user_func_array(array($this->those, $method), $params);
             return $this;
         }

@@ -1,58 +1,16 @@
 <?php
 
-namespace {
-    
-    require __DIR__.'/../bin/gini-phpunit.php';
+$gini_dirs = [
+    isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] . '/../bin' : '../bin',
+    '/usr/share/local/gini/bin',
+];
 
-    class Application {
-
-        static function setup() {
-            \Model\Cache::setup();
-            \Model\Config::setup();
-            \Model\Event::setup();
-            \Model\I18N::setup();
-            \Model\Logger::setup();
-            \Model\Session::setup();
-        }
-
-        static function main($argv) {
-            // DO NOTHING AND WAIT FOR PHPUNIT TEST CASE
-        }
-
-        static function shutdown() {
-            \Model\Session::shutdown();		
-        }
-
-        static function exception($e) {
-            
-        }
-
+foreach ($gini_dirs as $dir) {
+    $file = $dir.'/gini-phpunit.php';
+    if (file_exists($file)) {
+        require_once $file;
+        return;
     }
-
 }
 
-namespace Gini\PHPUnit {
-    
-    abstract class CGI extends \PHPUnit_Framework_TestCase {
-        public static function setUpBeforeClass() {
-            \Gini\Core::setup();
-            \Model\CGI::setup();
-        }
-        
-        public static function tearDownAfterClass() {
-            \Model\CGI::shutdown();
-        }
-    }
-
-    abstract class CLI extends \PHPUnit_Framework_TestCase {
-        public static function setUpBeforeClass() {
-            \Gini\Core::setup();
-            \Model\CLI::setup();
-        }
-        
-        public static function tearDownAfterClass() {
-            \Model\CLI::shutdown();
-        }
-    }
-
-}
+die("missing Gini PHPUnit Components!");

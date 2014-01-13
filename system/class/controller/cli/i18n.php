@@ -27,7 +27,7 @@ namespace Controller\CLI {
             $l10n_path = $path . '/' . RAW_DIR . '/l10n';
             $l10n_template = $l10n_path . '/template.pot';
 
-            \Model\File::check_path($l10n_template);
+            \Gini\File::check_path($l10n_template);
             if (file_exists($l10n_template)) unlink($l10n_template);
 
             $keywords = '--keyword=T';
@@ -89,7 +89,7 @@ namespace Controller\CLI {
 
             foreach($argv as $locale) {
                 $pofile = I18N_PATH.'/'.$locale.'/LC_MESSAGES/'.$appname.'.po';
-                \Model\File::check_path($pofile);
+                \Gini\File::check_path($pofile);
                 $paths = \Gini\Core::file_paths(RAW_DIR . '/l10n/'.$locale.'.po');
                 echo "merge: $appname.po\n";
                 $cmd = sprintf('msgcat -o %1$s %2$s', 

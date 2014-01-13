@@ -1,4 +1,5 @@
 <?php
+
 $_SERVER += $_ENV;
 
 $sys_path = realpath(isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] : (dirname(__FILE__).'/../system'));
@@ -48,9 +49,10 @@ if (file_exists($view_map_file)) {
 
 $class_path = SYS_PATH . '/class';
 if (file_exists($class_path.'.phar')) {
-    require 'phar://' . $class_path . '.phar/gini/bootstrap.php';
+    require 'phar://' . $class_path . '.phar/gini/core.php';
 }
 else {
-    require $class_path . '/gini/bootstrap.php';
+    require $class_path . '/gini/core.php';
 }
 
+\Gini\Core::start();

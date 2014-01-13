@@ -1,33 +1,29 @@
 #!/usr/bin/env php
 <?php
 
-require __DIR__ . '/gini-bootstrap.php';
+namespace Gini {
+    require __DIR__ . '/gini-bootstrap.php';
 
-class Application {
+    class Application {
 
-	static function setup() {
-		\Model\Cache::setup();
-		\Model\Config::setup();
-		\Model\Event::setup();
-		\Model\I18N::setup();
-		\Model\Logger::setup();
-		\Model\Session::setup();
-		\Model\CLI::setup();
-	}
+    	static function setup() {
+    		CLI::setup();
+    	}
 
-	static function main(&$argv) {			
-		// $argv包括了我们的cli标准脚本, 因此需要删除
-		array_shift($argv);
-		\Model\CLI::main($argv);
-	}
+    	static function main($argv) {			
+    		// $argv包括了我们的cli标准脚本, 因此需要删除
+    		array_shift($argv);
+    		CLI::main($argv);
+    	}
 
-	static function shutdown() {
-		\Model\CLI::shutdown();
-		\Model\Session::shutdown();		
-	}
+    	static function shutdown() {
+    		CLI::shutdown();
+    	}
 
-	static function exception($e) {
-		\Model\CLI::exception($e);
-	}
+    	static function exception($e) {
+    		CLI::exception($e);
+    	}
 
+    }
 }
+

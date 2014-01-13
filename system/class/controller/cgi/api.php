@@ -5,7 +5,7 @@ namespace Controller\CGI {
     final class API extends \Controller\CGI {
 
         function __index() {
-            $request = @json_decode(\Model\CGI::content(), true);
+            $request = @json_decode(\Gini\CGI::content(), true);
             if ($request === null) {
                 $response = [
                     'jsonrpc' => '2.0', 
@@ -17,9 +17,9 @@ namespace Controller\CGI {
                 ];    
             }
             else {
-                 $response = \Model\API::dispatch((array)$request);
+                 $response = \Gini\API::dispatch((array)$request);
             }            
-            return new \Model\CGI\Response\JSON($response);
+            return new \Gini\CGI\Response\JSON($response);
         }
 
     }

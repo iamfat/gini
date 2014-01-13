@@ -15,7 +15,7 @@ namespace Controller\CGI {
     
         function __post_action($action, &$params, $response) {
             parent::__post_action($action, $params, $response);
-            if (null === $response) $response = new \Model\CGI\Response\HTML($this->view);
+            if (null === $response) $response = new \Gini\CGI\Response\HTML($this->view);
             return $response;
         }
     

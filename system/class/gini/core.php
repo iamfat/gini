@@ -178,7 +178,7 @@ namespace Gini {
                 }
             }
             else {
-                $file = Core::phar_file_exists($base, $name.EXT, $scope);
+                $file = Core::phar_file_exists($base, $name.'.php', $scope);
                 if ($file) {
                      require_once($file);
                     return $file;
@@ -263,7 +263,7 @@ namespace Gini {
                 !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
             }
 
-            \Application::exception($e);
+            !method_exists('\\Gini\\Application', 'exception') or \Gini\Application::exception($e);
             exit(1);
         }
 
@@ -275,7 +275,7 @@ namespace Gini {
             throw new \ErrorException($code, 0, 1, $file, $line);
         }
 
-        static function setup(){
+        static function start(){
 
             error_reporting(E_ALL & ~E_NOTICE);
             
@@ -292,6 +292,12 @@ namespace Gini {
             mb_internal_encoding('utf-8');
             mb_language('uni');
 
+            define('CLASS_DIR', 'class');
+            define('VIEW_DIR', 'view');
+            define('RAW_DIR', 'raw');
+            define('DATA_DIR', 'data');
+            define('CACHE_DIR', 'cache');
+
             self::import(SYS_PATH);
 
             if (isset($_SERVER['GINI_APP_PATH'])) {
@@ -305,17 +311,18 @@ namespace Gini {
 
             define('APP_SHORTNAME', self::$PATH_TO_SHORTNAME[APP_PATH]);
 
-            \Application::setup();
+            Config::setup();
+            Logger::setup();
+            Event::setup();
+
+            !method_exists('\\Gini\\Application', 'setup') or \Gini\Application::setup();
             foreach (self::$PATH_INFO as $name => $info) {
                 $class = '\\'.str_replace('-', '_', $name);
                 !method_exists($class, 'setup') or call_user_func($class.'::setup');
             }
 
-        }
-
-        static function main() {
             global $argv;
-            \Application::main($argv);
+            !method_exists('\\Gini\\Application', 'main') or \Gini\Application::main($argv);
         }
 
         static function shutdown() {
@@ -323,8 +330,7 @@ namespace Gini {
                 $class = '\\'.str_replace('-', '_', $name);
                 !method_exists($class, 'shutdown') or call_user_func($class.'::shutdown');
             }
-
-            \Application::shutdown();    
+            !method_exists('\\Gini\\Application', 'shutdown') or \Gini\Application::shutdown();    
         }
         
         static function debug_mode() {
@@ -399,20 +405,6 @@ namespace {
         array_pop($_TRACE_INDENTS);
     }
 
-    $_DECLARED;
-    
-    function TRY_DECLARE($name, $file) {
-        global $_DECLARED;
-        if (!isset($_DECLARED[$name])) {
-            $_DECLARED[$name] = $file;
-        }
-    }
-
-    function DECLARED($name, $file) {
-        global $_DECLARED;
-        return  $_DECLARED[$name] == $file;
-    }
-
     function _G($key, $value = null) {
         if (is_null($value)) {
             return isset(\Gini\Core::$_G[$key]) ? \Gini\Core::$_G[$key] : null;
@@ -422,12 +414,52 @@ namespace {
         }
     }
 
-    function V($path, $vars=null) {
-        return new \Model\View($path, $vars);
+    if (function_exists('s')) {
+        die("import() was declared by other libraries, which may cause problems!");
+    }
+    else {
+        function import($path) {
+            return \Gini\Core::import($path);
+        }
     }
 
-    function import($path) {
-        return \Gini\Core::import($path);
+    if (function_exists('s')) {
+        die("s() was declared by other libraries, which may cause problems!");
+    }
+    else {
+        function s() {
+            $args = func_get_args();
+            if (count($args) > 1) {
+                call_user_func_array('sprintf', $args);
+            }
+            else {
+                return $args[0];
+            }
+        }    
     }
 
+    if (function_exists('H')) {
+        die("H() was declared by other libraries, which may cause problems!");
+    }
+    else {
+        function H(){
+            $args = func_get_args();
+            if (count($args) > 1) {
+                $str = call_user_func_array('sprintf', $args);
+            }
+            else {
+                $str = $args[0];
+            }
+            return htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8');
+        }
+    }
+
+    if (function_exists('V')) {
+        die("V() was declared by other libraries, which may cause problems!");
+    }
+    else {
+        function V($path, $vars=null) {
+            return new \Gini\View($path, $vars);
+        }
+    }
 }
