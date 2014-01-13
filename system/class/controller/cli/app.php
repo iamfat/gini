@@ -202,6 +202,9 @@ namespace Controller\CLI {
             
             $config_file = APP_PATH . '/cache/config.json';
             file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+
+            \Gini\Config::setup();
+
             echo "   \e[32mdone.\e[0m\n";
         }
 
