@@ -228,6 +228,8 @@ class CLI {
 
     static function dispatch($argc, array $argv) {
 
+        $orig_argv = $argv;
+
         $cmd = reset($argv);
 
         $path = '';
@@ -257,7 +259,8 @@ class CLI {
         }
 
         if (!$class || !class_exists($class, false)) {
-            exit("\e[1;34mgini\e[0m: '$cmd' is not a gini command. See 'gini help'.\n");
+            $class = '\\Controller\\CLI\\App';
+            $params = $orig_argv;
         }
 
         _CONF('runtime.controller_path', $path);
@@ -270,7 +273,7 @@ class CLI {
             $action = 'action_'.$action;
             array_shift($params);
         }
-        elseif (method_exists($controller, '__index')) {
+        elseif (!$action && method_exists($controller, '__index')) {
             $action = '__index';
         }
         else {
