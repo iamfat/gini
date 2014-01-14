@@ -7,3 +7,5 @@
 .i18n
 system/web
 system/cache
+
+/vendor/

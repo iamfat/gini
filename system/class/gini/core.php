@@ -13,30 +13,6 @@ namespace Gini {
 
         static $_G;
         static $PATH_INFO;
-        static $PATH_TO_SHORTNAME;
-
-        static function short_path($path) {
-            $path_arr = explode('/', $path);
-            $num = count($path_arr);
-            for ($i=$num;$i>1;$i--) {
-                $base = implode('/', array_slice($path_arr, 0, $i));
-                if (isset(self::$PATH_TO_SHORTNAME[$base])) {
-                    $rpath = $i == $num ? '' : implode('/', array_slice($path_arr, $i));
-                    return self::$PATH_TO_SHORTNAME[$base] . '/' . $rpath;
-                }
-            }
-        }
-
-        static function shortname($path) {
-            $path_arr = explode('/', $path);
-            $num = count($path_arr);
-            for ($i=$num;$i>1;$i--) {
-                $base = implode('/', array_slice($path_arr, 0, $i));
-                if (isset(self::$PATH_TO_SHORTNAME[$base])) {
-                    return self::$PATH_TO_SHORTNAME[$base];
-                }
-            }
-        }
 
         static function fetch_info($path) {
 
@@ -51,7 +27,7 @@ namespace Gini {
                 $path = $_SERVER['GINI_MODULE_BASE_PATH'] . '/' . $path;
             }
 
-            $path = realpath($path);
+            // $path = realpath($path);
 
             $info_script = $path.'/gini.json';
             if (!file_exists($info_script)) return null;
@@ -146,7 +122,7 @@ namespace Gini {
             }
             
             self::$PATH_INFO = $path_info;
-            self::$PATH_TO_SHORTNAME[$path] = $info->shortname;
+            return $info;
         }
 
         static function autoload($class){
@@ -298,18 +274,18 @@ namespace Gini {
             define('DATA_DIR', 'data');
             define('CACHE_DIR', 'cache');
 
-            self::import(SYS_PATH);
+            $info = self::import(SYS_PATH);
 
             if (isset($_SERVER['GINI_APP_PATH'])) {
                 $app_path = $_SERVER['GINI_APP_PATH'];
                 define('APP_PATH', $app_path);
-                self::import(APP_PATH);
+                $info = self::import(APP_PATH);
             }
             else {
                 define('APP_PATH', SYS_PATH);
             }
 
-            define('APP_SHORTNAME', self::$PATH_TO_SHORTNAME[APP_PATH]);
+            define('APP_SHORTNAME', $info->shortname);
 
             Config::setup();
             Logger::setup();

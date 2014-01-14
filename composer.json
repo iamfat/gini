@@ -1,0 +1,17 @@
+{
+    "name": "iamfat/gini",
+    "description": "Gini PHP Framework",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Jia Huang",
+            "email": "iamfat@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "bin": [
+        "bin/gini"
+    ]
+}

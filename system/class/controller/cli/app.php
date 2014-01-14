@@ -1,11 +1,12 @@
 <?php
 
 /**
-* 模块操作命令行
-* usage: app command [args...]
-*    app new app_path [Name]
-* @package default
-* @author Jia Huang
+ * 模块操作命令行
+ * usage: app command [args...]
+ *    app new app_path [Name]
+ *
+ * @package default
+ * @author Jia Huang
 **/
 
 namespace {
@@ -361,12 +362,10 @@ namespace Controller\CLI {
         function action_update_web($args) {
             $web_dir = APP_PATH . '/web';
             \Gini\File::check_path($web_dir.'/foo');
-            $cgi_path = realpath(dirname($_SERVER['SCRIPT_FILENAME']) . '/gini-cgi');
+            $cgi_path = realpath(dirname(realpath($_SERVER['SCRIPT_FILENAME'])) . '/../lib/cgi.php');
             $index_path = $web_dir . '/index.php';
-            if (file_exists($index_path)) {
-                unlink($index_path);
-            }
-            symlink($cgi_path, $index_path);
+            unlink($index_path);
+            file_put_contents($index_path, "<?php require \"$cgi_path\";\n");
 
             $this->_merge_assets();
             $this->_convert_less();
@@ -425,7 +424,6 @@ namespace Controller\CLI {
             }
 
         }
-
 
         function action_print_config($args) {
 

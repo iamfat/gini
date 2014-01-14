@@ -135,11 +135,11 @@ namespace Gini {
         static function setup(){
             URI::setup();
             self::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
-    		Session::setup();
+            Session::setup();
         }
 
         static function shutdown() { 
-    		Session::shutdown();		
+            Session::shutdown();        
         }
     }
     

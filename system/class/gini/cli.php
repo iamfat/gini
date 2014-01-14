@@ -165,8 +165,6 @@ class CLI {
             // list available cli programs
             $paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'controller/cli');
             foreach($paths as $path) {
-                $shortname = \Gini\Core::shortname($path);
-                // printf("\e[30;1;4m%s\e[0m:\n", $shortname);
                 if (!is_dir($path)) continue;
 
                 $dh = opendir($path);
@@ -188,9 +186,8 @@ class CLI {
         $cmd = $argv[0];
         if ($cmd[0] == '@') {
             // @app: automatically set APP_PATH and run
-            $app_base_path = realpath( isset($_SERVER['GINI_MODULE_BASE_PATH']) ? 
-                                $_SERVER['GINI_MODULE_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..'
-                             );
+            $app_base_path = isset($_SERVER['GINI_MODULE_BASE_PATH']) ? 
+                                $_SERVER['GINI_MODULE_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..';
 
             $cmd = substr($cmd, 1);
             $_SERVER['GINI_APP_PATH'] = $app_base_path . '/' .$cmd;
@@ -286,11 +283,11 @@ class CLI {
     }
 
     static function setup() {
-		Session::setup();
+        Session::setup();
     }
 
     static function shutdown() { 
-		Session::shutdown();
+        Session::shutdown();
     }
     
 }

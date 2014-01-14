@@ -2,7 +2,7 @@
 
 namespace Gini {
     
-    require __DIR__ . '/gini-bootstrap.php';
+    require __DIR__ . '/bootstrap.php';
 
     class Application { }
 
