@@ -2,7 +2,7 @@
 
 $_SERVER += $_ENV;
 
-$sys_path = realpath(isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] : __DIR__.'/../system');
+$sys_path = realpath(isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] : __DIR__.'/..');
 $_SERVER['GINI_SYS_PATH'] = $sys_path;
 define('SYS_PATH', $sys_path);
 

@@ -15,7 +15,7 @@ _gini()
 
 	case "$cur" in
 	@) 
-		COMPREPLY=($( compgen -W "$(gini apps)" -- "$cur" )) 
+		COMPREPLY=($( compgen -W "$(gini ?)" -- "$cur" )) 
 		;;
 	*)   
 		COMPREPLY=( $( compgen -W "$(gini ?)" -- "$cur" ) )

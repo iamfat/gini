@@ -22,12 +22,16 @@ abstract class CLI {
     }
     
     function __index($params) {
-        echo "\e[1;34mgini\e[0m: unknown command.\n";
+        $this->__unknown($params);
     }
 
     function action_help($params) {
         echo "\e[1;34mgini\e[0m: help is unavailable.\n";
     }
         
+    function __unknown($params) {
+        echo "\e[1;34mgini\e[0m: unknown command.\n";
+    }
+
 }
 

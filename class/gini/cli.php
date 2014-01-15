@@ -277,7 +277,7 @@ class CLI {
             $action = '__index';
         }
         else {
-            exit("\e[1;34mgini\e[0m: '$cmd' is not a gini command. See 'gini help'.\n");
+            $action = '__unknown';
         }
         
         $controller->action = $action;

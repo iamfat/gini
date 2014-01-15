@@ -1,0 +1,8 @@
+---
+# default: db1
+# db1:
+#    dsn: ""
+#    username: ""
+#    password: ""
+#    options: [] 
+...

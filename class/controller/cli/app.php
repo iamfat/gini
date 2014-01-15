@@ -202,6 +202,8 @@ namespace Controller\CLI {
             }
             
             $config_file = APP_PATH . '/cache/config.json';
+
+            \Gini\File::check_path(APP_PATH.'/cache/foo');
             file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
 
             \Gini\Config::setup();
@@ -224,6 +226,7 @@ namespace Controller\CLI {
                 });
             }
 
+            \Gini\File::check_path(APP_PATH.'/cache/foo');
             file_put_contents(APP_PATH.'/cache/class_map.json', json_encode($class_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
@@ -242,12 +245,12 @@ namespace Controller\CLI {
                 });
             }
 
+            \Gini\File::check_path(APP_PATH.'/cache/foo');
             file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
 
         function action_update_cache($args) {
-            \Gini\File::check_path(APP_PATH.'/cache/foo');
             $this->_update_class_cache();
             $this->_update_view_cache();
             $this->_update_config_cache();
@@ -406,10 +409,20 @@ namespace Controller\CLI {
         }
 
         function action_update($args) {
-            if (count($args) == 0) $args = ['cache', 'orm', 'web'];
+            if (count($args) == 0) $args = ['class', 'view', 'config', 'orm', 'web'];
 
-            if (in_array('cache', $args)) {
-                $this->action_update_cache($args);
+            if (in_array('class', $args)) {
+                $this->_update_class_cache();
+                echo "\n";
+            }
+
+            if (in_array('config', $args)) {
+                $this->_update_config_cache();
+                echo "\n";
+            }
+
+            if (in_array('view', $args)) {
+                $this->_update_view_cache();
                 echo "\n";
             }
 
@@ -425,7 +438,7 @@ namespace Controller\CLI {
 
         }
 
-        function action_print_config($args) {
+        private function _export_config() {
 
             $config_items = [];
 
@@ -441,6 +454,110 @@ namespace Controller\CLI {
                 echo yaml_emit($config_items, YAML_UTF8_ENCODING);
             }
 
+        }
+
+        private function _export_orm() {
+
+            printf("Exporting ORM structures...\n\n");
+
+            $orm_dirs = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
+            foreach($orm_dirs as $orm_dir) {
+                if (!is_dir($orm_dir)) continue;
+
+                $this->_prepare_walkthrough($orm_dir, '', function($file) use ($orm_dir) {
+                    $oname = preg_replace('|.php$|', '', $file);
+                    if ($oname == 'object') return;
+                    printf("   %s\n", $oname);
+                    $class_name = '\\ORM\\'.str_replace('/', '\\', $oname);
+                    $o = new $class_name();
+                    $structure = $o->structure();
+
+                    // unset system fields
+                    unset($structure['id']);
+                    unset($structure['_extra']);
+
+                    $i = 1; $max = count($structure);
+                    foreach ($structure as $k => $v) {
+                        if ($i == $max) break;
+                        printf("   ├─ %s (%s)\n", $k, implode(',', array_map(function($k, $v) {
+                            return $v ? "$k:$v" : $k;
+                        }, array_keys($v), $v)));
+                        $i++;
+                    }
+
+                    printf("   └─ %s (%s)\n\n", $k, implode(',', array_map(function($k, $v) {
+                        return $v ? "$k:$v" : $k;
+                    }, array_keys($v), $v)));
+                });
+
+            }
+
+        }
+
+        function action_export($args) {
+            if (count($args) == 0) $args = ['config', 'orm'];
+
+            if (in_array('config', $args)) {
+                $this->_export_config();
+                echo "\n";
+            }
+
+            if (in_array('orm', $args)) {
+                $this->_export_orm($args);
+                echo "\n";
+            }
+
+        }
+        
+        function action_build($args) {
+            $info = \Gini\Core::path_info(APP_SHORTNAME);
+
+            echo "Building \e[4m$info->name\e[0m ($info->shortname-$info->version)...\n";
+
+            if (!isset($info->build)) $info->build = (object)[];
+            $build = (object)$info->build;
+            if (!isset($build->copy)) {
+                $build->copy = ['raw'];
+            }
+            if (!isset($build->pack)) {
+                $build->pack = ['class', 'view'];
+            }
+            
+            $app_dir = $info->path;
+            $build_dir = $info->path . '/build/' . $info->shortname;
+            if (!is_dir($build_dir))@mkdir($build_dir,0755,true);
+
+            require_once(SYS_PATH.'/lib/packer.php');
+            foreach ($build->pack as $dir) {
+                echo "  Packing $dir.phar...\n";
+                $packer = new \Gini\Dev\Packer("$build_dir/$dir.phar");
+                $packer->import("$app_dir/$dir");
+                echo "\n";
+            }
+            
+            foreach ($build->copy as $dir) {
+                $dir = preg_replace('/^[\/.]/', '', $dir);
+                if (!is_dir("$app_dir/$dir")) {
+                    continue;
+                }
+                
+                if (is_dir("$build_dir/$dir")) {
+                    passthru("rm -r $build_dir/$dir");
+                }
+                echo "  copy $dir...\n";
+                passthru("cp -r $app_dir/$dir $build_dir");
+            }
+            
+            echo ("  copy gini.json...\n");
+            passthru("cp $app_dir/gini.json $build_dir/gini.json");
+
+            echo "\n";
+        }
+        
+        function action_deploy($args) {
+            // gini install path/to/modules
+            $info = \Gini\Core::path_info(APP_SHORTNAME);
+            echo "Deploying $info->name...\n";
         }
 
     }

@@ -40,8 +40,8 @@ namespace Gini {
                 $info->shortname = basename($path);
             }
 
-            if ($info->shortname != 'system' && !isset($info->dependencies['system'])) {
-                $info->dependencies['system'] = '*';
+            if ($info->shortname != 'gini' && !isset($info->dependencies['gini'])) {
+                $info->dependencies['gini'] = '*';
             }
 
             $info->path = $path;
