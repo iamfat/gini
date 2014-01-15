@@ -367,7 +367,7 @@ namespace Controller\CLI {
             \Gini\File::check_path($web_dir.'/foo');
             $cgi_path = realpath(dirname(realpath($_SERVER['SCRIPT_FILENAME'])) . '/../lib/cgi.php');
             $index_path = $web_dir . '/index.php';
-            unlink($index_path);
+            if (file_exists($index_path) || is_link($index_path)) unlink($index_path);
             file_put_contents($index_path, "<?php require \"$cgi_path\";\n");
 
             $this->_merge_assets();
@@ -408,7 +408,7 @@ namespace Controller\CLI {
             echo "   \e[32mdone.\e[0m\n";
         }
 
-        function action_update($args) {
+        function action_update($args) {            
             if (count($args) == 0) $args = ['class', 'view', 'config', 'orm', 'web'];
 
             if (in_array('class', $args)) {
@@ -509,9 +509,7 @@ namespace Controller\CLI {
 
         }
         
-        function action_build($args) {
-            $info = \Gini\Core::path_info(APP_SHORTNAME);
-
+        private function _build($build_base, $info) {
             echo "Building \e[4m$info->name\e[0m ($info->shortname-$info->version)...\n";
 
             if (!isset($info->build)) $info->build = (object)[];
@@ -524,11 +522,18 @@ namespace Controller\CLI {
             }
             
             $app_dir = $info->path;
-            $build_dir = $info->path . '/build/' . $info->shortname;
-            if (!is_dir($build_dir))@mkdir($build_dir,0755,true);
-
+            $build_dir = $build_base . '/' . $info->shortname;
+            
+            if (!is_dir($build_dir)) {
+                @mkdir($build_dir, 0755, true);
+            }
+            
             require_once(SYS_PATH.'/lib/packer.php');
             foreach ($build->pack as $dir) {
+                if (!is_dir("$app_dir/$dir")) {
+                    continue;
+                }
+
                 echo "  Packing $dir.phar...\n";
                 $packer = new \Gini\Dev\Packer("$build_dir/$dir.phar");
                 $packer->import("$app_dir/$dir");
@@ -550,8 +555,22 @@ namespace Controller\CLI {
             
             echo ("  copy gini.json...\n");
             passthru("cp $app_dir/gini.json $build_dir/gini.json");
-
             echo "\n";
+        }
+        
+        function action_build($args) {
+            $info = \Gini\Core::path_info(APP_SHORTNAME);
+            $build_base = $info->path . '/build';
+
+            if (is_dir($build_base)) {
+                passthru("rm -rf $build_base");
+            }
+
+            @mkdir($build_base, 0755, true);
+            
+            foreach (\Gini\Core::$PATH_INFO as $name => $info) {
+                $this->_build($build_base, $info);
+            }
         }
         
         function action_deploy($args) {
