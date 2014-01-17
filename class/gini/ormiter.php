@@ -77,7 +77,7 @@ namespace Gini {
             return isset($this->_fetch_flag['*']) || isset($this->_fetch_flag[$scope]);
         }
 
-        protected function reset_fetch() {
+        protected function resetFetch() {
             if ($this->SQL) {
                 $this->set_fetch_flag('*', false);
                 $this->SQL = null;

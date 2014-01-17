@@ -573,10 +573,15 @@ namespace Controller\CLI {
             }
         }
         
-        function action_deploy($args) {
+        function action_install($args) {
+            $name = reset($args);
+            echo "Installing $name...\n";
             // gini install path/to/modules
-            $info = \Gini\Core::path_info(APP_SHORTNAME);
-            echo "Deploying $info->name...\n";
+            $cmd = strtr(
+                getenv("GINI_INSTALL_COMMAND") ?: 'git clone git@gini.genee.cn:gini/%name %base/%name',
+                ['%name'=>escapeshellcmd($name), '%base'=>escapeshellcmd($_SERVER['GINI_MODULE_BASE_PATH'])]
+            );
+            passthru($cmd);
         }
 
     }
