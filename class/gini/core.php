@@ -34,7 +34,7 @@ namespace Gini {
 
             $info = (object)@json_decode(@file_get_contents($info_script), true);
 
-            $info->dependencies = (array) $info->dependencies;        
+            if (!is_array($info->dependencies)) $info->dependencies = [];
 
             if (!$info->shortname) {
                 $info->shortname = basename($path);
@@ -50,10 +50,19 @@ namespace Gini {
         }
 
         static function path_info($shortname) {
-            return self::$PATH_INFO[$shortname] ?: null;
+            return self::$PATH_INFO[$shortname] ?: false;
+        }
+        
+        static function checkVersion($version, $versionRequired) {
+            if ($versionRequired != '*' &&  preg_match('/^\s*(<=|>=|<|>|=)?\s*(.+)$/', $versionRequired, $parts)) {
+                if (!version_compare($version, $parts[2], $parts[1] ?: '>=')) {
+                    return false;
+                }
+            }
+            return true;
         }
 
-        static function import($path, $parent=null) {
+        static function import($path, $version='*', $parent=null) {
 
             TRACE("import($path)");
             
@@ -81,27 +90,30 @@ namespace Gini {
                 $path = realpath($path);
                 $info = self::fetch_info($path);
                 if ($info === null) {
-                    throw new \Exception("{$shortname} required but missing!");
+                    // throw new \Exception("{$shortname} required but missing!");
+                    if ($parent) {
+                        $parent->error = "\"{$shortname}/{$version}\" missing!";
+                    }
+                    return false;
                 }
                 $info->path = $path;
             }
             
-            if (!$info) return;
+            if (!$info) return false;
  
-            if ($parent && isset($parent->dependencies[$info->shortname])) {
-                $version_required = $parent->dependencies[$info->shortname];
-                if ($version_required != '*' && preg_match('/^\s*(<=|>=|<|>|=)?\s*(.+)$/', $version_required, $parts)) {
-                    if (!version_compare($info->version, $parts[2], $parts[1] ?: '>=')) {
-                        throw new \Exception("{$info->shortname}{$version_required} required but not match!");
-                    }
+            if ($parent) {
+                if (!self::checkVersion($info->version, $version)) {
+                    $parent->error = "{$info->shortname}/{$version} required!";
+                    // throw new \Exception("{$info->shortname}/{$version} required but not match!");
+                    return false;
                 }
             }
             
-            if (isset(self::$PATH_INFO[$path])) return;
+            if (isset(self::$PATH_INFO[$path])) return self::$PATH_INFO[$path];
             
             foreach ((array)$info->dependencies as $app => $version) {
                 if (!$app) continue;
-                self::import($app, $info);
+                self::import($app, $version, $info);
             }
 
             $inserted = false;
@@ -294,7 +306,9 @@ namespace Gini {
             !method_exists('\\Gini\\Application', 'setup') or \Gini\Application::setup();
             foreach (self::$PATH_INFO as $name => $info) {
                 $class = '\\'.str_replace('-', '_', $name);
-                !method_exists($class, 'setup') or call_user_func($class.'::setup');
+                if (!$info->error && method_exists($class, 'setup')) {
+                    call_user_func($class.'::setup');
+                }
             }
 
             global $argv;
@@ -304,7 +318,9 @@ namespace Gini {
         static function shutdown() {
             foreach (array_reverse(self::$PATH_INFO) as $name => $info) {
                 $class = '\\'.str_replace('-', '_', $name);
-                !method_exists($class, 'shutdown') or call_user_func($class.'::shutdown');
+                if (!$info->error && method_exists($class, 'shutdown')) {
+                    call_user_func($class.'::shutdown');
+                }
             }
             !method_exists('\\Gini\\Application', 'shutdown') or \Gini\Application::shutdown();    
         }
@@ -387,15 +403,6 @@ namespace {
         }
         else {
             \Gini\Core::$_G[$key] = $value;
-        }
-    }
-
-    if (function_exists('s')) {
-        die("import() was declared by other libraries, which may cause problems!");
-    }
-    else {
-        function import($path) {
-            return \Gini\Core::import($path);
         }
     }
 

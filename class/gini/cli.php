@@ -209,16 +209,29 @@ class CLI {
     
     static function exception($e) {
         $message = $e->getMessage();
-        $file = \Gini\File::relative_path($e->getFile());
+        $file = $e->getFile();
+        foreach (\Gini\Core::$PATH_INFO as $info) {
+            if (0 == strncmp($file, $info->path, strlen($info->path))) {
+                $file = "[$info->shortname] ".\Gini\File::relative_path($file, $info->path);
+                break;
+            }
+        }
         $line = $e->getLine();
-        printf("[exception] \e[1m%s\e[0m (\e[34m%s\e[0m:$line)\n", $message, $file, $line);
+        printf("[E] \e[1m%s\e[0m (\e[1;34m%s\e[0m:$line)\n", $message, $file, $line);
         if (\Gini\Core::debug_mode()) {
             $trace = array_slice($e->getTrace(), 1, 3);
             foreach ($trace as $n => $t) {
+                $file = $t['file'];
+                foreach (\Gini\Core::$PATH_INFO as $info) {
+                    if (0 == strncmp($file, $info->path, strlen($info->path))) {
+                        $file = "[$info->shortname] ".\Gini\File::relative_path($file, $info->path);
+                        break;
+                    }
+                }
                 fprintf(STDERR, "%3d. %s%s() in (%s:%d)\n", $n + 1,
                                 $t['class'] ? $t['class'].'::':'', 
                                 $t['function'],
-                                \Gini\File::relative_path($t['file']),
+                                $file,
                                 $t['line']);
 
             }
@@ -286,6 +299,7 @@ class CLI {
     }
 
     static function setup() {
+        URI::setup();
         Session::setup();
     }
 

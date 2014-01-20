@@ -6,7 +6,7 @@ namespace Controller\CGI {
         
         function __index() {
             $this->view->title = 'Gini PHP Framework';
-            $this->view->body = V('phtml/body');
+            $this->view->body = V('body');
         }
         
     }

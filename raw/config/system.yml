@@ -1,19 +1,18 @@
 ---
-system:
 # locale: en_US
 # session_handler: built_in
 # session_path: /tmp/session
 # session_name: gini-session
-  session_cookie:
-    lifetime: 0
-    path: /
-    domain: ~
-  timezone: Asia/Shanghai
-  postmaster:
-    address: support@geneegroup.com
-    name: Genee
-  log:
-    ident: gini
-    option: 5
-    facility: 8
+session_cookie:
+  lifetime: 0
+  path: /
+  domain: ~
+timezone: Asia/Shanghai
+postmaster:
+  address: support@geneegroup.com
+  name: Genee
+log:
+  ident: gini
+  option: 5
+  facility: 8
 ...

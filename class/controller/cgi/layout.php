@@ -5,7 +5,7 @@ namespace Controller\CGI {
     class Layout extends \Controller\CGI {
         
         public $view;
-        protected static $layout_name = 'phtml/layout';
+        protected static $layout_name = 'layout';
         
         function __pre_action($action, &$params) {
             parent::__pre_action($action, $params);    

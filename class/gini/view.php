@@ -1,5 +1,14 @@
 <?php
 
+namespace Gini\View {
+    
+    interface Engine {
+        public function __construct($path, array $vars);
+        public function __toString();
+    }
+    
+}
+
 namespace Gini {
 
     class View {
@@ -35,32 +44,6 @@ namespace Gini {
             return isset($this->_vars[$key]);
         }
             
-        private function __load_view($_path, $_extension) {
-
-            if ($_path) {
-                ob_start();
-
-                switch ($_extension) {
-                case 'js':
-                    echo "(function(){\n";
-                    foreach ($this->_vars as $k => $v) {
-                        echo "var $k=".json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).";\n";
-                    }
-                    @include($_path);
-                    echo "\n})();";
-                    break;
-                default:
-                    extract($this->_vars);
-                    @include($_path);
-                }
-
-                $output = ob_get_contents();
-                ob_end_clean();
-            }
-            
-            return $output;
-        }
-        
         //返回View内容
         private $_ob_cache;        
         function __toString(){
@@ -68,26 +51,51 @@ namespace Gini {
             if ($this->_ob_cache !== null) return $this->_ob_cache;
 
             $path = $this->_path;
-            $scope = null;
-
             $locale = _CONF('system.locale');
-            
-            list($extension, $path) = explode('/', $path, 2);
-            
-            if ($GLOBALS['gini.view_map']) {
-                $_path 
-                    = $GLOBALS['gini.view_map'][$extension.'/@'.$locale.'/'.$path] 
-                        ?: $GLOBALS['gini.view_map'][$extension.'/'.$path];
+            $localeSpecificPath = "@$locale/$path";
+
+            $engines = _CONF('view.engines');
+            if (isset($GLOBALS['gini.view_map'][$localeSpecificPath])) {
+                $realPath = $GLOBALS['gini.view_map'][$localeSpecificPath];
+                $engine = $engines[pathinfo($realPath, PATHINFO_EXTENSION)];
+            }
+            elseif (isset($GLOBALS['gini.view_map'][$path])) {
+                $realPath = $GLOBALS['gini.view_map'][$path];
+                $engine = $engines[pathinfo($realPath, PATHINFO_EXTENSION)];
             }
             else {
-                $_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, '@'.$locale.'/'.$path.'.'.$extension);
-                if (!$_path) {
-                    $_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, $path.'.'.$extension);    
+                foreach ($engines as $ext => $engine) {
+                    $realPath = \Gini\Core::phar_file_exists(VIEW_DIR, "$localeSpecificPath.$ext");
+                    if (!$realPath) {
+                        $realPath = \Gini\Core::phar_file_exists(VIEW_DIR, "$path.$ext");
+                    }                
+                    if ($realPath) break;
                 }
             }
 
-            $output = $this->__load_view($_path, $extension);
-        
+            if ($engine && $realPath) {
+                $class = "\\Gini\\View\\$engine";
+                $output = new $class($realPath, $this->_vars);
+            }
+            
+            // if (isset($GLOBALS['gini.view_map'])) {
+            //     if (isset($GLOBALS['gini.view_map'][$extension.'/@'.$locale.'/'.$path])) {
+            //         $_path = $GLOBALS['gini.view_map'][$extension.'/@'.$locale.'/'.$path];
+            //     }
+            //     elseif (isset($GLOBALS['gini.view_map'][$extension.'/'.$path])) {
+            //         $_path = $GLOBALS['gini.view_map'][$extension.'/'.$path];
+            //     }
+            // }
+            // 
+            // if (is_null($_path)) {
+            //     $_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, '@'.$locale.'/'.$path.'.'.$extension);
+            //     if (!$_path) {
+            //         $_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, $path.'.'.$extension);    
+            //     }
+            // }
+            // 
+            // $output = $this->__load_view($_path, $extension);
+            //         
             return $this->_ob_cache = (string) $output;
                         
         }

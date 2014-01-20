@@ -94,15 +94,28 @@ namespace Gini {
         static function exception($e) {
             $message = $e->getMessage();
             if ($message) {
-                $file = File::relative_path($e->getFile());
+                $file = $e->getFile();
+                foreach (\Gini\Core::$PATH_INFO as $info) {
+                    if (0 == strncmp($file, $info->path, strlen($info->path))) {
+                        $file = "[$info->shortname] ".\Gini\File::relative_path($file, $info->path);
+                        break;
+                    }
+                }
                 $line = $e->getLine();
                 error_log(sprintf("\e[31m\e[4mERROR\e[0m \e[1m%s\e[0m", $message));
                 $trace = array_slice($e->getTrace(), 1, 5);
                 foreach ($trace as $n => $t) {
+                    $file = $t['file'];
+                    foreach (\Gini\Core::$PATH_INFO as $info) {
+                        if (0 == strncmp($file, $info->path, strlen($info->path))) {
+                            $file = "[$info->shortname] ".\Gini\File::relative_path($file, $info->path);
+                            break;
+                        }
+                    }
                     error_log(sprintf("    %d) %s%s() in %s on line %d", $n + 1,
                                     $t['class'] ? $t['class'].'::':'', 
                                     $t['function'],
-                                    File::relative_path($t['file']),
+                                    $file,
                                     $t['line']));
 
                 }
