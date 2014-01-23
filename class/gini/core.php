@@ -300,7 +300,6 @@ namespace Gini {
             define('APP_SHORTNAME', $info->shortname);
 
             Config::setup();
-            Logger::setup();
             Event::setup();
 
             !method_exists('\\Gini\\Application', 'setup') or \Gini\Application::setup();

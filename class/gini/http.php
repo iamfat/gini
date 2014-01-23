@@ -114,7 +114,7 @@ namespace Gini {
             $errno = curl_errno($ch);
             if ($errno || !$data) {
                 $err = curl_error($ch);
-                _LOG("CURL ERROR($errno $err): $url ", 'error');
+                Logger::of('core')->error("CURL ERROR($errno $err): $url ");
                 curl_close($ch);
                 return null;
             }
