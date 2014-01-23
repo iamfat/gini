@@ -214,6 +214,26 @@ namespace Controller\CLI {
             echo "   \e[32mdone.\e[0m\n";
         }
 
+        public function action_preview($args) {
+            $addr = $args[0] ?: 'localhost:3000';
+            $command 
+                = sprintf("php -S %s -c %s -t %s 2>&1"
+                    , $addr
+                    , APP_PATH . '/raw/cli-server.ini'
+                    , APP_PATH.'/web');
+
+            $descriptors = array(
+                    array('file', '/dev/tty', 'r'),
+                    array('file', '/dev/tty', 'w'),
+                    array('file', '/dev/tty', 'w')
+            );
+
+            $proc = proc_open($command, $descriptors, $pipes);
+            if (is_resource($proc)) {
+                proc_close($proc);
+            }
+        }
+
         private function _convert_less() {
             printf("%s\n", "Converting LESS to CSS...");
 
@@ -320,7 +340,7 @@ namespace Controller\CLI {
             echo "   \e[32mdone.\e[0m\n";
         }
 
-        public function action_update_web($args) {
+        private function _update_web($args) {
             $web_dir = APP_PATH . '/web';
             \Gini\File::check_path($web_dir.'/foo');
             $cgi_path = realpath(dirname(realpath($_SERVER['SCRIPT_FILENAME'])) . '/../lib/cgi.php');
@@ -333,27 +353,7 @@ namespace Controller\CLI {
             $this->_uglify_js();
         }
 
-        public function action_preview($args) {
-            $addr = $args[0] ?: 'localhost:3000';
-            $command 
-                = sprintf("php -S %s -c %s -t %s 2>&1"
-                    , $addr
-                    , APP_PATH . '/raw/cli-server.ini'
-                    , APP_PATH.'/web');
-
-            $descriptors = array(
-                    array('file', '/dev/tty', 'r'),
-                    array('file', '/dev/tty', 'w'),
-                    array('file', '/dev/tty', 'w')
-            );
-
-            $proc = proc_open($command, $descriptors, $pipes);
-            if (is_resource($proc)) {
-                proc_close($proc);
-            }
-        }
-
-        public function action_update_orm($args) {
+        private function _update_orm($args) {
             // enumerate orms
             printf("Updating database structures according ORM definition...\n");
 
@@ -373,6 +373,35 @@ namespace Controller\CLI {
             }
 
             echo "   \e[32mdone.\e[0m\n";
+        }
+
+        private function _run_composer_bin($app) {
+            if (!file_exists($app->path.'/composer.json')) return;
+            echo "Update composer packages of $app->shortname...\n";
+            // gini install path/to/modules
+            $composer_bin = getenv("COMPOSER_BIN")?:"composer";
+            $cmd = sprintf("$composer_bin update -d %s", escapeshellarg($app->path));
+            passthru($cmd);
+        }
+
+        private function _update_composer($args) {
+            
+            $updated_list = [];
+            $update = function($info) use(&$update, &$updated_list) {
+                echo "Update $info->shortname\n";
+                $updated_list[$info->shortname] = true;
+                foreach ($info->dependencies as $name => $version) {
+                    if (isset($updated_list[$name])) continue;
+                    $app = \Gini\Core::path_info($name);
+                    if ($app) {
+                        $update($app);
+                    }
+                }
+                $this->_run_composer_bin($info);
+            };
+            
+            $app = \Gini\Core::path_info(APP_SHORTNAME);
+            $update($app);
         }
 
         function action_cache($args) {
@@ -396,15 +425,20 @@ namespace Controller\CLI {
         }
 
         function action_update($args) {            
-            if (count($args) == 0) $args = ['orm', 'web'];
+            if (count($args) == 0) $args = ['orm', 'web', 'composer'];
+
+            if (in_array('composer', $args)) {
+                $this->_update_composer($args);
+                echo "\n";
+            }
 
             if (in_array('orm', $args)) {
-                $this->action_update_orm($args);
+                $this->_update_orm($args);
                 echo "\n";
             }
 
             if (in_array('web', $args)) {
-                $this->action_update_web($args);
+                $this->_update_web($args);
                 echo "\n";
             }
 
@@ -532,36 +566,39 @@ namespace Controller\CLI {
             }
         }
         
-        private function _install($info) {
-            foreach ($info->dependencies as $name => $version) {
-                $app = \Gini\Core::path_info($name);
-                if ($app === false) {
-                    // need to install
-                    echo "Installing $name...\n";
-                    // gini install path/to/modules
-                    $cmd = strtr(
-                        getenv("GINI_INSTALL_COMMAND") ?: 'git clone git@gini.genee.cn:gini/%name %base/%name',
-                        ['%name'=>escapeshellcmd($name), '%base'=>escapeshellcmd($_SERVER['GINI_MODULE_BASE_PATH'])]
-                    );
-                    passthru($cmd);
-                    $app = \Gini\Core::import($name, $version, $info);
-                    if ($app) {
-                        $this->_install($app);
-                    }
-                }
-                elseif (!\Gini\Core::checkVersion($app->version, $version)) {
-                    
-                }
-                else {
-                    $this->_install($app);
-                }
-            }
-        }
-        
         public function action_install($args) {
             
+            $installed_list = [];
+            $install = function ($info) use(&$install, &$installed_list) {
+                if (isset($installed_list[$info->shortname])) return;
+                // need to install
+                $installed_list[$info->shortname] = true;
+                foreach ($info->dependencies as $name => $version) {
+                    $app = \Gini\Core::path_info($name);
+                    if ($app === false) {
+                        echo "Installing $name...\n";
+                        // gini install path/to/modules
+                        $cmd = strtr(
+                            getenv("GINI_INSTALL_COMMAND") ?: 'git clone git@gini.genee.cn:gini/%name %base/%name',
+                            ['%name'=>escapeshellcmd($name), '%base'=>escapeshellcmd($_SERVER['GINI_MODULE_BASE_PATH'])]
+                        );
+                        passthru($cmd);
+                        $app = \Gini\Core::import($name, $version, $info);
+                        if ($app) {
+                            $install($app);
+                        }
+                    }
+                    elseif (!\Gini\Core::checkVersion($app->version, $version)) {
+                    }
+                    else {
+                        $install($app);
+                    }
+                }
+                $this->_run_composer_bin($info);
+            };
+        
             $app = \Gini\Core::path_info(APP_SHORTNAME);
-            $this->_install($app);
+            $install($app);
         }
 
     }
