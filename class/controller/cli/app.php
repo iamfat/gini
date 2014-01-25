@@ -11,29 +11,6 @@
 
 namespace {
 
-    if (!function_exists('json_last_error_msg')) {
-
-        function json_last_error_msg() {
-            switch (json_last_error()) {
-                case JSON_ERROR_NONE:
-                    return 'no errors';
-                case JSON_ERROR_DEPTH:
-                    return 'maximum stack depth exceeded';
-                case JSON_ERROR_STATE_MISMATCH:
-                    return 'underflow or the modes mismatch';
-                case JSON_ERROR_CTRL_CHAR:
-                    return 'unexpected control character found';
-                case JSON_ERROR_SYNTAX:
-                    return 'syntax error, malformed JSON';
-                case JSON_ERROR_UTF8:
-                    return 'malformed UTF-8 characters, possibly incorrectly encoded';
-                default:
-                    return 'unknown error';
-            }
-        }
-
-    }
-    
     if (!function_exists('mb_str_pad')) {
         
         function mb_str_pad( $input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT) {
@@ -54,12 +31,12 @@ namespace Controller\CLI {
          * @return void
          * @author Jia Huang
          **/
-        public function action_init($args) {
+        public function actionInit($args) {
 
             $path = $_SERVER['PWD'];
 
             $prompt = array(
-                'shortname' => 'Shortname',
+                'id' => 'Id',
                 'name' => 'Name',
                 'description' => 'Description',
                 'version' => 'Version',
@@ -68,7 +45,7 @@ namespace Controller\CLI {
 
             $default = array(
                 'name' => ucwords(basename($path)),
-                'shortname' => basename($path),
+                'id' => strtolower(basename($path)),
                 'path' => $path,
                 'description' => 'App description...',
                 'version' => '0.1',
@@ -86,7 +63,7 @@ namespace Controller\CLI {
             file_put_contents($path . '/gini.json', $gini_json);
         }
 
-        public function action_help($args) {
+        public function actionHelp($args) {
             echo "gini init\n";
             echo "gini modules\n";
             echo "gini cache [class|view|config]\n";
@@ -100,10 +77,10 @@ namespace Controller\CLI {
             $this->action_help($args);
         }
 
-        public function action_info($args) {
-            $path = $args[0] ?: APP_SHORTNAME;
+        public function actionInfo($args) {
+            $path = $args[0] ?: APP_ID;
 
-            $info = \Gini\Core::path_info($path);
+            $info = \Gini\Core::moduleInfo($path);
             if ($info) {
                 foreach($info as $k => $v) {
                     if (is_array($v)) $v = json_encode($v);
@@ -113,9 +90,9 @@ namespace Controller\CLI {
 
         }
 
-        public function action_modules($args) {
+        public function actionModules($args) {
             
-            foreach (\Gini\Core::$PATH_INFO as $name => $info) {
+            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
                 printf("%s %s %s %s %s\e[0m\n", 
                     $info->error ? "\e[31m":'',
                     mb_str_pad($name, 20, ' '), 
@@ -161,7 +138,7 @@ namespace Controller\CLI {
 
             $config_file = APP_PATH . '/cache/config.json';
 
-            \Gini\File::check_path(APP_PATH.'/cache/foo');
+            \Gini\File::ensureDir(APP_PATH.'/cache');
             file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
 
             \Gini\Config::setup();
@@ -172,7 +149,7 @@ namespace Controller\CLI {
         private function _cache_class() {
             printf("%s\n", "Updating class cache...");
 
-            $paths = \Gini\Core::phar_file_paths(CLASS_DIR, '');
+            $paths = \Gini\Core::pharFilePaths(CLASS_DIR, '');
             $class_map = array();
             foreach ($paths as $class_dir) {
                 $this->_prepare_walkthrough($class_dir, '', function($file) use ($class_dir, &$class_map) {
@@ -184,7 +161,7 @@ namespace Controller\CLI {
                 });
             }
 
-            \Gini\File::check_path(APP_PATH.'/cache/foo');
+            \Gini\File::ensureDir(APP_PATH.'/cache');
             file_put_contents(APP_PATH.'/cache/class_map.json', json_encode($class_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
@@ -192,7 +169,7 @@ namespace Controller\CLI {
         private function _cache_view() {
             printf("%s\n", "Updating view cache...");
 
-            $paths = \Gini\Core::phar_file_paths(VIEW_DIR, '');
+            $paths = \Gini\Core::pharFilePaths(VIEW_DIR, '');
             $view_map = array();
             foreach ($paths as $view_dir) {
                 $this->_prepare_walkthrough($view_dir, '', function($file) use ($view_dir, &$view_map) {
@@ -209,12 +186,12 @@ namespace Controller\CLI {
                 });
             }
 
-            \Gini\File::check_path(APP_PATH.'/cache/foo');
+            \Gini\File::ensureDir(APP_PATH.'/cache');
             file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
 
-        public function action_preview($args) {
+        public function actionPreview($args) {
             $addr = $args[0] ?: 'localhost:3000';
             $command 
                 = sprintf("php -S %s -c %s -t %s 2>&1"
@@ -238,9 +215,9 @@ namespace Controller\CLI {
             printf("%s\n", "Converting LESS to CSS...");
 
             $css_dir = APP_PATH . '/web/assets/css';
-            \Gini\File::check_path($css_dir . '/foo');
+            \Gini\File::ensureDir($css_dir);
 
-            $pinfo = (array)\Gini\Core::$PATH_INFO;
+            $pinfo = (array)\Gini\Core::$MODULE_INFO;
             $less_map = array();
             foreach ($pinfo as $p) {
                 $less_dir = $p->path . '/' . RAW_DIR . '/less';
@@ -277,9 +254,9 @@ namespace Controller\CLI {
             printf("%s\n", "Uglifying JS...");
 
             $ugly_js_dir = APP_PATH . '/web/assets/js';
-            \Gini\File::check_path($ugly_js_dir . '/foo');
+            \Gini\File::ensureDir($ugly_js_dir);
 
-            $pinfo = (array)\Gini\Core::$PATH_INFO;
+            $pinfo = (array)\Gini\Core::$MODULE_INFO;
             $less_map = array();
             foreach ($pinfo as $p) {
                 $js_dir = $p->path . '/' . RAW_DIR . '/js';
@@ -308,8 +285,6 @@ namespace Controller\CLI {
 
             }
 
-            // \Gini\File::check_path(APP_PATH.'/cache/view_map.json');
-            // file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES| JSON_PRETTY_PRINT));
             echo "   \e[32mdone.\e[0m\n";
         }
 
@@ -317,16 +292,16 @@ namespace Controller\CLI {
     
             printf("%s\n", "Merging all assets...");
             $assets_dir = APP_PATH.'/web/assets';
-            \Gini\File::check_path($assets_dir.'/foo');
+            \Gini\File::ensureDir($assets_dir);
 
-            $pinfo = (array)\Gini\Core::$PATH_INFO;
+            $pinfo = (array)\Gini\Core::$MODULE_INFO;
             foreach ($pinfo as $p) {
                 $src_dir = $p->path . '/' . RAW_DIR . '/assets';
                 $this->_prepare_walkthrough($src_dir, '', function($file) use ($src_dir, $assets_dir) {
                     $src_path = $src_dir . '/' . $file;
-                    $dst_path = $assets_dir . '/' . $file;
 
-                    \Gini\File::check_path($dst_path);
+                    \Gini\File::ensureDir($assets_dir);
+                    $dst_path = $assets_dir . '/' . $file;
                     if (!file_exists($dst_path) 
                         || filesize($src_path) != filesize($dst_path) 
                         || filemtime($src_path) > filemtime($dst_path)) {
@@ -342,7 +317,7 @@ namespace Controller\CLI {
 
         private function _update_web($args) {
             $web_dir = APP_PATH . '/web';
-            \Gini\File::check_path($web_dir.'/foo');
+            \Gini\File::ensureDir($web_dir);
             $cgi_path = realpath(dirname(realpath($_SERVER['SCRIPT_FILENAME'])) . '/../lib/cgi.php');
             $index_path = $web_dir . '/index.php';
             if (file_exists($index_path) || is_link($index_path)) unlink($index_path);
@@ -357,7 +332,7 @@ namespace Controller\CLI {
             // enumerate orms
             printf("Updating database structures according ORM definition...\n");
 
-            $orm_dirs = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
+            $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'orm');
             foreach($orm_dirs as $orm_dir) {
                 if (!is_dir($orm_dir)) continue;
 
@@ -367,7 +342,7 @@ namespace Controller\CLI {
                     printf("   %s\n", $oname);
                     $class_name = '\\ORM\\'.str_replace('/', '\\', $oname);
                     $o = new $class_name();
-                    $o->db()->adjust_table($o->table_name(), $o->schema());
+                    $o->db()->adjustTable($o->tableName(), $o->schema());
                 });
 
             }
@@ -377,7 +352,7 @@ namespace Controller\CLI {
 
         private function _run_composer_bin($app) {
             if (!file_exists($app->path.'/composer.json')) return;
-            echo "Update composer packages of $app->shortname...\n";
+            echo "Update composer packages of $idtname...\n";
             // gini install path/to/modules
             $composer_bin = getenv("COMPOSER_BIN")?:"composer";
             $cmd = sprintf("$composer_bin update -d %s", escapeshellarg($app->path));
@@ -388,11 +363,11 @@ namespace Controller\CLI {
             
             $updated_list = [];
             $update = function($info) use(&$update, &$updated_list) {
-                echo "Update $info->shortname\n";
-                $updated_list[$info->shortname] = true;
+                echo "Update $iidtname\n";
+                $updated_list[$iidtname] = true;
                 foreach ($info->dependencies as $name => $version) {
                     if (isset($updated_list[$name])) continue;
-                    $app = \Gini\Core::path_info($name);
+                    $app = \Gini\Core::moduleInfo($name);
                     if ($app) {
                         $update($app);
                     }
@@ -400,11 +375,11 @@ namespace Controller\CLI {
                 $this->_run_composer_bin($info);
             };
             
-            $app = \Gini\Core::path_info(APP_SHORTNAME);
+            $app = \Gini\Core::moduleInfo(APP_ID);
             $update($app);
         }
 
-        function action_cache($args) {
+        function actionCache($args) {
             if (count($args) == 0) $args = ['class', 'view', 'config'];
 
             if (in_array('class', $args)) {
@@ -424,7 +399,7 @@ namespace Controller\CLI {
 
         }
 
-        function action_update($args) {            
+        function actionUpdate($args) {            
             if (count($args) == 0) $args = ['orm', 'web', 'composer'];
 
             if (in_array('composer', $args)) {
@@ -453,7 +428,7 @@ namespace Controller\CLI {
 
             printf("Exporting ORM structures...\n\n");
 
-            $orm_dirs = \Gini\Core::phar_file_paths(CLASS_DIR, 'orm');
+            $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'orm');
             foreach($orm_dirs as $orm_dir) {
                 if (!is_dir($orm_dir)) continue;
 
@@ -487,7 +462,7 @@ namespace Controller\CLI {
 
         }
 
-        public function action_export($args) {
+        public function actionExport($args) {
             if (count($args) == 0) $args = ['config', 'orm'];
 
             if (in_array('config', $args)) {
@@ -503,7 +478,7 @@ namespace Controller\CLI {
         }
         
         private function _build($build_base, $info) {
-            echo "Building \e[4m$info->name\e[0m ($info->shortname-$info->version)...\n";
+            echo "Building \e[4m$info->name\e[0m ($iidtname-$info->version)...\n";
 
             if (!isset($info->build)) $info->build = (object)[];
             $build = (object)$info->build;
@@ -515,7 +490,7 @@ namespace Controller\CLI {
             }
             
             $app_dir = $info->path;
-            $build_dir = $build_base . '/' . $info->shortname;
+            $build_dir = $build_base . '/' . $iidtname;
             
             if (!is_dir($build_dir)) {
                 @mkdir($build_dir, 0755, true);
@@ -551,8 +526,8 @@ namespace Controller\CLI {
             echo "\n";
         }
         
-        public function action_build($args) {
-            $info = \Gini\Core::path_info(APP_SHORTNAME);
+        public function actionBuild($args) {
+            $info = \Gini\Core::moduleInfo(APP_ID);
             $build_base = $info->path . '/build';
 
             if (is_dir($build_base)) {
@@ -561,20 +536,20 @@ namespace Controller\CLI {
 
             @mkdir($build_base, 0755, true);
             
-            foreach (\Gini\Core::$PATH_INFO as $name => $info) {
+            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
                 $this->_build($build_base, $info);
             }
         }
         
-        public function action_install($args) {
+        public function actionInstall($args) {
             
             $installed_list = [];
             $install = function ($info) use(&$install, &$installed_list) {
-                if (isset($installed_list[$info->shortname])) return;
+                if (isset($installed_list[$iidtname])) return;
                 // need to install
-                $installed_list[$info->shortname] = true;
+                $installed_list[$iidtname] = true;
                 foreach ($info->dependencies as $name => $version) {
-                    $app = \Gini\Core::path_info($name);
+                    $app = \Gini\Core::moduleInfo($name);
                     if ($app === false) {
                         echo "Installing $name...\n";
                         // gini install path/to/modules
@@ -597,8 +572,78 @@ namespace Controller\CLI {
                 $this->_run_composer_bin($info);
             };
         
-            $app = \Gini\Core::path_info(APP_SHORTNAME);
+            $app = \Gini\Core::moduleInfo(APP_ID);
             $install($app);
+        }
+
+        public function actionWatch($args) {
+            $files = new \Illuminate\Filesystem\Filesystem;
+            $tracker = new \JasonLewis\ResourceWatcher\Tracker;
+            
+            $watcher = new \JasonLewis\ResourceWatcher\Watcher($tracker, $files);
+            
+            // Config
+            echo "\e[1m# Watching CONFIG...\e[0m\n";
+            $onModifyConfig = function($resource, $path) {
+                passthru("gini cache config");
+            };
+            
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
+            array_walk($paths, function($path) use($watcher, &$onModifyConfig) {
+                $watcher->watch($path)->modify($onModifyConfig);
+            });
+            
+
+            // Class
+            echo "\e[1m# Watching CLASS change...\e[0m\n";
+            $onModifyConfig = function($resource, $path) {
+                passthru("gini cache class");
+            };
+            
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
+            array_walk($paths, function($path) use($watcher, &$onModifyConfig) {
+                $watcher->watch($path)->modify($onModifyConfig);
+            });
+            
+
+            // View
+            echo "\e[1m# Watching VIEW change...\e[0m\n";
+            $onModifyConfig = function($resource, $path) {
+                passthru("gini cache view");
+            };
+            
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
+            array_walk($paths, function($path) use($watcher, &$onModifyConfig) {
+                $watcher->watch($path)->modify($onModifyConfig);
+            });
+            
+
+            // ORM
+            echo "\e[1m# Watching ORM change...\e[0m\n";
+            $onModifyORM = function($resource, $path) {
+                passthru("gini update orm");
+            };
+            
+            $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'orm');
+            array_walk($paths, function($path) use($watcher, &$onModifyORM) {
+                $watcher->watch($path)->modify($onModifyORM);
+            });
+            
+
+            // Web
+            echo "\e[1m# Watching WEB change...\e[0m\n";
+            $onModifyWeb = function($resource, $path) {
+                passthru("gini update web");
+            };
+            
+            $paths
+                = \Gini\Core::pharFilePaths(RAW_DIR, 'assets') 
+                + \Gini\Core::pharFilePaths(RAW_DIR, 'less');
+            array_walk($paths, function($path) use($watcher, &$onModifyWeb) {
+                $watcher->watch($path)->modify($onModifyWeb);
+            });
+                         
+            $watcher->start();
         }
 
     }

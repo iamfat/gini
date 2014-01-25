@@ -71,9 +71,9 @@ namespace Gini {
             _CONF('runtime.controller_class', $class);
             $controller = new $class;
 
-            $action = strtr($params[0], '-', '_');
-            if ($action && $action[0]!='_' && method_exists($controller, 'action_'.$action)) {
-                $action = 'action_'.$action;
+            $action = preg_replace('/[-_]/', '', $params[0]);
+            if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {
+                $action = 'action'.$action;
                 array_shift($params);
             }
             elseif (method_exists($controller, '__index')) {
@@ -95,9 +95,9 @@ namespace Gini {
             $message = $e->getMessage();
             if ($message) {
                 $file = $e->getFile();
-                foreach (\Gini\Core::$PATH_INFO as $info) {
+                foreach (\Gini\Core::$MODULE_INFO as $info) {
                     if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                        $file = "[$info->shortname] ".\Gini\File::relative_path($file, $info->path);
+                        $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
                         break;
                     }
                 }
@@ -106,9 +106,9 @@ namespace Gini {
                 $trace = array_slice($e->getTrace(), 1, 5);
                 foreach ($trace as $n => $t) {
                     $file = $t['file'];
-                    foreach (\Gini\Core::$PATH_INFO as $info) {
+                    foreach (\Gini\Core::$MODULE_INFO as $info) {
                         if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                            $file = "[$info->shortname] ".\Gini\File::relative_path($file, $info->path);
+                            $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
                             break;
                         }
                     }

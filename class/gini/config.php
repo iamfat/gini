@@ -107,13 +107,13 @@ namespace Gini {
             
             $items = [];
             
-            $paths = \Gini\Core::phar_file_paths(RAW_DIR, 'config');
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
             foreach ($paths as $path) {
                 self::_load_config_dir($path, $items);
             }
             
             if (isset($_SERVER['GINI_ENV'])) {
-                $paths = \Gini\Core::phar_file_paths(RAW_DIR, 'config/@'.$_SERVER['GINI_ENV']);
+                $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$_SERVER['GINI_ENV']);
                 foreach ($paths as $path) {
                     self::_load_config_dir($path, $items);
                 }

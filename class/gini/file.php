@@ -4,28 +4,14 @@ namespace Gini {
 
     class File {
     
-        static function exists(){
-            $paths=func_get_args();
-            foreach($paths as $path){
-                if(is_array($path)){
-                    $path=call_user_func_array('File::exists', array_reverse($path));
-                    if($path) return $path;
-                } elseif(file_exists($path)) {
-                    return $path;
-                }
-            }
-            return null;
-        }
-    
-        static function check_path($path, $mode=0755){
-            $path = dirname($path);
+        static function ensureDir($path, $mode=0755){
             if (!is_dir($path)) {
                 return mkdir($path, $mode, true);
             }
             return true;
         }
     
-        static function bytes($a) {
+        static function humanReadableBytes($a) {
             $unim = array('B','KB','MB','GB','TB','PB');
             $c=0;
             while ($a>=1024) {
@@ -35,20 +21,20 @@ namespace Gini {
             return number_format($a).$unim[$c];
         }
     
-        static function rmdir($path) {
+        static function removeDir($path) {
             if (is_dir($path) && !is_link($path)) {
-                $dh=@opendir($path);
+                $dh = opendir($path);
                 if($dh){
-                    while($n=readdir($dh)){
+                    while($n = readdir($dh)){
                         if($n[0]=='.')continue;
-                        self::rmdir($path.'/'.$n);
+                        self::removeDir($path.'/'.$n);
                     }
-                    @closedir($dh);
+                    closedir($dh);
                 }
-                @rmdir($path);
+                rmdir($path);
             }
             else {
-                @unlink($path);
+                unlink($path);
             }
         }
     
@@ -59,15 +45,15 @@ namespace Gini {
             }
     
             if($clean_empty) {
-                $path=dirname($path);
-                while(is_dir($path) && @rmdir($path)){
+                $path = dirname($path);
+                while (is_dir($path) && rmdir($path)) {
                     $path=dirname($path);
                 }
             }
     
         }
     
-        static function copy_r($source, $dest, $mode=0755){ 
+        static function copy($source, $dest, $mode=0755){ 
             $dh = @opendir($source); 
             if ($dh) {
                 while($name = readdir($dh)) { 
@@ -76,11 +62,11 @@ namespace Gini {
     
                     $path = $source . '/' . $name;
                     if (is_dir($path)) { 
-                        File::copy_r($path, $dest . '/' . $name); 
+                        self::copy($path, $dest . '/' . $name); 
                     } 
                     else {
+                        self::ensureDir($dest, $mode);
                         $dest_path = $dest . '/' . $name;
-                           File::check_path($dest_path, $mode);
                         copy($path, $dest_path); 
     
                     } 
@@ -89,31 +75,27 @@ namespace Gini {
             }
         } 
     
-        static function traverse($path, $callback, $params=null, $parent=null) {
-            if (false === call_user_func($callback, $path, $params)) return;
+        static function traverse($path, $callback) {
+            if (false === call_user_func($callback, $path)) return;
             if (is_dir($path)) {
                 $path = preg_replace('/[^\/]$/', '$0/', $path);
                 $dh = opendir($path);
                 if ($dh) {
                     while ($file = readdir($dh)) {
                         if ($file[0] == '.') continue;
-                        self::traverse($path.$file, $callback, $params, $path); 
+                        self::traverse($path.$file, $callback); 
                     }
                     closedir($dh);
                 }
             }
         }
     
-        static function relative_path($path, $base=null) {
+        static function relativePath($path, $base=null) {
             if (!$base) $base = getcwd();
-            /*
-                Cheng.Liu@2010.11.13
-                兼容去除路径中'/'的问题
-            */
             return preg_replace('|^'.preg_quote($base, '|').'/(.*)$|', '$1', $path);
         }
     
-        static function in_paths($path, $paths=array()) {
+        static function inPaths($path, $paths=array()) {
             foreach($paths as $p) {
                 if(preg_match('|^'.preg_quote($p).'|iu', $path))return true;
             }
@@ -137,26 +119,8 @@ namespace Gini {
                 return $size;
             }
             else {
-                return @filesize($path);
+                return filesize($path);
             }
-        }
-    
-        static function basename($path) {
-    
-            //返回$url最后出现"/"的位置
-            $pos = strrpos($path,"/");
-            $pos = $pos === false ? strrpos($path,"\\") : $pos;
-            $pos = $pos === false ? -1 : $pos;
-    
-            $len = strlen($path);
-            if ($len == 0 || $len < $pos) {
-                return false;
-            }
-            else {
-                $filename = substr($path, $pos + 1, $len - $pos - 1);
-                return $filename;
-            }
-    
         }
     
     }

@@ -7,14 +7,14 @@ namespace Controller\CGI {
         public $view;
         protected static $layout_name = 'layout';
         
-        function __pre_action($action, &$params) {
-            parent::__pre_action($action, $params);    
+        function __preAction($action, &$params) {
+            parent::__preAction($action, $params);    
             $this->view = V(static::$layout_name);
             $this->view->title = _CONF('layout.title');    
         }
     
-        function __post_action($action, &$params, $response) {
-            parent::__post_action($action, $params, $response);
+        function __postAction($action, &$params, $response) {
+            parent::__postAction($action, $params, $response);
             if (null === $response) $response = new \Gini\CGI\Response\HTML($this->view);
             return $response;
         }

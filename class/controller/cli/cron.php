@@ -15,13 +15,13 @@ namespace Controller\CLI {
             }
         }
 
-        function action_list($args) {
+        function actionList($args) {
             foreach ((array)_CONF('cron') as $cron) {
-                printf("gini @%s %s\n", APP_SHORTNAME, $cron['command']);
+                printf("gini @%s %s\n", APP_ID, $cron['command']);
             }
         }
 
-        function action_export($args) {
+        function actionExport($args) {
             
             if ($args[0]) {
                 $user = $args[0];
@@ -29,7 +29,7 @@ namespace Controller\CLI {
             
             foreach ((array)_CONF('cron') as $cron) {
                 if ($cron['comment']) printf("# %s\n", $cron['comment']);
-                printf("%s%s\tgini @%s %s\n\n", $cron['interval'], $user ? "\t$user":'', APP_SHORTNAME, $cron['command']);
+                printf("%s%s\tgini @%s %s\n\n", $cron['interval'], $user ? "\t$user":'', APP_ID, $cron['command']);
             }
         }
 

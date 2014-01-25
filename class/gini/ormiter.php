@@ -59,7 +59,7 @@ namespace Gini {
         }
 
         private $_fetch_flag;
-        protected function set_fetch_flag($scope, $enable=true) {
+        protected function setFetchFlag($scope, $enable=true) {
             if ($enable) {
                 $this->_fetch_flag[$scope] = true;
             }
@@ -73,20 +73,20 @@ namespace Gini {
             }
         }
 
-        protected function is_fetch_flagged($scope) {
+        protected function isFetchFlagged($scope) {
             return isset($this->_fetch_flag['*']) || isset($this->_fetch_flag[$scope]);
         }
 
         protected function resetFetch() {
             if ($this->SQL) {
-                $this->set_fetch_flag('*', false);
+                $this->setFetchFlag('*', false);
                 $this->SQL = null;
                 $this->count_SQL = null;
             }
         }
 
         protected function fetch($scope='data') {
-            if ($this->is_fetch_flagged($scope)) return $this;
+            if ($this->isFetchFlagged($scope)) return $this;
 
             switch($scope) {
             case 'count':
@@ -110,12 +110,12 @@ namespace Gini {
                 }
             }
 
-            $this->set_fetch_flag($scope, true);
+            $this->setFetchFlag($scope, true);
 
             return $this;
         }
 
-        function delete_all() {
+        function deleteAll() {
             $this->fetch();
             foreach ($this->objects as $object) {
                 if (!$object->delete()) return false;

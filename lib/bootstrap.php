@@ -55,4 +55,7 @@ else {
     require $class_path . '/gini/core.php';
 }
 
+//require composer of gini module
+require_once __DIR__.'/../vendor/autoload.php';
+
 \Gini\Core::start();

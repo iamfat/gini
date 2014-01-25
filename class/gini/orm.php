@@ -12,7 +12,7 @@ namespace Gini {
         private $_criteria;
         private $_objects;
         private $_name;
-        private $_table_name;
+        private $_tableName;
         private $_oinfo;
         
         private $_db_data;
@@ -24,7 +24,7 @@ namespace Gini {
             orm[user].call[method]
             */
             $name = "call[$method]";
-            if (!$this->event('is_binded', $name)) {
+            if (!$this->event('isBinded', $name)) {
                 $trace = debug_backtrace();
                 $message = sprintf("Framework Error: Call to undefined method %s::%s() in %s on line %d", 
                                     $trace[1]['class'], 
@@ -125,14 +125,14 @@ namespace Gini {
 
                     $db = $this->db();
                     
-                    $criteria = $this->normalize_criteria($this->_criteria);
+                    $criteria = $this->normalizeCriteria($this->_criteria);
 
                     //从数据库中获取该数据
                     foreach ($criteria as $k=>$v) {
-                        $where[] = $db->quote_ident($k) . '=' . $db->quote($v);
+                        $where[] = $db->quoteIdent($k) . '=' . $db->quote($v);
                     }
                     
-                    $SQL = 'SELECT * FROM '.$db->quote_ident($this->table_name()) . ' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+                    $SQL = 'SELECT * FROM '.$db->quoteIdent($this->tableName()) . ' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
 
                     $result = $db->query($SQL);
                     //只取第一条记录
@@ -145,7 +145,7 @@ namespace Gini {
                 //给object赋值
                 $this->_db_data = (array) $data;
                 $this->_db_time = time();
-                $this->set_data((array) $data);
+                $this->setData((array) $data);
             }
         }
 
@@ -169,7 +169,7 @@ namespace Gini {
             return Database::db($db_name);
         }
 
-        function normalize_criteria(array $crit) {
+        function normalizeCriteria(array $crit) {
             $ncrit = array();
             $structure = $this->structure();
 
@@ -318,9 +318,9 @@ namespace Gini {
             if (!$this->id) return true;
 
             $db = $this->db();
-            $tbl_name = $this->table_name();
+            $tbl_name = $this->tableName();
                 
-            $SQL = 'DELETE FROM '.$db->quote_ident($tbl_name).' WHERE '.$db->quote_ident('id').'='.$db->quote($this->id);
+            $SQL = 'DELETE FROM '.$db->quoteIdent($tbl_name).' WHERE '.$db->quoteIdent('id').'='.$db->quote($this->id);
             return !!$db->query($SQL);
         }
 
@@ -372,24 +372,24 @@ namespace Gini {
             // diff db_data and this->_db_data
             $db_data = array_diff_assoc((array)$db_data, (array)$this->_db_data);
 
-            $tbl_name = $this->table_name();
+            $tbl_name = $this->tableName();
             $id = (int) ($this->_db_data['id'] ?: $db_data['id']);
             unset($db_data['id']);
 
             if ($id > 0) {
 
                 foreach($db_data as $k=>$v){
-                    $pair[] = $db->quote_ident($k).'='.$db->quote($v);
+                    $pair[] = $db->quoteIdent($k).'='.$db->quote($v);
                 }
 
-                if ($pair) $SQL = 'UPDATE '.$db->quote_ident($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quote_ident('id').'='.$db->quote($id);
+                if ($pair) $SQL = 'UPDATE '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quoteIdent('id').'='.$db->quote($id);
             }
             else {
 
                 $keys = array_keys($db_data);
                 $vals = array_values($db_data);
                 
-                $SQL = 'INSERT INTO '.$db->quote_ident($tbl_name).' ('.$db->quote_ident($keys).') VALUES('.$db->quote($vals).')';
+                $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.$db->quote($vals).')';
             }
 
             if ($SQL) {
@@ -402,7 +402,7 @@ namespace Gini {
             if ($success) {
                 
                 if (!$id) {
-                    $id = $db->insert_id();
+                    $id = $db->lastInsertId();
                 }
                 
                 $this->criteria($id);
@@ -419,27 +419,27 @@ namespace Gini {
             unset(self::$_structures[get_called_class()]);
         }
 
-        private function _prepare_name() {
+        private function _prepareName() {
             list(,$name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 2);
             $this->_name = $name;
-            $this->_table_name = str_replace('/', '_', $name);
+            $this->_tableName = str_replace('/', '_', $name);
         }
 
-        function name() {
+        public function name() {
             if (!isset($this->_name)) {
-                $this->_prepare_name();
+                $this->_prepareName();
              }
             return $this->_name;
         }
         
-        function table_name() {
-            if (!isset($this->_table_name)) {
-                $this->_prepare_name();
+        public function tableName() {
+            if (!isset($this->_tableName)) {
+                $this->_prepareName();
             }
-            return $this->_table_name;
+            return $this->_tableName;
         }
 
-        function set_data($data) {
+        public function setData($data) {
             
             $this->_objects = array();
             $this->_oinfo = array();
@@ -473,7 +473,7 @@ namespace Gini {
             }
         }
 
-        function get_data() {
+        function getData() {
             foreach($this->structure() as $k => $v) {
                 $data[$k] = $this->$k;
             }

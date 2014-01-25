@@ -49,7 +49,7 @@ namespace Gini {
         }
 
         private $_cookie_file;
-        function cookie_file($file = null) {
+        function cookieFile($file = null) {
             $this->_cookie_file = $file;
             return $this;
         }

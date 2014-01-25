@@ -5,19 +5,19 @@ namespace Gini\Database {
     class Exception extends \ErrorException {};
     
     interface Driver {
-        function quote_ident($s);
+        function quoteIdent($s);
 
-        function table_exists($table);
-        function table_status($table);
-        function table_schema($name, $refresh);
+        function tableExists($table);
+        function tableStatus($table);
+        function tableSchema($name, $refresh);
 
-        function adjust_table($table, $schema);
+        function adjustTable($table, $schema);
 
         function snapshot($filename, $tbls);
-        function empty_database();
+        function emptyDatabase();
 
-        function create_table($table);
-        function drop_table($table);
+        function createTable($table);
+        function dropTable($table);
 
         function restore($filename, &$restore_filename, $tables);
     }
@@ -108,19 +108,19 @@ namespace Gini {
             $args = func_get_args();
             $ident = array();
             foreach($args as $arg) {
-                $ident[] = $this->quote_ident($arg);
+                $ident[] = $this->quoteIdent($arg);
             }
             return implode('.', $ident);
         }
 
-        function quote_ident($s){
+        function quoteIdent($s){
             if(is_array($s)){
                 foreach($s as &$i){
-                    $i = $this->quote_ident($i);
+                    $i = $this->quoteIdent($i);
                 }
                 return implode(',', $s);
             }           
-            return $this->_driver->quote_ident($s);
+            return $this->_driver->quoteIdent($s);
         }
         
         function quote($s) {
@@ -146,7 +146,7 @@ namespace Gini {
             return $this->_driver->getAttribute($attr);
         }
             
-        function insert_id(string $name = null) {
+        function lastInsertId(string $name = null) {
             return $this->_driver->lastInsertId($name);
         }
 
@@ -157,7 +157,7 @@ namespace Gini {
                 if (is_array($args[1])) {
                     $idents = [];
                     foreach ($args[1] as $k => $v) {
-                        $idents[$k] = $this->_driver->quote_ident($v);
+                        $idents[$k] = $this->_driver->quoteIdent($v);
                     }
                 
                     $SQL = strtr($args[0], $idents);
@@ -167,11 +167,11 @@ namespace Gini {
                 }
  
                 if (is_array($args[2])) {
-                    TRACE("prepare = %s", preg_replace('/\s+/', ' ', $SQL));
+                    \Gini\Logger::of('core')->debug("Database query prepare = {SQL}", ['SQL'=>preg_replace('/\s+/', ' ', $SQL)]);
                     $st = $this->_driver->prepare($SQL);
                     if (!$st) return false;
                 
-                    TRACE("execute = %s", json_encode($args[2]));
+                    \Gini\Logger::of('core')->debug("Database query execute = {params}", ['params'=>json_encode($args[2])]);
                     $success = $st->execute($args[2]); 
                     if (!$success) return false;
                     
@@ -182,7 +182,7 @@ namespace Gini {
                 $SQL = $args[0];
             }
 
-            TRACE("query = %s", preg_replace('/\s+/', ' ', $SQL));
+            \Gini\Logger::of('core')->debug("Database query = {SQL}", ['SQL'=>preg_replace('/\s+/', ' ', $SQL)]);
             $st = $this->_driver->query($SQL);
             if (!$st) return false;
             return new Database\Statement($st);
@@ -194,7 +194,7 @@ namespace Gini {
             return $result ? $result->value() : null;
         }
         
-        function begin_transaction() {
+        function beginTransaction() {
             $this->_driver->beginTransaction();
             return $this;
         }
@@ -217,27 +217,27 @@ namespace Gini {
             return $this->_driver->snapshot($filename, $tables);
         }
         
-        function adjust_table($table, $schema) {
-            return $this->_driver->adjust_table($table, $schema);
+        function adjustTable($table, $schema) {
+            return $this->_driver->adjustTable($table, $schema);
         }
         
-        function create_table($table) {
-            return $this->_driver->create_table($table);
+        function createTable($table) {
+            return $this->_driver->createTable($table);
         }
     
-        function create_tables(array $tables) {
+        function createTables(array $tables) {
             foreach($tables as $table) {
-                $this->create_table($table);
+                $this->createTable($table);
             }
         }
         
-        function drop_table($table) {
-            $this->_driver->drop_table($table);
+        function dropTable($table) {
+            $this->_driver->dropTable($table);
         }
         
-        function drop_tables(array $tables) {
+        function dropTables(array $tables) {
             foreach($tables as $table) {
-                $this->drop_table($table);
+                $this->dropTable($table);
             }
         }
     
@@ -249,17 +249,17 @@ namespace Gini {
             else $tables = (array) $tables;
     
             if (count($tables) > 0) {
-                call_user_func_array(array($this, 'drop_table'), $tables);
+                call_user_func_array(array($this, 'dropTable'), $tables);
             }
             else {
-                $this->empty_database();
+                $this->emptyDatabase();
             }
             
             return $this->_driver->restore($filename, $tables);
         }
         
-        function empty_database() {
-            return $this->_driver->empty_database();
+        function emptyDatabase() {
+            return $this->_driver->emptyDatabase();
         }
     }
 

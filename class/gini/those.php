@@ -3,7 +3,7 @@
 /*
 
 $user = those('user')
-    ->whose('id')->is_in(1, 2, 3)
+    ->whose('id')->isIn(1, 2, 3)
     ->orWhose('atime')->isGreaterThan(3)
     ->andWhose('age')->isBetween(5, 15);
 
@@ -60,7 +60,7 @@ namespace Gini {
 
         protected function fetch($scope='fetch') {
             if (!$this->SQL) {
-                $this->make_SQL();
+                $this->makeSQL();
             }
             return parent::fetch($scope);            
         }
@@ -171,7 +171,7 @@ namespace Gini {
 
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'INNER JOIN '.$db->ident($this->table_name).' AS '.$db->quote_ident($this->_table) 
+                $this->_join[] = 'INNER JOIN '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table) 
                     . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
@@ -198,7 +198,7 @@ namespace Gini {
             
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'LEFT JOIN '.$db->ident($this->table_name).' AS '.$db->quote_ident($this->_table)
+                $this->_join[] = 'LEFT JOIN '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table)
                     . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
@@ -248,7 +248,7 @@ namespace Gini {
                         $structure = $o->structure();
                         if (array_key_exists('object', $structure[$field])) {
                             if (!$structure[$field]['object']) {
-                                $obj_where[] = $db->ident($this->_table, $field . '_name') . $op . $db->quote($v->table_name());
+                                $obj_where[] = $db->ident($this->_table, $field . '_name') . $op . $db->quote($v->tableName());
 
                             }
 
@@ -344,7 +344,7 @@ namespace Gini {
             $db = $this->db;
             $table = $this->_table;
 
-            $from_SQL = 'FROM ' . $db->ident($this->table_name).' AS '.$db->quote_ident($this->_table);
+            $from_SQL = 'FROM ' . $db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
 
             if ($this->_where) {
                 $from_SQL .= ' WHERE ' . implode(' ', $this->_where);
@@ -367,89 +367,6 @@ namespace Gini {
             return $this;
         }
 
-        // OLD UNDERSCORE STYLE
-        function and_whose($field) {
-            return $this->andWhose($field);
-        }
-        
-        function or_whose($field) {
-            return $this->orWhose($field);
-        }
-        
-        function who_is($field) {
-            return $this->whoIs($field);
-        }
-        
-        function which_is($field) {
-            return $this->whoIs($field);
-        }
-
-        function and_who_is($field) {
-            return $this->whoIs($field);
-        }
-        
-        function and_which_is($field) {
-            return $this->whoIs($field);
-        }
-
-        function or_who_is($field) {
-            return $this->orWhoIs($field);
-        }
-
-        function or_which_is($field) {
-            return $this->orWhoIs($field);
-        }
-
-        function is_in() {
-            $args = func_get_args();
-            return call_user_func_array([$this, 'isIn'], $args);
-        }
-            
-        function is_not_in() {
-            $args = func_get_args();
-            return call_user_func_array([$this, 'isNotIn'], $args);
-        }
-            
-        function is_not($v) {
-            return $this->match('<>', $v);
-        }
-
-        function begins_with($v) {
-            return $this->match('^=', $v);
-        }
-
-        function ends_with($v) {
-            return $this->match('$=', $v);
-        }
-
-        function is_less_than($v) {
-            return $this->match('<', $v);
-        }
-
-        function is_greater_than($v) {
-            return $this->match('>', $v);
-        }
-
-        function is_greater_than_or_equal($v) {
-            return $this->match('>=', $v);
-        }
-
-        function is_less_than_or_equal($v) {
-            return $this->match('<=', $v);
-        }
-
-        function is_between($a, $b) {
-            return $this->isBetween($a, $b);
-        }
-
-        function order_by($field, $mode='asc') {
-            return $this->orderBy($field, $mode);
-        }
-
-        function make_SQL() {
-            return $this->makeSQL();
-        }
-        
     }
 
 }

@@ -4,30 +4,30 @@ namespace Controller\CLI {
     
     class I18N extends \Controller\CLI {
 
-        function action_help($argv) {
+        function actionHelp($argv) {
             echo "gini i18n scan [<locales>]\n";
             echo "gini i18n format <locales>\n";
         }
 
-        function action_scan($argv) {
+        function actionScan($argv) {
 
             if (count($argv) < 1) {
                 exit("usage: \e[1;34mgini i18n scan\e[0m [<locales>]\n");
             }
 
-            $info = \Gini\Core::path_info(APP_SHORTNAME);
-            if (!isset($info->shortname)) {
+            $info = \Gini\Core::moduleInfo(APP_ID);
+            if (!isset($info->id)) {
                 echo "\e[1;34mgini i18n scan\e[0m: Invalid app path!\n";
                 exit;
             }
 
             $path = $info->path;
-            $domain = str_replace('/', '-', $info->shortname);
+            $domain = str_replace('/', '-', $info->id);
             
             $l10n_path = $path . '/' . RAW_DIR . '/l10n';
-            $l10n_template = $l10n_path . '/template.pot';
+            \Gini\File::ensureDir($l10n_path);
 
-            \Gini\File::check_path($l10n_template);
+            $l10n_template = $l10n_path . '/template.pot';
             if (file_exists($l10n_template)) unlink($l10n_template);
 
             $keywords = '--keyword=T';
@@ -36,7 +36,7 @@ namespace Controller\CLI {
                     escapeshellarg($path), 
                     $keywords,
                     $info->author ?: 'Anonymous',
-                    $info->shortname,
+                    $info->id,
                     $info->version,
                     $info->email ?: 'l10n@geneegroup.com',
                     escapeshellarg($l10n_template)
@@ -80,27 +80,29 @@ namespace Controller\CLI {
             
         }
 
-        function action_format($argv) {
+        function actionFormat($argv) {
             if (count($argv) < 1) {
                 exit("usage: \e[1;34mgini i18n format\e[0m <locales>\n");
             }
 
-            $appname = APP_SHORTNAME;
+            $appname = APP_ID;
 
             foreach($argv as $locale) {
-                $pofile = I18N_PATH.'/'.$locale.'/LC_MESSAGES/'.$appname.'.po';
-                \Gini\File::check_path($pofile);
-                $paths = \Gini\Core::file_paths(RAW_DIR . '/l10n/'.$locale.'.po');
+                $lodir = I18N_PATH.'/'.$locale.'/LC_MESSAGES';
+                \Gini\File::ensureDir($lodir);
+                
+                $pofile = $podir.'/'.$appname.'.po';
+                $paths = \Gini\Core::filePaths(RAW_DIR . '/l10n/'.$locale.'.po');
                 echo "merge: $appname.po\n";
                 $cmd = sprintf('msgcat -o %1$s %2$s', 
                        escapeshellarg($pofile), 
                        implode(' ', array_map(escapeshellarg, $paths)));
                 passthru($cmd);
 
-                $target = I18N_PATH.'/'.$locale.'/LC_MESSAGES/'.$appname.'.mo';
+                $mofile = $lodir . '/'.$appname.'.mo';
                 echo "compile: $appname.po => $appname.mo\n";
                 $cmd = sprintf('msgfmt -o %s %s', 
-                    escapeshellarg($target),
+                    escapeshellarg($mofile),
                     escapeshellarg($pofile)
                 );
                 passthru($cmd);

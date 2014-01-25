@@ -16,12 +16,12 @@ namespace Gini\Database {
                 if ($table && $table != '*') {
                     unset($this->_table_status[$table]);
                     $SQL = sprintf('SHOW TABLE STATUS FROM %s WHERE "Name"=%s', 
-                            $this->quote_ident($this->_dbname), $this->quote($table));
+                            $this->quoteIdent($this->_dbname), $this->quote($table));
                 }
                 else {
                     $this->_table_status = null;
                     $SQL = sprintf('SHOW TABLE STATUS FROM %s', 
-                            $this->quote_ident($this->_dbname));
+                            $this->quoteIdent($this->_dbname));
                 }
 
                 $rs = $this->query($SQL);
@@ -48,27 +48,22 @@ namespace Gini\Database {
             $this->query('SET sql_mode=\'ANSI\'');
         }
         
-        function query($SQL) {
-            TRACE('%s', $SQL);
-            return parent::query($SQL);
-        }
-        
-        function quote_ident($name) {
+        function quoteIdent($name) {
             if (is_array($name)) {
                 $v = [];
                 foreach($name as $n) {
-                    $v[] = $this->quote_ident($n);
+                    $v[] = $this->quoteIdent($n);
                 }
                 return implode(',', $v);
             }
             return '"'.addslashes($name).'"';
         }
         
-        function table_exists($table) {
+        function tableExists($table) {
             return isset($this->_table_status[$table]);
         }
 
-        function table_status($table) {
+        function tableStatus($table) {
             $this->_update_table_status();
             return $this->_table_status[$table];
         }
@@ -84,12 +79,12 @@ namespace Gini\Database {
             return $type;
         }
 
-        function adjust_table($table, $schema) {
+        function adjustTable($table, $schema) {
             
             // $remove_nonexistent = _CONF('database.remove_nonexistent') ?: false;
             
-            if (!$this->table_exists($table)) {
-                $this->create_table($table);
+            if (!$this->tableExists($table)) {
+                $this->createTable($table);
             }
 
             $field_sql = array();
@@ -97,7 +92,7 @@ namespace Gini\Database {
             $fields = $schema['fields'];
             $indexes = $schema['indexes'];
 
-            $curr_schema = $this->table_schema($table);
+            $curr_schema = $this->tableSchema($table);
             //检查所有Fields
             $curr_fields = $curr_schema['fields'];
             $missing_fields = array_diff_key($fields, $curr_fields);
@@ -115,13 +110,13 @@ namespace Gini\Database {
                         || $field['default'] != $curr_field['default']
                         || $field['serial'] != $curr_field['serial']) {
                         $field_sql[] = sprintf('CHANGE %s %s'
-                            , $this->quote_ident($key)
+                            , $this->quoteIdent($key)
                             , $this->field_sql($key, $field));
                     }
                 }
                 /*
                 elseif ($remove_nonexistent) {
-                    $field_sql[] = sprintf('DROP %s', $this->quote_ident($key) );
+                    $field_sql[] = sprintf('DROP %s', $this->quoteIdent($key) );
                 }
                 */
                 /*
@@ -132,14 +127,14 @@ namespace Gini\Database {
                     }
 
                     $field_sql[] = sprintf('CHANGE %s %s'
-                        , $this->quote_ident($key)
+                        , $this->quoteIdent($key)
                         , $this->field_sql($nkey, $curr_field));
                 }
                 */
             }
 
             if (count($fields) > 0 && isset($curr_fields['_FOO'])) {
-                $field_sql[] = sprintf('DROP %s', $this->quote_ident('_FOO'));
+                $field_sql[] = sprintf('DROP %s', $this->quoteIdent('_FOO'));
             }
 
             $curr_indexes = $curr_schema['indexes'];
@@ -163,20 +158,20 @@ namespace Gini\Database {
                 }
                 // remove other indexes
                 else {
-                    $field_sql[]=sprintf('DROP INDEX %s', $this->quote_ident($key) );
+                    $field_sql[]=sprintf('DROP INDEX %s', $this->quoteIdent($key) );
                 }
             }
 
             if (count($field_sql)>0) {
                 $SQL = sprintf('ALTER TABLE %s %s', 
-                    $this->quote_ident($table), implode(', ', $field_sql));
+                    $this->quoteIdent($table), implode(', ', $field_sql));
                 $this->query($SQL);
-                $this->table_schema($table, true);
+                $this->tableSchema($table, true);
             }
 
         }
 
-        function table_schema($name, $refresh = false) {
+        function tableSchema($name, $refresh = false) {
             
             if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
 
@@ -206,7 +201,7 @@ namespace Gini\Database {
             }
             
             if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
-                $ds = $this->query(sprintf('SHOW INDEX FROM %s', $this->quote_ident($name)));
+                $ds = $this->query(sprintf('SHOW INDEX FROM %s', $this->quoteIdent($name)));
                 $indexes = array();
                 if ($ds) while($row = $ds->fetchObject()) {
                     $indexes[$row->Key_name]['fields'][] = $row->Column_name;
@@ -223,7 +218,7 @@ namespace Gini\Database {
 
         private function field_sql($key, &$field) {
             return sprintf('%s %s%s%s%s'
-                    , $this->quote_ident($key)
+                    , $this->quoteIdent($key)
                     , $field['type']
                     , $field['null']? '': ' NOT NULL'
                     , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']):''
@@ -237,17 +232,17 @@ namespace Gini\Database {
                 $type='PRIMARY KEY';
                 break;
             case 'unique':
-                $type='UNIQUE KEY '. $this->quote_ident($key);
+                $type='UNIQUE KEY '. $this->quoteIdent($key);
                 break;
             default:
-                $type='KEY '. $this->quote_ident($key);
+                $type='KEY '. $this->quoteIdent($key);
             }
             
             if ($no_fields) {
                 return $type;
             }
             else {
-                return sprintf('%s (%s)', $type, $this->quote_ident($val['fields']));
+                return sprintf('%s (%s)', $type, $this->quoteIdent($val['fields']));
             }
         }
         
@@ -257,21 +252,21 @@ namespace Gini\Database {
                 $type='PRIMARY KEY';
                 break;
             case 'unique':
-                $type='UNIQUE '. $this->quote_ident($key);
+                $type='UNIQUE '. $this->quoteIdent($key);
                 break;
             default:
-                $type='INDEX '. $this->quote_ident($key);
+                $type='INDEX '. $this->quoteIdent($key);
             }
             
             if ($no_fields) {
                 return $type;
             }
             else {
-                return sprintf('%s (%s)', $type, $this->quote_ident($val['fields']));
+                return sprintf('%s (%s)', $type, $this->quoteIdent($val['fields']));
             }
         }
         
-        function create_table($table) {
+        function createTable($table) {
 
             if (isset($this->_options['engine'][$table])) {
                 $engine = $this->_options['engine'][$table];
@@ -284,8 +279,8 @@ namespace Gini\Database {
             }
              
             $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s (%s INT NOT NULL) ENGINE = %s DEFAULT CHARSET = utf8', 
-                        $this->quote_ident($table), 
-                        $this->quote_ident('_FOO'), 
+                        $this->quoteIdent($table), 
+                        $this->quoteIdent('_FOO'), 
                         $this->quote($engine)
                         );
             $rs = $this->query($SQL);
@@ -295,8 +290,8 @@ namespace Gini\Database {
         
         }
 
-        function drop_table($table) {
-            $this->query('DROP TABLE '.$this->quote_ident($table));
+        function dropTable($table) {
+            $this->query('DROP TABLE '.$this->quoteIdent($table));
             $this->_update_table_status($table);
             unset($this->_prepared_tables[$table]);
             unset($this->_table_fields[$table]);
@@ -324,12 +319,12 @@ namespace Gini\Database {
             return $ret == 0;
         }
         
-        function empty_database() {
+        function emptyDatabase() {
             $rs = $this->query('SHOW TABLES');
             while ($r = $rs->fetch(\PDO::FETCH_NUM)) {
                 $tables[] = $r[0];
             }
-            $this->query('DROP TABLE '.$this->quote_ident($tables));
+            $this->query('DROP TABLE '.$this->quoteIdent($tables));
         }
         
         function restore($filename, &$retore_filename, $tables) {

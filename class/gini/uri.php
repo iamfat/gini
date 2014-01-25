@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * Gini URI Helpers
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright , 24 January, 2014
+ * @package gini
+ **/
+
+/**
+ * Define DocBlock
+ **/
+
 namespace Gini {
 
     class URI {
@@ -101,7 +114,7 @@ namespace Gini {
             if (substr($dir, -1) != '/') $dir .= '/';
             self::$_base = $scheme.'://'.$host.$dir;     
             
-            self::$_rurl = \Gini\Core::path_info(APP_SHORTNAME)->rurl;               
+            self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl;               
         }
 
         static function base() {
@@ -120,14 +133,12 @@ namespace Gini {
 
 namespace {
 
-    function URL() {
-        $args = func_get_args();
-        return call_user_func_array('\\Gini\\URI::url', $args);
+    function URL($url=null, $query=null, $fragment=null) {
+        return \Gini\URI::url($url, $query, $fragment);
     }
 
-    function MAILTO() {
-        $args = func_get_args();
-        return call_user_func_array('\\Gini\\URI::mailto', $args);
+    function MAILTO($mail, $name=null, $extra=null) {
+        return \Gini\URI::mailto($mail, $name, $extra);
     }
 
     function RURL($path, $type) {

@@ -65,9 +65,9 @@ namespace Gini {
             }
             else {
                 foreach ($engines as $ext => $engine) {
-                    $realPath = \Gini\Core::phar_file_exists(VIEW_DIR, "$localeSpecificPath.$ext");
+                    $realPath = \Gini\Core::locatePharFile(VIEW_DIR, "$localeSpecificPath.$ext");
                     if (!$realPath) {
-                        $realPath = \Gini\Core::phar_file_exists(VIEW_DIR, "$path.$ext");
+                        $realPath = \Gini\Core::locatePharFile(VIEW_DIR, "$path.$ext");
                     }                
                     if ($realPath) break;
                 }
@@ -78,24 +78,6 @@ namespace Gini {
                 $output = new $class($realPath, $this->_vars);
             }
             
-            // if (isset($GLOBALS['gini.view_map'])) {
-            //     if (isset($GLOBALS['gini.view_map'][$extension.'/@'.$locale.'/'.$path])) {
-            //         $_path = $GLOBALS['gini.view_map'][$extension.'/@'.$locale.'/'.$path];
-            //     }
-            //     elseif (isset($GLOBALS['gini.view_map'][$extension.'/'.$path])) {
-            //         $_path = $GLOBALS['gini.view_map'][$extension.'/'.$path];
-            //     }
-            // }
-            // 
-            // if (is_null($_path)) {
-            //     $_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, '@'.$locale.'/'.$path.'.'.$extension);
-            //     if (!$_path) {
-            //         $_path = \Gini\Core::phar_file_exists(VIEW_DIR.'/'.$extension, $path.'.'.$extension);    
-            //     }
-            // }
-            // 
-            // $output = $this->__load_view($_path, $extension);
-            //         
             return $this->_ob_cache = (string) $output;
                         
         }

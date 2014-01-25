@@ -8,11 +8,6 @@ namespace Gini {
 
     class API {
     
-        private static $_debug = false;
-        static function debug($debug = true) {
-            self::$_debug = $debug;
-        }
-    
         static function dispatch(array $data) {
     
             try {
@@ -59,12 +54,6 @@ namespace Gini {
                     throw new API\Exception("Method not found", -32601);
                 }
             
-                if (self::$_debug) {
-                    $func_str = trim(var_export($callback, true), '\'');
-                    $params_str = preg_replace('/\[(.*)\]/', '$1', @json_encode($params));
-                    TRACE( '<<< '.$func_str. '('. $params_str.')');
-                }
-            
                 $result = call_user_func_array($callback, $params);
             
                 if ($id !== null) {
@@ -72,11 +61,7 @@ namespace Gini {
                         'jsonrpc' => '2.0', 
                         'result' => $result,
                         'id' => $id,
-                    ];
-            
-                    if (self::$_debug) {
-                        TRACE('>>> '.@json_encode($response));
-                    }                
+                    ];            
                 }
             
             }

@@ -99,13 +99,11 @@ namespace Gini {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 
-            TRACE(">>> %s: %s", $this->_url, $post_data);
             $data = curl_exec($ch);
-            TRACE("<<< %s: %s", $this->_url, trim($data));
             
             $errno = curl_errno($ch);
             if ($errno) {
-                TRACE("curl error %s", curl_error($ch));
+                \Gini\Logger::of('core')->debug("RPC error: {error}", ['error'=>curl_error($ch)]);
                 $data = null;
             }
 

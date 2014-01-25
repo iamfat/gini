@@ -13,7 +13,7 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "monolog/monolog": "*"
+        "psr/log": "~1.0"
     },
     "require-dev": {
         "linkorb/jsmin-php": "dev-master",

@@ -9,18 +9,18 @@ abstract class CGI {
     public $form;
     public $route;
 
-    function __pre_action($action, &$params) { }
+    function __preAction($action, &$params) { }
     
-    function __post_action($action, &$params, $response) { }
+    function __postAction($action, &$params, $response) { }
 
     function execute() {
 
         $action = $this->action ?: '__index';
         $params = (array) $this->params;
 
-        $this->__pre_action($action, $params);
+        $this->__preAction($action, $params);
         $response = call_user_func_array(array($this, $action), $params);
-        return $this->__post_action($action, $params, $response) ?: $response;
+        return $this->__postAction($action, $params, $response) ?: $response;
     }
     
     function form($mode = '*') {

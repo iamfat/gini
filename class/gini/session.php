@@ -15,8 +15,6 @@ namespace Gini {
 
     class Session {
 
-        static function ignore_error($errno, $errstr) { }
-        
         static function setup() {
             
             $driver = _CONF('system.session_driver') ?: 'built_in';
@@ -54,7 +52,7 @@ namespace Gini {
                 session_id($_POST['gini-session']);
             }
             
-            set_error_handler('\\Gini\\Session::ignore_error', E_ALL ^ E_NOTICE);
+            set_error_handler(function(){}, E_ALL ^ E_NOTICE);
             session_start();
             restore_error_handler();
 
@@ -64,18 +62,13 @@ namespace Gini {
             }
 
             $now = time();
-            foreach((array)$_SESSION['@TIMEOUT'] as $token => $data) {
-                list($ts, $timeout) = $data;
-                if ($now - $ts > $timeout) {
+            foreach((array)$_SESSION['@TIMEOUT'] as $token => $timeout) {
+                if ($now > $timeout) {
                     unset($_SESSION[$token]);
                     unset($_SESSION['@TIMEOUT'][$token]);
                 }
             }
             
-            foreach((array)$_SESSION['@ONETIME'] as $token => $data) {
-                $_SESSION['@ONETIME'][$token] = true;
-            }
-
         }
         
         static function shutdown(){ 
@@ -91,7 +84,7 @@ namespace Gini {
                 
                 $tmp = (array) $_SESSION;
                 
-                set_error_handler('\\Gini\\Session::ignore_error', E_ALL ^ E_NOTICE);
+                set_error_handler(function(){}, E_ALL ^ E_NOTICE);
                 session_start();
                 restore_error_handler();
                 
@@ -109,7 +102,6 @@ namespace Gini {
 
             if (PHP_SAPI == 'cli') {
                 if (Cookie::get(session_name()) != session_id()) {
-                    TRACE("%s = %s", session_name(), session_id());
                     Cookie::set(session_name(), session_id());            
                 }
                 Cookie::shutdown();
@@ -140,22 +132,18 @@ namespace Gini {
             return self::$driver->gc($max); 
         }
         
-        static function make_timeout($token, $timeout = 0) {
+        static function makeTimeout($token, $timeout = 0) {
             if ($timeout > 0) {
-                $_SESSION['@TIMEOUT'][$token] = array(time(), (int)$timeout);
+                $_SESSION['@TIMEOUT'][$token] = time() + $timeout;
             }
             else {
                 unset($_SESSION['@TIMEOUT'][$token]);
             }
         }
         
-        static function make_onetime($token) {
-            $_SESSION['@ONETIME'][$token] = false;
-        }
-        
-        static function temp_token($prefix='', $timeout = 0) {
+        static function tempToken($prefix='', $timeout = 0) {
             $token = uniqid($prefix);
-            if ($timeout > 0) self::make_timeout($token, $timeout);
+            if ($timeout > 0) self::makeTimeout($token, $timeout);
             return $token;
         }
 
@@ -172,7 +160,7 @@ namespace Gini {
 
         }
         
-        static function regenerate_id() {
+        static function regenerateId() {
             if (PHP_SAPI == 'cli') {
                 session_id(null);
             }

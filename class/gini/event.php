@@ -4,7 +4,7 @@ namespace Gini {
 
     class Event {
 
-        static $events=[];
+        private static $_EVENTS=[];
     
         private $queue=[];
         private $sorted=false;
@@ -14,7 +14,6 @@ namespace Gini {
         private $_pass = false;
         private $_abort = false;
     
-
         private function _sort(){
         
             uasort($this->queue, function($a, $b){ 
@@ -28,15 +27,15 @@ namespace Gini {
             $this->sorted=true;
         }
 
-        function __construct($name) {
+        public function __construct($name) {
             $this->name = $name;
         }
     
-        function pass() {
+        public function pass() {
             $this->_pass = true;
         }
     
-        function abort() {
+        public function abort() {
             $this->_abort = true;
         }
     
@@ -78,10 +77,7 @@ namespace Gini {
 
         }
     
-        protected function _bind($return, $weight=0, $key=null){
-
-            TRACE('bind("%s", %s, %d, %s)', 
-                $this->name, json_encode($return), $weight, $key?:'null');
+        private function addHandler($return, $weight=0, $key=null) {
 
             $event = (object) ['weight'=>$weight, 'return'=>$return];
         
@@ -109,31 +105,40 @@ namespace Gini {
         
         }
     
-        static function factory($name, $ensure=true) {
-            $e = self::$events[$name];
+        public static function get($name, $ensure=false) {
+            $e = self::$_EVENTS[$name];
             if (!$e && $ensure) {
-                $e = self::$events[$name] = new Event($name);
+                $e = self::$_EVENTS[$name] = new Event($name);
             }
             return $e;
         }
 
-        static function & extract_names($selector) {
+        static function extractNames($selector) {
             return is_array($selector) ? $selector : [$selector];
         }
     
-        static function bind($events, $callback, $weight=0, $key=null) {
-            foreach (self::extract_names($events) as $name) {
-                self::factory($name)
-                    ->_bind($callback, $weight, $key);
+        static function bind($names, $return, $weight=0) {
+
+            $names = static::extractNames($names);
+            
+            \Gini\Logger::of('core')
+                ->debug("{name} <= {return} [{weight}]", [
+                    'name' => @json_encode($names, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+                    'return' => @json_encode($return, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+                    'weight' => $weight
+                ]);
+
+            foreach ($names as $name) {
+                static::get($name, true)->addHandler($return, $weight);
             }
         }
     
         static function trigger() {
             $return = null;
             $params = func_get_args();
-            $events = array_shift($params);
-            foreach (self::extract_names($events) as $name) {
-                $e = self::factory($name, false);
+            $_EVENTS = array_shift($params);
+            foreach (static::extractNames($_EVENTS) as $name) {
+                $e = static::get($name);
                 if ($e) {
                     $e->_abort = false;
                     $e->_return = $return;
@@ -149,8 +154,9 @@ namespace Gini {
             return $return;
         }
     
-        static function is_binded($name) {
-            return count(static::factory($name)->queue) > 0;
+        static function isBinded($name) {
+            $e = static::get($name);
+            return $e ? count($e->queue) > 0 : false;
         }
     
         static function setup() {
@@ -159,6 +165,7 @@ namespace Gini {
                     if (!is_string($key)) {
                         $key = null;
                     }
+                    
                     // $config['xxx'] = array('return'=>'callback:xxx_func', );
                     if (is_array($hook) && isset($hook['return'])) {
                         $return = $hook['return'];
@@ -168,6 +175,7 @@ namespace Gini {
                         $return = $hook;
                         $weight = 0;
                     }
+                    
                     static::bind($event, $return, $weight, $key);
                 }
             }

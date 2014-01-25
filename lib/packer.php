@@ -31,7 +31,7 @@ class Packer {
 		$this->phar->setStub('<?php echo "GINI PACK FILE.\n"; __HALT_COMPILER();?>');
 	}
 	
-	private static function relative_path($path, $base) {
+	private static function relativePath($path, $base) {
 		return preg_replace('|^'.preg_quote($base, '|').'/?(.*)$|', '$1', $path);
 	}
 	
@@ -46,7 +46,7 @@ class Packer {
 	}
 	
 	function encode_file($path, $base) {
-		$rpath = self::relative_path($path, $base);
+		$rpath = self::relativePath($path, $base);
 
 		if (preg_match('/\.(php|phtml)$/', $path)) {
 			echo "    \e[34mPHP\e[0m: $rpath...";

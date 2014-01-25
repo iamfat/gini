@@ -163,7 +163,7 @@ class CLI {
 
     static function subcommands($argc, $argv) {
             // list available cli programs
-            $paths = \Gini\Core::phar_file_paths(CLASS_DIR, 'controller/cli');
+            $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'controller/cli');
             foreach($paths as $path) {
                 if (!is_dir($path)) continue;
 
@@ -210,21 +210,21 @@ class CLI {
     static function exception($e) {
         $message = $e->getMessage();
         $file = $e->getFile();
-        foreach (\Gini\Core::$PATH_INFO as $info) {
+        foreach (\Gini\Core::$MODULE_INFO as $info) {
             if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                $file = "[$info->shortname] ".\Gini\File::relative_path($file, $info->path);
+                $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
                 break;
             }
         }
         $line = $e->getLine();
         printf("[E] \e[1m%s\e[0m (\e[1;34m%s\e[0m:$line)\n", $message, $file, $line);
-        if (\Gini\Core::debug_mode()) {
+        if (\Gini\Core::isDebugging()) {
             $trace = array_slice($e->getTrace(), 1, 3);
             foreach ($trace as $n => $t) {
                 $file = $t['file'];
-                foreach (\Gini\Core::$PATH_INFO as $info) {
+                foreach (\Gini\Core::$MODULE_INFO as $info) {
                     if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                        $file = "[$info->shortname] ".\Gini\File::relative_path($file, $info->path);
+                        $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
                         break;
                     }
                 }
@@ -281,9 +281,9 @@ class CLI {
 
         $controller = new $class;
 
-        $action = str_replace('-', '_', $params[0]);
-        if ($action && $action[0]!='_' && method_exists($controller, 'action_'.$action)) {
-            $action = 'action_'.$action;
+        $action = preg_replace('/[-_]/', '', $params[0]);
+        if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {
+            $action = 'action'.$action;
             array_shift($params);
         }
         elseif (!$action && method_exists($controller, '__index')) {

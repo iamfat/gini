@@ -60,7 +60,7 @@ namespace Gini {
             return $arr;
         }
 
-        static function random_password($length=12, $level=3) {
+        static function randPassword($length=12, $level=3) {
             list($usec, $sec) = explode(' ', microtime());
             srand((float) $sec + ((float) $usec * 100000));
             
