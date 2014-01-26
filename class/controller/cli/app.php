@@ -510,7 +510,7 @@ namespace Controller\CLI {
             
             foreach ($build->copy as $dir) {
                 $dir = preg_replace('/^[\/.]/', '', $dir);
-                if (!is_dir("$app_dir/$dir")) {
+                if (!file_exists("$app_dir/$dir")) {
                     continue;
                 }
                 
