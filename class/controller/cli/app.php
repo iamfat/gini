@@ -139,7 +139,8 @@ namespace Controller\CLI {
             $config_file = APP_PATH . '/cache/config.json';
 
             \Gini\File::ensureDir(APP_PATH.'/cache');
-            file_put_contents($config_file, json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            file_put_contents($config_file, 
+                json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
 
             \Gini\Config::setup();
 
@@ -162,7 +163,8 @@ namespace Controller\CLI {
             }
 
             \Gini\File::ensureDir(APP_PATH.'/cache');
-            file_put_contents(APP_PATH.'/cache/class_map.json', json_encode($class_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            file_put_contents(APP_PATH.'/cache/class_map.json', 
+                json_encode($class_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
 
@@ -187,7 +189,8 @@ namespace Controller\CLI {
             }
 
             \Gini\File::ensureDir(APP_PATH.'/cache');
-            file_put_contents(APP_PATH.'/cache/view_map.json', json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            file_put_contents(APP_PATH.'/cache/view_map.json', 
+                json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
             echo "   \e[32mdone.\e[0m\n";
         }
 
@@ -268,14 +271,11 @@ namespace Controller\CLI {
                         if (fnmatch('*.js', $name)) {
                             $src_path = $js_dir . '/' . $name;
                             $dst_path = $ugly_js_dir . '/' . $name;
-                            if (!file_exists($dst_path) 
-                                || filemtime($src_path) > filemtime($dst_path)) {
+                            if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
                                 // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
                                 printf("   %s\n", $name);
-                                $command = sprintf("uglifyjs %s -o %s"
-                                    , escapeshellarg($src_path)
-                                    , escapeshellarg($dst_path)
-                                    );
+                                $command = sprintf("uglifyjs %s -o %s",
+                                    escapeshellarg($src_path), escapeshellarg($dst_path));
                                 exec($command);
                             }
                         }
@@ -554,8 +554,12 @@ namespace Controller\CLI {
                         echo "Installing $name...\n";
                         // gini install path/to/modules
                         $cmd = strtr(
-                            getenv("GINI_INSTALL_COMMAND") ?: 'git clone git@gini.genee.cn:gini/%name %base/%name',
-                            ['%name'=>escapeshellcmd($name), '%base'=>escapeshellcmd($_SERVER['GINI_MODULE_BASE_PATH'])]
+                            getenv("GINI_INSTALL_COMMAND") 
+                                ?: 'git clone git@gini.genee.cn:gini/%name %base/%name',
+                            [
+                                '%name' => escapeshellcmd($name),
+                                '%base' => escapeshellcmd($_SERVER['GINI_MODULE_BASE_PATH'])
+                            ]
                         );
                         passthru($cmd);
                         $app = \Gini\Core::import($name, $version, $info);
@@ -577,72 +581,56 @@ namespace Controller\CLI {
         }
 
         public function actionWatch($args) {
-            $files = new \Illuminate\Filesystem\Filesystem;
-            $tracker = new \JasonLewis\ResourceWatcher\Tracker;
-            
-            $watcher = new \JasonLewis\ResourceWatcher\Watcher($tracker, $files);
-            
+
+            $watcher = new \Lurker\ResourceWatcher;
+
             // Config
-            echo "\e[1m# Watching CONFIG...\e[0m\n";
-            $onModifyConfig = function($resource, $path) {
-                passthru("gini cache config");
-            };
-            
             $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
-            array_walk($paths, function($path) use($watcher, &$onModifyConfig) {
-                $watcher->watch($path)->modify($onModifyConfig);
+            array_walk($paths, function($path) use($watcher) {
+                $watcher->trackByListener($path, function(\Lurker\Event\FilesystemEvent $event) {
+                    passthru("gini cache config");
+                });
             });
             
 
             // Class
-            echo "\e[1m# Watching CLASS change...\e[0m\n";
-            $onModifyConfig = function($resource, $path) {
-                passthru("gini cache class");
-            };
-            
-            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
-            array_walk($paths, function($path) use($watcher, &$onModifyConfig) {
-                $watcher->watch($path)->modify($onModifyConfig);
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'class');
+            array_walk($paths, function($path) use($watcher) {
+                $watcher->trackByListener($path, function(\Lurker\Event\FilesystemEvent $event) {
+                    passthru("gini cache class");
+                });
             });
             
 
             // View
-            echo "\e[1m# Watching VIEW change...\e[0m\n";
-            $onModifyConfig = function($resource, $path) {
-                passthru("gini cache view");
-            };
-            
-            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
-            array_walk($paths, function($path) use($watcher, &$onModifyConfig) {
-                $watcher->watch($path)->modify($onModifyConfig);
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'view');
+            array_walk($paths, function($path) use($watcher) {
+                $watcher->trackByListener($path, function(\Lurker\Event\FilesystemEvent $event) {
+                    passthru("gini cache view");
+                });
             });
             
 
             // ORM
-            echo "\e[1m# Watching ORM change...\e[0m\n";
-            $onModifyORM = function($resource, $path) {
-                passthru("gini update orm");
-            };
-            
             $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'orm');
-            array_walk($paths, function($path) use($watcher, &$onModifyORM) {
-                $watcher->watch($path)->modify($onModifyORM);
+            array_walk($paths, function($path) use($watcher) {
+                $watcher->trackByListener($path, function(\Lurker\Event\FilesystemEvent $event) {
+                    passthru("gini update orm");
+                });
             });
             
 
             // Web
-            echo "\e[1m# Watching WEB change...\e[0m\n";
-            $onModifyWeb = function($resource, $path) {
-                passthru("gini update web");
-            };
-            
             $paths
                 = \Gini\Core::pharFilePaths(RAW_DIR, 'assets') 
-                + \Gini\Core::pharFilePaths(RAW_DIR, 'less');
-            array_walk($paths, function($path) use($watcher, &$onModifyWeb) {
-                $watcher->watch($path)->modify($onModifyWeb);
+                    + \Gini\Core::pharFilePaths(RAW_DIR, 'less');
+            array_walk($paths, function($path) use($watcher) {
+                $watcher->trackByListener($path, function(\Lurker\Event\FilesystemEvent $event) {
+                    passthru("gini update web");
+                });
             });
                          
+            echo "watching config/class/view/orm/web...\n";
             $watcher->start();
         }
 
