@@ -363,8 +363,8 @@ namespace Controller\CLI {
             
             $updated_list = [];
             $update = function($info) use(&$update, &$updated_list) {
-                echo "Update $iidtname\n";
-                $updated_list[$iidtname] = true;
+                echo "Update $info->id\n";
+                $updated_list[$info->id] = true;
                 foreach ($info->dependencies as $name => $version) {
                     if (isset($updated_list[$name])) continue;
                     $app = \Gini\Core::moduleInfo($name);
@@ -478,7 +478,7 @@ namespace Controller\CLI {
         }
         
         private function _build($build_base, $info) {
-            echo "Building \e[4m$info->name\e[0m ($iidtname-$info->version)...\n";
+            echo "Building \e[4m$info->name\e[0m ($info->id-$info->version)...\n";
 
             if (!isset($info->build)) $info->build = (object)[];
             $build = (object)$info->build;
@@ -490,7 +490,7 @@ namespace Controller\CLI {
             }
             
             $app_dir = $info->path;
-            $build_dir = $build_base . '/' . $iidtname;
+            $build_dir = $build_base . '/' . $info->id;
             
             if (!is_dir($build_dir)) {
                 @mkdir($build_dir, 0755, true);
@@ -545,9 +545,9 @@ namespace Controller\CLI {
             
             $installed_list = [];
             $install = function ($info) use(&$install, &$installed_list) {
-                if (isset($installed_list[$iidtname])) return;
+                if (isset($installed_list[$info->id])) return;
                 // need to install
-                $installed_list[$iidtname] = true;
+                $installed_list[$info->id] = true;
                 foreach ($info->dependencies as $name => $version) {
                     $app = \Gini\Core::moduleInfo($name);
                     if ($app === false) {
