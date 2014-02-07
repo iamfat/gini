@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * JSON-RPC API support
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright Genee, 2014-02-07
+ **/
+
+/**
+ * Define DocBlock
+ **/
+
 namespace Gini\API {
     class Exception extends \Exception {}
 }

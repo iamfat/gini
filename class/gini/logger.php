@@ -1,11 +1,32 @@
 <?php
+/**
+ * Logger
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright Genee, 2014-01-27
+ **/
+
+/**
+ * Define DocBlock
+ **/
 
 namespace Gini {
 
+    /**
+     * Logger Class
+     */
     class Logger extends \Psr\Log\AbstractLogger {
-        
+
         protected static $_LOGGERS = [];
 
+        /**
+         * Get logger by name
+         *
+         * @param string $name Name of the logger
+         * @return Logger
+         * @author Jia Huang
+         */
         public static function of($name) {
             if (!isset(self::$_LOGGERS[$name])) {
                self::$_LOGGERS[$name] = new Logger($name); 
@@ -16,6 +37,11 @@ namespace Gini {
         protected $_name;
         protected $_handlers = [];
         
+        /**
+         * Instantiate Logger object by name
+         *
+         * @param string $name Logger name
+         */
         public function __construct($name) {
             $this->_name = $name;
 
@@ -33,7 +59,6 @@ namespace Gini {
          * Check if we are debugging something
          *
          * @return bool
-         * @author Jia Huang
          **/
         public static function isDebugging() {
             return file_exists(APP_PATH . '/.debug');
@@ -44,7 +69,6 @@ namespace Gini {
          *
          * @param string $func Function name to trace
          * @return bool
-         * @author Jia Huang
          **/
         public static function isDebuggingFunction($func) {
             static $tracablePattern;
@@ -60,6 +84,14 @@ namespace Gini {
             return false;
         }
 
+        /**
+         * Log function
+         *
+         * @param string $level Log level
+         * @param string $message Log message
+         * @param array $context Log context data
+         * @return void
+         */
         public function log($level, $message, array $context = array()) {
             
             // log to configured handlers

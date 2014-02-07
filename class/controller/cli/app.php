@@ -29,7 +29,6 @@ namespace Controller\CLI {
          * 初始化模块
          *
          * @return void
-         * @author Jia Huang
          **/
         public function actionInit($args) {
 

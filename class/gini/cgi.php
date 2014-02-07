@@ -1,8 +1,27 @@
 <?php
 
-namespace Gini {
+/**
+ * CGI support
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright Genee, 2014-02-07
+ **/
 
-    use \Gini\File;
+/**
+ * Define DocBlock
+ **/
+
+namespace Gini\CGI {
+
+    interface Response {
+        function output();
+        function content();
+    }
+
+}
+
+namespace Gini {
 
     class CGI {
 
@@ -158,9 +177,3 @@ namespace Gini {
     
 }
 
-namespace Gini\CGI {
-    interface Response {
-        function output();
-        function content();
-    }
-}

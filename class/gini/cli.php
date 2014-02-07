@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * CLI support
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright Genee, 2014-02-07
+ **/
+
+/**
+ * Define DocBlock
+ **/
+
 namespace Gini;
 
 class CLI {
@@ -10,10 +22,10 @@ class CLI {
 
     static $built_in_commands = array(
         'help' => 'Help',
-        'commands' => 'List available commands',
+        '-' => 'List available commands',
         );
 
-    static function parse_arguments($line) {
+    static function parseArguments($line) {
         $max = strlen($line);
         $st;     // parsing status: PARSE_BLANK, PARSE_IN_ARG, PARSE_IN_QUOTE
         $qt;    // quote char
@@ -90,7 +102,7 @@ class CLI {
         return $args;
     }
 
-    static function parse_prompt($prompt) {
+    static function parsePrompt($prompt) {
         return preg_replace_callback('|%(\w+)|', function ($matches) {
             return $_SERVER[$matches[1]] ?: getenv($matches[1]) ?: $matches[0];
         }, $prompt);
@@ -124,7 +136,7 @@ class CLI {
 
     private static $prompt;
 
-    static function main($argv) {
+    static function main(array $argv) {
 
         if (count($argv) < 1) {
             static::command_help($argv);
@@ -133,23 +145,24 @@ class CLI {
 
         $cli = strtolower($argv[0]);
         switch ($cli) {
-        case '?':
-            $method = 'subcommands';
+        case '-':
+            $method = 'commandAvailable';
             break;
         default:
-            $method = 'command_'.$cli;
+            $method = 'command'.$cli;
         }
+        
         if ($cli && method_exists(__CLASS__, $method)) {
-            call_user_func(array(__CLASS__, $method), $argc, $argv);
+            call_user_func(array(__CLASS__, $method), $argv);
         }
         else {
             $GLOBALS['GINI.CURRENT_CLI'] = $cli;
-            static::exec($argc, $argv);
+            static::exec($argv);
         }
 
     }
 
-    static function command_help($argv) {
+    static function commandHelp(array $argv) {
         echo "usage: \e[1;34mgini\e[0m <command> [<args>]\n\n";
         echo "The most commonly used git commands are:\n";
         foreach(self::$built_in_commands as $k => $v) {
@@ -157,31 +170,31 @@ class CLI {
         }
     }
 
-    static function command_root() {
+    static function commandRoot() {
         echo $_SERVER['GINI_APP_PATH']."\n";
     }
 
-    static function subcommands($argc, $argv) {
-            // list available cli programs
-            $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'controller/cli');
-            foreach($paths as $path) {
-                if (!is_dir($path)) continue;
+    static function commandAvailable(array $argv) {
+        // list available cli programs
+        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'controller/cli');
+        foreach($paths as $path) {
+            if (!is_dir($path)) continue;
 
-                $dh = opendir($path);
-                if ($dh) {
-                    while ($name = readdir($dh)) {
-                        if ($name[0] == '.') continue;
-                        if (!is_file($path . '/' . $name)) continue;
-                        printf("%s\t", basename($name, '.php'));
-                    }
-                    closedir($dh);
+            $dh = opendir($path);
+            if ($dh) {
+                while ($name = readdir($dh)) {
+                    if ($name[0] == '.') continue;
+                    if (!is_file($path . '/' . $name)) continue;
+                    printf("%s\t", basename($name, '.php'));
                 }
-
+                closedir($dh);
             }
-            echo "\n";
+
+        }
+        echo "\n";
     }
 
-    static function exec($argc, $argv) {
+    static function exec(array $argv) {
 
         $cmd = $argv[0];
         if ($cmd[0] == '@') {
@@ -203,7 +216,7 @@ class CLI {
             proc_close(proc_open(implode(' ', $eargv), array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER));                    
         }
         else {    
-            self::dispatch(count($argv), $argv);
+            self::dispatch($argv);
         }
     }
     
@@ -218,7 +231,7 @@ class CLI {
         }
         $line = $e->getLine();
         printf("[E] \e[1m%s\e[0m (\e[1;34m%s\e[0m:$line)\n", $message, $file, $line);
-        if (\Gini\Core::isDebugging()) {
+        // if (is debugging) {
             $trace = array_slice($e->getTrace(), 1, 3);
             foreach ($trace as $n => $t) {
                 $file = $t['file'];
@@ -236,10 +249,10 @@ class CLI {
 
             }
             fprintf(STDERR, "\n");
-        }
+        // }
     }
 
-    static function dispatch($argc, array $argv) {
+    static function dispatch(array $argv) {
 
         $orig_argv = $argv;
 
@@ -247,6 +260,7 @@ class CLI {
 
         $path = '';
 
+        $candidates = [];
         while (count($argv) > 0) {
             $arg = array_shift($argv);
             if (!preg_match('|^[a-z]\w+$|', $arg)) break;

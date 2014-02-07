@@ -1,8 +1,17 @@
 <?php
 
-/*
-$object = new \ORM\Object($id);
-*/
+/**
+ * Those ORM
+ * $object = new \ORM\Object($id|[criteria array]);
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright Genee, 2014-01-27
+ **/
+
+/**
+ * Define DocBlock
+ **/
 
 namespace Gini {
 
@@ -26,7 +35,7 @@ namespace Gini {
             $name = "call[$method]";
             if (!$this->event('isBinded', $name)) {
                 $trace = debug_backtrace();
-                $message = sprintf("Framework Error: Call to undefined method %s::%s() in %s on line %d", 
+                $message = sprintf("[E]: Call to undefined method %s::%s() in %s on line %d", 
                                     $trace[1]['class'], 
                                     $trace[1]['function'],
                                     $trace[1]['file'],

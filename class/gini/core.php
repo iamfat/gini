@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Gini Core
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright Genee, 2014-01-27
+ **/
+
+/**
+ * Define DocBlock
+ **/
+
 namespace Gini {
 
     /**
@@ -39,7 +51,6 @@ namespace Gini {
          * @param string $path Module path
          *
          * @return object|false Module info
-         * @author Jia Huang
          **/
         public static function fetchModuleInfo($path) {
 
@@ -82,7 +93,6 @@ namespace Gini {
          * @param string $id Module Id
          *
          * @return object|false Module Information
-         * @author Jia Huang
          **/
         public static function moduleInfo($id) {
             return self::$MODULE_INFO[$id] ?: false;
@@ -94,7 +104,6 @@ namespace Gini {
          * @param string $version The version to check.
          * @param string $versionRequired Version requirement, e.g. "*", ">=2.3.4"
          * @return bool
-         * @author Jia Huang
          **/
         public static function checkVersion($version, $versionRequired) {
             if ($versionRequired != '*' &&  preg_match('/^\s*(<=|>=|<|>|=)?\s*(.+)$/', $versionRequired, $parts)) {
@@ -114,7 +123,6 @@ namespace Gini {
          *
          *
          * @return object|false Module information
-         * @author Jia Huang
          **/
         public static function import($path, $version='*', $parent=null) {
 
@@ -366,7 +374,6 @@ namespace Gini {
          * Function to start the whole gini framework
          *
          * @return void
-         * @author Jia Huang
          **/
         public static function start(){
 
@@ -423,7 +430,6 @@ namespace Gini {
          * Shutdown handler, called when script finished.
          *
          * @return void
-         * @author Jia Huang
          **/
         public static function shutdown() {
             foreach (array_reverse(self::$MODULE_INFO) as $name => $info) {
@@ -441,6 +447,13 @@ namespace Gini {
 
 namespace {
 
+    /**
+     * Shortcut for global variables in Gini
+     *
+     * @param string $key Name of global variable
+     * @param string[optional] string given when setting
+     * @return mixed
+     **/
     function _G($key, $value = null) {
         if (is_null($value)) {
             return isset(\Gini\Core::$GLOBALS[$key]) ? \Gini\Core::$GLOBALS[$key] : null;
@@ -450,6 +463,11 @@ namespace {
         }
     }
 
+    /**
+     * Shortcut for sprintf()
+     *
+     * @return string
+     **/
     if (function_exists('s')) {
         die("s() was declared by other libraries, which may cause problems!");
     }
@@ -465,6 +483,12 @@ namespace {
         }    
     }
 
+    /**
+     * Shortcut for htmlentities() + sprintf()
+     * e.g. H("Hello, %s!", "world")
+     *
+     * @return string
+     **/
     if (function_exists('H')) {
         die("H() was declared by other libraries, which may cause problems!");
     }
@@ -481,6 +505,13 @@ namespace {
         }
     }
 
+    /**
+     * Shortcut for new \Gini\View
+     *
+     * @param string $path Path to the view
+     * @param array[optional] $vars Parameters for the view
+     * @return object \Gini\View object
+     **/
     if (function_exists('V')) {
         die("V() was declared by other libraries, which may cause problems!");
     }

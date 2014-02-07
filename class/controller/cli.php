@@ -1,17 +1,40 @@
 <?php
 
+/**
+ * CLI Controller
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright Genee, 2014-02-08
+ **/
+
+/**
+ * Define DocBlock
+ **/
+
 namespace Controller;
     
 abstract class CLI {
 
+    /**
+     * current action
+     *
+     * @var string
+     */
     public $action;
+    
+    /**
+     * current parameters
+     *
+     * @var array
+     */
     public $params;
  
-    function __preAction($action, &$params) { }
+    protected function __preAction($action, &$params) { }
     
-    function __postAction($action, &$params, $response) { }
+    protected function __postAction($action, &$params, $response) { }
 
-    function execute() {
+    public function execute() {
 
         $action = $this->action ?: '__index';
         $params = (array) $this->params;
@@ -21,15 +44,15 @@ abstract class CLI {
         return $this->__postAction($action, $params, $response) ?: $response;
     }
     
-    function __index($params) {
+    public function __index($params) {
         $this->__unknown($params);
     }
 
-    function action_help($params) {
+    public function actionHelp($params) {
         echo "\e[1;34mgini\e[0m: help is unavailable.\n";
     }
         
-    function __unknown($params) {
+    public function __unknown($params) {
         echo "\e[1;34mgini\e[0m: unknown command.\n";
     }
 
