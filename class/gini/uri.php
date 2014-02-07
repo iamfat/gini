@@ -138,19 +138,30 @@ namespace Gini {
 
 namespace {
 
-    public function URL($url=null, $query=null, $fragment=null)
-    {
-        return \Gini\URI::url($url, $query, $fragment);
+    if (function_exists('URL')) {
+        die("URL() was declared by other libraries, which may cause problems!");
+    } else {
+        function URL($url=null, $query=null, $fragment=null)
+        {
+            return \Gini\URI::url($url, $query, $fragment);
+        }
     }
 
-    public function MAILTO($mail, $name=null, $extra=null)
-    {
-        return \Gini\URI::mailto($mail, $name, $extra);
+    if (function_exists('MAILTO')) {
+        die("URL() was declared by other libraries, which may cause problems!");
+    } else {
+        function MAILTO($mail, $name=null, $extra=null)
+        {
+            return \Gini\URI::mailto($mail, $name, $extra);
+        }
     }
 
-    public function RURL($path, $type)
-    {
-        return \Gini\URI::rurl($path, $type);
+    if (function_exists('RURL')) {
+        die("RURL() was declared by other libraries, which may cause problems!");
+    } else {
+        function RURL($path, $type)
+        {
+            return \Gini\URI::rurl($path, $type);
+        }
     }
-
 }

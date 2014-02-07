@@ -408,23 +408,34 @@ namespace Gini {
 
 namespace {
 
-    public function a($name, $criteria = null)
-    {
-        $name = str_replace('/', '\\', $name);
-        $class_name = '\\ORM\\'.$name;
+    if (function_exists('a')) {
+        die("a() was declared by other libraries, which may cause problems!");
+    } else {
+        function a($name, $criteria = null)
+        {
+            $name = str_replace('/', '\\', $name);
+            $class_name = '\\ORM\\'.$name;
 
-        return new $class_name($criteria);
+            return new $class_name($criteria);
+        }
     }
 
     // alias to a()
-    public function an($name, $criteria = null)
-    {
-        return a($name, $criteria);
+    if (function_exists('an')) {
+        die("an() was declared by other libraries, which may cause problems!");
+    } else {
+        function an($name, $criteria = null)
+        {
+            return a($name, $criteria);
+        }
     }
 
-    public function those($name)
-    {
-        return new \Gini\Those($name);
+    if (function_exists('those')) {
+        die("those() was declared by other libraries, which may cause problems!");
+    } else {
+        function those($name)
+        {
+            return new \Gini\Those($name);
+        }
     }
-
 }

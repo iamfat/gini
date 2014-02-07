@@ -460,12 +460,16 @@ namespace {
      *                     @param string[optional] string given when setting
      * @return mixed
      **/
-    public function _G($key, $value = null)
-    {
-        if (is_null($value)) {
-            return isset(\Gini\Core::$GLOBALS[$key]) ? \Gini\Core::$GLOBALS[$key] : null;
-        } else {
-            \Gini\Core::$GLOBALS[$key] = $value;
+    if (function_exists('_G')) {
+        die("_G() was declared by other libraries, which may cause problems!");
+    } else {
+        function _G($key, $value = null)
+        {
+            if (is_null($value)) {
+                return isset(\Gini\Core::$GLOBALS[$key]) ? \Gini\Core::$GLOBALS[$key] : null;
+            } else {
+                \Gini\Core::$GLOBALS[$key] = $value;
+            }
         }
     }
 

@@ -4,21 +4,25 @@ namespace Gini;
 
 require_once __DIR__."/bootstrap.php";
 
-class Application {
-
-    static function setup() {
+class Application
+{
+    public static function setup()
+    {
         CGI::setup();
     }
 
-    static function main($args) {
+    public static function main($args)
+    {
         CGI::main($args);                   // 分派控制器
     }
 
-    static function shutdown() {
+    public static function shutdown()
+    {
         CGI::shutdown();
     }
 
-    static function exception($e) {
+    public static function exception($e)
+    {
         CGI::exception($e);
     }
 

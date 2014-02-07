@@ -39,25 +39,28 @@ namespace Gini {
 
 namespace {
 
-    public function T($fmt, $params=null)
-    {
-        if (!$fmt) return $fmt;
-        if (is_array($fmt)) {
-            $a = \Gini\I18N::stripContext($fmt[0]);  //msgid
-            $b = \Gini\I18N::stripContext($fmt[1]);  //plural msgid
-            $c = ngettext($fmt[0], $fmt[1], $fmt[2]);
-            if ($c == $fmt[0] || $c == $fmt[1]) {
-                $fmt = $fmt[2] == 1 ? $a : $b;
+    if (function_exists('T')) {
+        die("T() was declared by other libraries, which may cause problems!");
+    } else {
+        function T($fmt, $params=null)
+        {
+            if (!$fmt) return $fmt;
+            if (is_array($fmt)) {
+                $a = \Gini\I18N::stripContext($fmt[0]);  //msgid
+                $b = \Gini\I18N::stripContext($fmt[1]);  //plural msgid
+                $c = ngettext($fmt[0], $fmt[1], $fmt[2]);
+                if ($c == $fmt[0] || $c == $fmt[1]) {
+                    $fmt = $fmt[2] == 1 ? $a : $b;
+                } else {
+                    $fmt = $c;
+                }
             } else {
-                $fmt = $c;
+                $a = \Gini\I18N::stripContext($fmt);
+                $b = gettext($fmt);
+                $fmt = ($b == $fmt) ? $a : $b;
             }
-        } else {
-            $a = \Gini\I18N::stripContext($fmt);
-            $b = gettext($fmt);
-            $fmt = ($b == $fmt) ? $a : $b;
+
+            return $params ? strtr($fmt, (array) $params) : $fmt;
         }
-
-        return $params ? strtr($fmt, (array) $params) : $fmt;
     }
-
 }

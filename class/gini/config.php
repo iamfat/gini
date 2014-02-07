@@ -130,13 +130,16 @@ namespace Gini {
 
 namespace {
 
-    public function _CONF($key, $value=null)
-    {
-        if (is_null($value)) {
-            return \Gini\Config::get($key);
-        } else {
-            \Gini\Config::set($key, $value);
+    if (function_exists('_CONF')) {
+        die("_CONF() was declared by other libraries, which may cause problems!");
+    } else {
+        function _CONF($key, $value=null)
+        {
+            if (is_null($value)) {
+                return \Gini\Config::get($key);
+            } else {
+                \Gini\Config::set($key, $value);
+            }
         }
     }
-
 }

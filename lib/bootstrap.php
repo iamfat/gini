@@ -50,8 +50,7 @@ if (file_exists($view_map_file)) {
 $class_path = SYS_PATH . '/class';
 if (file_exists($class_path.'.phar')) {
     require 'phar://' . $class_path . '.phar/gini/core.php';
-}
-else {
+} else {
     require $class_path . '/gini/core.php';
 }
 
