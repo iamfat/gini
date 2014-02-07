@@ -1,10 +1,11 @@
 <?php
 
 namespace Controller\CLI {
-    
-    class Cron extends \Controller\CLI {
 
-        function __index($args) {
+    class Cron extends \Controller\CLI
+    {
+        function __index($args)
+        {
             $helps = array(
                 'list' => 'List crons',
                 'export' => 'Export to STDIN in crontab syntax'
@@ -15,19 +16,20 @@ namespace Controller\CLI {
             }
         }
 
-        function actionList($args) {
-            foreach ((array)_CONF('cron') as $cron) {
+        function actionList($args)
+        {
+            foreach ((array) _CONF('cron') as $cron) {
                 printf("gini @%s %s\n", APP_ID, $cron['command']);
             }
         }
 
-        function actionExport($args) {
-            
+        function actionExport($args)
+        {
             if ($args[0]) {
                 $user = $args[0];
             }
-            
-            foreach ((array)_CONF('cron') as $cron) {
+
+            foreach ((array) _CONF('cron') as $cron) {
                 if ($cron['comment']) printf("# %s\n", $cron['comment']);
                 printf("%s%s\tgini @%s %s\n\n", $cron['interval'], $user ? "\t$user":'', APP_ID, $cron['command']);
             }

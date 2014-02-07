@@ -4,8 +4,8 @@
 
 namespace Gini\Database;
 
-class SQLite extends \PDO implements Driver {
-
+class SQLite extends \PDO implements Driver
+{
     private $_table_status = null;
     private $_table_schema = null;
 
@@ -13,18 +13,19 @@ class SQLite extends \PDO implements Driver {
 
     private $_h;
 
-    function quoteIdent($s){
+    public function quoteIdent($s)
+    {
         return '"'.addslashes($s).'"';
     }
-    
-    private function _update_table_status($table=null) {
+
+    private function _update_table_status($table=null)
+    {
         if ($table || !$this->_table_status) {
-            
+
             if ($table && $table != '*') {
                 unset($this->_table_status[$table]);
                 $SQL = sprintf('SELECT "name" FROM "sqlite_master" WHERE "type"=\'table\' AND name=%s', $this->quote($table));
-            }
-            else {
+            } else {
                 $this->_table_status = null;
                 $SQL = 'SELECT "name" FROM "sqlite_master" WHERE "type"=\'table\'';
             }
@@ -36,28 +37,32 @@ class SQLite extends \PDO implements Driver {
         }
     }
 
-    function tableExists($table){
+    public function tableExists($table)
+    {
         return isset($this->_table_status[$table]);
     }
 
-    function tableStatus($table) {
+    public function tableStatus($table)
+    {
         $this->_update_table_status();
+
         return $this->_table_status[$table];
     }
 
-    private static function _normalize_type($type) {
+    private static function _normalize_type($type)
+    {
         // 确保小写
         $type = strtolower($type);
         // 移除多余空格
-        $type = preg_replace('/\s+/', ' ', $type); 
+        $type = preg_replace('/\s+/', ' ', $type);
         // 去除多级整数的长度说明
         $type = preg_replace('/\b(tinyint|smallint|mediumint|bigint|int)\s*(\(\s*\d+\s*\))*/', 'int', $type);
 
         return $type;
     }
 
-    function adjustTable($table, $schema) {
-        
+    public function adjustTable($table, $schema)
+    {
         // $remove_nonexistent = _CONF('database.remove_nonexistent') ?: false;
         $this->_update_table_status($table);
         if (!$this->tableExists($table)) {
@@ -73,7 +78,7 @@ class SQLite extends \PDO implements Driver {
         if ($curr_indexes['PRIMARY']['type'] == 'primary') {
             unset($curr_indexes['PRIMARY']);
         }
-        
+
         if (!$need_new_table) {
             //检查所有Fields
             $missing_fields = array_diff_key($fields, $curr_fields);
@@ -85,7 +90,7 @@ class SQLite extends \PDO implements Driver {
                     if ($field) {
                         $curr_type = $this->_normalize_type($curr_field['type']);
                         $type = $this->_normalize_type($field['type']);
-                        if ( $type !== $curr_type
+                        if ($type !== $curr_type
                             || $field['null'] != $curr_field['null']
                             || $field['default'] != $curr_field['default']
                             || $field['serial'] != $curr_field['serial']) {
@@ -100,7 +105,7 @@ class SQLite extends \PDO implements Driver {
 
         if ($need_new_table) {
 
-            foreach($curr_indexes as $key=>$curr_val) {
+            foreach ($curr_indexes as $key=>$curr_val) {
                 $SQL = sprintf('DROP INDEX %s', $this->quoteIdent($table.'__'.$key));
                 $this->query($SQL);
             }
@@ -115,15 +120,14 @@ class SQLite extends \PDO implements Driver {
                 $field_names[] = $this->quoteIdent($key);
                 if (isset($curr_fields[$key])) {
                     $field_values[] = $this->quoteIdent($key);
-                }
-                else {
+                } else {
                     $field_values[] = $this->quote($field['default']);
                 }
             }
 
             if ($indexes['PRIMARY']['type'] == 'primary') {
                 $primary_keys = $indexes['PRIMARY']['fields'];
-                foreach($primary_keys as &$key) {
+                foreach ($primary_keys as &$key) {
                     if ($fields[$key]['serial']) {
                         $primary_keys = null;
                         break;
@@ -138,8 +142,8 @@ class SQLite extends \PDO implements Driver {
             }
 
             // 1. 建立新表
-            $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s (%s)', 
-                        $this->quoteIdent('_new_'.$table), 
+            $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s (%s)',
+                        $this->quoteIdent('_new_'.$table),
                         implode(', ', $field_sql)
                         );
             $this->query($SQL);
@@ -147,7 +151,7 @@ class SQLite extends \PDO implements Driver {
             // 2. 移动数据
             if ($this->tableExists($table) && count($fields) > 0) {
                 $SQL = sprintf('INSERT INTO %s (%s) SELECT %s FROM %s',
-                    $this->quoteIdent('_new_'.$table), 
+                    $this->quoteIdent('_new_'.$table),
                     implode(',', $field_names), implode(',', $field_values), $this->quoteIdent($table)
                     );
                 $this->query($SQL);
@@ -159,16 +163,14 @@ class SQLite extends \PDO implements Driver {
             // 3. 表改名
             $SQL = sprintf('ALTER TABLE %s RENAME TO %s', $this->quoteIdent('_new_'.$table), $this->quoteIdent($table));
             $this->query($SQL);
-        }
-        else {
-            foreach($curr_indexes as $key=>$curr_val) {
+        } else {
+            foreach ($curr_indexes as $key=>$curr_val) {
                 $val = & $indexes[$key];
                 if ($val) {
                     if ( $val['type'] != $curr_val['type']
                         || array_diff($val, $curr_val)) {
-                        
-                    }
-                    else {
+
+                    } else {
                         continue;
                     }
                 }
@@ -181,10 +183,10 @@ class SQLite extends \PDO implements Driver {
         }
 
         if ($index_modified) {
-            foreach($indexes as $key=>$val) {
-                $SQL = sprintf('CREATE %sINDEX IF NOT EXISTS %s ON %s (%s)', 
-                            $val['type'] ? 'UNIQUE ' : '', 
-                            $this->quoteIdent($table.'__'.$key), 
+            foreach ($indexes as $key=>$val) {
+                $SQL = sprintf('CREATE %sINDEX IF NOT EXISTS %s ON %s (%s)',
+                            $val['type'] ? 'UNIQUE ' : '',
+                            $this->quoteIdent($table.'__'.$key),
                             $this->quoteIdent($table),
                             $this->quoteIdent($val['fields'])
                         );
@@ -197,8 +199,8 @@ class SQLite extends \PDO implements Driver {
         }
     }
 
-    function tableSchema($name, $refresh = false) {
-        
+    public function tableSchema($name, $refresh = false)
+    {
         $indexes = array();
         $fields=array();
         $primary_keys = array();
@@ -207,15 +209,15 @@ class SQLite extends \PDO implements Driver {
 
             $ds = $this->query(sprintf('SELECT sql FROM sqlite_master WHERE type=\'table\' AND name=%s', $this->quote($name)));
             $table_sql = $ds->fetchObject()->sql;
-            
+
             $ds = $this->query(sprintf('PRAGMA table_info(%s)', $this->quoteIdent($name)));
             // cid, name, type, notnull, dflt_value, pk
-            while($dr = $ds->fetchObject()) {
+            while ($dr = $ds->fetchObject()) {
 
                 $field = array('type' => $this->_normalize_type($dr->type));
 
                 if ($dr->dflt_value !== null) {
-                    switch($field['type']) {
+                    switch ($field['type']) {
                     case 'int':
                         $field['default'] = (int) $dr->dflt_value;
                         break;
@@ -229,7 +231,7 @@ class SQLite extends \PDO implements Driver {
 
                 if (!$dr->notnull) {
                     $field['null'] = true;
-                }                
+                }
 
                 if (false !== strpos($table_sql, $this->quoteIdent($dr->name).' INTEGER PRIMARY KEY AUTOINCREMENT')) {
                     $field['serial'] = true;
@@ -244,7 +246,7 @@ class SQLite extends \PDO implements Driver {
 
             $this->_table_schema[$name]['fields'] = $fields;
         }
-        
+
         if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
             $ds = $this->query(sprintf('PRAGMA index_list("%s")', $this->escape($name)));
 
@@ -264,14 +266,15 @@ class SQLite extends \PDO implements Driver {
                 $indexes['PRIMARY']['type'] = 'primary';
                 $indexes['PRIMARY']['fields'] = $primary_keys;
             }
-            
+
             $this->_table_schema[$name]['indexes'] = $indexes;
         }
 
         return $this->_table_schema[$name];
     }
 
-    private function field_sql($key, &$field) {
+    private function field_sql($key, &$field)
+    {
         if ($field['serial']) {
             return sprintf('%s INTEGER PRIMARY KEY AUTOINCREMENT'
                     , $this->quoteIdent($key)
@@ -285,41 +288,47 @@ class SQLite extends \PDO implements Driver {
                 , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']):''
                 );
     }
-    
-    function createTable($table, $engine=null) {
-         
+
+    public function createTable($table, $engine=null)
+    {
         $engine = $engine ?: 'innodb';    //innodb as default db
-        
+
         $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s ("_FOO" int NOT NULL)', $this->quoteIdent($table));
         $rs = $this->query($SQL);
         $this->_update_table_status($table);
-        
+
         return $rs !== null;
-    
+
     }
 
-    function beginTransaction() {
+    public function beginTransaction()
+    {
         @$this->query("BEGIN TRANSACTION");
     }
-    
-    function commit() {
+
+    public function commit()
+    {
         @$this->query("COMMIT TRANSACTION");
     }
-    
-    function rollback() {
+
+    public function rollback()
+    {
         @$this->query("ROLLBACK TRANSACTION");
     }
-    
-    function dropTable($table) {
+
+    public function dropTable($table)
+    {
         $this->query('DROP TABLE IF EXISTS '.$this->quoteIdent($table));
         $this->_update_table_status($table);
         unset($this->_prepared_tables[$table]);
         unset($this->_table_fields[$table]);
-        unset($this->_table_indexes[$table]);  
-        return true;      
+        unset($this->_table_indexes[$table]);
+
+        return true;
     }
-    
-    function emptyDatabase() {
+
+    public function emptyDatabase()
+    {
         $rs = $this->query("SELECT name FROM sqlite_master WHERE type='table'");
         while ($r = $rs->fetch(\PDO::FETCH_NUM)) {
             if (strncmp($r[0], 'sqlite_', 7) == 0) continue;
@@ -329,22 +338,21 @@ class SQLite extends \PDO implements Driver {
         foreach ((array) $tables as $table) {
             $this->query('DROP TABLE IF EXISTS '.$this->quoteIdent($table));
         }
-        
+
         return true;
     }
-    
-    //COMMENTED FOR STABILITY REASON        
+
+    //COMMENTED FOR STABILITY REASON
     // function snapshot($filename, $tables) {
     //     // TODO
     //     // NOT IMPLEMENTED
     //     return false;
     // }
-    // 
+    //
     // function restore($filename, &$retore_filename, $tables) {
     //     // TODO
     //     // NOT IMPLEMENTED
     //     return false;
     // }
-   
-}
 
+}

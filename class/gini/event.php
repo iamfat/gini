@@ -14,8 +14,8 @@
 
 namespace Gini;
 
-class Event {
-
+class Event
+{
     private static $_EVENTS=[];
 
     private $queue=[];
@@ -26,11 +26,11 @@ class Event {
     private $_pass = false;
     private $_abort = false;
 
-    private function _sort(){
-    
-        uasort($this->queue, function($a, $b){ 
+    private function _sort()
+    {
+        uasort($this->queue, function ($a, $b) {
             if ($a->weight != $b->weight) {
-                return $a->weight > $b->weight; 
+                return $a->weight > $b->weight;
             }
 
             return $a->order > $b->order;
@@ -39,26 +39,29 @@ class Event {
         $this->sorted=true;
     }
 
-    public function __construct($name) {
+    public function __construct($name)
+    {
         $this->name = $name;
     }
 
-    public function pass() {
+    public function pass()
+    {
         $this->_pass = true;
     }
 
-    public function abort() {
+    public function abort()
+    {
         $this->_abort = true;
     }
 
     private $triggering = false;
-    private function _trigger(array $params){
-
+    private function _trigger(array $params)
+    {
         if (!$this->sorted) $this->_sort();
-    
+
         array_unshift($params, $this);
-    
-        foreach($this->queue as $hook){
+
+        foreach ($this->queue as $hook) {
 
             $return = $hook->return;
             // array(object, method)
@@ -68,79 +71,79 @@ class Event {
             // callback:\Namespace\Class\Method
             elseif (is_string($return) && 0 == strncmp($return, 'callback:', 9)) {
                 $callback = substr($return, 9);
-            }
-            else {
+            } else {
                 $this->_abort = true;
                 $this->_return = $return;
                 break;
             }
-        
+
             $this->_pass = false;
             if (is_callable($callback)) {
                 $return = call_user_func_array($callback, $params);
             }
-        
+
             if (!$this->_pass) {
                 $this->_return = $return;
             }
-        
+
             if ($this->_abort) break;
         }
 
     }
 
-    private function addHandler($return, $weight=0, $key=null) {
-
+    private function addHandler($return, $weight=0, $key=null)
+    {
         $event = (object) ['weight'=>$weight, 'return'=>$return];
-    
+
         if (!$key) {
-            if (is_array($return) 
+            if (is_array($return)
                 && count($return) == 2 && is_object($return[0])) {
                 $class = get_class($return[0]);
                 $key = 'dynamic:'.$class .'.'.$return[1];
-            }
-            elseif (is_string($return) 
+            } elseif (is_string($return)
                 && 0 == strncmp($return, 'callback:', 9)) {
                 $key = $return;
-            }
-            else {
+            } else {
                 $key = 'return:'.json_encode($return);
-            } 
+            }
         }
 
-        $key = strtolower($key);        
+        $key = strtolower($key);
         if (!isset($this->queue[$key])) {
             $event->order = count($this->queue);
         }
-    
+
         $this->queue[$key] = $event;
-    
+
     }
 
-    public static function get($name, $ensure=false) {
+    public static function get($name, $ensure=false)
+    {
         $e = self::$_EVENTS[$name];
         if (!$e && $ensure) {
             $e = self::$_EVENTS[$name] = new Event($name);
         }
+
         return $e;
     }
 
-    static function extractNames($selector) {
+    public static function extractNames($selector)
+    {
         return is_array($selector) ? $selector : [$selector];
     }
 
     /**
      * Bind some events with specified callback with/without weight
      *
-     * @param string $names 
-     * @param string $return 
-     * @param string $weight 
+     * @param  string $names
+     * @param  string $return
+     * @param  string $weight
      * @return void
      */
-    static function bind($names, $return, $weight=0) {
-
+    public static function bind($names, $return, $weight=0)
+    {
         $names = static::extractNames($names);
-        
+
         \Gini\Logger::of('core')
             ->debug("{name} <= {return} [{weight}]", [
                 'name' => @json_encode($names, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
@@ -156,10 +159,11 @@ class Event {
     /**
      * Trigger specified events
      *
-     * @param string $names
+     * @param  string $names
      * @return void
      */
-    static function trigger() {
+    public static function trigger()
+    {
         $return = null;
         $params = func_get_args();
         $_EVENTS = array_shift($params);
@@ -176,18 +180,20 @@ class Event {
                 }
             }
         }
-    
+
         return $return;
     }
 
     /**
      * Check if an event was binded
      *
-     * @param string $name event name
+     * @param  string $name event name
      * @return bool
      */
-    static function isBinded($name) {
+    public static function isBinded($name)
+    {
         $e = static::get($name);
+
         return $e ? count($e->queue) > 0 : false;
     }
 
@@ -196,23 +202,23 @@ class Event {
      *
      * @return void
      */
-    static function setup() {
-        foreach((array)_CONF('hooks') as $event => $event_hooks) {
+    public static function setup()
+    {
+        foreach ((array) _CONF('hooks') as $event => $event_hooks) {
             foreach ((array) $event_hooks as $key => $hook) {
                 if (!is_string($key)) {
                     $key = null;
                 }
-                
+
                 // $config['xxx'] = array('return'=>'callback:xxx_func', );
                 if (is_array($hook) && isset($hook['return'])) {
                     $return = $hook['return'];
                     $weight = $hook['weight'];
-                }
-                else {
+                } else {
                     $return = $hook;
                     $weight = 0;
                 }
-                
+
                 static::bind($event, $return, $weight, $key);
             }
         }

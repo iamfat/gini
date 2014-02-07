@@ -2,32 +2,35 @@
 
 namespace Gini {
 
-    class ORMIter implements \Iterator, \ArrayAccess, \Countable {
-
+    class ORMIter implements \Iterator, \ArrayAccess, \Countable
+    {
         protected $db;
 
         protected $name;
         protected $table_name;
-        
+
         protected $current_id;
         protected $objects = array();
-        
+
         protected $total_count;    //符合selector的数据总数
         protected $count;    //实际获得数据数
-        
+
         protected $SQL;
         protected $SQL_idents;
         protected $SQL_params;
         protected $count_SQL;
 
-        function total_count() {
+        function total_count()
+        {
             $this->fetch('count');
+
             return (int) $this->total_count;
         }
 
-        function name(){return $this->name;}
+        function name() {return $this->name;}
 
-        function __construct($name){
+        function __construct($name)
+        {
             // 查询一下看看是不是复数
             $name = _CONF('orm.plurals')[$name] ?: $name;
             $this->name = $name;
@@ -37,10 +40,10 @@ namespace Gini {
 
         function __clone() {}
 
-        function query() {
-            
+        function query()
+        {
             $db = $this->db;
-            
+
             $args = func_get_args();
 
             $this->SQL = $SQL = $args[0];
@@ -59,25 +62,26 @@ namespace Gini {
         }
 
         private $_fetch_flag;
-        protected function setFetchFlag($scope, $enable=true) {
+        protected function setFetchFlag($scope, $enable=true)
+        {
             if ($enable) {
                 $this->_fetch_flag[$scope] = true;
-            }
-            else {
+            } else {
                 if ($scope === '*') {
                     unset($this->_fetch_flag);
-                }
-                else {
+                } else {
                     unset($this->_fetch_flag[$scope]);
                 }
             }
         }
 
-        protected function isFetchFlagged($scope) {
+        protected function isFetchFlagged($scope)
+        {
             return isset($this->_fetch_flag['*']) || isset($this->_fetch_flag[$scope]);
         }
 
-        protected function resetFetch() {
+        protected function resetFetch()
+        {
             if ($this->SQL) {
                 $this->setFetchFlag('*', false);
                 $this->SQL = null;
@@ -85,10 +89,11 @@ namespace Gini {
             }
         }
 
-        protected function fetch($scope='data') {
+        protected function fetch($scope='data')
+        {
             if ($this->isFetchFlagged($scope)) return $this;
 
-            switch($scope) {
+            switch ($scope) {
             case 'count':
                 $this->total_count = $this->count_SQL ? $this->db->value($this->count_SQL) : 0;
                 break;
@@ -115,122 +120,147 @@ namespace Gini {
             return $this;
         }
 
-        function deleteAll() {
+        function deleteAll()
+        {
             $this->fetch();
             foreach ($this->objects as $object) {
                 if (!$object->delete()) return false;
             }
+
             return true;
         }
 
-        function object($id) {
+        function object($id)
+        {
             if ($this->objects[$id] === true) {
                 $this->objects[$id] = a($this->name, $id);
             }
+
             return $this->objects[$id];
         }
 
         // Iterator Start
-        function rewind(){
+        function rewind()
+        {
             $this->fetch();
             reset($this->objects);
             $this->current_id = key($this->objects);
         }
-        
-        function current(){ 
+
+        function current()
+        {
             $this->fetch();
-            return $this->object($this->current_id); 
+
+            return $this->object($this->current_id);
         }
-        
-        function key(){
+
+        function key()
+        {
             $this->fetch();
+
             return $this->current_id;
         }
-        
-        function next(){
+
+        function next()
+        {
             $this->fetch();
             next($this->objects);
             $this->current_id = key($this->objects);
+
             return $this->object($this->current_id);
         }
-        
-        function valid(){
+
+        function valid()
+        {
             $this->fetch();
+
             return isset($this->objects[$this->current_id]);
         }
         // Iterator End
 
         // Countable Start
-        function count(){
+        function count()
+        {
             $this->fetch();
+
             return (int) $this->count;
         }
         // Countable End
-        
+
         // ArrayAccess Start
-        function offsetGet($id){
+        function offsetGet($id)
+        {
             $this->fetch();
-            if($this->count > 0){
+            if ($this->count > 0) {
                 return $this->object($id);
             }
+
             return null;
         }
-        
-        function offsetUnset($id){
+
+        function offsetUnset($id)
+        {
             $this->fetch();
             unset($this->objects[$id]);
             $this->count = count($this->objects);
             if ($this->current_id==$id) $this->current_id = key($this->objects);
         }
-        
-        function offsetSet($id, $object){
+
+        function offsetSet($id, $object)
+        {
             $this->fetch();
             $this->objects[$object->id] = $object;
             $this->count = count($this->objects);
             $this->current_id=$id;
         }
-        
-        function offsetExists($id){
+
+        function offsetExists($id)
+        {
             $this->fetch();
+
             return isset($this->objects[$id]);
         }
 
         // ArrayAccess End
-        function prepend($object){
+        function prepend($object)
+        {
             $this->fetch();
 
             if ($object->id) {
                 $this->objects = array($object->id => $object) + $this->objects;
             }
-            
+
             $this->count = count($this->objects);
+
             return $this;
         }
 
-        function reverse() {
+        function reverse()
+        {
             $this->fetch();
             //反排
             $this->objects = array_reverse($this->objects);
+
             return $this;
         }
 
-        function get($key = 'id', $val = null) {
+        function get($key = 'id', $val = null)
+        {
             $this->fetch();
 
             $arr = array();
             if ($val === null) {
-                foreach(array_keys($this->objects) as $k) {
+                foreach (array_keys($this->objects) as $k) {
                     $o = $this->object($k);
                     $arr[] = $o->$key;
                 }
-            }
-            else {
-                foreach(array_keys($this->objects) as $k) {
+            } else {
+                foreach (array_keys($this->objects) as $k) {
                     $o = $this->object($k);
                     $arr[$o->$key] = $o->$val;
                 }
             }
-            
+
             return $arr;
         }
 

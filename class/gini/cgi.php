@@ -14,7 +14,8 @@
 
 namespace Gini\CGI {
 
-    interface Response {
+    interface Response
+    {
         function output();
         function content();
     }
@@ -23,8 +24,8 @@ namespace Gini\CGI {
 
 namespace Gini {
 
-    class CGI {
-
+    class CGI
+    {
         static function stripslashes(& $value)
         {
             return is_array($value) ?
@@ -32,8 +33,8 @@ namespace Gini {
                     stripslashes($value);
         }
 
-        static function main($argv) {
-            
+        static function main($argv)
+        {
             //从末端开始尝试
             /*
                 home/page/edit/1/2
@@ -47,9 +48,9 @@ namespace Gini {
             $response = self::request(self::$route, ['get'=>$_GET, 'post'=>$_POST, 'files'=>$_FILES])->execute();
             if ($response) $response->output();
         }
-        
-        static function request($route, array $form = array()) {
-            
+
+        static function request($route, array $form = array())
+        {
             $args = explode('/', $route);
 
             $path = '';
@@ -64,7 +65,7 @@ namespace Gini {
             }
 
             $class = null;
-            foreach(array_reverse($candidates) as $path => $params){
+            foreach (array_reverse($candidates) as $path => $params) {
                 $basename = strtr(basename($path), '-', '_') ;
                 $dirname = dirname($path);
                 $class_namespace = '\\Controller\\CGI\\';
@@ -94,11 +95,9 @@ namespace Gini {
             if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {
                 $action = 'action'.$action;
                 array_shift($params);
-            }
-            elseif (method_exists($controller, '__index')) {
+            } elseif (method_exists($controller, '__index')) {
                 $action = '__index';
-            }
-            else {
+            } else {
                 self::redirect('error/404');
             }
 
@@ -107,10 +106,11 @@ namespace Gini {
             $controller->form = $form;
             $controller->route = $path;
 
-            return $controller;     
+            return $controller;
         }
 
-        static function exception($e) {
+        static function exception($e)
+        {
             $message = $e->getMessage();
             if ($message) {
                 $file = $e->getFile();
@@ -132,7 +132,7 @@ namespace Gini {
                         }
                     }
                     error_log(sprintf("    %d) %s%s() in %s on line %d", $n + 1,
-                                    $t['class'] ? $t['class'].'::':'', 
+                                    $t['class'] ? $t['class'].'::':'',
                                     $t['function'],
                                     $file,
                                     $t['line']));
@@ -143,37 +143,41 @@ namespace Gini {
             if (PHP_SAPI != 'cli') {
                 while(@ob_end_clean());    //清空之前的所有显示
                 header('HTTP/1.1 500 Internal Server Error');
-            }        
+            }
         }
 
-        static function content() {
+        static function content()
+        {
             return file_get_contents('php://input');
         }
 
         protected static $route;
-        static function route($route = null) {
+        static function route($route = null)
+        {
             if (is_null($route)) {
                 return self::$route;
             }
             self::$route = $route;
         }
 
-        static function redirect($url='', $query=null) {
+        static function redirect($url='', $query=null)
+        {
             // session_write_close();
             header('Location: '. URL($url, $query), true, 302);
             exit();
         }
-        
-        static function setup(){
+
+        static function setup()
+        {
             URI::setup();
             self::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
             Session::setup();
         }
 
-        static function shutdown() { 
-            Session::shutdown();        
+        static function shutdown()
+        {
+            Session::shutdown();
         }
     }
-    
-}
 
+}

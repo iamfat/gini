@@ -2,22 +2,23 @@
 
 namespace Gini {
 
-    final class I18N {
-    
-        public static function setup() {
-    
+    final class I18N
+    {
+        public static function setup()
+        {
             if (!defined('I18N_PATH')) {
                 define('I18N_PATH', APP_PATH . '/i18n');
             }
-            
+
             bindtextdomain(APP_ID, I18N_PATH);
             textdomain(APP_ID);
             bind_textdomain_codeset(APP_ID, 'UTF-8');
-            
+
             self::setLocale(_CONF('system.locale') ?: 'en_US');
         }
-    
-        public static function setLocale($locale) {
+
+        public static function setLocale($locale)
+        {
             $full_locale = ($locale ?: 'en_US').'.UTF-8';
             \Gini\Logger::of('core')->debug("locale = {locale}", ['locale'=>$full_locale]);
 
@@ -25,18 +26,21 @@ namespace Gini {
             putenv('LANG='.$full_locale);
             setlocale(LC_MESSAGES, $full_locale);
         }
-    
-        public static function stripContext($s) {
+
+        public static function stripContext($s)
+        {
             list($c, $t) = explode("\004", $s, 2);
+
             return $t ?: $c;
         }
     }
-    
+
 }
 
 namespace {
 
-    function T($fmt, $params=null) {
+    public function T($fmt, $params=null)
+    {
         if (!$fmt) return $fmt;
         if (is_array($fmt)) {
             $a = \Gini\I18N::stripContext($fmt[0]);  //msgid
@@ -44,17 +48,16 @@ namespace {
             $c = ngettext($fmt[0], $fmt[1], $fmt[2]);
             if ($c == $fmt[0] || $c == $fmt[1]) {
                 $fmt = $fmt[2] == 1 ? $a : $b;
-            }
-            else {
+            } else {
                 $fmt = $c;
             }
-        }
-        else {
+        } else {
             $a = \Gini\I18N::stripContext($fmt);
             $b = gettext($fmt);
             $fmt = ($b == $fmt) ? $a : $b;
         }
-        return $params ? strtr($fmt, (array)$params) : $fmt;
+
+        return $params ? strtr($fmt, (array) $params) : $fmt;
     }
-    
+
 }

@@ -1,17 +1,20 @@
 <?php
 
 namespace Gini\RPC {
-    
+
     class Exception extends \Exception {}
-    
-    class Cookie {
+
+    class Cookie
+    {
         public $file;
-        
-        function __construct() {
+
+        function __construct()
+        {
             $this->file = tempnam(sys_get_temp_dir(), 'rpc.cookie.');
         }
-        
-        function __destruct() {
+
+        function __destruct()
+        {
              if ($this->file && file_exists($this->file)) unlink($this->file);
         }
     }
@@ -20,24 +23,27 @@ namespace Gini\RPC {
 
 namespace Gini {
 
-    class RPC {
-
+    class RPC
+    {
         private $_url;
         private $_path;
         private $_cookie;
         private $_uniqid = 0;
 
-        function __construct($url, $path=null, $cookie=null) {
+        function __construct($url, $path=null, $cookie=null)
+        {
             $this->_url = $url;
             $this->_path = $path;
             $this->_cookie = $cookie ?: new RPC\Cookie;
         }
-        
-        function __get($name) {
+
+        function __get($name)
+        {
             return new RPC($this->_url, $this->_path ? $this->_path . '/' . $name : $name, $this->_cookie);
         }
 
-        function __call($method, $params) {
+        function __call($method, $params)
+        {
             if ($method === __FUNCTION__) return null;
 
             if ($this->_path) $method = $this->_path . '/' . $method;
@@ -57,12 +63,10 @@ namespace Gini {
                     $message = sprintf('remote error: %s', $data['error']['message']);
                     $code = $data['error']['code'];
                     throw new \Gini\RPC\Exception($message, $code);
-                }
-                elseif ($id != $data['id']) {
+                } elseif ($id != $data['id']) {
                     $message = 'wrong response id!';
                     throw new \Gini\RPC\Exception($message);
-                }
-                elseif (is_null($data)) {
+                } elseif (is_null($data)) {
                     $message = sprintf('unknown error with raw data: %s', $raw_data ?: '(null)');
                     throw new \Gini\RPC\Exception($message);
                 }
@@ -71,8 +75,8 @@ namespace Gini {
             return $data['result'];
         }
 
-        function post($post_data, $timeout = 5) {
-
+        function post($post_data, $timeout = 5)
+        {
             $cookie_file = $this->_cookie->file;
 
             $ch = curl_init();
@@ -100,7 +104,7 @@ namespace Gini {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 
             $data = curl_exec($ch);
-            
+
             $errno = curl_errno($ch);
             if ($errno) {
                 \Gini\Logger::of('core')->debug("RPC error: {error}", ['error'=>curl_error($ch)]);
@@ -108,12 +112,10 @@ namespace Gini {
             }
 
             curl_close($ch);
+
             return $data;
         }
 
     }
 
 }
-
-
-

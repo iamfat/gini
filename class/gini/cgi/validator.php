@@ -6,15 +6,17 @@ namespace Gini\CGI\Validator {
 
 namespace Gini\CGI {
 
-    class Validator {
-        
+    class Validator
+    {
         private $_errors;
 
-        function errors() {
+        function errors()
+        {
             return $this->_errors;
         }
 
-        function validate($key, $assertion, $message) {
+        function validate($key, $assertion, $message)
+        {
             if (!$assertion) {
                 $this->_errors[$key] = $message;
             }
@@ -22,7 +24,8 @@ namespace Gini\CGI {
             return $this;
         }
 
-        function done() {
+        function done()
+        {
             if (count($this->_errors) > 0) {
                 throw new Validator\Exception;
             }

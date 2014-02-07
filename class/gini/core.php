@@ -20,8 +20,8 @@ namespace Gini {
      * @package Gini
      * @author Jia Huang
      **/
-    class Core {
-
+    class Core
+    {
         /**
          * The array contains all global defined variables.
          *
@@ -35,7 +35,7 @@ namespace Gini {
          * @var array
          **/
         static $MODULE_INFO;
-        
+
         /**
          * Fetch module info from provided path.
          *
@@ -52,8 +52,8 @@ namespace Gini {
          *
          * @return object|false Module info
          **/
-        public static function fetchModuleInfo($path) {
-
+        public static function fetchModuleInfo($path)
+        {
             /*
             $id; $path;
             $name; $description; $version;
@@ -70,7 +70,7 @@ namespace Gini {
             $info_script = $path.'/gini.json';
             if (!file_exists($info_script)) return false;
 
-            $info = (object)@json_decode(@file_get_contents($info_script), true);
+            $info = (object) @json_decode(@file_get_contents($info_script), true);
 
             if (!is_array($info->dependencies)) $info->dependencies = [];
 
@@ -94,7 +94,8 @@ namespace Gini {
          *
          * @return object|false Module Information
          **/
-        public static function moduleInfo($id) {
+        public static function moduleInfo($id)
+        {
             return self::$MODULE_INFO[$id] ?: false;
         }
 
@@ -105,49 +106,48 @@ namespace Gini {
          * @param string $versionRequired Version requirement, e.g. "*", ">=2.3.4"
          * @return bool
          **/
-        public static function checkVersion($version, $versionRequired) {
+        public static function checkVersion($version, $versionRequired)
+        {
             if ($versionRequired != '*' &&  preg_match('/^\s*(<=|>=|<|>|=)?\s*(.+)$/', $versionRequired, $parts)) {
                 if (!version_compare($version, $parts[2], $parts[1] ?: '>=')) {
                     return false;
                 }
             }
+
             return true;
         }
-        
+
         /**
          * Import a module by its path.
          *
-         * @param   string  $path               Module path 
-         * @param   string  $version[optional]  Version Requirement  
-         * @param   object  $parent[optional]   Parent Module Information   
+         * @param   string  $path               Module path
+         * @param   string  $version[optional]  Version Requirement
+         * @param   object  $parent[optional]   Parent Module Information
          *
          *
          * @return object|false Module information
          **/
-        public static function import($path, $version='*', $parent=null) {
-
+        public static function import($path, $version='*', $parent=null)
+        {
             if (isset(self::$MODULE_INFO[$path])) {
                 $info = self::$MODULE_INFO[$path];
                 $path = $info->path;
-            }
-            else {
+            } else {
 
                 if ($path[0] != '/') {
                     $id = $path;
-                    // relative path? 
+                    // relative path?
                     if ($parent) {
                         $npath = $parent->path . '/modules/'.$path;
-                    }
-                    else {
+                    } else {
                         $npath = 'modules/'.$path;
                     }
 
                     $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
-                }
-                else {
+                } else {
                     $id = basename($path);
                 }
-                
+
                 $path = realpath($path);
                 $info = self::fetchModuleInfo($path);
                 if ($info === false) {
@@ -155,13 +155,14 @@ namespace Gini {
                     if ($parent) {
                         $parent->error = "\"{$id}/{$version}\" missing!";
                     }
+
                     return false;
                 }
                 $info->path = $path;
             }
-            
+
             if (!$info) return false;
- 
+
             if ($parent) {
                 if (!self::checkVersion($info->version, $version)) {
                     $parent->error = "{$info->id}/{$version} required!";
@@ -169,10 +170,10 @@ namespace Gini {
                     return false;
                 }
             }
-            
+
             if (isset(self::$MODULE_INFO[$path])) return self::$MODULE_INFO[$path];
-            
-            foreach ((array)$info->dependencies as $app => $version) {
+
+            foreach ((array) $info->dependencies as $app => $version) {
                 if (!$app) continue;
                 self::import($app, $version, $info);
             }
@@ -180,7 +181,7 @@ namespace Gini {
             $inserted = false;
             foreach ((array) self::$MODULE_INFO as $b_id => $b_info) {
 
-                if (!$inserted && 
+                if (!$inserted &&
                     (isset($b_info->dependencies[$info->id]) || $b_id == APP_ID)
                 ) {
                     $module_info[$info->id] = $info;
@@ -193,8 +194,9 @@ namespace Gini {
             if (!$inserted) {
                 $module_info[$info->id] = $info;
             }
-            
+
             self::$MODULE_INFO = $module_info;
+
             return $info;
         }
 
@@ -204,7 +206,8 @@ namespace Gini {
          * @param string $class Autoloading class name
          * @return void
          **/
-        public static function autoload($class){
+        public static function autoload($class)
+        {
             //定义类后缀与类路径的对应关系
             $class = strtolower($class);
             $path = str_replace('\\', '/', $class);
@@ -213,6 +216,7 @@ namespace Gini {
                 if (isset($GLOBALS['gini.class_map'][$path])) {
                     require_once($GLOBALS['gini.class_map'][$path]);
                 }
+
                 return;
             }
 
@@ -222,26 +226,27 @@ namespace Gini {
         /**
          * @ignore private method
          **/
-        private static function _require($base, $name, $scope=null) {
+        private static function _require($base, $name, $scope=null)
+        {
             if (is_array($base)) {
-                foreach($base as $b){
+                foreach ($base as $b) {
                     $file = self::_require($b, $name, $scope);
                     if ($file) return $file;
                 }
-            }
-            elseif (is_array($name)) {
-                foreach($name as $n){
+            } elseif (is_array($name)) {
+                foreach ($name as $n) {
                     $file = self::_require($base, $n, $scope);
                     if ($file) return $file;
                 }
-            }
-            else {
+            } else {
                 $file = self::locatePharFile($base, $name.'.php', $scope);
                 if ($file) {
                     require_once($file);
+
                     return $file;
                 }
             }
+
             return false;
         }
 
@@ -253,15 +258,14 @@ namespace Gini {
          * @param string $scope[optional] Specify one module to locate the file
          * @return string|false Return matched file path when avaiable
          **/
-        public static function locatePharFile($phar, $file, $scope=null) {
-
+        public static function locatePharFile($phar, $file, $scope=null)
+        {
             if (is_null($scope)) {
-                foreach (array_reverse(array_keys((array)self::$MODULE_INFO)) as $scope) {
+                foreach (array_reverse(array_keys((array) self::$MODULE_INFO)) as $scope) {
                     $file_path = self::locatePharFile($phar, $file, $scope);
                     if ($file_path) return $file_path;
                 }
-            }
-            elseif (isset(self::$MODULE_INFO[$scope])) {
+            } elseif (isset(self::$MODULE_INFO[$scope])) {
                 $info = self::$MODULE_INFO[$scope];
                 $file_path = 'phar://'.$info->path . '/' . $phar . '.phar/' . $file;
                 if (file_exists($file_path)) return $file_path;
@@ -270,8 +274,8 @@ namespace Gini {
                 if (file_exists($file_path)) return $file_path;
 
             }
-            
-            return false;        
+
+            return false;
         }
 
         /**
@@ -281,13 +285,12 @@ namespace Gini {
          * @param string $scope[optional] Specify one module to locate the file
          * @return string|false Return matched file path when avaiable
          **/
-        public static function locateFile($file, $scope = null) {
-
-            if (is_null($scope)) foreach (array_reverse(array_keys((array)self::$MODULE_INFO)) as $scope) {
+        public static function locateFile($file, $scope = null)
+        {
+            if (is_null($scope)) foreach (array_reverse(array_keys((array) self::$MODULE_INFO)) as $scope) {
                 $file_path = self::locateFile($file, $scope);
                 if ($file_path) return $file_path;
-            }
-            elseif (isset(self::$MODULE_INFO[$scope])) {
+            } elseif (isset(self::$MODULE_INFO[$scope])) {
                 $info = self::$MODULE_INFO[$scope];
                 $file_path = $info->path . '/' . $file;
                 if (file_exists($file_path)) return $file_path;
@@ -303,12 +306,12 @@ namespace Gini {
          * @param string $file File path
          * @return array Return all file paths
          **/
-        public static function pharFilePaths($base, $file) {
-
+        public static function pharFilePaths($base, $file)
+        {
             foreach ((array) self::$MODULE_INFO as $info) {
                 $file_path = 'phar://' . $info->path . '/' . $base . '.phar';
                 if ($file) $file_path .= '/' . $file;
-                
+
                 if (file_exists($file_path)) {
                     $file_paths[] = $file_path;
                     continue;
@@ -331,8 +334,8 @@ namespace Gini {
          * @param string $file File path
          * @return array Return all file paths
          **/
-        public static function filePaths($file) {
-
+        public static function filePaths($file)
+        {
             foreach ((array) self::$MODULE_INFO as $info) {
                 $file_path = $info->path . '/' . $file;
                 if (file_exists($file_path)) {
@@ -346,7 +349,8 @@ namespace Gini {
         /**
          * @ignore Exception Handler
          **/
-        public static function exception($e) {
+        public static function exception($e)
+        {
             foreach (array_reverse((array) self::$MODULE_INFO) as $name => $info) {
                 $class = '\\'.str_replace('-', '_', $name);
                 !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
@@ -359,14 +363,16 @@ namespace Gini {
         /**
          * @ignore Error Handler
          **/
-        public static function error($errno , $errstr, $errfile, $errline, $errcontext) {
+        public static function error($errno , $errstr, $errfile, $errline, $errcontext)
+        {
             throw new \ErrorException($errstr, $errno, 1, $errfile, $errline);
         }
 
         /**
          * @ignore Assertion Handler
          **/
-        public static function assertion($file, $line, $code) {
+        public static function assertion($file, $line, $code)
+        {
             throw new \ErrorException($code, 0, 1, $file, $line);
         }
 
@@ -375,10 +381,10 @@ namespace Gini {
          *
          * @return void
          **/
-        public static function start(){
-
+        public static function start()
+        {
             error_reporting(E_ALL & ~E_NOTICE);
-            
+
             spl_autoload_register('\Gini\Core::autoload');
             register_shutdown_function ('\Gini\Core::shutdown');
             set_exception_handler('\Gini\Core::exception');
@@ -404,8 +410,7 @@ namespace Gini {
                 $app_path = $_SERVER['GINI_APP_PATH'];
                 define('APP_PATH', $app_path);
                 $info = self::import(APP_PATH);
-            }
-            else {
+            } else {
                 define('APP_PATH', SYS_PATH);
             }
 
@@ -431,16 +436,17 @@ namespace Gini {
          *
          * @return void
          **/
-        public static function shutdown() {
+        public static function shutdown()
+        {
             foreach (array_reverse(self::$MODULE_INFO) as $name => $info) {
                 $class = '\\'.str_replace('-', '_', $name);
                 if (!$info->error && method_exists($class, 'shutdown')) {
                     call_user_func($class.'::shutdown');
                 }
             }
-            !method_exists('\\Gini\\Application', 'shutdown') or \Gini\Application::shutdown();    
+            !method_exists('\\Gini\\Application', 'shutdown') or \Gini\Application::shutdown();
         }
-        
+
     } // END class
 
 }
@@ -450,15 +456,15 @@ namespace {
     /**
      * Shortcut for global variables in Gini
      *
-     * @param string $key Name of global variable
-     * @param string[optional] string given when setting
+     * @param  string $key Name of global variable
+     *                     @param string[optional] string given when setting
      * @return mixed
      **/
-    function _G($key, $value = null) {
+    public function _G($key, $value = null)
+    {
         if (is_null($value)) {
             return isset(\Gini\Core::$GLOBALS[$key]) ? \Gini\Core::$GLOBALS[$key] : null;
-        }
-        else {
+        } else {
             \Gini\Core::$GLOBALS[$key] = $value;
         }
     }
@@ -470,17 +476,16 @@ namespace {
      **/
     if (function_exists('s')) {
         die("s() was declared by other libraries, which may cause problems!");
-    }
-    else {
-        function s() {
+    } else {
+        function s()
+        {
             $args = func_get_args();
             if (count($args) > 1) {
                 call_user_func_array('sprintf', $args);
-            }
-            else {
+            } else {
                 return $args[0];
             }
-        }    
+        }
     }
 
     /**
@@ -491,16 +496,16 @@ namespace {
      **/
     if (function_exists('H')) {
         die("H() was declared by other libraries, which may cause problems!");
-    }
-    else {
-        function H(){
+    } else {
+        function H()
+        {
             $args = func_get_args();
             if (count($args) > 1) {
                 $str = call_user_func_array('sprintf', $args);
-            }
-            else {
+            } else {
                 $str = $args[0];
             }
+
             return htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8');
         }
     }
@@ -508,15 +513,15 @@ namespace {
     /**
      * Shortcut for new \Gini\View
      *
-     * @param string $path Path to the view
-     * @param array[optional] $vars Parameters for the view
-     * @return object \Gini\View object
+     * @param  string          $path Path to the view
+     * @param  array[optional] $vars Parameters for the view
+     * @return object          \Gini\View object
      **/
     if (function_exists('V')) {
         die("V() was declared by other libraries, which may cause problems!");
-    }
-    else {
-        function V($path, $vars=null) {
+    } else {
+        function V($path, $vars=null)
+        {
             return new \Gini\View($path, $vars);
         }
     }

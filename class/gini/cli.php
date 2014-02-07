@@ -14,8 +14,8 @@
 
 namespace Gini;
 
-class CLI {
-
+class CLI
+{
     const PARSE_BLANK = 0;
     const PARSE_IN_ARG = 1;
     const PARSE_IN_QUOTE = 2;
@@ -25,7 +25,8 @@ class CLI {
         '-' => 'List available commands',
         );
 
-    static function parseArguments($line) {
+    public static function parseArguments($line)
+    {
         $max = strlen($line);
         $st;     // parsing status: PARSE_BLANK, PARSE_IN_ARG, PARSE_IN_QUOTE
         $qt;    // quote char
@@ -38,8 +39,7 @@ class CLI {
                 if ($c == '0' || $c == 'x') {
                     $arg .= stripcslashes('\\'.substr($line, $i, 3));
                     $i += 2;
-                }
-                else {
+                } else {
                     $arg .= stripcslashes('\\'.$c);
                 }
 
@@ -47,11 +47,10 @@ class CLI {
 
                 if ($st == self::PARSE_BLANK) {
                     $st = self::PARSE_IN_ARG;
-                    $qt = null;                            
+                    $qt = null;
                 }
                 continue;
-            }
-            elseif ($c == '\\') {
+            } elseif ($c == '\\') {
                 $esc = true;
                 continue;
             }
@@ -60,12 +59,10 @@ class CLI {
             case self::PARSE_BLANK:
                 if ($c == ' ' || $c == "\t") {
                     continue;
-                }
-                elseif ($c == '"' || $c == '\'') {
+                } elseif ($c == '"' || $c == '\'') {
                     $st = self::PARSE_IN_QUOTE;
                     $qt = $c;
-                }
-                else {
+                } else {
                     $arg .= $c;
                     $st = self::PARSE_IN_ARG;
                     $qt = null;
@@ -76,8 +73,7 @@ class CLI {
                     $args[] = $arg;
                     $arg = '';
                     $st = self::PARSE_BLANK;
-                }
-                else {
+                } else {
                     $arg .= $c;
                 }
                 break;
@@ -86,8 +82,7 @@ class CLI {
                     $st = self::PARSE_BLANK;
                     $args[] = $arg;
                     $arg = '';
-                }
-                else {
+                } else {
                     $arg .= $c;
                 }
                 break;
@@ -102,13 +97,15 @@ class CLI {
         return $args;
     }
 
-    static function parsePrompt($prompt) {
+    public static function parsePrompt($prompt)
+    {
         return preg_replace_callback('|%(\w+)|', function ($matches) {
             return $_SERVER[$matches[1]] ?: getenv($matches[1]) ?: $matches[0];
         }, $prompt);
     }
 
-    static function relaunch() {
+    public static function relaunch()
+    {
         //$ph = proc_open($_SERVER['_'] . ' &', array(STDIN, STDOUT, STDERR), $pipes, null, $env);
         // fork process to avoid memory leak
         $env_path = '/tmp/gini-cli';
@@ -118,8 +115,7 @@ class CLI {
         if (isset($_SERVER['__RELAUNCH_PROCESS'])) {
             unset($_SERVER['__RELAUNCH_PROCESS']);
             exit(200);
-        }
-        else {
+        } else {
             do {
                 // load $_SERVER from shared memo-cliry
                 $_SERVER['__RELAUNCH_PROCESS'] = 1;
@@ -127,17 +123,16 @@ class CLI {
                 if (is_resource($ph)) {
                     $code = proc_close($ph);
                     $_SERVER = (array) json_decode(@file_get_contents($env_file), true);
-                }                    
-            }
-            while ($code == 200);
+                }
+            } while ($code == 200);
             exit;
         }
     }
 
     private static $prompt;
 
-    static function main(array $argv) {
-
+    public static function main(array $argv)
+    {
         if (count($argv) < 1) {
             static::command_help($argv);
             exit;
@@ -151,33 +146,35 @@ class CLI {
         default:
             $method = 'command'.$cli;
         }
-        
+
         if ($cli && method_exists(__CLASS__, $method)) {
             call_user_func(array(__CLASS__, $method), $argv);
-        }
-        else {
+        } else {
             $GLOBALS['GINI.CURRENT_CLI'] = $cli;
             static::exec($argv);
         }
 
     }
 
-    static function commandHelp(array $argv) {
+    public static function commandHelp(array $argv)
+    {
         echo "usage: \e[1;34mgini\e[0m <command> [<args>]\n\n";
         echo "The most commonly used git commands are:\n";
-        foreach(self::$built_in_commands as $k => $v) {
+        foreach (self::$built_in_commands as $k => $v) {
             printf("   \e[1;34m%-10s\e[0m %s\n", $k, $v);
         }
     }
 
-    static function commandRoot() {
+    public static function commandRoot()
+    {
         echo $_SERVER['GINI_APP_PATH']."\n";
     }
 
-    static function commandAvailable(array $argv) {
+    public static function commandAvailable(array $argv)
+    {
         // list available cli programs
         $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'controller/cli');
-        foreach($paths as $path) {
+        foreach ($paths as $path) {
             if (!is_dir($path)) continue;
 
             $dh = opendir($path);
@@ -194,12 +191,12 @@ class CLI {
         echo "\n";
     }
 
-    static function exec(array $argv) {
-
+    public static function exec(array $argv)
+    {
         $cmd = $argv[0];
         if ($cmd[0] == '@') {
             // @app: automatically set APP_PATH and run
-            $app_base_path = isset($_SERVER['GINI_MODULE_BASE_PATH']) ? 
+            $app_base_path = isset($_SERVER['GINI_MODULE_BASE_PATH']) ?
                                 $_SERVER['GINI_MODULE_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..';
 
             $cmd = substr($cmd, 1);
@@ -213,14 +210,14 @@ class CLI {
             foreach ($argv as $arg) {
                 $eargv[] = escapeshellcmd($arg);
             }
-            proc_close(proc_open(implode(' ', $eargv), array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER));                    
-        }
-        else {    
+            proc_close(proc_open(implode(' ', $eargv), array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER));
+        } else {
             self::dispatch($argv);
         }
     }
-    
-    static function exception($e) {
+
+    public static function exception($e)
+    {
         $message = $e->getMessage();
         $file = $e->getFile();
         foreach (\Gini\Core::$MODULE_INFO as $info) {
@@ -242,7 +239,7 @@ class CLI {
                     }
                 }
                 fprintf(STDERR, "%3d. %s%s() in (%s:%d)\n", $n + 1,
-                                $t['class'] ? $t['class'].'::':'', 
+                                $t['class'] ? $t['class'].'::':'',
                                 $t['function'],
                                 $file,
                                 $t['line']);
@@ -252,8 +249,8 @@ class CLI {
         // }
     }
 
-    static function dispatch(array $argv) {
-
+    public static function dispatch(array $argv)
+    {
         $orig_argv = $argv;
 
         $cmd = reset($argv);
@@ -267,10 +264,10 @@ class CLI {
             if ($path) $path .= '/' . $arg;
             else $path = $arg;
             $candidates[$path] = $argv;
-        } 
+        }
 
         $class = null;
-        foreach(array_reverse($candidates) as $path => $params){
+        foreach (array_reverse($candidates) as $path => $params) {
             $basename = basename($path);
             $dirname = dirname($path);
             $class_namespace = '\\Controller\\CLI\\';
@@ -299,26 +296,26 @@ class CLI {
         if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {
             $action = 'action'.$action;
             array_shift($params);
-        }
-        elseif (!$action && method_exists($controller, '__index')) {
+        } elseif (!$action && method_exists($controller, '__index')) {
             $action = '__index';
-        }
-        else {
+        } else {
             $action = '__unknown';
         }
-        
+
         $controller->action = $action;
         $controller->params = $params;
         $controller->execute();
     }
 
-    static function setup() {
+    public static function setup()
+    {
         URI::setup();
         Session::setup();
     }
 
-    static function shutdown() { 
+    public static function shutdown()
+    {
         Session::shutdown();
     }
-    
+
 }

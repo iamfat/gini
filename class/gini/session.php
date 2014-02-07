@@ -2,7 +2,8 @@
 
 namespace Gini\Session {
 
-    interface Driver {
+    interface Driver
+    {
         function read($id);
         function write($id, $data);
         function destroy($id);
@@ -13,20 +14,20 @@ namespace Gini\Session {
 
 namespace Gini {
 
-    class Session {
-
-        static function setup() {
-            
+    class Session
+    {
+        static function setup()
+        {
             $driver = _CONF('system.session_driver') ?: 'built_in';
 
             if ($driver != 'built_in') {
-                
+
                 $class = '\\Gini\\Session\\'.$driver;
 
                 self::$driver = new $class;
 
                 session_set_save_driver ( 'Session::open' , 'Session::close' , 'Session::read' , 'Session::write' , 'Session::destroy' , 'Session::gc' );
-            
+
             }
 
             $session_name = _CONF('system.session_name') ?: 'gini-session';
@@ -40,19 +41,19 @@ namespace Gini {
             if (PHP_SAPI=='cli') {
                 Cookie::setup();
             }
-            
+
             $cookie_params = (array) _CONF('system.session_cookie');
             session_set_cookie_params (
                 $cookie_params['lifetime'],
                 $cookie_params['path'],
                 $cookie_params['domain']
             );
-            
+
             if ($_POST['gini-session']) {
                 session_id($_POST['gini-session']);
             }
-            
-            set_error_handler(function(){}, E_ALL ^ E_NOTICE);
+
+            set_error_handler(function () {}, E_ALL ^ E_NOTICE);
             session_start();
             restore_error_handler();
 
@@ -62,18 +63,18 @@ namespace Gini {
             }
 
             $now = time();
-            foreach((array)$_SESSION['@TIMEOUT'] as $token => $timeout) {
+            foreach ((array) $_SESSION['@TIMEOUT'] as $token => $timeout) {
                 if ($now > $timeout) {
                     unset($_SESSION[$token]);
                     unset($_SESSION['@TIMEOUT'][$token]);
                 }
             }
-            
-        }
-        
-        static function shutdown(){ 
 
-            foreach((array)$_SESSION['@ONETIME'] as $token => $remove) {
+        }
+
+        static function shutdown()
+        {
+            foreach ((array) $_SESSION['@ONETIME'] as $token => $remove) {
                 if ($remove) {
                     unset($_SESSION['@ONETIME'][$token]);
                     unset($_SESSION[$token]);
@@ -81,73 +82,79 @@ namespace Gini {
             }
 
             if (PHP_SAPI == 'cli') {
-                
+
                 $tmp = (array) $_SESSION;
-                
-                set_error_handler(function(){}, E_ALL ^ E_NOTICE);
+
+                set_error_handler(function () {}, E_ALL ^ E_NOTICE);
                 session_start();
                 restore_error_handler();
-                
-                foreach(array_keys($_SESSION) as $k) {
+
+                foreach (array_keys($_SESSION) as $k) {
                     unset($_SESSION[$k]);
                 }
-                
-                foreach(array_keys($tmp) as $k) {
+
+                foreach (array_keys($tmp) as $k) {
                     $_SESSION[$k] = $tmp[$k];
                 }
             }
 
             // 记录session_id
-            session_write_close(); 
+            session_write_close();
 
             if (PHP_SAPI == 'cli') {
                 if (Cookie::get(session_name()) != session_id()) {
-                    Cookie::set(session_name(), session_id());            
+                    Cookie::set(session_name(), session_id());
                 }
                 Cookie::shutdown();
             }
-            
-        }
-        
-        static function close() { return true; }
-        static function open() { return true; }
-        static function read($id) { 
-            if (!self::$driver) return true;
-            return self::$driver->read($id); 
-        }
-        
-        private static $driver;
-        static function write($id, $data) { 
-            if (!self::$driver) return true;
-            return self::$driver->write($id, $data); 
+
         }
 
-        static function destroy($id) {
+        static function close() { return true; }
+        static function open() { return true; }
+        static function read($id)
+        {
             if (!self::$driver) return true;
-            return self::$driver->destroy($id); 
+            return self::$driver->read($id);
         }
-        
-        static function gc($max) { 
+
+        private static $driver;
+        static function write($id, $data)
+        {
             if (!self::$driver) return true;
-            return self::$driver->gc($max); 
+            return self::$driver->write($id, $data);
         }
-        
-        static function makeTimeout($token, $timeout = 0) {
+
+        static function destroy($id)
+        {
+            if (!self::$driver) return true;
+            return self::$driver->destroy($id);
+        }
+
+        static function gc($max)
+        {
+            if (!self::$driver) return true;
+            return self::$driver->gc($max);
+        }
+
+        static function makeTimeout($token, $timeout = 0)
+        {
             if ($timeout > 0) {
                 $_SESSION['@TIMEOUT'][$token] = time() + $timeout;
-            }
-            else {
+            } else {
                 unset($_SESSION['@TIMEOUT'][$token]);
             }
         }
-        
-        static function tempToken($prefix='', $timeout = 0) {
+
+        static function tempToken($prefix='', $timeout = 0)
+        {
             $token = uniqid($prefix);
             if ($timeout > 0) self::makeTimeout($token, $timeout);
             return $token;
         }
 
-        static function cleanup($entire=false) {
+        static function cleanup($entire=false)
+        {
             if ($entire) {
                 session_unset();
             }
@@ -159,16 +166,16 @@ namespace Gini {
             }
 
         }
-        
-        static function regenerateId() {
+
+        static function regenerateId()
+        {
             if (PHP_SAPI == 'cli') {
                 session_id(null);
-            }
-            elseif (PHP_SAPI != 'cli-server') {
+            } elseif (PHP_SAPI != 'cli-server') {
                 session_regenerate_id();
             }
         }
-        
+
     }
 
 }

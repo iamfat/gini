@@ -18,8 +18,8 @@ $user = those('user')
             )
     );
 
-$user = those users who is the employer of 
-those users whose name begins with Zhang and whose room is in 
+$user = those users who is the employer of
+those users whose name begins with Zhang and whose room is in
 those room whose building is Building(1).
 
 $user = those('users')
@@ -32,8 +32,8 @@ $user = those('users')
 
 namespace Gini {
 
-    class Those extends ORMIter {
-
+    class Those extends ORMIter
+    {
         private $_table;
         private $_field;
         private $_where;
@@ -41,31 +41,37 @@ namespace Gini {
         private $_alias;
 
         private static $_uniqid = 0;
-        function uniqid() {
+        function uniqid()
+        {
             return (self::$_uniqid++);
         }
-        
-        static function reset() {
+
+        static function reset()
+        {
             self::$_uniqid = 0;
         }
 
-        static function setup() {
-
+        static function setup()
+        {
         }
 
-        function __construct($name) {
+        function __construct($name)
+        {
             parent::__construct($name);
             $this->_table = 't'.$this->uniqid();
         }
 
-        protected function fetch($scope='fetch') {
+        protected function fetch($scope='fetch')
+        {
             if (!$this->SQL) {
                 $this->makeSQL();
             }
-            return parent::fetch($scope);            
+
+            return parent::fetch($scope);
         }
 
-        private function _getValue($v) {
+        private function _getValue($v)
+        {
             $db = $this->db;
             if (preg_match('/^@(?:(\w+)\.)?(\w+)$/', $v, $parts)) {
                 //有可能是某个table的field名
@@ -74,96 +80,114 @@ namespace Gini {
                     while (isset($this->_alias[$table])) {
                         $table = $this->_alias[$table];
                     }
-                }
-                else {
+                } else {
                     $table = $this->_table;
                 }
+
                 return $db->ident($table, $field);
             }
+
             return $db->quote($v);
         }
-        
-        private function _packWhere($where, $op = 'AND') {
+
+        private function _packWhere($where, $op = 'AND')
+        {
             if (!is_array($where)) $where = array($where);
             if (count($where) <= 1) return $where[0];
-            return '('.implode( ' '.$op.' ', $where).')'; 
+            return '('.implode( ' '.$op.' ', $where).')';
         }
 
-        function limit($start, $per_page = null) {
-            
+        function limit($start, $per_page = null)
+        {
             $this->resetFetch();
 
             if ($per_page > 0) {
                 $this->_limit = sprintf("%d, %d", $start, $per_page);
-            }
-            else {
+            } else {
                 $this->_limit = sprintf("%d", $start);
             }
 
             return $this;
         }
 
-        function whose($field) {
+        function whose($field)
+        {
             $this->resetFetch();
             if ($this->_where) {
                 $this->_where[] = 'AND';
             }
             $this->_field = $field;
+
             return $this;
         }
 
-        function andWhose($field) {
+        function andWhose($field)
+        {
             return $this->whose($field);
         }
-        
-        function orWhose($field) {
+
+        function orWhose($field)
+        {
             $this->resetFetch();
             $this->_where[] = 'OR';
             $this->_field = $field;
+
             return $this;
         }
 
-        function whoIs($field) {
+        function whoIs($field)
+        {
             $this->resetFetch();
             $this->_field = $field;
+
             return $this;
         }
 
-        function andWhoIs($field) {
+        function andWhoIs($field)
+        {
             return $this->whoIs($field);
         }
 
-        function whichIs($field) {
+        function whichIs($field)
+        {
             return $this->whoIs($field);
         }
 
-        function andWhichIs($field) {
+        function andWhichIs($field)
+        {
             return $this->whoIs($field);
         }
 
-        function orWhoIs($field) {
+        function orWhoIs($field)
+        {
             $this->resetFetch();
             $this->_where[] = 'OR';
             $this->_field = $field;
+
             return $this;
         }
 
-        function orWhichIs($field) {
+        function orWhichIs($field)
+        {
             return $this->orWhoIs($field);
         }
 
-        function of($those) {
+        function of($those)
+        {
             // TO BE IMPLEMENTED
             return $this;
         }
 
-        function alias($name) {
+        function alias($name)
+        {
             $this->resetFetch();
             $this->_alias[$name] = $this->_table;
+
             return $this;
         }
-            
-        function isIn() {
+
+        function isIn()
+        {
             $values = func_get_args();
 
             $db = $this->db;
@@ -171,7 +195,7 @@ namespace Gini {
 
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'INNER JOIN '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table) 
+                $this->_join[] = 'INNER JOIN '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table)
                     . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
@@ -179,8 +203,7 @@ namespace Gini {
                 if ($v->_where) {
                     $this->_where = array_merge($this->_where, $v->_where);
                 }
-            }
-            else {
+            } else {
                 foreach ($values as $v) {
                     $qv[] = $db->quote($v);
                 }
@@ -190,12 +213,13 @@ namespace Gini {
             return $this;
         }
 
-        function isNotIn() {
+        function isNotIn()
+        {
             $values = func_get_args();
-            
+
             $db = $this->db;
             $field_name = $db->ident($this->_table, $this->_field);
-            
+
             $v = reset($values);
             if ($v instanceof Those) {
                 $this->_join[] = 'LEFT JOIN '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table)
@@ -208,24 +232,24 @@ namespace Gini {
                     $this->_where[] = 'AND';
                 }
                 $this->_where[] = $field_name . ' IS NOT NULL';
-            }
-            else {
+            } else {
                 foreach ($values as $v) {
                     $qv[] = $db->quote($v);
                 }
                 $this->_where[] = $field_name . ' NOT IN (' . implode(', ', $qv) .')';
             }
-            
+
             return $this;
         }
 
-        function match($op, $v) {
+        function match($op, $v)
+        {
             assert($this->_field);
 
             $db = $this->db;
             $field_name = $db->ident($this->_table, $this->_field);
 
-            switch($op) {
+            switch ($op) {
                 case '^=': {
                     $this->_where[] = $field_name .' LIKE '.$db->quote($v.'%');
                 }
@@ -241,7 +265,7 @@ namespace Gini {
                 }
                 break;
 
-                case '=': case '<>': {                    
+                case '=': case '<>': {
                     if ($v instanceof \ORM\Object) {
                         $o = a($this->name);
                         $field = $this->_field;
@@ -256,15 +280,14 @@ namespace Gini {
 
                             if ($op == '<>') {
                                 $this->_where[] = $this->_packWhere($obj_where, 'OR');
-                            }
-                            else {
+                            } else {
                                 $this->_where[] = $this->_packWhere($obj_where, 'AND');
                             }
                             break;
                         }
                     }
                 }
-                
+
                 default: {
                     $this->_where[] = $field_name . $op . $this->_getValue($v);
                 }
@@ -275,55 +298,67 @@ namespace Gini {
         }
 
         // is(1), is('hello'), is('@name')
-        function is($v) {
+        function is($v)
+        {
             return $this->match('=', $v);
         }
 
-        function isNot($v) {
+        function isNot($v)
+        {
             return $this->match('<>', $v);
         }
 
-        function beginsWith($v) {
+        function beginsWith($v)
+        {
             return $this->match('^=', $v);
         }
 
-        function contains($v) {
+        function contains($v)
+        {
             return $this->match('*=', $v);
         }
 
-        function endsWith($v) {
+        function endsWith($v)
+        {
             return $this->match('$=', $v);
         }
 
-        function isLessThan($v) {
+        function isLessThan($v)
+        {
             return $this->match('<', $v);
         }
 
-        function isGreaterThan($v) {
+        function isGreaterThan($v)
+        {
             return $this->match('>', $v);
         }
 
-        function isGreaterThanOrEqual($v) {
+        function isGreaterThanOrEqual($v)
+        {
             return $this->match('>=', $v);
         }
 
-        function isLessThanOrEqual($v) {
+        function isLessThanOrEqual($v)
+        {
             return $this->match('<=', $v);
         }
 
-        function isBetween($a, $b) {
+        function isBetween($a, $b)
+        {
             assert($this->_field);
             $db = $this->db;
             $field_name = $db->ident($this->_table, $this->_field);
-            $this->_where[] = '(' . $field_name . '>=' . $this->_getValue($a) . 
+            $this->_where[] = '(' . $field_name . '>=' . $this->_getValue($a) .
                 ' AND ' . $field_name . '<' . $this->_getValue($b) . ')';
+
             return $this;
         }
 
-        function orderBy($field, $mode='asc') {
+        function orderBy($field, $mode='asc')
+        {
             $this->resetFetch();
 
-            $db = $this->db;            
+            $db = $this->db;
             $mode = strtolower($mode);
             switch ($mode) {
                 case 'desc':
@@ -339,8 +374,8 @@ namespace Gini {
             return $this;
         }
 
-        function makeSQL() {
-
+        function makeSQL()
+        {
             $db = $this->db;
             $table = $this->_table;
 
@@ -373,18 +408,22 @@ namespace Gini {
 
 namespace {
 
-    function a($name, $criteria = null) {
+    public function a($name, $criteria = null)
+    {
         $name = str_replace('/', '\\', $name);
         $class_name = '\\ORM\\'.$name;
+
         return new $class_name($criteria);
     }
 
     // alias to a()
-    function an($name, $criteria = null) {
+    public function an($name, $criteria = null)
+    {
         return a($name, $criteria);
     }
 
-    function those($name) {
+    public function those($name)
+    {
         return new \Gini\Those($name);
     }
 

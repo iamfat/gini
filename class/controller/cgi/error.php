@@ -2,10 +2,10 @@
 
 namespace Controller\CGI {
 
-    class Error extends Layout {
-    
-        function __index($code = 404) {
-
+    class Error extends Layout
+    {
+        function __index($code = 404)
+        {
             switch ($code) {
             case 401:
                 $title = "Unauthorized visit";
@@ -21,13 +21,14 @@ namespace Controller\CGI {
 
             if ($_SERVER['HTTP_X_REQUESTED_WITH']) {
                 $this->view = '';
+
                 return;
             }
 
             $this->view->title = $title;
             $this->view->body = V('error', array('code' => $code));
         }
-    
+
     }
 
 }

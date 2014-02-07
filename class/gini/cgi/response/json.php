@@ -2,22 +2,25 @@
 
 namespace Gini\CGI\Response {
 
-    class JSON implements \Gini\CGI\Response {
-
+    class JSON implements \Gini\CGI\Response
+    {
         private $_content;
 
-        function __construct($content) {
+        function __construct($content)
+        {
             $this->_content = $content;
         }
 
-        function output() {
+        function output()
+        {
             header('Content-Type: application/json');
             if ($this->_content !== null) {
                 file_put_contents('php://output', json_encode($this->_content)."\n");
             }
         }
-        
-        function content() {
+
+        function content()
+        {
             return $this->_content;
         }
 

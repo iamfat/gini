@@ -2,67 +2,81 @@
 
 namespace Gini {
 
-    class HTTP {
-    
+    class HTTP
+    {
         private $_header=[];
         private $_post=[];
-    
-        function header($name , $value) {
+
+        function header($name , $value)
+        {
             $this->_header[$name]=$value;
+
             return $this;
         }
-    
-        function get($url, $query=null, $timeout=5) {
+
+        function get($url, $query=null, $timeout=5)
+        {
             $qpos = strpos($url, '?');
             $url .= ($qpos === false) ? '?' : '&';
             $url .= is_string($query) ? $query : http_build_query($query);
+
             return $this->request($url, $timeout);
         }
-    
-        function post($url, $query, $timeout=5) {
+
+        function post($url, $query, $timeout=5)
+        {
             $this->_post = $query;
+
             return $this->request($url, $timeout);
         }
-    
-        function clean(){
+
+        function clean()
+        {
             $this->_header = [];
             $this->_post = [];
         }
 
-        function cookie() {
+        function cookie()
+        {
             $cookie = array();
             $file = $this->_cookie_file;
             if (file_exists($file)) {
                 $rows = file($file);
-                foreach($rows as $row){
+                foreach ($rows as $row) {
                     if('#'==$row[0])
                         continue;
                     $row = trim($row, "\r\n\t ");
                     $arr = explode("\t", $row);
-                    if(isset($arr[5]) && isset($arr[6])) {
+                    if (isset($arr[5]) && isset($arr[6])) {
                         $cookie[$arr[5]] = rawurldecode($arr[6]);
                     }
                 }
 
             }
+
             return $cookie;
         }
 
         private $_cookie_file;
-        function cookieFile($file = null) {
+        function cookieFile($file = null)
+        {
             $this->_cookie_file = $file;
+
             return $this;
         }
 
         private $_proxy;
         private $_proxy_type;
-        function proxy($proxy, $socks5 = false) {
+        function proxy($proxy, $socks5 = false)
+        {
             $this->_proxy = $proxy;
             $this->_proxy_type = $socks5 ? CURLPROXY_SOCKS5 : CURLPROXY_HTTP;
+
             return $this;
         }
 
-        function request($url, $timeout=5){
+        function request($url, $timeout=5)
+        {
             $ch = curl_init();
             curl_setopt_array($ch, array(
                 CURLOPT_SSL_VERIFYPEER => false,
@@ -94,9 +108,9 @@ namespace Gini {
                 ));
             }
 
-            if($this->_header){
+            if ($this->_header) {
                 $curl_header=array();
-                foreach($this->_header as $k=>$v){
+                foreach ($this->_header as $k=>$v) {
                     $curl_header[]=$k.': '.$v;
                 }
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $curl_header);
@@ -106,7 +120,7 @@ namespace Gini {
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, is_array($this->_post) ? http_build_query($this->_post) : $this->_post);
             }
-        
+
             $data = curl_exec($ch);
 
             $this->clean();
@@ -116,34 +130,35 @@ namespace Gini {
                 $err = curl_error($ch);
                 Logger::of('core')->error("CURL ERROR($errno $err): $url ");
                 curl_close($ch);
+
                 return null;
             }
 
             $info = curl_getinfo($ch);
 
             curl_close($ch);
-        
+
             return new HTTP\Response($data, $info['http_code']);
         }
 
-    
     }
 
 }
 
 namespace Gini\HTTP {
-    
-    class Response {
 
+    class Response
+    {
         public $header=[];
         public $status=null;
         public $body=null;
-    
-        function __construct($data, $status) {
+
+        function __construct($data, $status)
+        {
             list($header, $body)=explode("\n\n", str_replace("\r", "", $data), 2);
-        
+
             $this->body=trim($body);
- 
+
             $header = explode("\n", $header);
             $status = array_shift($header);
             $this->status = $status;
@@ -155,11 +170,11 @@ namespace Gini\HTTP {
                 }
             }
         }
-    
-        function __toString() {
+
+        function __toString()
+        {
             return $this->body;
         }
     }
 
 }
-

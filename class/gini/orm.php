@@ -15,19 +15,20 @@
 
 namespace Gini {
 
-    abstract class ORM {
-
+    abstract class ORM
+    {
         private static $_injections;
         private $_criteria;
         private $_objects;
         private $_name;
         private $_tableName;
         private $_oinfo;
-        
+
         private $_db_data;
         private $_db_time;    //上次数据库同步的时间
 
-        function __call($method, $params) {
+        function __call($method, $params)
+        {
             if ($method == __FUNCTION__) return;
             /*
             orm[user].call[method]
@@ -35,20 +36,21 @@ namespace Gini {
             $name = "call[$method]";
             if (!$this->event('isBinded', $name)) {
                 $trace = debug_backtrace();
-                $message = sprintf("[E]: Call to undefined method %s::%s() in %s on line %d", 
-                                    $trace[1]['class'], 
+                $message = sprintf("[E]: Call to undefined method %s::%s() in %s on line %d",
+                                    $trace[1]['class'],
                                     $trace[1]['function'],
                                     $trace[1]['file'],
                                     $trace[1]['line']);
                 trigger_error($message, E_USER_ERROR);
+
                 return;
             }
-            
+
             return $this->event('trigger', $name, $params);
         }
 
-        private function event() {
-
+        private function event()
+        {
             $args = func_get_args();
             $func = array_shift($args);
             $action = array_shift($args);
@@ -56,15 +58,17 @@ namespace Gini {
             $inheritance = $this->inheritance();
 
             $events = array();
-            foreach(array_keys($inheritance) as $name) {
+            foreach (array_keys($inheritance) as $name) {
                 $events[] = "orm[$name].$action";
             }
 
             array_unshift($args, implode(' ', $events), $this);
-            return call_user_func_array('\Gini\Event::'.$func, $args);        
+
+            return call_user_func_array('\Gini\Event::'.$func, $args);
         }
 
-        function inheritance() {
+        function inheritance()
+        {
             $inheritance = array();
 
             $class = get_class($this);
@@ -77,19 +81,19 @@ namespace Gini {
                 if ($name == 'object') break;
             }
 
-            return $inheritance;    
+            return $inheritance;
         }
 
         private static $_structures;
-        function structure() {
-
+        function structure()
+        {
             $class_name = get_class($this);
             if (!isset(self::$_structures[$class_name])) {
                 $rc = new \ReflectionClass($this);
                 $defaults = $rc->getDefaultProperties();
 
                 $structure = array();
-                foreach($rc->getProperties() as $p) {
+                foreach ($rc->getProperties() as $p) {
                     if (!$p->isStatic() && $p->isPublic()) {
                         $k = $p->getName();
                         $structure[$k] = $defaults[$k];
@@ -101,7 +105,7 @@ namespace Gini {
                     $rc = new \ReflectionClass($injection);
                     $defaults = $rc->getDefaultProperties();
 
-                    foreach($rc->getProperties() as $p) {
+                    foreach ($rc->getProperties() as $p) {
                         if (!$p->isStatic() && $p->isPublic()) {
                             $k = $p->getName();
                             $structure[$k] = $defaults[$k];
@@ -112,7 +116,7 @@ namespace Gini {
                 foreach ($structure as $k => $v) {
                     $params = explode(',', strtolower($v));
                     $v = array();
-                    foreach($params as $p) {
+                    foreach ($params as $p) {
                         list($p, $pv) = explode(':', trim($p), 2);
                         $v[$p] = $pv;
                     }
@@ -126,29 +130,29 @@ namespace Gini {
             return self::$_structures[$class_name];
         }
 
-        function fetch($force = false) {
-
+        function fetch($force = false)
+        {
             if ($force || $this->_db_time == 0) {
 
                 if (is_array($this->_criteria) && count($this->_criteria) > 0) {
 
                     $db = $this->db();
-                    
+
                     $criteria = $this->normalizeCriteria($this->_criteria);
 
                     //从数据库中获取该数据
                     foreach ($criteria as $k=>$v) {
                         $where[] = $db->quoteIdent($k) . '=' . $db->quote($v);
                     }
-                    
-                    $SQL = 'SELECT * FROM '.$db->quoteIdent($this->tableName()) . ' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+
+                    $SQL = 'SELECT * FROM '.$db->quoteIdent($this->tableName()) . ' WHERE '.implode(' AND ', $where).' LIMIT 1';
 
                     $result = $db->query($SQL);
                     //只取第一条记录
                     if ($result) {
                         $data = $result->row(\PDO::FETCH_ASSOC);
                     }
-                
+
                 }
 
                 //给object赋值
@@ -158,8 +162,8 @@ namespace Gini {
             }
         }
 
-        function __construct($criteria = null) {
-
+        function __construct($criteria = null)
+        {
             $structure = $this->structure();
             foreach ($structure as $k => $v) {
                 unset($this->$k);    //empty all public properties
@@ -171,38 +175,39 @@ namespace Gini {
 
         }
 
-        static function db() {
+        static function db()
+        {
             $rc = new \ReflectionClass(get_called_class());
             $db_name = $rc->getStaticPropertyValue('_db');
-            
+
             return Database::db($db_name);
         }
 
-        function normalizeCriteria(array $crit) {
+        function normalizeCriteria(array $crit)
+        {
             $ncrit = array();
             $structure = $this->structure();
 
             foreach ($crit as $k => $v) {
                 if (is_scalar($v) || is_null($v)) {
                     $ncrit[$k] = $v;
-                }
-                elseif ($v instanceof \ORM\Object) {
+                } elseif ($v instanceof \ORM\Object) {
                     if (!isset($structure[$k]['object'])) {
                         $ncrit[$k.'_name'] = $v->name();
                     }
                     $ncrit[$k.'_id'] = $v->id;
                 }
             }
-            
+
             return $ncrit;
         }
 
-        function criteria($criteria = null) {
-
+        function criteria($criteria = null)
+        {
             if ($criteria !== null) {
-                //set criteria                
+                //set criteria
                 if (is_scalar($criteria)) {
-                    $criteria = array('id'=>(int)$criteria);
+                    $criteria = array('id'=>(int) $criteria);
                 }
                 $this->_criteria = (array) $criteria;
             }
@@ -210,19 +215,19 @@ namespace Gini {
             return $this->_criteria;
         }
 
-        function schema() {
-            
+        function schema()
+        {
             $structure = $this->structure();
 
             $fields;
             $indexes;
 
-            foreach($structure as $k => $v) {
+            foreach ($structure as $k => $v) {
 
                 $field = null;
                 $index = null;
 
-                foreach($v as $p => $pv) {
+                foreach ($v as $p => $pv) {
                     switch ($p) {
                     case 'int':
                     case 'bigint':
@@ -236,8 +241,7 @@ namespace Gini {
                     case 'string':
                         if ($pv == '*') {
                             $field['type'] = 'text';
-                        }
-                        else {
+                        } else {
                             $field['type'] = 'varchar('.($pv?:255).')';
                         }
                         break;
@@ -298,7 +302,7 @@ namespace Gini {
                     foreach ($vv as &$vvv) {
                         $vvv = trim($vvv);
                         // correct object name
-                        if (array_key_exists('object', (array)$structure[$vvv])) {
+                        if (array_key_exists('object', (array) $structure[$vvv])) {
                             if (!$structure[$vvv]['object']) {
                                 $vv[] = $vvv.'_name';
                             }
@@ -306,7 +310,7 @@ namespace Gini {
                         }
                     }
 
-                    switch($vk) {
+                    switch ($vk) {
                     case 'unique':
                         $indexes['_MIDX_'.$k] = ['type' => 'unique', 'fields'=>$vv];
                         break;
@@ -322,19 +326,21 @@ namespace Gini {
 
             return array('fields' => $fields, 'indexes' => $indexes);
         }
-        
-        function delete() {
+
+        function delete()
+        {
             if (!$this->id) return true;
 
             $db = $this->db();
             $tbl_name = $this->tableName();
-                
+
             $SQL = 'DELETE FROM '.$db->quoteIdent($tbl_name).' WHERE '.$db->quoteIdent('id').'='.$db->quote($this->id);
+
             return !!$db->query($SQL);
         }
 
-        function save() {
-
+        function save()
+        {
             $schema = (array) $this->schema();
 
             $db = $this->db();
@@ -352,24 +358,20 @@ namespace Gini {
                         $db_data[$k.'_name'] = $oname ?: 'object';
                     }
                     $db_data[$k.'_id'] = $o->id ?: 0;
-                }
-                elseif (array_key_exists('array', $v)) {
+                } elseif (array_key_exists('array', $v)) {
                     $db_data[$k] = isset($this->$k)
-                        ? json_encode($this->$k, true) 
+                        ? json_encode($this->$k, true)
                         : ( array_key_exists('null', $v) ? 'null' : '{}' );
-                }
-                else {
+                } else {
                     $db_data[$k] = $this->$k;
                     if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
                         $default = $v['default'];
                         if (is_null($default)) {
                             if (isset($v['string'])) {
                                 $default = '';
-                            }
-                            elseif (isset($v['datetime'])) {
+                            } elseif (isset($v['datetime'])) {
                                 $default = '0000-00-00 00:00:00';
-                            }
-                            else {
+                            } else {
                                 $default = 0;
                             }
                         }
@@ -379,7 +381,7 @@ namespace Gini {
             }
 
             // diff db_data and this->_db_data
-            $db_data = array_diff_assoc((array)$db_data, (array)$this->_db_data);
+            $db_data = array_diff_assoc((array) $db_data, (array) $this->_db_data);
 
             $tbl_name = $this->tableName();
             $id = (int) ($this->_db_data['id'] ?: $db_data['id']);
@@ -387,33 +389,31 @@ namespace Gini {
 
             if ($id > 0) {
 
-                foreach($db_data as $k=>$v){
+                foreach ($db_data as $k=>$v) {
                     $pair[] = $db->quoteIdent($k).'='.$db->quote($v);
                 }
 
                 if ($pair) $SQL = 'UPDATE '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quoteIdent('id').'='.$db->quote($id);
-            }
-            else {
+            } else {
 
                 $keys = array_keys($db_data);
                 $vals = array_values($db_data);
-                
+
                 $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.$db->quote($vals).')';
             }
 
             if ($SQL) {
                 $success = $db->query($SQL);
-            }
-            else {
+            } else {
                 $success = true;
             }
 
             if ($success) {
-                
+
                 if (!$id) {
                     $id = $db->lastInsertId();
                 }
-                
+
                 $this->criteria($id);
                 $this->fetch(true);
 
@@ -422,34 +422,40 @@ namespace Gini {
             return $success;
         }
 
-        static function inject($injection) {
+        static function inject($injection)
+        {
             self::$_injections[] = $injection;
             // clear structure cache
             unset(self::$_structures[get_called_class()]);
         }
 
-        private function _prepareName() {
+        private function _prepareName()
+        {
             list(,$name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 2);
             $this->_name = $name;
             $this->_tableName = str_replace('/', '_', $name);
         }
 
-        public function name() {
+        public function name()
+        {
             if (!isset($this->_name)) {
                 $this->_prepareName();
              }
+
             return $this->_name;
         }
-        
-        public function tableName() {
+
+        public function tableName()
+        {
             if (!isset($this->_tableName)) {
                 $this->_prepareName();
             }
+
             return $this->_tableName;
         }
 
-        public function setData($data) {
-            
+        public function setData($data)
+        {
             $this->_objects = array();
             $this->_oinfo = array();
 
@@ -459,8 +465,7 @@ namespace Gini {
                     $o = $data[$k];
                     if (isset($o) && $o instanceof \ORM\Object && isset($oname) && $o->name() == $oname) {
                         $this->$k = $o;
-                    }
-                    else {
+                    } else {
                         //object need to be bind later to avoid deadlock.
                         unset($this->$k);
                         if (!isset($oname)) $oname = strval($data[$k.'_name']);
@@ -472,37 +477,37 @@ namespace Gini {
                             $this->_oinfo[$k] = $oi;
                         }
                     }
-                }
-                elseif (array_key_exists('array', $v)) {
-                    $this->$k = @json_decode(strval($data[$k]), true);                
-                }
-                else {
+                } elseif (array_key_exists('array', $v)) {
+                    $this->$k = @json_decode(strval($data[$k]), true);
+                } else {
                     $this->$k = $data[$k];
                 }
             }
         }
 
-        function getData() {
-            foreach($this->structure() as $k => $v) {
+        function getData()
+        {
+            foreach ($this->structure() as $k => $v) {
                 $data[$k] = $this->$k;
             }
+
             return $data;
         }
 
-        function __get($name) {
+        function __get($name)
+        {
             // 如果之前没有触发数据库查询, 在这里触发一下
             $this->fetch();
 
             if (isset($this->_objects[$name])) {
                 return $this->_objects[$name];
-            }
-            elseif (isset($this->_oinfo[$name])) {
+            } elseif (isset($this->_oinfo[$name])) {
                 $oi = $this->_oinfo[$name];
                 $o = a($oi->name, $oi->id);
                 $this->_objects[$name] = $o;
+
                 return $o;
-            }
-            elseif (isset($this->_extra[$name])) {
+            } elseif (isset($this->_extra[$name])) {
                 // try find it in _extra
                 return $this->_extra[$name];
             }
@@ -510,36 +515,37 @@ namespace Gini {
             return $this->$name;
         }
 
-        function __set($name, $value) {        
+        function __set($name, $value)
+        {
             // 如果之前没有触发数据库查询, 在这里触发一下
             $this->fetch();
 
             $structure = $this->structure();
             if (isset($this->_oinfo[$name])) {
                 $this->_objects[$name] = $value;
-            }
-            elseif (isset($structure[$name])) {
+            } elseif (isset($structure[$name])) {
                 $this->$name = $value;
-            }
-            else {
+            } else {
                 // 奇怪 如果之前没有强制类型转换 数组赋值会不成功
                 $this->_extra = (array) $this->_extra;
                 $this->_extra[$name] = $value;
             }
         }
-        
+
         // 返回localized name
-        function _T($name, $locale=null) {
+        function _T($name, $locale=null)
+        {
             // 如果之前没有触发数据库查询, 在这里触发一下
             $this->fetch();
- 
+
             // if _CONF('system.locale') == 'zh_CN', $object->T('name') will access $object->_extra['i18n'][zh_CN]['name']
             if (!isset($locale)) $locale = _CONF('system.locale');
             if (isset($this->_extra['@i18n'][$locale][$name])) {
                 return $this->_extra['@i18n'][$locale][$name];
             }
+
             return $this->$name;
         }
 
-    }    
+    }
 }

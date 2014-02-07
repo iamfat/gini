@@ -1,93 +1,95 @@
 <?php
 
 namespace Gini {
-    
-    class Config {
-    
+
+    class Config
+    {
         static $items = [];
-    
-        static function export() {
+
+        static function export()
+        {
             return self::$items;
         }
-    
-        static function import($items){
+
+        static function import($items)
+        {
             self::$items = $items;
         }
-    
-        static function clear() {
+
+        static function clear()
+        {
             self::$items = [];    //清空
         }
-        
-        static function get($key) {
+
+        static function get($key)
+        {
             list($category, $key) = explode('.', $key, 2);
-            if ($key === null) return self::$items[$category];            
+            if ($key === null) return self::$items[$category];
             return self::$items[$category][$key];
         }
-    
-        static function set($key, $val) {
+
+        static function set($key, $val)
+        {
             list($category, $key) = explode('.', $key, 2);
             if ($key) {
                 if ($val === null) {
                     unset(self::$items[$category][$key]);
-                }
-                else {
+                } else {
                     self::$items[$category][$key]=$val;
                 }
-            }
-            else {
+            } else {
                 if ($val === null) {
                     unset(self::$items[$category]);
-                }
-                else {
+                } else {
                     self::$items[$category];
                 }
             }
         }
-        
-        static function append($key, $val){
+
+        static function append($key, $val)
+        {
             list($category, $key) = explode('.', $key, 2);
             if (self::$items[$category][$key] === null) {
                 self::$items[$category][$key] = $val;
-            } 
-            elseif (is_array(self::$items[$category][$key])) {
+            } elseif (is_array(self::$items[$category][$key])) {
                 self::$items[$category][$key][] = $val;
-            }
-            else {
+            } else {
                 self::$items[$category][$key] .= $val;
             }
         }
-    
-        static function setup() {
+
+        static function setup()
+        {
             self::clear();
             $exp = 300;
             $config_file = APP_PATH . '/cache/config.json';
             if (file_exists($config_file)) {
-                self::$items = (array)@json_decode(file_get_contents($config_file), true);
-            }
-            else {
+                self::$items = (array) @json_decode(file_get_contents($config_file), true);
+            } else {
                 // no cached file, read from original file
                 self::$items = self::fetch();
             }
         }
 
-        private static function _load_config_dir($base, &$items){
+        private static function _load_config_dir($base, &$items)
+        {
             if (!is_dir($base)) return;
-            
+
             $dh = opendir($base);
             if ($dh) {
-                while($name = readdir($dh)) {
+                while ($name = readdir($dh)) {
                     if ($name[0] == '.') continue;
-                    
+
                     $file = $base . '/' . $name;
                     if (!is_file($file)) continue;
-                    
+
                     $category = pathinfo($name, PATHINFO_FILENAME);
-                    if (!isset($items[$category])) $items[$category] = [];    
+                    if (!isset($items[$category])) $items[$category] = [];
 
                     switch (pathinfo($name, PATHINFO_EXTENSION)) {
                     case 'php':
                         $config = & $items[$category];
-                        call_user_func(function() use (&$config, $file) {
+                        call_user_func(function () use (&$config, $file) {
                             include($file);
                         });
                         break;
@@ -102,23 +104,23 @@ namespace Gini {
                 closedir($dh);
             }
         }
-        
-        public static function fetch() {
-            
+
+        public static function fetch()
+        {
             $items = [];
-            
+
             $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
             foreach ($paths as $path) {
                 self::_load_config_dir($path, $items);
             }
-            
+
             if (isset($_SERVER['GINI_ENV'])) {
                 $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$_SERVER['GINI_ENV']);
                 foreach ($paths as $path) {
                     self::_load_config_dir($path, $items);
                 }
             }
-           
+
             return $items;
         }
 
@@ -127,14 +129,14 @@ namespace Gini {
 }
 
 namespace {
-    
-    function _CONF($key, $value=null) {
+
+    public function _CONF($key, $value=null)
+    {
         if (is_null($value)) {
             return \Gini\Config::get($key);
-        }
-        else {
+        } else {
             \Gini\Config::set($key, $value);
         }
     }
-    
+
 }

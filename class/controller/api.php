@@ -14,6 +14,6 @@
 
 namespace Controller;
 
-class API {
-    
+class API
+{
 }

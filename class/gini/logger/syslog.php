@@ -1,9 +1,9 @@
 <?php
 
 namespace Gini\Logger {
-    
-    class SysLog extends Handler {
-        
+
+    class SysLog extends Handler
+    {
         private static $_LEVEL2PRIORITY = [
             \Psr\Log\LogLevel::EMERGENCY => \LOG_EMERG,
             \Psr\Log\LogLevel::ALERT => \LOG_ALERT,
@@ -14,24 +14,24 @@ namespace Gini\Logger {
             \Psr\Log\LogLevel::INFO => \LOG_INFO,
             \Psr\Log\LogLevel::DEBUG => \LOG_DEBUG,
         ];
-        
-        public function log($level, $message, array $context = array()) {
-            
+
+        public function log($level, $message, array $context = array())
+        {
             if (!$this->isLoggable($level)) return;
-            
+
             $message = "[{ident}] $message";
             $context['ident'] = $this->_name;
-            
+
             $replacements = [];
             foreach ($context as $key => $val) {
                 $replacements['{'.$key.'}'] = $val;
             }
 
             $message = strtr($message, $replacements);
-            
+
             syslog(self::$_LEVEL2PRIORITY[$level], $message);
         }
 
     }
-    
+
 }
