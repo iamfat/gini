@@ -11,7 +11,7 @@ namespace Controller\CGI {
         {
             parent::__preAction($action, $params);
             $this->view = V(static::$layout_name);
-            $this->view->title = _CONF('layout.title');
+            $this->view->title = \Gini\Config::get('layout.title');
         }
 
         function __postAction($action, &$params, $response)

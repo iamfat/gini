@@ -32,7 +32,7 @@ class ORMIter implements \Iterator, \ArrayAccess, \Countable
     public function __construct($name)
     {
         // 查询一下看看是不是复数
-        $name = _CONF('orm.plurals')[$name] ?: $name;
+        $name = \Gini\Config::get('orm.plurals')[$name] ?: $name;
         $this->name = $name;
         $this->table_name = str_replace('/', '_', $name);
         $this->db = a($name)->db();

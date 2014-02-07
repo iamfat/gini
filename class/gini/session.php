@@ -6,7 +6,7 @@ class Session
 {
     public static function setup()
     {
-        $driver = _CONF('system.session_driver') ?: 'built_in';
+        $driver = \Gini\Config::get('system.session_driver') ?: 'built_in';
 
         if ($driver != 'built_in') {
 
@@ -18,19 +18,19 @@ class Session
 
         }
 
-        $session_name = _CONF('system.session_name') ?: 'gini-session';
+        $session_name = \Gini\Config::get('system.session_name') ?: 'gini-session';
         $host_hash = hash('md4', $_SERVER['HTTP_HOST']);
         ini_set('session.name', $session_name.'_'.$host_hash);
 
-        if (_CONF('system.session_path')) {
-            session_save_path(_CONF('system.session_path'));
+        if (\Gini\Config::get('system.session_path')) {
+            session_save_path(\Gini\Config::get('system.session_path'));
         }
 
         if (PHP_SAPI=='cli') {
             Cookie::setup();
         }
 
-        $cookie_params = (array) _CONF('system.session_cookie');
+        $cookie_params = (array) \Gini\Config::get('system.session_cookie');
         session_set_cookie_params (
             $cookie_params['lifetime'],
             $cookie_params['path'],

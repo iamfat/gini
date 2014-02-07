@@ -287,8 +287,8 @@ class CLI
             $params = $orig_argv;
         }
 
-        _CONF('runtime.controller_path', $path);
-        _CONF('runtime.controller_class', $class);
+        \Gini\Config::set('runtime.controller_path', $path);
+        \Gini\Config::set('runtime.controller_class', $class);
 
         $controller = new $class;
 

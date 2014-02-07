@@ -1,145 +1,127 @@
 <?php
 
-namespace Gini {
+namespace Gini;
 
-    class Config
+class Config
+{
+    static $items = [];
+
+    public static function export()
     {
-        static $items = [];
+        return self::$items;
+    }
 
-        static function export()
-        {
-            return self::$items;
-        }
+    public static function import($items)
+    {
+        self::$items = $items;
+    }
 
-        static function import($items)
-        {
-            self::$items = $items;
-        }
+    public static function clear()
+    {
+        self::$items = [];    //清空
+    }
 
-        static function clear()
-        {
-            self::$items = [];    //清空
-        }
+    public static function get($key)
+    {
+        list($category, $key) = explode('.', $key, 2);
+        if ($key === null) return self::$items[$category];
+        return self::$items[$category][$key];
+    }
 
-        static function get($key)
-        {
-            list($category, $key) = explode('.', $key, 2);
-            if ($key === null) return self::$items[$category];
-            return self::$items[$category][$key];
-        }
-
-        static function set($key, $val)
-        {
-            list($category, $key) = explode('.', $key, 2);
-            if ($key) {
-                if ($val === null) {
-                    unset(self::$items[$category][$key]);
-                } else {
-                    self::$items[$category][$key]=$val;
-                }
+    public static function set($key, $val)
+    {
+        list($category, $key) = explode('.', $key, 2);
+        if ($key) {
+            if ($val === null) {
+                unset(self::$items[$category][$key]);
             } else {
-                if ($val === null) {
-                    unset(self::$items[$category]);
-                } else {
-                    self::$items[$category];
-                }
+                self::$items[$category][$key]=$val;
             }
-        }
-
-        static function append($key, $val)
-        {
-            list($category, $key) = explode('.', $key, 2);
-            if (self::$items[$category][$key] === null) {
-                self::$items[$category][$key] = $val;
-            } elseif (is_array(self::$items[$category][$key])) {
-                self::$items[$category][$key][] = $val;
+        } else {
+            if ($val === null) {
+                unset(self::$items[$category]);
             } else {
-                self::$items[$category][$key] .= $val;
+                self::$items[$category];
             }
         }
+    }
 
-        static function setup()
-        {
-            self::clear();
-            $exp = 300;
-            $config_file = APP_PATH . '/cache/config.json';
-            if (file_exists($config_file)) {
-                self::$items = (array) @json_decode(file_get_contents($config_file), true);
-            } else {
-                // no cached file, read from original file
-                self::$items = self::fetch();
-            }
+    public static function append($key, $val)
+    {
+        list($category, $key) = explode('.', $key, 2);
+        if (self::$items[$category][$key] === null) {
+            self::$items[$category][$key] = $val;
+        } elseif (is_array(self::$items[$category][$key])) {
+            self::$items[$category][$key][] = $val;
+        } else {
+            self::$items[$category][$key] .= $val;
         }
+    }
 
-        private static function _load_config_dir($base, &$items)
-        {
-            if (!is_dir($base)) return;
+    public static function setup()
+    {
+        self::clear();
+        $exp = 300;
+        $config_file = APP_PATH . '/cache/config.json';
+        if (file_exists($config_file)) {
+            self::$items = (array) @json_decode(file_get_contents($config_file), true);
+        } else {
+            // no cached file, read from original file
+            self::$items = self::fetch();
+        }
+    }
 
-            $dh = opendir($base);
-            if ($dh) {
-                while ($name = readdir($dh)) {
-                    if ($name[0] == '.') continue;
+    private static function _load_config_dir($base, &$items)
+    {
+        if (!is_dir($base)) return;
 
-                    $file = $base . '/' . $name;
-                    if (!is_file($file)) continue;
+        $dh = opendir($base);
+        if ($dh) {
+            while ($name = readdir($dh)) {
+                if ($name[0] == '.') continue;
 
-                    $category = pathinfo($name, PATHINFO_FILENAME);
-                    if (!isset($items[$category])) $items[$category] = [];
+                $file = $base . '/' . $name;
+                if (!is_file($file)) continue;
 
-                    switch (pathinfo($name, PATHINFO_EXTENSION)) {
-                    case 'php':
-                        $config = & $items[$category];
-                        call_user_func(function () use (&$config, $file) {
-                            include($file);
-                        });
-                        break;
-                    case 'yml':
-                    case 'yaml':
-                        $config = (array) yaml_parse_file($file);
-                        $items[$category] = \Gini\Util::array_merge_deep($items[$category], $config);
-                        break;
-                    }
+                $category = pathinfo($name, PATHINFO_FILENAME);
+                if (!isset($items[$category])) $items[$category] = [];
 
+                switch (pathinfo($name, PATHINFO_EXTENSION)) {
+                case 'php':
+                    $config = & $items[$category];
+                    call_user_func(function () use (&$config, $file) {
+                        include($file);
+                    });
+                    break;
+                case 'yml':
+                case 'yaml':
+                    $config = (array) yaml_parse_file($file);
+                    $items[$category] = \Gini\Util::array_merge_deep($items[$category], $config);
+                    break;
                 }
-                closedir($dh);
+
             }
+            closedir($dh);
+        }
+    }
+
+    public static function fetch()
+    {
+        $items = [];
+
+        $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
+        foreach ($paths as $path) {
+            self::_load_config_dir($path, $items);
         }
 
-        public static function fetch()
-        {
-            $items = [];
-
-            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
+        if (isset($_SERVER['GINI_ENV'])) {
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$_SERVER['GINI_ENV']);
             foreach ($paths as $path) {
                 self::_load_config_dir($path, $items);
             }
-
-            if (isset($_SERVER['GINI_ENV'])) {
-                $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$_SERVER['GINI_ENV']);
-                foreach ($paths as $path) {
-                    self::_load_config_dir($path, $items);
-                }
-            }
-
-            return $items;
         }
 
+        return $items;
     }
 
-}
-
-namespace {
-
-    if (function_exists('_CONF')) {
-        die("_CONF() was declared by other libraries, which may cause problems!");
-    } else {
-        function _CONF($key, $value=null)
-        {
-            if (is_null($value)) {
-                return \Gini\Config::get($key);
-            } else {
-                \Gini\Config::set($key, $value);
-            }
-        }
-    }
 }

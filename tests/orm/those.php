@@ -9,7 +9,7 @@ namespace Gini\PHPUnit\ORM {
         public static function setUpBeforeClass() {
             parent::setUpBeforeClass();
             
-            _CONF('database.default', [
+            \Gini\Config::set('database.default', [
                 'dsn' => 'sqlite:gini_ut.sqlite3'
             ]);    
 

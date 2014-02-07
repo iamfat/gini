@@ -18,7 +18,7 @@ namespace Controller\CLI {
 
         function actionList($args)
         {
-            foreach ((array) _CONF('cron') as $cron) {
+            foreach ((array) \Gini\Config::get('cron') as $cron) {
                 printf("gini @%s %s\n", APP_ID, $cron['command']);
             }
         }
@@ -29,7 +29,7 @@ namespace Controller\CLI {
                 $user = $args[0];
             }
 
-            foreach ((array) _CONF('cron') as $cron) {
+            foreach ((array) \Gini\Config::get('cron') as $cron) {
                 if ($cron['comment']) printf("# %s\n", $cron['comment']);
                 printf("%s%s\tgini @%s %s\n\n", $cron['interval'], $user ? "\t$user":'', APP_ID, $cron['command']);
             }

@@ -583,8 +583,8 @@ abstract class ORM
         // 如果之前没有触发数据库查询, 在这里触发一下
         $this->fetch();
 
-        // if _CONF('system.locale') == 'zh_CN', $object->L('name') will access $object->_extra['i18n'][zh_CN]['name']
-        if (!isset($locale)) $locale = _CONF('system.locale');
+        // if \Gini\Config::get('system.locale') == 'zh_CN', $object->L('name') will access $object->_extra['i18n'][zh_CN]['name']
+        if (!isset($locale)) $locale = \Gini\Config::get('system.locale');
         if (isset($this->_extra['@i18n'][$locale][$name])) {
             return $this->_extra['@i18n'][$locale][$name];
         }

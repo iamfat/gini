@@ -48,7 +48,7 @@ class Logger extends \Psr\Log\AbstractLogger
     {
         $this->_name = $name;
 
-        foreach ((array) _CONF("logger.{$this->_name}") as $handlerName => $options) {
+        foreach ((array) \Gini\Config::get("logger.{$this->_name}") as $handlerName => $options) {
             $options = (array) $options;
             $level = isset($options['level']) ? $options['level'] : \Psr\Log\LogLevel::DEBUG;
             $handlerClass = "\\Gini\\Logger\\$handlerName";

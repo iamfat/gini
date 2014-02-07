@@ -41,7 +41,7 @@ class Database
         $name = $name ?: 'default';
         if (!isset(self::$DB[$name])) {
 
-            $opt = _CONF('database.'.$name);
+            $opt = \Gini\Config::get('database.'.$name);
             if (is_string($opt)) {
                 // 是一个别名
                 $db = self::db($opt);

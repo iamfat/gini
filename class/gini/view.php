@@ -48,10 +48,10 @@ class View
         if ($this->_ob_cache !== null) return $this->_ob_cache;
 
         $path = $this->_path;
-        $locale = _CONF('system.locale');
+        $locale = \Gini\Config::get('system.locale');
         $localeSpecificPath = "@$locale/$path";
 
-        $engines = _CONF('view.engines');
+        $engines = \Gini\Config::get('view.engines');
         if (isset($GLOBALS['gini.view_map'][$localeSpecificPath])) {
             $realPath = $GLOBALS['gini.view_map'][$localeSpecificPath];
             $engine = $engines[pathinfo($realPath, PATHINFO_EXTENSION)];

@@ -89,7 +89,7 @@ class MySQL extends \PDO implements Driver
 
     public function adjustTable($table, $schema)
     {
-        // $remove_nonexistent = _CONF('database.remove_nonexistent') ?: false;
+        // $remove_nonexistent = \Gini\Config::get('database.remove_nonexistent') ?: false;
 
         if (!$this->tableExists($table)) {
             $this->createTable($table);

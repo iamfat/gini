@@ -14,7 +14,7 @@ namespace Gini {
             textdomain(APP_ID);
             bind_textdomain_codeset(APP_ID, 'UTF-8');
 
-            self::setLocale(_CONF('system.locale') ?: 'en_US');
+            self::setLocale(\Gini\Config::get('system.locale') ?: 'en_US');
         }
 
         public static function setLocale($locale)

@@ -204,7 +204,7 @@ class Event
      */
     public static function setup()
     {
-        foreach ((array) _CONF('hooks') as $event => $event_hooks) {
+        foreach ((array) \Gini\Config::get('hooks') as $event => $event_hooks) {
             foreach ((array) $event_hooks as $key => $hook) {
                 if (!is_string($key)) {
                     $key = null;

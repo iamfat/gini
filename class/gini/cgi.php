@@ -77,8 +77,8 @@ class CGI
 
         if (!$class || !class_exists($class, false)) self::redirect('error/404');
 
-        _CONF('runtime.controller_path', $path);
-        _CONF('runtime.controller_class', $class);
+        \Gini\Config::set('runtime.controller_path', $path);
+        \Gini\Config::set('runtime.controller_class', $class);
         $controller = new $class;
 
         $action = preg_replace('/[-_]/', '', $params[0]);
