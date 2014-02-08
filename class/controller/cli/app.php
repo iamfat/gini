@@ -308,8 +308,9 @@ namespace Controller\CLI {
                 $this->_prepare_walkthrough($src_dir, '', function ($file) use ($src_dir, $assets_dir) {
                     $src_path = $src_dir . '/' . $file;
 
-                    \Gini\File::ensureDir($assets_dir);
                     $dst_path = $assets_dir . '/' . $file;
+                    \Gini\File::ensureDir(dirname($dst_path));
+
                     if (!file_exists($dst_path)
                         || filesize($src_path) != filesize($dst_path)
                         || filemtime($src_path) > filemtime($dst_path)) {
