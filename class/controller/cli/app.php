@@ -49,7 +49,7 @@ namespace Controller\CLI {
                 'id' => strtolower(basename($path)),
                 'path' => $path,
                 'description' => 'App description...',
-                'version' => '0.1',
+                'version' => '0.1.0',
                 'dependencies' => '[]',
                 );
 

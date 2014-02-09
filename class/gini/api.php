@@ -45,6 +45,7 @@ class API
                 }
 
                 if ($method[0] != '_') {
+                    $method = 'action'.$method;
                     $o = new $class;
                     if (method_exists($o, $method)) {
                         $callback = array($o, $method);
