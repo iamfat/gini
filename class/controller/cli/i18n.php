@@ -92,7 +92,7 @@ namespace Controller\CLI {
                 $lodir = I18N_PATH.'/'.$locale.'/LC_MESSAGES';
                 \Gini\File::ensureDir($lodir);
 
-                $pofile = $podir.'/'.$appname.'.po';
+                $pofile = $lodir.'/'.$appname.'.po';
                 $paths = \Gini\Core::filePaths(RAW_DIR . '/l10n/'.$locale.'.po');
                 echo "merge: $appname.po\n";
                 $cmd = sprintf('msgcat -o %1$s %2$s',

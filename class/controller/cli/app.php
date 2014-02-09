@@ -364,7 +364,7 @@ namespace Controller\CLI {
         private function _run_composer_bin($app)
         {
             if (!file_exists($app->path.'/composer.json')) return;
-            echo "Update composer packages of $idtname...\n";
+            echo "Update composer packages of $app->id...\n";
             // gini install path/to/modules
             $composer_bin = getenv("COMPOSER_BIN")?:"composer";
             $cmd = sprintf("$composer_bin update -d %s", escapeshellarg($app->path));
