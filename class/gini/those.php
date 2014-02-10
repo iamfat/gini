@@ -414,9 +414,9 @@ namespace {
         function a($name, $criteria = null)
         {
             $name = str_replace('/', '\\', $name);
-            $class_name = '\\ORM\\'.$name;
+            $class_name = '\ORM\\'.$name;
 
-            return new $class_name($criteria);
+            return \Gini\IoC::construct($class_name, $criteria);
         }
     }
 
@@ -435,7 +435,7 @@ namespace {
     } else {
         function those($name)
         {
-            return new \Gini\Those($name);
+            return \Gini\IoC::construct('\Gini\Those', $name);
         }
     }
 }

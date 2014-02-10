@@ -356,7 +356,7 @@ namespace Gini {
                 !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
             }
 
-            !method_exists('\\Gini\\Application', 'exception') or \Gini\Application::exception($e);
+            !method_exists('\Gini\Application', 'exception') or \Gini\Application::exception($e);
             exit(1);
         }
 
@@ -419,7 +419,7 @@ namespace Gini {
             Config::setup();
             Event::setup();
 
-            !method_exists('\\Gini\\Application', 'setup') or \Gini\Application::setup();
+            !method_exists('\Gini\Application', 'setup') or \Gini\Application::setup();
             foreach (self::$MODULE_INFO as $name => $info) {
                 $class = '\\'.str_replace('-', '_', $name);
                 if (!$info->error && method_exists($class, 'setup')) {
@@ -428,7 +428,7 @@ namespace Gini {
             }
 
             global $argv;
-            !method_exists('\\Gini\\Application', 'main') or \Gini\Application::main($argv);
+            !method_exists('\Gini\Application', 'main') or \Gini\Application::main($argv);
         }
 
         /**
@@ -444,7 +444,7 @@ namespace Gini {
                     call_user_func($class.'::shutdown');
                 }
             }
-            !method_exists('\\Gini\\Application', 'shutdown') or \Gini\Application::shutdown();
+            !method_exists('\Gini\Application', 'shutdown') or \Gini\Application::shutdown();
         }
 
     } // END class
@@ -526,7 +526,7 @@ namespace {
     } else {
         function V($path, $vars=null)
         {
-            return new \Gini\View($path, $vars);
+            return \Gini\IoC::construct('\Gini\View', $path, $vars);
         }
     }
 }

@@ -89,8 +89,8 @@ class Database
     public function __construct($dsn, $username=null, $password=null, $options=null)
     {
         list($driver_name,) = explode(':', $dsn, 2);
-        $driver_class = '\\Gini\\Database\\'.$driver_name;
-        $this->_driver = new $driver_class($dsn, $username, $password, $options);
+        $driver_class = '\Gini\Database\\'.$driver_name;
+        $this->_driver = \Gini\IoC::construct($driver_class, $dsn, $username, $password, $options);
         if (!$this->_driver instanceof Database\Driver) {
             throw new Database\Exception('unknown database driver: '.$driver_name);
         }

@@ -351,8 +351,8 @@ namespace Controller\CLI {
                     $oname = preg_replace('|.php$|', '', $file);
                     if ($oname == 'object') return;
                     printf("   %s\n", $oname);
-                    $class_name = '\\ORM\\'.str_replace('/', '\\', $oname);
-                    $o = new $class_name();
+                    $class_name = '\ORM\\'.str_replace('/', '\\', $oname);
+                    $o = \Gini\IoC::construct($class_name);
                     $o->db()->adjustTable($o->tableName(), $o->schema());
                 });
 
@@ -451,8 +451,8 @@ namespace Controller\CLI {
                     $oname = preg_replace('|.php$|', '', $file);
                     if ($oname == 'object') return;
                     printf("   %s\n", $oname);
-                    $class_name = '\\ORM\\'.str_replace('/', '\\', $oname);
-                    $o = new $class_name();
+                    $class_name = '\ORM\\'.str_replace('/', '\\', $oname);
+                    $o = \Gini\IoC::construct($class_name);
                     $structure = $o->structure();
 
                     // unset system fields
@@ -520,7 +520,7 @@ namespace Controller\CLI {
                 }
 
                 echo "  Packing $dir.phar...\n";
-                $packer = new \Gini\Dev\Packer("$build_dir/$dir.phar");
+                $packer = \Gini\IoC::construct('\Gini\Dev\Packer', "$build_dir/$dir.phar");
                 $packer->import("$app_dir/$dir");
                 echo "\n";
             }

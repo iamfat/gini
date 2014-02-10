@@ -4,15 +4,16 @@ namespace Gini;
 
 class Session
 {
+    
     public static function setup()
     {
         $driver = \Gini\Config::get('system.session_driver') ?: 'built_in';
 
         if ($driver != 'built_in') {
 
-            $class = '\\Gini\\Session\\'.$driver;
+            $class = '\Gini\Session\\'.$driver;
 
-            self::$driver = new $class;
+            self::$driver = \Gini\IoC::construct($class);
 
             session_set_save_driver ( 'Session::open' , 'Session::close' , 'Session::read' , 'Session::write' , 'Session::destroy' , 'Session::gc' );
 

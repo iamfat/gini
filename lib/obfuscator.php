@@ -588,8 +588,8 @@ class Obfuscator
 
             $output = \Minify_HTML::minify($output, [
                 // 'xhtml' => TRUE,
-                'cssMinifier' => '\\Gini\\Dev\\Obfuscator::minify_css',
-                'jsMinifier' => '\\Gini\\Dev\\Obfuscator::minify_js',
+                'cssMinifier' => '\Gini\Dev\Obfuscator::minify_css',
+                'jsMinifier' => '\Gini\Dev\Obfuscator::minify_js',
             ]);
 
             // $fds = [

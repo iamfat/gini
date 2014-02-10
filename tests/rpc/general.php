@@ -33,8 +33,7 @@ namespace Gini\PHPUnit\RPC {
 
             $this->_testCall('RPCTest.camelCaseMethod', [$var]);
             $this->_testCall('rpctest.camelcasemethod', [$var]);
-            $this->_testCall('rpctest.underscore_method', [$var]);
-            $this->_testCall('rpctest/underscore_method', [$var]);            
+            $this->_testCall('rpctest/camelCaseMethod', [$var]);            
         }
     
     }
@@ -45,11 +44,7 @@ namespace Controller\API {
     
     class RPCTest {
         
-        function camelCaseMethod($s) {
-            return $s;
-        }
-        
-        function underscore_method($s) {
+        function actionCamelCaseMethod($s) {
             return $s;
         }
         

@@ -58,7 +58,7 @@ class CGI
         foreach (array_reverse($candidates) as $path => $params) {
             $basename = strtr(basename($path), '-', '_') ;
             $dirname = dirname($path);
-            $class_namespace = '\\Controller\\CGI\\';
+            $class_namespace = '\Controller\CGI\\';
             if ($dirname != '.') {
                 $class_namespace .= strtr($dirname, ['-'=>'_', '/'=>'\\']).'\\';
             }
@@ -79,7 +79,7 @@ class CGI
 
         \Gini\Config::set('runtime.controller_path', $path);
         \Gini\Config::set('runtime.controller_class', $class);
-        $controller = new $class;
+        $controller = \Gini\IoC::construct($class);
 
         $action = preg_replace('/[-_]/', '', $params[0]);
         if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {

@@ -270,7 +270,7 @@ class CLI
         foreach (array_reverse($candidates) as $path => $params) {
             $basename = basename($path);
             $dirname = dirname($path);
-            $class_namespace = '\\Controller\\CLI\\';
+            $class_namespace = '\Controller\CLI\\';
             if ($dirname != '.') {
                 $class_namespace .= str_replace('/', '_', $dirname).'\\';
             }
@@ -283,14 +283,14 @@ class CLI
         }
 
         if (!$class || !class_exists($class, false)) {
-            $class = '\\Controller\\CLI\\App';
+            $class = '\Controller\CLI\App';
             $params = $orig_argv;
         }
 
         \Gini\Config::set('runtime.controller_path', $path);
         \Gini\Config::set('runtime.controller_class', $class);
 
-        $controller = new $class;
+        $controller = \Gini\IoC::construct($class);
 
         $action = preg_replace('/[-_]/', '', $params[0]);
         if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {

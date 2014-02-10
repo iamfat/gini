@@ -51,8 +51,8 @@ class Logger extends \Psr\Log\AbstractLogger
         foreach ((array) \Gini\Config::get("logger.{$this->_name}") as $handlerName => $options) {
             $options = (array) $options;
             $level = isset($options['level']) ? $options['level'] : \Psr\Log\LogLevel::DEBUG;
-            $handlerClass = "\\Gini\\Logger\\$handlerName";
-            $handler = new $handlerClass($this->_name, $level, $options);
+            $handlerClass = "\Gini\Logger\\$handlerName";
+            $handler = \Gini\IoC::construct($handlerClass, $this->_name, $level, $options);
             $this->_handlers[] = $handler;
         }
 

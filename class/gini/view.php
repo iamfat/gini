@@ -69,8 +69,8 @@ class View
         }
 
         if ($engine && $realPath) {
-            $class = "\\Gini\\View\\$engine";
-            $output = new $class($realPath, $this->_vars);
+            $class = '\Gini\View\\'.$engine;
+            $output = \Gini\IoC::construct($class, $realPath, $this->_vars);
         }
 
         return $this->_ob_cache = (string) $output;

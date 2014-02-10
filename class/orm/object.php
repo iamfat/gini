@@ -27,8 +27,8 @@ class Object extends \Gini\ORM
     {
         if ($method == __CLASS__) return;
 
-        if (method_exists('\\Gini\\Those', $method)) {
-            if (!$this->those) $this->those = new \Gini\Those($this->name());
+        if (method_exists('\Gini\Those', $method)) {
+            if (!$this->those) $this->those = \Gini\IoC::construct('\Gini\Those', $this->name());
             call_user_func_array(array($this->those, $method), $params);
 
             return $this;

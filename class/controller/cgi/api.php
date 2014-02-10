@@ -20,7 +20,7 @@ namespace Controller\CGI {
                  $response = \Gini\API::dispatch((array) $request);
             }
 
-            return new \Gini\CGI\Response\JSON($response);
+            return \Gini\IoC::construct('\Gini\CGI\Response\JSON', $response);
         }
 
     }

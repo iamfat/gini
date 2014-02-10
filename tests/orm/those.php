@@ -13,7 +13,7 @@ namespace Gini\PHPUnit\ORM {
                 'dsn' => 'sqlite:gini_ut.sqlite3'
             ]);    
 
-            class_exists('\\Gini\\Those');
+            class_exists('\Gini\Those');
 
             $fakeORM = <<<'EOT'
                 namespace ORM;
