@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini {
+namespace Gini;
 
 class RPC
 {
