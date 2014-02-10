@@ -38,6 +38,13 @@ abstract class CGI
     public $form;
 
     /**
+     * route to current controller
+     *
+     * @var string
+     **/
+    public $route;
+
+    /**
      * Function called right before action is being executed
      *
      * @param  string $action

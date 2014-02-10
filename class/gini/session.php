@@ -4,7 +4,7 @@ namespace Gini;
 
 class Session
 {
-    
+
     public static function setup()
     {
         $driver = \Gini\Config::get('system.session_driver') ?: 'built_in';
