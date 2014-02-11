@@ -187,12 +187,9 @@ abstract class ORM
 
     }
 
-    public static function db()
+    public function db()
     {
-        $rc = new \ReflectionClass(get_called_class());
-        $db_name = $rc->getStaticPropertyValue('_db');
-
-        return Database::db($db_name);
+        return Database::db(static::$db_name);
     }
 
     public function normalizeCriteria(array $crit)
@@ -295,10 +292,7 @@ abstract class ORM
 
         }
 
-        $ro = new \ReflectionObject($this);
-        $static_props = $ro->getStaticProperties();
-
-        $db_index = $static_props['db_index'];
+        $db_index = static::$db_index;
         if (count($db_index) > 0) {
             // 索引项
             foreach ($db_index as $k => $v) {

@@ -266,7 +266,7 @@ namespace Gini {
                 break;
 
                 case '=': case '<>': {
-                    if ($v instanceof \ORM\Object) {
+                    if (is_object($v)) {
                         $o = a($this->name);
                         $field = $this->_field;
                         $structure = $o->structure();

@@ -44,19 +44,19 @@ class Database
             $opt = \Gini\Config::get('database.'.$name);
             if (is_string($opt)) {
                 // 是一个别名
-                $db = self::db($opt);
+                $db = static::db($opt);
             } else {
                 if (!is_array($opt)) {
                     throw new Database\Exception('database "' . $name . '" was not configured correctly!');
                 }
 
-                $db = new Database($opt['dsn'], $opt['username'], $opt['password'], $opt['options']);
+                $db = \Gini\IoC::construct('\Gini\Database', $opt['dsn'], $opt['username'], $opt['password'], $opt['options']);
             }
 
-            self::$DB[$name] = $db;
+            static::$DB[$name] = $db;
         }
 
-        return self::$DB[$name];
+        return static::$DB[$name];
     }
 
     /**
@@ -67,8 +67,8 @@ class Database
     public static function shutdown($name=null)
     {
         $name = $name ?: 'default';
-        if (!isset(self::$DB[$name])) {
-            unset(self::$DB[$name]);
+        if (!isset(static::$DB[$name])) {
+            unset(static::$DB[$name]);
         }
     }
 
@@ -78,7 +78,7 @@ class Database
      **/
     public static function reset()
     {
-        self::$DB = array();
+        static::$DB = [];
     }
 
     /**

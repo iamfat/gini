@@ -77,7 +77,7 @@ namespace Controller\CLI {
 
         public function __index($args)
         {
-            $this->action_help($args);
+            $this->actionHelp($args);
         }
 
         public function actionInfo($args)

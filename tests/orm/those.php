@@ -9,48 +9,61 @@ namespace Gini\PHPUnit\ORM {
         public static function setUpBeforeClass() {
             parent::setUpBeforeClass();
             
-            \Gini\Config::set('database.default', [
-                'dsn' => 'sqlite:gini_ut.sqlite3'
-            ]);    
+            // \Gini\Config::set('database.default', [
+            //     'dsn' => 'sqlite:gini_ut.sqlite3'
+            // ]);    
 
-            class_exists('\Gini\Those');
+        }
+        
+        public function setUp() {
 
-            $fakeORM = <<<'EOT'
-                namespace ORM;
+            parent::setUp();
 
-                class UT_User extends \ORM\Object {
+            // Mocking \ORM\UT_Lab
+            //         
+            // class UT_Lab extends \ORM\Object {
+            // 
+            //     var $name        = 'string:50';
+            //     var $gender      = 'bool';
+            //     var $money       = 'double,default:0';
+            //     var $description = 'string:*,null';
+            // 
+            // }
 
-                    var $name        = 'string:50';
+            \Gini\IoC::bind('\ORM\UT_Lab', function()
+            {
+                $mock = $this->getMockBuilder('\ORM\Object')
+                     ->disableOriginalConstructor()
+                     ->getMock();
 
-                }
+                $mock->expects($this->any())
+                    ->method('db')
+                    ->will($this->returnCallback(function(){
+                        return \Gini\Database::db();
+                    }));
 
-                class UT_Department extends \ORM\Object {
+                $labStructure = [
+                    'id' => [ 'bigint' => null, 'primary' => null, 'serial' => null ],
+                    '_extra' => [ 'array' => null ],
+                    'name' => [ 'string' => 50 ],
+                    'money' => [ 'double' => null, 'default' => 0 ],
+                    'description' => [ 'string' => '*', 'null' => null ],
+                ];
 
-                    var $name        = 'string:50';
+                $mock->expects($this->any())
+                    ->method('structure')
+                    ->will($this->returnValue($labStructure));
+                                                
+                return $mock;
+            });
 
-                }
-
-                class UT_Account extends \ORM\Object {
-
-                    var $lab = 'object:lab';
-                    var $department = 'object:department';
-
-                }
-
-                class UT_Lab extends \ORM\Object {
-
-                    var $name        = 'string:50';
-                    var $gender      = 'bool';
-                    var $money       = 'double,default:0';
-                    var $description = 'string:*,null';
-
-                }
-
-EOT;
-
-            eval($fakeORM);
         }
 
+        public function tearDown() {
+            \Gini\IoC::clear('\ORM\UT_Lab');
+            parent::tearDown();
+        }
+        
         public function testNumber() {
             
             \Gini\Those::reset();
@@ -90,6 +103,7 @@ EOT;
         }
         
         public function testStringMatch() {
+            
             \Gini\Those::reset();
             $those = those('ut_lab')->whose('name')->beginsWith('COOL');
             $those->makeSQL();

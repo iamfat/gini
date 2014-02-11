@@ -41,13 +41,13 @@ class RPC
             if (isset($data['error'])) {
                 $message = sprintf('remote error: %s', $data['error']['message']);
                 $code = $data['error']['code'];
-                throw \Gini\IoC::construct('\Gini\RPC\Exception', $message, $code);
+                throw new \Gini\RPC\Exception($message, $code);
             } elseif ($id != $data['id']) {
                 $message = 'wrong response id!';
-                throw \Gini\IoC::construct('\Gini\RPC\Exception', $message);
+                throw new \Gini\RPC\Exception($message);
             } elseif (is_null($data)) {
                 $message = sprintf('unknown error with raw data: %s', $raw_data ?: '(null)');
-                throw \Gini\IoC::construct('\Gini\RPC\Exception', $message);
+                throw new \Gini\RPC\Exception($message);
             }
         }
 
