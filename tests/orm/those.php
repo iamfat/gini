@@ -6,18 +6,60 @@ namespace Gini\PHPUnit\ORM {
 
     class Those extends \Gini\PHPUnit\CLI {
 
-        public static function setUpBeforeClass() {
-            parent::setUpBeforeClass();
-            
-            // \Gini\Config::set('database.default', [
-            //     'dsn' => 'sqlite:gini_ut.sqlite3'
-            // ]);    
-
-        }
-        
         public function setUp() {
 
             parent::setUp();
+
+            $db = $this->getMockBuilder('\Gini\Database')
+                 ->disableOriginalConstructor()
+                 ->getMock();
+            
+            $db->expects($this->any())
+                ->method('quote')
+                ->will($this->returnCallback(function($s) use($db) {
+                    if (is_array($s)) {
+                        foreach ($s as &$i) {
+                            $i = $db->quote($i);
+                        }
+            
+                        return implode(',', $s);
+                    } elseif (is_null($s)) {
+                        return 'NULL';
+                    } elseif (is_bool($s)) {
+                        return $s ? 1 : 0;
+                    } elseif (is_int($s) || is_float($s)) {
+                        return $s;
+                    }
+            
+                    return '\''.addslashes($s).'\'';
+                }));
+            
+            $db->expects($this->any())
+                ->method('quoteIdent')
+                ->will($this->returnCallback(function($s) use($db) {
+                    if (is_array($s)) {
+                        foreach ($s as &$i) {
+                            $i = $mock->quoteIdent($i);
+                        }
+            
+                        return implode(',', $s);
+                    }
+            
+                    return '"'.addslashes($s).'"';
+                }));
+            
+            $db->expects($this->any())
+                ->method('ident')
+                ->will($this->returnCallback(function() {
+                    $args = func_get_args();
+                    $ident = [];
+                    foreach ($args as $arg) {
+                        $ident[] = '"'.addslashes($arg).'"';
+                    }
+                    return implode('.', $ident);
+               }));
+            
+            // $db = \Gini\IoC::construct('\Gini\Database', 'sqlite:memory');
 
             // Mocking \ORM\UT_Lab
             //         
@@ -30,17 +72,14 @@ namespace Gini\PHPUnit\ORM {
             // 
             // }
 
-            \Gini\IoC::bind('\ORM\UT_Lab', function()
-            {
-                $mock = $this->getMockBuilder('\ORM\Object')
+            \Gini\IoC::bind('\ORM\UT_Lab', function() use ($db) {
+                $lab = $this->getMockBuilder('\ORM\Object')
                      ->disableOriginalConstructor()
                      ->getMock();
 
-                $mock->expects($this->any())
+                $lab->expects($this->any())
                     ->method('db')
-                    ->will($this->returnCallback(function(){
-                        return \Gini\Database::db();
-                    }));
+                    ->will($this->returnValue($db));
 
                 $labStructure = [
                     'id' => [ 'bigint' => null, 'primary' => null, 'serial' => null ],
@@ -50,11 +89,11 @@ namespace Gini\PHPUnit\ORM {
                     'description' => [ 'string' => '*', 'null' => null ],
                 ];
 
-                $mock->expects($this->any())
+                $lab->expects($this->any())
                     ->method('structure')
                     ->will($this->returnValue($labStructure));
                                                 
-                return $mock;
+                return $lab;
             });
 
         }
@@ -123,13 +162,6 @@ namespace Gini\PHPUnit\ORM {
 
         }
     
-        public static function tearDownAfterClass() {
-            parent::tearDownAfterClass();
-            if (file_exists('gini_ut.sqlite3')) {
-                unlink('gini_ut.sqlite3');
-            }
-        }
-            
     }
         
 }

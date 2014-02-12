@@ -49,7 +49,7 @@ class SQLite extends \PDO implements Driver
         return $this->_table_status[$table];
     }
 
-    private static function _normalize_type($type)
+    private static function _normalizeType($type)
     {
         // 确保小写
         $type = strtolower($type);
@@ -88,8 +88,8 @@ class SQLite extends \PDO implements Driver
                 foreach ($curr_fields as $key=>$curr_field) {
                     $field = $fields[$key];
                     if ($field) {
-                        $curr_type = $this->_normalize_type($curr_field['type']);
-                        $type = $this->_normalize_type($field['type']);
+                        $curr_type = $this->_normalizeType($curr_field['type']);
+                        $type = $this->_normalizeType($field['type']);
                         if ($type !== $curr_type
                             || $field['null'] != $curr_field['null']
                             || $field['default'] != $curr_field['default']
@@ -116,7 +116,7 @@ class SQLite extends \PDO implements Driver
             $field_values = [];
 
             foreach ($fields as $key=>$field) {
-                $field_sql[] = $this->field_sql($key, $field);
+                $field_sql[] = $this->_fieldSQL($key, $field);
                 $field_names[] = $this->quoteIdent($key);
                 if (isset($curr_fields[$key])) {
                     $field_values[] = $this->quoteIdent($key);
@@ -214,7 +214,7 @@ class SQLite extends \PDO implements Driver
             // cid, name, type, notnull, dflt_value, pk
             while ($dr = $ds->fetchObject()) {
 
-                $field = array('type' => $this->_normalize_type($dr->type));
+                $field = array('type' => $this->_normalizeType($dr->type));
 
                 if ($dr->dflt_value !== null) {
                     switch ($field['type']) {
@@ -273,7 +273,7 @@ class SQLite extends \PDO implements Driver
         return $this->_table_schema[$name];
     }
 
-    private function field_sql($key, &$field)
+    private function _fieldSQL($key, &$field)
     {
         if ($field['serial']) {
             return sprintf('%s INTEGER PRIMARY KEY AUTOINCREMENT'
@@ -283,7 +283,7 @@ class SQLite extends \PDO implements Driver
 
         return sprintf('%s %s%s%s'
                 , $this->quoteIdent($key)
-                , $this->_normalize_type($field['type'])
+                , $this->_normalizeType($field['type'])
                 , $field['null']? '': ' NOT NULL'
                 , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']):''
                 );
