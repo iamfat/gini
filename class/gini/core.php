@@ -485,10 +485,9 @@ namespace {
         {
             $args = func_get_args();
             if (count($args) > 1) {
-                call_user_func_array('sprintf', $args);
-            } else {
-                return $args[0];
+                return call_user_func_array('sprintf', $args);
             }
+            return $args[0];
         }
     }
 

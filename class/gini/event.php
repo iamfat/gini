@@ -64,12 +64,13 @@ class Event
         foreach ($this->queue as $hook) {
 
             $return = $hook->return;
-            // array(object, method)
             if (is_array($return) && count($return) == 2 && is_object($return[0]) ) {
+                // array(object, method)
                 $callback = $return;
-            }
-            // callback:\Namespace\Class\Method
-            elseif (is_string($return) && 0 == strncmp($return, 'callback:', 9)) {
+            } elseif (is_object($return) && ($return instanceof \Closure)) {
+                $callback = $return;
+            } elseif (is_string($return) && 0 == strncmp($return, 'callback:', 9)) {
+                // callback:\Namespace\Class\Method
                 $callback = substr($return, 9);
             } else {
                 $this->_abort = true;
@@ -91,15 +92,16 @@ class Event
 
     }
 
-    private function addHandler($return, $weight=0, $key=null)
+    public function addHandler($return, $weight=0, $key=null)
     {
         $event = (object) ['weight'=>$weight, 'return'=>$return];
 
         if (!$key) {
             if (is_array($return)
                 && count($return) == 2 && is_object($return[0])) {
-                $class = get_class($return[0]);
-                $key = 'dynamic:'.$class .'.'.$return[1];
+                $key = 'dynamic:'.spl_object_hash($return[0]).'.'.$return[1];
+            } elseif (is_object($return) && ($return instanceof \Closure)) {
+                $key = 'dynamic:'.spl_object_hash($return);
             } elseif (is_string($return)
                 && 0 == strncmp($return, 'callback:', 9)) {
                 $key = $return;
@@ -107,7 +109,7 @@ class Event
                 $key = 'return:'.json_encode($return);
             }
         }
-
+        
         $key = strtolower($key);
         if (!isset($this->queue[$key])) {
             $event->order = count($this->queue);
@@ -127,7 +129,7 @@ class Event
         return $e;
     }
 
-    public static function extractNames($selector)
+    public static function _normalizeNames($selector)
     {
         return is_array($selector) ? $selector : [$selector];
     }
@@ -142,7 +144,7 @@ class Event
      */
     public static function bind($names, $return, $weight=0)
     {
-        $names = static::extractNames($names);
+        $names = static::_normalizeNames($names);
 
         \Gini\Logger::of('core')
             ->debug("{name} <= {return} [{weight}]", [
@@ -167,7 +169,7 @@ class Event
         $return = null;
         $params = func_get_args();
         $_EVENTS = array_shift($params);
-        foreach (static::extractNames($_EVENTS) as $name) {
+        foreach (static::_normalizeNames($_EVENTS) as $name) {
             $e = static::get($name);
             if ($e) {
                 $e->_abort = false;
