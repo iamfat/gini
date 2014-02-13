@@ -134,7 +134,7 @@ class CLI
     public static function main(array $argv)
     {
         if (count($argv) < 1) {
-            static::command_help($argv);
+            static::commandHelp($argv);
             exit;
         }
 
