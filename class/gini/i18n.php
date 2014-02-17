@@ -2,7 +2,7 @@
 
 namespace Gini {
 
-    final class I18N
+    class I18N
     {
         public static function setup()
         {
