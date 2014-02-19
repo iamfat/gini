@@ -95,7 +95,11 @@ class Config
                     break;
                 case 'yml':
                 case 'yaml':
-                    $config = (array) yaml_parse_file($file);
+                    $content = file_get_contents($file);
+                    $content = preg_replace_callback('/\$\((.+?)\)/', function($matches) {
+                        return $_SERVER[$matches[1]] ?: $matches[0];
+                    }, $content);
+                    $config = (array) yaml_parse($content);
                     $items[$category] = \Gini\Util::array_merge_deep($items[$category], $config);
                     break;
                 }

@@ -22,7 +22,7 @@ if (!isset($_SERVER['GINI_APP_PATH'])) {
 }
 
 if (!isset($_SERVER['GINI_MODULE_BASE_PATH'])) {
-    $_SERVER['GINI_MODULE_BASE_PATH'] = '/usr/local/share/gini-modules';
+    $_SERVER['GINI_MODULE_BASE_PATH'] = dirname(SYS_PATH);
 }
 
 if (!isset($_SERVER['GINI_APP_PATH'])) {
