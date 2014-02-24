@@ -143,6 +143,9 @@ class CLI
         case '-':
             $method = 'commandAvailable';
             break;
+        case '-v':
+            $method = 'commandVersion';
+            break;
         default:
             $method = 'command'.$cli;
         }
@@ -168,6 +171,13 @@ class CLI
     public static function commandRoot()
     {
         echo $_SERVER['GINI_APP_PATH']."\n";
+    }
+
+    public static function commandVersion(array $argv)
+    {
+        // list available cli programs
+        $info = \Gini\Core::moduleInfo($argv[1] ?: APP_ID);
+        echo "$info->name ($info->version)\n";
     }
 
     public static function commandAvailable(array $argv)
