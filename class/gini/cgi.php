@@ -35,7 +35,7 @@ class CGI
             home/page.php        Controller\Page::index('edit', 1)
         */
 
-        $response = self::request(self::$route, ['get'=>$_GET, 'post'=>$_POST, 'files'=>$_FILES])->execute();
+        $response = self::request(self::$route, ['get'=>$_GET, 'post'=>$_POST, 'files'=>$_FILES, 'route'=>self::$route])->execute();
         if ($response) $response->output();
     }
 
@@ -94,7 +94,6 @@ class CGI
         $controller->action = $action;
         $controller->params = $params;
         $controller->form = $form;
-        $controller->route = $path;
 
         return $controller;
     }
