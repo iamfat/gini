@@ -27,6 +27,31 @@ namespace Controller\CLI {
 
     class App extends \Controller\CLI
     {
+        
+        private function _init_phpunit()
+        {
+            $gini = \Gini\Core::moduleInfo('gini');
+
+            echo "Generating PHPUnit files...";
+            
+            $xml = APP_PATH.'/phpunit.xml';
+            if (!file_exists($xml)) {
+                copy($gini->path . '/raw/templates/phpunit/phpunit.xml', $xml);
+            }
+            
+            $dir = APP_PATH . '/tests';
+            if (!file_exists($dir)) {
+                mkdir($dir);
+            }
+            
+            $base = APP_PATH . '/tests/gini.php';
+            if (!file_exists($base)) {
+                copy($gini->path . '/raw/templates/phpunit/gini.php', $base);
+            }
+            
+            echo "\e[1mDONE.\e[0m\n";
+        }
+        
         /**
          * 初始化模块
          *
@@ -34,6 +59,14 @@ namespace Controller\CLI {
          **/
         public function actionInit($args)
         {
+            if (count($args) > 0) {
+                if (in_array('phpunit', $args)) {
+                    return $this->_init_phpunit();
+                }
+            
+                return;
+            }
+            
             $path = $_SERVER['PWD'];
 
             $prompt = array(
@@ -364,10 +397,11 @@ namespace Controller\CLI {
         private function _run_composer_bin($app)
         {
             if (!file_exists($app->path.'/composer.json')) return;
-            echo "Update composer packages of $app->id...\n";
+            echo "composer update for \e[1m$app->id\e[0m...\n";
             // gini install path/to/modules
             $composer_bin = getenv("COMPOSER_BIN")?:"composer";
             $cmd = sprintf("$composer_bin update -d %s", escapeshellarg($app->path));
+            // echo "$ $cmd\n";
             passthru($cmd);
         }
 
@@ -375,7 +409,6 @@ namespace Controller\CLI {
         {
             $updated_list = [];
             $update = function ($info) use (&$update, &$updated_list) {
-                echo "Update $info->id\n";
                 $updated_list[$info->id] = true;
                 foreach ($info->dependencies as $name => $version) {
                     if (isset($updated_list[$name])) continue;
@@ -436,6 +469,7 @@ namespace Controller\CLI {
         private function _export_config()
         {
             $items = \Gini\Config::fetch();
+            // echo json_encode($items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
             echo yaml_emit($items, YAML_UTF8_ENCODING);
         }
 

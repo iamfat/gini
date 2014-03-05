@@ -24,8 +24,8 @@ abstract class ORM
     private $_tableName;
     private $_oinfo;
 
-    private $_db_data;
-    private $_db_time;    //上次数据库同步的时间
+    protected $_db_data;
+    protected $_db_time;    //上次数据库同步的时间
 
     /**
      * Magic method to use Event('orm[$name].call[$method]') to extend ORM object

@@ -13,12 +13,12 @@ class RPC
     {
         $this->_url = $url;
         $this->_path = $path;
-        $this->_cookie = $cookie ?: new RPC\Cookie;
+        $this->_cookie = $cookie ?: IoC::construct('\Gini\RPC\Cookie');
     }
 
     public function __get($name)
     {
-        return new RPC($this->_url, $this->_path ? $this->_path . '/' . $name : $name, $this->_cookie);
+        return IoC::construct('\Gini\RPC', $this->_url, $this->_path ? $this->_path . '/' . $name : $name, $this->_cookie);
     }
 
     public function __call($method, $params)
@@ -41,13 +41,13 @@ class RPC
             if (isset($data['error'])) {
                 $message = sprintf('remote error: %s', $data['error']['message']);
                 $code = $data['error']['code'];
-                throw new \Gini\RPC\Exception($message, $code);
+                throw new IoC::construct('\Gini\RPC\Exception', $message, $code);
             } elseif ($id != $data['id']) {
                 $message = 'wrong response id!';
-                throw new \Gini\RPC\Exception($message);
+                throw new IoC::construct('\Gini\RPC\Exception', $message);
             } elseif (is_null($data)) {
                 $message = sprintf('unknown error with raw data: %s', $raw_data ?: '(null)');
-                throw new \Gini\RPC\Exception($message);
+                throw new IoC::construct('\Gini\RPC\Exception', $message);
             }
         }
 
