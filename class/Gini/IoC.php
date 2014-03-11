@@ -11,13 +11,19 @@ class IoC
     
     protected static $CALLBACKS = [];
     
+    protected static function key($name)
+    {
+        return strtolower($name);
+    }
+    
     public static function construct()
     {
         $args = func_get_args();
-        $name = strtolower(array_shift($args));
+        $name = array_shift($args);
+        $key = self::key($name);
         // check if the class was overrided?
-        if (isset(static::$CALLBACKS[$name])) {
-            $o = static::$CALLBACKS[$name];
+        if (isset(static::$CALLBACKS[$key])) {
+            $o = static::$CALLBACKS[$key];
             if ($o->singleton) {
                 return $o->object ?: $o->object = call_user_func_array($o->callback, $args);
             }
@@ -29,7 +35,7 @@ class IoC
 
     public static function bind($name, $callback)
     {
-        static::$CALLBACKS[strtolower($name)] = (object) [
+        static::$CALLBACKS[self::key($name)] = (object) [
             'callback' => $callback,
             'singleton' => false
         ];
@@ -37,7 +43,7 @@ class IoC
     
     public static function singleton($name, $callback)
     {
-        static::$CALLBACKS[strtolower($name)] = (object) [
+        static::$CALLBACKS[self::key($name)] = (object) [
             'callback' => $callback,
             'singleton' => true
         ];
@@ -45,7 +51,7 @@ class IoC
 
     public static function instance($name, $object)
     {
-        static::$CALLBACKS[strtolower($name)] = (object) [
+        static::$CALLBACKS[self::key($name)] = (object) [
             'object' => $object,
             'singleton' => true
         ];
@@ -53,7 +59,7 @@ class IoC
 
     public static function clear($name)
     {
-        unset(static::$CALLBACKS[strtolower($name)]);
+        unset(static::$CALLBACKS[self::key($name)]);
     }
 
 }
