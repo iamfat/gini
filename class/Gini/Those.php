@@ -32,7 +32,7 @@ $user = those('users')
 
 namespace Gini {
 
-    class Those extends ORMIter
+    class Those extends ORMIterator
     {
         private $_table;
         private $_field;

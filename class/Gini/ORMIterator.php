@@ -2,7 +2,7 @@
 
 namespace Gini;
 
-class ORMIter implements \Iterator, \ArrayAccess, \Countable
+class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 {
     protected $db;
 

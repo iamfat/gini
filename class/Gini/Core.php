@@ -421,7 +421,9 @@ namespace Gini {
 
             !method_exists('\Gini\Application', 'setup') or \Gini\Application::setup();
             foreach (self::$MODULE_INFO as $name => $info) {
-                $class = '\\'.str_replace('-', '_', $name);
+                // use CamelCase instead of underscore_case
+                // $class = '\\'.str_replace('-', '_', $name);
+                $class = '\\'.strtr($name, ['-'=>'', '_'=>'']);
                 if (!$info->error && method_exists($class, 'setup')) {
                     call_user_func($class.'::setup');
                 }
