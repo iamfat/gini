@@ -1,6 +1,6 @@
 ---
 # locale: en_US
-# session_handler: built_in
+# session_driver: null
 # session_path: /tmp/session
 # session_name: gini-session
 session_cookie:

@@ -7,9 +7,9 @@ class Session
 
     public static function setup()
     {
-        $driver = \Gini\Config::get('system.session_driver') ?: 'built_in';
+        $driver = \Gini\Config::get('system.session_driver');
 
-        if ($driver != 'built_in') {
+        if ($driver) {
 
             $class = '\Gini\Session\\'.$driver;
 

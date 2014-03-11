@@ -1,5 +1,5 @@
 ---
 core:
-  syslog:
+  SysLog:
     level: error
 ...
