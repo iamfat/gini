@@ -183,7 +183,7 @@ class CLI
     public static function commandAvailable(array $argv)
     {
         // list available cli programs
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'controller/cli');
+        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Controller/CLI');
         foreach ($paths as $path) {
             if (!is_dir($path)) continue;
 
@@ -192,7 +192,7 @@ class CLI
                 while ($name = readdir($dh)) {
                     if ($name[0] == '.') continue;
                     if (!is_file($path . '/' . $name)) continue;
-                    printf("%s\t", basename($name, '.php'));
+                    printf("%s\t", strtolower(basename($name, '.php')));
                 }
                 closedir($dh);
             }

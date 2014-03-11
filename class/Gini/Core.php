@@ -209,14 +209,14 @@ namespace Gini {
         public static function autoload($class)
         {
             //定义类后缀与类路径的对应关系
-            $class = strtolower($class);
+            // $class = strtolower($class);
             $path = str_replace('\\', '/', $class);
-
+            
             if (isset($GLOBALS['gini.class_map'])) {
+                $path = strtolower($path);
                 if (isset($GLOBALS['gini.class_map'][$path])) {
                     require_once($GLOBALS['gini.class_map'][$path]);
                 }
-
                 return;
             }
 
