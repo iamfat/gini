@@ -1,5 +1,5 @@
 ---
 engines:
-  phtml: phtml
-  js: javascript
+  phtml: PHTML
+  js: Javascript
 ...

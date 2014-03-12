@@ -361,7 +361,7 @@ abstract class ORM
                 $oname = $v['object'];
                 $o = $this->$k;
                 if (!isset($oname)) {
-                    $db_data[$k.'_name'] = $oname ?: 'object';
+                    $db_data[$k.'_name'] = $oname ?: $o->name();
                 }
                 $db_data[$k.'_id'] = $o->id ?: 0;
             } elseif (array_key_exists('array', $v)) {
