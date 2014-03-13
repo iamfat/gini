@@ -20,7 +20,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     protected $SQL_params;
     protected $count_SQL;
 
-    public function total_count()
+    public function totalCount()
     {
         $this->fetch('count');
 
