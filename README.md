@@ -16,6 +16,7 @@
 ## Database
 
 ```php
+<?php
 namespace Gini;
 
 $COMPOSER_DIR = getenv("COMPOSER_HOME") ?: getenv("HOME") . '/.composer';
