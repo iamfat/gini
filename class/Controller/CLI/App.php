@@ -378,7 +378,7 @@ class App extends \Controller\CLI
 
             $this->_prepare_walkthrough($orm_dir, '', function ($file) use ($orm_dir) {
                 $oname = preg_replace('|.php$|', '', $file);
-                if ($oname == 'object') return;
+                if ($oname == 'Object') return;
                 printf("   %s\n", $oname);
                 $class_name = '\ORM\\'.str_replace('/', '\\', $oname);
                 $o = \Gini\IoC::construct($class_name);
