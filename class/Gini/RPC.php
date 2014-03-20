@@ -7,7 +7,7 @@ class RPC
     private $_url;
     private $_path;
     private $_cookie;
-    private $_uniqid = 0;
+    private $_uniqid = 1;
 
     public function __construct($url, $path=null, $cookie=null)
     {

@@ -19,8 +19,10 @@ class Session
 
         }
 
+        $cookie_params = (array) \Gini\Config::get('system.session_cookie');
+
         $session_name = \Gini\Config::get('system.session_name') ?: 'gini-session';
-        $host_hash = hash('md4', $_SERVER['HTTP_HOST']);
+        $host_hash = sha1($cookie_params['domain'] ?: $_SERVER['HTTP_HOST']);
         ini_set('session.name', $session_name.'_'.$host_hash);
 
         if (\Gini\Config::get('system.session_path')) {
@@ -31,7 +33,6 @@ class Session
             Cookie::setup();
         }
 
-        $cookie_params = (array) \Gini\Config::get('system.session_cookie');
         session_set_cookie_params (
             $cookie_params['lifetime'],
             $cookie_params['path'],
