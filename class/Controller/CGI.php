@@ -31,11 +31,11 @@ abstract class CGI
     public $params;
 
     /**
-     * GET/POST/FILES passed to current controller
+     * Environmental variables such as $_GET/$_POST/$_FILES/route passed to current controller
      *
      * @var array
      */
-    public $form;
+    public $env;
 
     /**
      * route to current controller
@@ -89,13 +89,13 @@ abstract class CGI
     {
         switch ($mode) {
         case 'get':
-            return $this->form['get'] ?: [];
+            return $this->env['get'] ?: [];
         case 'post':
-            return $this->form['post'] ?: [];
+            return $this->env['post'] ?: [];
         case 'files':
-            return $this->form['files'] ?: [];
+            return $this->env['files'] ?: [];
         default:
-            return array_merge((array) $this->form['get'], (array) $this->form['post']);
+            return array_merge((array) $this->env['get'], (array) $this->env['post']);
         }
     }
 
