@@ -382,7 +382,11 @@ class App extends \Controller\CLI
                 printf("   %s\n", $oname);
                 $class_name = '\ORM\\'.str_replace('/', '\\', $oname);
                 $o = \Gini\IoC::construct($class_name);
-                $o->db()->adjustTable($o->tableName(), $o->schema());
+                // some object might not have database backend
+                $db = $o->db();
+                if ($db) {
+                    $db->adjustTable($o->tableName(), $o->schema());
+                }
             });
 
         }
