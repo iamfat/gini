@@ -64,7 +64,7 @@ class Cookie
             if (!file_exists(self::$_cookie_file)) {
                 \Gini\File::ensureDir(dirname(self::$_cookie_file));
             }
-            $content = json_encode((array) self::$_cookie, true);
+            $content = J((array) self::$_cookie);
             file_put_contents(self::$_cookie_file, $content);
         }
     }

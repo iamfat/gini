@@ -366,7 +366,7 @@ abstract class ORM
                 $db_data[$k.'_id'] = $o->id ?: 0;
             } elseif (array_key_exists('array', $v)) {
                 $db_data[$k] = isset($this->$k)
-                    ? json_encode($this->$k, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    ? J($this->$k)
                     : ( array_key_exists('null', $v) ? 'null' : '{}' );
             } else {
                 $db_data[$k] = $this->$k;

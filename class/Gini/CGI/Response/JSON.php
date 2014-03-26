@@ -16,7 +16,7 @@ namespace Gini\CGI\Response {
             header('Content-Type: application/json');
             if ($this->_content !== null) {
                 file_put_contents('php://output', 
-                    json_encode($this->_content, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) . PHP_EOL);
+                    J($this->_content) . PHP_EOL);
             }
         }
 
