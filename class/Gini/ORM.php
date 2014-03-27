@@ -64,7 +64,7 @@ abstract class ORM
 
         $inheritance = $this->inheritance();
 
-        $events = array();
+        $events = [];
         foreach (array_keys($inheritance) as $name) {
             $events[] = "orm[$name].$action";
         }
@@ -81,7 +81,7 @@ abstract class ORM
      */
     public function inheritance()
     {
-        $inheritance = array();
+        $inheritance = [];
 
         $class = get_class($this);
         $name = strtolower(join('', array_slice(explode('\\', $class), -1)));
@@ -104,7 +104,7 @@ abstract class ORM
             $rc = new \ReflectionClass($this);
             $defaults = $rc->getDefaultProperties();
 
-            $structure = array();
+            $structure = [];
             foreach ($rc->getProperties() as $p) {
                 if (!$p->isStatic() && $p->isPublic()) {
                     $k = $p->getName();
@@ -127,7 +127,7 @@ abstract class ORM
 
             foreach ($structure as $k => $v) {
                 $params = explode(',', strtolower($v));
-                $v = array();
+                $v = [];
                 foreach ($params as $p) {
                     list($p, $pv) = explode(':', trim($p), 2);
                     $v[$p] = $pv;
@@ -168,9 +168,7 @@ abstract class ORM
             }
 
             //给object赋值
-            $this->_db_data = (array) $data;
-            $this->_db_time = time();
-            $this->setData((array) $data);
+            $this->setData((array)$data);
         }
     }
 
@@ -194,7 +192,7 @@ abstract class ORM
 
     public function normalizeCriteria(array $crit)
     {
-        $ncrit = array();
+        $ncrit = [];
         $structure = $this->structure();
 
         foreach ($crit as $k => $v) {
@@ -216,7 +214,7 @@ abstract class ORM
         if ($criteria !== null) {
             //set criteria
             if (is_scalar($criteria)) {
-                $criteria = array('id'=>(int) $criteria);
+                $criteria = ['id'=>(int) $criteria];
             }
             $this->_criteria = (array) $criteria;
         }
@@ -264,26 +262,22 @@ abstract class ORM
                     $field['default'] = $pv;
                     break;
                 case 'primary':
-                    $indexes['PRIMARY'] = array('type' => 'primary', 'fields'=> array($k));
+                    $indexes['PRIMARY'] = ['type' => 'primary', 'fields'=> [$k]];
                     break;
                 case 'unique':
-                    $indexes['_IDX_'.$k] = array('type' => 'unique', 'fields'=> array($k));
+                    $indexes['_IDX_'.$k] = ['type' => 'unique', 'fields'=> [$k]];
                     break;
                 case 'serial':
                     $field['serial'] = true;
                     break;
                 case 'index':
-                    $indexes['_IDX_'.$k] = array('fields'=>array($k));
+                    $indexes['_IDX_'.$k] = ['fields'=>[$k]];
                 case 'object':
                     // 需要添加新的$field
                     if (!$pv) {
-                        $fields[$k.'_name'] = array(
-                            'type' => 'varchar(120)',
-                        );
+                        $fields[$k.'_name'] = ['type' => 'varchar(120)'];
                     }
-                    $fields[$k.'_id'] = array(
-                            'type' => 'bigint'
-                        );
+                    $fields[$k.'_id'] = ['type' => 'bigint'];
                 }
 
             }
@@ -330,7 +324,7 @@ abstract class ORM
             }
         }
 
-        return array('fields' => $fields, 'indexes' => $indexes);
+        return ['fields' => $fields, 'indexes' => $indexes];
     }
 
     public function delete()
@@ -355,7 +349,7 @@ abstract class ORM
 
         $structure = $this->structure();
 
-        $db_data = array();
+        $db_data = [];
         foreach ($structure as $k => $v) {
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
@@ -482,10 +476,13 @@ abstract class ORM
      * @param  string $data
      * @return void
      */
-    public function setData($data)
+    public function setData(array $data)
     {
-        $this->_objects = array();
-        $this->_oinfo = array();
+        $this->_db_data = $data;
+        $this->_db_time = time();
+
+        $this->_objects = [];
+        $this->_oinfo = [];
 
         foreach ($this->structure() as $k => $v) {
             if (array_key_exists('object', $v)) {
@@ -498,10 +495,7 @@ abstract class ORM
                     unset($this->$k);
                     if (!isset($oname)) $oname = strval($data[$k.'_name']);
                     if ($oname) {
-                        $oi = (object) array(
-                            'name' => $oname,
-                            'id' => $data[$k.'_id']
-                        );
+                        $oi = (object)['name' => $oname, 'id' => $data[$k.'_id']];
                         $this->_oinfo[$k] = $oi;
                     }
                 }
