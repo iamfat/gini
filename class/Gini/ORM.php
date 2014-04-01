@@ -157,7 +157,13 @@ abstract class ORM
                     $where[] = $db->quoteIdent($k) . '=' . $db->quote($v);
                 }
 
-                $SQL = 'SELECT * FROM '.$db->quoteIdent($this->tableName()) . ' WHERE '.implode(' AND ', $where).' LIMIT 1';
+                $schema = $this->schema();
+
+                $fields = array_map([$db, 'quoteIdent'], array_keys($schema['fields']));
+
+                $SQL = 'SELECT ' . implode(', ', $fields)
+                    . ' FROM ' . $db->quoteIdent($this->tableName())
+                    . ' WHERE ' . implode(' AND ', $where) . ' LIMIT 1';
 
                 $result = $db->query($SQL);
                 //只取第一条记录
@@ -168,7 +174,7 @@ abstract class ORM
             }
 
             //给object赋值
-            $this->setData((array)$data);
+            $this->setData((array) $data);
         }
     }
 
@@ -495,7 +501,7 @@ abstract class ORM
                     unset($this->$k);
                     if (!isset($oname)) $oname = strval($data[$k.'_name']);
                     if ($oname) {
-                        $oi = (object)['name' => $oname, 'id' => $data[$k.'_id']];
+                        $oi = (object) ['name' => $oname, 'id' => $data[$k.'_id']];
                         $this->_oinfo[$k] = $oi;
                     }
                 }
