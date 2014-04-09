@@ -7,7 +7,7 @@ class RPC
     private $_url;
     private $_path;
     private $_cookie;
-    private $_uniqid = 0;
+    private $_uniqid = 1;
 
     public function __construct($url, $path=null, $cookie=null)
     {
@@ -77,7 +77,7 @@ class RPC
             ),
         ));
 
-        $post_data = @json_encode($post_data, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        $post_data = J($post_data);
 
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);

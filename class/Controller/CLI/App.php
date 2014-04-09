@@ -89,7 +89,7 @@ class App extends \Controller\CLI
 
         $data['dependencies'] = (array) @json_decode($data['dependencies']);
 
-        $gini_json = json_encode($data, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES| JSON_PRETTY_PRINT);
+        $gini_json = J($data, JSON_PRETTY_PRINT);
         file_put_contents($path . '/gini.json', $gini_json);
     }
 
@@ -116,7 +116,7 @@ class App extends \Controller\CLI
         $info = \Gini\Core::moduleInfo($path);
         if ($info) {
             foreach ($info as $k => $v) {
-                if (is_array($v)) $v = json_encode($v);
+                if (is_array($v)) $v = J($v);
                 printf("%s = %s\n", $k, $v);
             }
         }
@@ -172,7 +172,7 @@ class App extends \Controller\CLI
 
         \Gini\File::ensureDir(APP_PATH.'/cache');
         file_put_contents($config_file,
-            json_encode($config_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            J($config_items));
 
         \Gini\Config::setup();
 
@@ -197,7 +197,7 @@ class App extends \Controller\CLI
 
         \Gini\File::ensureDir(APP_PATH.'/cache');
         file_put_contents(APP_PATH.'/cache/class_map.json',
-            json_encode($class_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            J($class_map));
         echo "   \e[32mdone.\e[0m\n";
     }
 
@@ -224,7 +224,7 @@ class App extends \Controller\CLI
 
         \Gini\File::ensureDir(APP_PATH.'/cache');
         file_put_contents(APP_PATH.'/cache/view_map.json',
-            json_encode($view_map, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            J($view_map));
         echo "   \e[32mdone.\e[0m\n";
     }
 
@@ -378,11 +378,15 @@ class App extends \Controller\CLI
 
             $this->_prepare_walkthrough($orm_dir, '', function ($file) use ($orm_dir) {
                 $oname = preg_replace('|.php$|', '', $file);
-                if ($oname == 'object') return;
+                if ($oname == 'Object') return;
                 printf("   %s\n", $oname);
                 $class_name = '\ORM\\'.str_replace('/', '\\', $oname);
                 $o = \Gini\IoC::construct($class_name);
-                $o->db()->adjustTable($o->tableName(), $o->schema());
+                // some object might not have database backend
+                $db = $o->db();
+                if ($db) {
+                    $db->adjustTable($o->tableName(), $o->schema());
+                }
             });
 
         }
@@ -465,7 +469,7 @@ class App extends \Controller\CLI
     private function _export_config()
     {
         $items = \Gini\Config::fetch();
-        // echo json_encode($items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+        // echo J($items, JSON_PRETTY_PRINT);
         echo yaml_emit($items, YAML_UTF8_ENCODING);
     }
 

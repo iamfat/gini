@@ -20,7 +20,7 @@ class JavaScript implements Engine
 
             echo "(function () {\n";
             foreach ($this->_vars as $k => $v) {
-                echo "var $k=".json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).";\n";
+                echo "var $k=".J($v).";\n";
             }
             @include($_path);
             echo "\n})();";

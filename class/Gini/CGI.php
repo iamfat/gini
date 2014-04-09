@@ -39,7 +39,7 @@ class CGI
         if ($response) $response->output();
     }
 
-    public static function request($route, array $form = array())
+    public static function request($route, array $env = array())
     {
         $args = explode('/', $route);
 
@@ -93,7 +93,7 @@ class CGI
 
         $controller->action = $action;
         $controller->params = $params;
-        $controller->form = $form;
+        $controller->env = $env;
 
         return $controller;
     }

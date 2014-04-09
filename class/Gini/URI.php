@@ -120,8 +120,11 @@ namespace Gini {
             self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl;
         }
 
-        static function base()
+        static function base($base=null)
         {
+            if ($base) {
+                self::$_base = $base;
+            }
             return self::$_base;
         }
 

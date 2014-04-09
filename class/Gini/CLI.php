@@ -111,7 +111,7 @@ class CLI
         $env_path = '/tmp/gini-cli';
         $env_file = $env_path.'/'.posix_getpid().'.json';
         if (!file_exists($env_path)) @mkdir($env_path, 0777, true);
-        file_put_contents($env_file, json_encode($_SERVER));
+        file_put_contents($env_file, J($_SERVER));
         if (isset($_SERVER['__RELAUNCH_PROCESS'])) {
             unset($_SERVER['__RELAUNCH_PROCESS']);
             exit(200);

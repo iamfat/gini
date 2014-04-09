@@ -106,7 +106,7 @@ class Event
                 && 0 == strncmp($return, 'callback:', 9)) {
                 $key = $return;
             } else {
-                $key = 'return:'.json_encode($return);
+                $key = 'return:'.J($return);
             }
         }
         
@@ -148,8 +148,8 @@ class Event
 
         \Gini\Logger::of('core')
             ->debug("{name} <= {return} [{weight}]", [
-                'name' => @json_encode($names, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
-                'return' => @json_encode($return, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),
+                'name' => J($names),
+                'return' => J($return),
                 'weight' => $weight
             ]);
 

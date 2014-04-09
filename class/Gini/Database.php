@@ -204,7 +204,7 @@ class Database
             $st = $this->_driver->prepare($SQL);
             if (!$st) return false;
 
-            \Gini\Logger::of('core')->debug("Database query execute = {params}", ['params'=>json_encode($params)]);
+            \Gini\Logger::of('core')->debug("Database query execute = {params}", ['params'=>J($params)]);
             $success = $st->execute($params);
             if (!$success) return false;
             return new Database\Statement($st);
