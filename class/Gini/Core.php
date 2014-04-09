@@ -352,7 +352,9 @@ namespace Gini {
         public static function exception($e)
         {
             foreach (array_reverse((array) self::$MODULE_INFO) as $name => $info) {
-                $class = '\\'.str_replace('-', '_', $name);
+                // use CamelCase instead of underscore_case
+                // $class = '\\'.str_replace('-', '_', $name);
+                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
                 !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
             }
 
@@ -423,7 +425,7 @@ namespace Gini {
             foreach (self::$MODULE_INFO as $name => $info) {
                 // use CamelCase instead of underscore_case
                 // $class = '\\'.str_replace('-', '_', $name);
-                $class = '\\'.strtr($name, ['-'=>'', '_'=>'']);
+                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
                 if (!$info->error && method_exists($class, 'setup')) {
                     call_user_func($class.'::setup');
                 }
@@ -441,7 +443,9 @@ namespace Gini {
         public static function shutdown()
         {
             foreach (array_reverse(self::$MODULE_INFO) as $name => $info) {
-                $class = '\\'.str_replace('-', '_', $name);
+                // use CamelCase instead of underscore_case
+                // $class = '\\'.str_replace('-', '_', $name);
+                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
                 if (!$info->error && method_exists($class, 'shutdown')) {
                     call_user_func($class.'::shutdown');
                 }
