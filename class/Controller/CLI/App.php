@@ -372,7 +372,7 @@ class App extends \Controller\CLI
         // enumerate orms
         printf("Updating database structures according ORM definition...\n");
 
-        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'orm');
+        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'ORM');
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) continue;
 
@@ -477,7 +477,7 @@ class App extends \Controller\CLI
     {
         printf("Exporting ORM structures...\n\n");
 
-        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'orm');
+        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'ORM');
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) continue;
 
@@ -643,7 +643,7 @@ class App extends \Controller\CLI
         });
 
         // Class
-        $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'class');
+        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, '');
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
                 passthru("gini cache class");
@@ -659,7 +659,7 @@ class App extends \Controller\CLI
         });
 
         // ORM
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'orm');
+        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'ORM');
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
                 passthru("gini update orm");
