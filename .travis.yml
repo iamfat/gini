@@ -1,0 +1,14 @@
+language: php
+
+php:
+  - 5.5
+  - 5.4
+
+before_install:
+  - sudo apt-get update > /dev/null
+
+install:
+  - composer install
+  
+before_script:
+  - composer update
