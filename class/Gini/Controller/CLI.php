@@ -12,7 +12,7 @@
  * Define DocBlock
  **/
 
-namespace Controller;
+namespace Gini\Controller;
 
 abstract class CLI
 {

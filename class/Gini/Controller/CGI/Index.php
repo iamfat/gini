@@ -1,6 +1,6 @@
 <?php
 
-namespace Controller\CGI;
+namespace Gini\Controller\CGI;
 
 class Index extends Layout
 {

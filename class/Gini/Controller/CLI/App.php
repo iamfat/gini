@@ -9,7 +9,7 @@
  * @author Jia Huang
 **/
 
-namespace Controller\CLI;
+namespace Gini\Controller\CLI;
 
 if (!function_exists('mb_str_pad')) {
 
@@ -21,7 +21,7 @@ if (!function_exists('mb_str_pad')) {
     }
 }
 
-class App extends \Controller\CLI
+class App extends \Gini\Controller\CLI
 {
 
     private function _init_phpunit()

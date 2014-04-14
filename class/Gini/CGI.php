@@ -58,7 +58,7 @@ class CGI
         foreach (array_reverse($candidates) as $path => $params) {
             $basename = strtr(basename($path), '-', '_') ;
             $dirname = dirname($path);
-            $class_namespace = '\Controller\CGI\\';
+            $class_namespace = '\Gini\Controller\CGI\\';
             if ($dirname != '.') {
                 $class_namespace .= strtr($dirname, ['-'=>'_', '/'=>'\\']).'\\';
             }

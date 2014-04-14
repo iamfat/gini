@@ -1,8 +1,8 @@
 <?php
 
-namespace Controller\CLI;
+namespace Gini\Controller\CLI;
 
-class I18N extends \Controller\CLI
+class I18N extends \Gini\Controller\CLI
 {
     public function actionHelp($argv)
     {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Controller\CGI;
+namespace Gini\Controller\CGI;
 
-final class API extends \Controller\CGI
+final class API extends \Gini\Controller\CGI
 {
     public function __index()
     {
