@@ -23,31 +23,31 @@ if (!function_exists('mb_str_pad')) {
 
 class App extends \Controller\CLI
 {
-    
+
     private function _init_phpunit()
     {
         $gini = \Gini\Core::moduleInfo('gini');
 
         echo "Generating PHPUnit files...";
-        
+
         $xml = APP_PATH.'/phpunit.xml';
         if (!file_exists($xml)) {
             copy($gini->path . '/raw/templates/phpunit/phpunit.xml', $xml);
         }
-        
+
         $dir = APP_PATH . '/tests';
         if (!file_exists($dir)) {
             mkdir($dir);
         }
-        
+
         $base = APP_PATH . '/tests/gini.php';
         if (!file_exists($base)) {
             copy($gini->path . '/raw/templates/phpunit/gini.php', $base);
         }
-        
+
         echo "\e[1mDONE.\e[0m\n";
     }
-    
+
     /**
      * 初始化模块
      *
@@ -59,10 +59,10 @@ class App extends \Controller\CLI
             if (in_array('phpunit', $args)) {
                 return $this->_init_phpunit();
             }
-        
+
             return;
         }
-        
+
         $path = $_SERVER['PWD'];
 
         $prompt = array(
@@ -424,7 +424,7 @@ class App extends \Controller\CLI
         $update($app);
     }
 
-    function actionCache($args)
+    public function actionCache($args)
     {
         if (count($args) == 0) $args = ['class', 'view', 'config'];
 
@@ -445,7 +445,7 @@ class App extends \Controller\CLI
 
     }
 
-    function actionUpdate($args)
+    public function actionUpdate($args)
     {
         if (count($args) == 0) $args = ['orm', 'web', 'composer'];
 
@@ -482,7 +482,7 @@ class App extends \Controller\CLI
             if (!is_dir($orm_dir)) continue;
 
             $this->_prepare_walkthrough($orm_dir, '', function ($file) use ($orm_dir) {
-                $oname = preg_replace('|.php$|', '', $file);
+                $oname = strtolower(preg_replace('|.php$|', '', $file));
                 if ($oname == 'object') return;
                 printf("   %s\n", $oname);
                 $class_name = '\ORM\\'.str_replace('/', '\\', $oname);
@@ -681,4 +681,3 @@ class App extends \Controller\CLI
     }
 
 }
-

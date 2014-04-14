@@ -1,6 +1,6 @@
 <?php
 
-namespace Controller\CLI {
+namespace Controller\CLI;
 
     class Cron extends \Controller\CLI
     {
@@ -36,5 +36,3 @@ namespace Controller\CLI {
         }
 
     }
-
-}

@@ -1,14 +1,13 @@
 <?php
 
-namespace Controller\CGI {
+namespace Controller\CGI;
 
-    class Index extends Layout
+class Index extends Layout
+{
+    public function __index()
     {
-        function __index()
-        {
-            $this->view->title = 'Gini PHP Framework';
-            $this->view->body = V('body');
-        }
-
+        $this->view->title = 'Gini PHP Framework';
+        $this->view->body = V('body');
     }
+
 }

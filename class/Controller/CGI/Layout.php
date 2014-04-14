@@ -1,26 +1,24 @@
 <?php
 
-namespace Controller\CGI {
+namespace Controller\CGI;
 
-    class Layout extends \Controller\CGI
+class Layout extends \Controller\CGI
+{
+    public $view;
+    protected static $layout_name = 'layout';
+
+    public function __preAction($action, &$params)
     {
-        public $view;
-        protected static $layout_name = 'layout';
+        parent::__preAction($action, $params);
+        $this->view = V(static::$layout_name);
+        $this->view->title = \Gini\Config::get('layout.title');
+    }
 
-        function __preAction($action, &$params)
-        {
-            parent::__preAction($action, $params);
-            $this->view = V(static::$layout_name);
-            $this->view->title = \Gini\Config::get('layout.title');
-        }
-
-        function __postAction($action, &$params, $response)
-        {
-            parent::__postAction($action, $params, $response);
-            if (null === $response) $response = \Gini\IoC::construct('\Gini\CGI\Response\HTML', $this->view);
-            return $response;
-        }
-
+    public function __postAction($action, &$params, $response)
+    {
+        parent::__postAction($action, $params, $response);
+        if (null === $response) $response = \Gini\IoC::construct('\Gini\CGI\Response\HTML', $this->view);
+        return $response;
     }
 
 }

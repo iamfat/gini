@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\CGI\Response {
+namespace Gini\CGI\Response;
 
     class HTML
     {
@@ -23,5 +23,3 @@ namespace Gini\CGI\Response {
         }
 
     }
-
-}

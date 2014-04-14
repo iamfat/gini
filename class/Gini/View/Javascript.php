@@ -2,7 +2,7 @@
 
 namespace Gini\View;
 
-class JavaScript implements Engine
+class Javascript implements Engine
 {
     private $_path;
     private $_vars;

@@ -211,12 +211,13 @@ namespace Gini {
             //定义类后缀与类路径的对应关系
             // $class = strtolower($class);
             $path = str_replace('\\', '/', $class);
-            
+
             if (isset($GLOBALS['gini.class_map'])) {
                 $path = strtolower($path);
                 if (isset($GLOBALS['gini.class_map'][$path])) {
                     require_once($GLOBALS['gini.class_map'][$path]);
                 }
+
                 return;
             }
 
@@ -463,7 +464,7 @@ namespace {
      * Shortcut for global variables in Gini
      *
      * @param  string $key Name of global variable
-     *                     @param string[optional] string given when setting
+     * @param string[optional] string given when setting
      * @return mixed
      **/
     if (function_exists('_G')) {
@@ -493,6 +494,7 @@ namespace {
             if (count($args) > 1) {
                 return call_user_func_array('sprintf', $args);
             }
+
             return $args[0];
         }
     }
@@ -531,6 +533,7 @@ namespace {
         function J($v, $opt = 0)
         {
             $opt |= JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES;
+
             return @json_encode($v, $opt);
         }
     }

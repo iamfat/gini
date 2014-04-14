@@ -4,13 +4,13 @@ namespace Controller\CLI;
 
 class I18N extends \Controller\CLI
 {
-    function actionHelp($argv)
+    public function actionHelp($argv)
     {
         echo "gini i18n scan [<locales>]\n";
         echo "gini i18n format <locales>\n";
     }
 
-    function actionScan($argv)
+    public function actionScan($argv)
     {
         if (count($argv) < 1) {
             exit("usage: \e[1;34mgini i18n scan\e[0m [<locales>]\n");
@@ -80,7 +80,7 @@ class I18N extends \Controller\CLI
 
     }
 
-    function actionFormat($argv)
+    public function actionFormat($argv)
     {
         if (count($argv) < 1) {
             exit("usage: \e[1;34mgini i18n format\e[0m <locales>\n");
@@ -110,7 +110,7 @@ class I18N extends \Controller\CLI
         }
 
     }
-    
+
     public function actionTest($args)
     {
         $l10n_path = $path . '/' . RAW_DIR . '/l10n';
