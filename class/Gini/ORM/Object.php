@@ -1,6 +1,6 @@
 <?php
 
-namespace ORM;
+namespace Gini\ORM;
 
 class Object extends \Gini\ORM
 {

@@ -372,7 +372,7 @@ class App extends \Controller\CLI
         // enumerate orms
         printf("Updating database structures according ORM definition...\n");
 
-        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'ORM');
+        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) continue;
 
@@ -380,7 +380,7 @@ class App extends \Controller\CLI
                 $oname = preg_replace('|.php$|', '', $file);
                 if ($oname == 'Object') return;
                 printf("   %s\n", $oname);
-                $class_name = '\ORM\\'.str_replace('/', '\\', $oname);
+                $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
                 $o = \Gini\IoC::construct($class_name);
                 // some object might not have database backend
                 $db = $o->db();
@@ -477,7 +477,7 @@ class App extends \Controller\CLI
     {
         printf("Exporting ORM structures...\n\n");
 
-        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'ORM');
+        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) continue;
 
@@ -485,7 +485,7 @@ class App extends \Controller\CLI
                 $oname = strtolower(preg_replace('|.php$|', '', $file));
                 if ($oname == 'object') return;
                 printf("   %s\n", $oname);
-                $class_name = '\ORM\\'.str_replace('/', '\\', $oname);
+                $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
                 $o = \Gini\IoC::construct($class_name);
                 $structure = $o->structure();
 
@@ -659,7 +659,7 @@ class App extends \Controller\CLI
         });
 
         // ORM
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'ORM');
+        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
                 passthru("gini update orm");

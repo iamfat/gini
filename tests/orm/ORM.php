@@ -50,9 +50,9 @@ class ORM extends \Gini\PHPUnit\CLI {
                 return '\''.addslashes($s).'\'';
             }));
 
-        // Mocking \ORM\UT_Lab
+        // Mocking \Gini\ORM\UT_Lab
         //         
-        // class UTSample extends \ORM\Object {
+        // class UTSample extends \Gini\ORM\Object {
         // 
         //     var $name        = 'string:50';
         //     var $gender      = 'bool';
@@ -61,9 +61,9 @@ class ORM extends \Gini\PHPUnit\CLI {
         // 
         // }
 
-        \Gini\IoC::bind('\ORM\UTSample', function() use ($db) {
+        \Gini\IoC::bind('\Gini\ORM\UTSample', function() use ($db) {
             
-            $o = $this->getMockBuilder('\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Object')
                  ->setMethods(['db','structure', 'name', 'tableName'])
                  ->disableOriginalConstructor()
                  ->getMock();
@@ -96,7 +96,7 @@ class ORM extends \Gini\PHPUnit\CLI {
     }
 
     public function tearDown() {
-        \Gini\IoC::clear('\ORM\UTSample');
+        \Gini\IoC::clear('\Gini\ORM\UTSample');
         parent::tearDown();
     }
     
