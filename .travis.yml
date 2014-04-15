@@ -2,13 +2,18 @@ language: php
 
 php:
   - 5.5
-  - 5.4
 
 before_install:
   - sudo apt-get update > /dev/null
+  - composer self-update
 
 install:
+  - sudo apt-get install libyaml-dev
+  - pecl install yaml
+  - echo 'date.timezone = "Asia/Shanghai"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
+  - echo "extension = yaml.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - composer install
   
 before_script:
   - composer update
+  - bin/gini cache
