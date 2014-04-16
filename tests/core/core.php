@@ -8,20 +8,20 @@ class Core extends \Gini\PHPUnit\CLI {
 
     public function testLocateFile()
     {
-        $path = \Gini\Core::locateFile('class/gini/core.php', 'gini');
-        $this->assertEquals($path, SYS_PATH.'/class/gini/core.php');
+        $path = \Gini\Core::locateFile('class/Gini/Core.php', 'gini');
+        $this->assertEquals($path, SYS_PATH.'/class/Gini/Core.php');
 
-        $path = \Gini\Core::locateFile('class/gini/core.php');
-        $this->assertEquals($path, SYS_PATH.'/class/gini/core.php');
+        $path = \Gini\Core::locateFile('class/Gini/Core.php');
+        $this->assertEquals($path, SYS_PATH.'/class/Gini/Core.php');
 
-        $path = \Gini\Core::locateFile('class/gini/core.php', 'foo');
+        $path = \Gini\Core::locateFile('class/Gini/Core.php', 'foo');
         $this->assertEquals($path, null);
     }
     
     public function testPharFilePaths()
     {
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'gini/core.php');
-        $this->assertTrue(in_array(SYS_PATH.'/class/gini/core.php', $paths));
+        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/Core.php');
+        $this->assertTrue(in_array(SYS_PATH.'/class/Gini/Core.php', $paths));
     }
     
     public function testShortcuts()
