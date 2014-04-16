@@ -1,0 +1,19 @@
+language: php
+
+php:
+  - 5.5
+
+before_install:
+  - sudo apt-get update > /dev/null
+  - composer self-update
+
+install:
+  - sudo apt-get install libyaml-dev
+  - printf "\n" | pecl install yaml-beta
+  - echo 'date.timezone = "Asia/Shanghai"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
+  - echo "extension = yaml.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - composer install --dev
+  
+before_script:
+  - composer update
+  - bin/gini cache

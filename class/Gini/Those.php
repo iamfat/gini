@@ -414,7 +414,7 @@ namespace {
         function a($name, $criteria = null)
         {
             $name = str_replace('/', '\\', $name);
-            $class_name = '\ORM\\'.$name;
+            $class_name = '\Gini\ORM\\'.$name;
 
             return \Gini\IoC::construct($class_name, $criteria);
         }

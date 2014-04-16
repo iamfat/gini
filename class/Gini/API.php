@@ -31,7 +31,7 @@ class API
             $params = $data['params'];
 
             $path_arr = explode('/', $path);
-            $class = '\Controller\API\\'.implode('\\', $path_arr);
+            $class = '\Gini\Controller\API\\'.implode('\\', $path_arr);
 
             if (class_exists($class) && method_exists($class, '__invoke')) {
                 // might not be necessary, since __invoke is the magic method since PHP 5.3
@@ -39,9 +39,9 @@ class API
             } else {
                 $method = array_pop($path_arr);
                 if (count($path_arr) > 0) {
-                    $class = '\Controller\API\\' . implode('\\', $path_arr);
+                    $class = '\Gini\Controller\API\\' . implode('\\', $path_arr);
                 } else {
-                    $class = '\Controller\API';
+                    $class = '\Gini\Controller\API';
                 }
 
                 if ($method[0] != '_') {

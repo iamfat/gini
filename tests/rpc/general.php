@@ -40,7 +40,7 @@ namespace Gini\PHPUnit\RPC {
         
 }
 
-namespace Controller\API {
+namespace Gini\Controller\API {
     
     class RPCTest {
         

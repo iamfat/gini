@@ -125,6 +125,7 @@ namespace Gini {
             if ($base) {
                 self::$_base = $base;
             }
+
             return self::$_base;
         }
 

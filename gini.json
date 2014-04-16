@@ -3,11 +3,15 @@
     "name": "Gini Framework",
     "author": "Jia Huang",
     "email": "iamfat@gmail.com",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "build": {
         "copy": [
-            "bin", "lib", "raw", "data", 
-            "composer.json", "vendor"
+            "bin",
+            "lib",
+            "raw",
+            "data",
+            "composer.json",
+            "vendor"
         ]
     }
 }

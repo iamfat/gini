@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\CGI\Response {
+namespace Gini\CGI\Response;
 
     class JSON implements \Gini\CGI\Response
     {
@@ -15,7 +15,7 @@ namespace Gini\CGI\Response {
         {
             header('Content-Type: application/json');
             if ($this->_content !== null) {
-                file_put_contents('php://output', 
+                file_put_contents('php://output',
                     J($this->_content) . PHP_EOL);
             }
         }
@@ -26,5 +26,3 @@ namespace Gini\CGI\Response {
         }
 
     }
-
-}

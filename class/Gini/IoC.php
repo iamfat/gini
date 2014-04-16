@@ -8,14 +8,14 @@ namespace Gini;
  */
 class IoC
 {
-    
+
     protected static $CALLBACKS = [];
-    
+
     protected static function key($name)
     {
         return strtolower($name);
     }
-    
+
     public static function construct()
     {
         $args = func_get_args();
@@ -27,9 +27,10 @@ class IoC
             if ($o->singleton) {
                 return $o->object ?: $o->object = call_user_func_array($o->callback, $args);
             }
+
             return call_user_func_array($o->callback, $args);
         }
-        
+
         return call_user_func_array([new \ReflectionClass($name), 'newInstance'], $args);
     }
 
@@ -40,7 +41,7 @@ class IoC
             'singleton' => false
         ];
     }
-    
+
     public static function singleton($name, $callback)
     {
         static::$CALLBACKS[self::key($name)] = (object) [

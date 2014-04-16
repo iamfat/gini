@@ -25,7 +25,7 @@ class Logger extends \Psr\Log\AbstractLogger
      *
      * @param  string $name Name of the logger
      * @return Logger
-     *                     @author Jia Huang
+     * @author Jia Huang
      */
     public static function of($name)
     {

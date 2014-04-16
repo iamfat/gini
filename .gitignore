@@ -2,3 +2,7 @@
 *.*~
 .DS_Store
 /vendor/
+/report/
+*.lock
+
+raw/l10n/template.pot

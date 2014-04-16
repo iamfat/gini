@@ -2,7 +2,7 @@
 
 /**
 * Those ORM
-* $object = new \ORM\Object($id|[criteria array]);
+* $object = new \Gini\ORM\Object($id|[criteria array]);
 *
 * @author Jia Huang
 * @version $Id$
@@ -92,7 +92,7 @@ abstract class ORM
             $inheritance[$name] = $class;
             if ($name == 'object') break;
         }
-
+        
         return $inheritance;
     }
 
@@ -204,7 +204,7 @@ abstract class ORM
         foreach ($crit as $k => $v) {
             if (is_scalar($v) || is_null($v)) {
                 $ncrit[$k] = $v;
-            } elseif ($v instanceof \ORM\Object) {
+            } elseif ($v instanceof \Gini\ORM\Object) {
                 if (!isset($structure[$k]['object'])) {
                     $ncrit[$k.'_name'] = $v->name();
                 }
@@ -443,7 +443,8 @@ abstract class ORM
 
     private function _prepareName()
     {
-        list(,$name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 2);
+        // remove Gini/ORM
+        list(,,$name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
         $this->_name = $name;
         $this->_tableName = str_replace('/', '_', $name);
     }
@@ -494,7 +495,7 @@ abstract class ORM
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
                 $o = $data[$k];
-                if (isset($o) && $o instanceof \ORM\Object && isset($oname) && $o->name() == $oname) {
+                if (isset($o) && $o instanceof \Gini\ORM\Object && isset($oname) && $o->name() == $oname) {
                     $this->$k = $o;
                 } else {
                     //object need to be bind later to avoid deadlock.

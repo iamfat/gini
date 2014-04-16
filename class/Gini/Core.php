@@ -211,12 +211,13 @@ namespace Gini {
             //定义类后缀与类路径的对应关系
             // $class = strtolower($class);
             $path = str_replace('\\', '/', $class);
-            
+
             if (isset($GLOBALS['gini.class_map'])) {
                 $path = strtolower($path);
                 if (isset($GLOBALS['gini.class_map'][$path])) {
                     require_once($GLOBALS['gini.class_map'][$path]);
                 }
+
                 return;
             }
 
@@ -352,7 +353,9 @@ namespace Gini {
         public static function exception($e)
         {
             foreach (array_reverse((array) self::$MODULE_INFO) as $name => $info) {
-                $class = '\\'.str_replace('-', '_', $name);
+                // use CamelCase instead of underscore_case
+                // $class = '\\'.str_replace('-', '_', $name);
+                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
                 !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
             }
 
@@ -423,7 +426,7 @@ namespace Gini {
             foreach (self::$MODULE_INFO as $name => $info) {
                 // use CamelCase instead of underscore_case
                 // $class = '\\'.str_replace('-', '_', $name);
-                $class = '\\'.strtr($name, ['-'=>'', '_'=>'']);
+                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
                 if (!$info->error && method_exists($class, 'setup')) {
                     call_user_func($class.'::setup');
                 }
@@ -441,7 +444,9 @@ namespace Gini {
         public static function shutdown()
         {
             foreach (array_reverse(self::$MODULE_INFO) as $name => $info) {
-                $class = '\\'.str_replace('-', '_', $name);
+                // use CamelCase instead of underscore_case
+                // $class = '\\'.str_replace('-', '_', $name);
+                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
                 if (!$info->error && method_exists($class, 'shutdown')) {
                     call_user_func($class.'::shutdown');
                 }
@@ -459,7 +464,7 @@ namespace {
      * Shortcut for global variables in Gini
      *
      * @param  string $key Name of global variable
-     *                     @param string[optional] string given when setting
+     * @param string[optional] string given when setting
      * @return mixed
      **/
     if (function_exists('_G')) {
@@ -489,6 +494,7 @@ namespace {
             if (count($args) > 1) {
                 return call_user_func_array('sprintf', $args);
             }
+
             return $args[0];
         }
     }
@@ -527,6 +533,7 @@ namespace {
         function J($v, $opt = 0)
         {
             $opt |= JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES;
+
             return @json_encode($v, $opt);
         }
     }

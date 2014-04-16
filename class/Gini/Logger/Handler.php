@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\Logger {
+namespace Gini\Logger;
 
     abstract class Handler
     {
@@ -41,5 +41,3 @@ namespace Gini\Logger {
         }
 
     }
-
-}

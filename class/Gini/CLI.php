@@ -183,7 +183,7 @@ class CLI
     public static function commandAvailable(array $argv)
     {
         // list available cli programs
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Controller/CLI');
+        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/Controller/CLI');
         foreach ($paths as $path) {
             if (!is_dir($path)) continue;
 
@@ -280,7 +280,7 @@ class CLI
         foreach (array_reverse($candidates) as $path => $params) {
             $basename = basename($path);
             $dirname = dirname($path);
-            $class_namespace = '\Controller\CLI\\';
+            $class_namespace = '\Gini\Controller\CLI\\';
             if ($dirname != '.') {
                 $class_namespace .= str_replace('/', '_', $dirname).'\\';
             }
@@ -293,7 +293,7 @@ class CLI
         }
 
         if (!$class || !class_exists($class, false)) {
-            $class = '\Controller\CLI\App';
+            $class = '\Gini\Controller\CLI\App';
             $params = $orig_argv;
         }
 

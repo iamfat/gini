@@ -1,8 +1,8 @@
 <?php
 
-namespace Controller\CLI {
+namespace Gini\Controller\CLI;
 
-    class Cron extends \Controller\CLI
+    class Cron extends \Gini\Controller\CLI
     {
         function __index($args)
         {
@@ -36,5 +36,3 @@ namespace Controller\CLI {
         }
 
     }
-
-}

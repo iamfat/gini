@@ -109,7 +109,7 @@ class Event
                 $key = 'return:'.J($return);
             }
         }
-        
+
         $key = strtolower($key);
         if (!isset($this->queue[$key])) {
             $event->order = count($this->queue);

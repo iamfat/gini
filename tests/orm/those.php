@@ -60,9 +60,9 @@ class Those extends \Gini\PHPUnit\CLI {
         
         $db = \Gini\IoC::construct('\Gini\Database', 'sqlite::memory:');
 
-        // Mocking \ORM\UT_Lab
+        // Mocking \Gini\ORM\UT_Lab
         //         
-        // class UT_Lab extends \ORM\Object {
+        // class UT_Lab extends \Gini\ORM\Object {
         // 
         //     var $name        = 'string:50';
         //     var $gender      = 'bool';
@@ -71,8 +71,8 @@ class Those extends \Gini\PHPUnit\CLI {
         // 
         // }
 
-        \Gini\IoC::bind('\ORM\UT_Lab', function() use ($db) {
-            $lab = $this->getMockBuilder('\ORM\Object')
+        \Gini\IoC::bind('\Gini\ORM\UT_Lab', function() use ($db) {
+            $lab = $this->getMockBuilder('\Gini\ORM\Object')
                  ->disableOriginalConstructor()
                  ->getMock();
 
@@ -98,7 +98,7 @@ class Those extends \Gini\PHPUnit\CLI {
     }
 
     public function tearDown() {
-        \Gini\IoC::clear('\ORM\UT_Lab');
+        \Gini\IoC::clear('\Gini\ORM\UT_Lab');
         parent::tearDown();
     }
     
