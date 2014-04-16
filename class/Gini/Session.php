@@ -4,6 +4,11 @@ namespace Gini;
 
 class Session
 {
+    
+    private static function _idPath()
+    {
+        return sys_get_temp_dir() . '/gini-session/' . posix_getpwuid(posix_getuid())['name'] . '/' . posix_getsid(0);
+    }
 
     public static function setup()
     {
@@ -30,7 +35,12 @@ class Session
         }
 
         if (PHP_SAPI=='cli') {
-            Cookie::setup();
+            ini_set('session.use_cookies', 0);
+            // TODO: find a better way to save and load session id
+            $idPath = self::_idPath();
+            if (file_exists($idPath)) {
+                session_id(file_get_contents($idPath));
+            }
         }
 
         session_set_cookie_params (
@@ -47,7 +57,7 @@ class Session
         session_start();
         restore_error_handler();
 
-        if (PHP_SAPI=='cli') {
+        if (!ini_get('session.use_cookies')) {
             // close session immediately to avoid deadlock
             session_write_close();
         }
@@ -71,7 +81,7 @@ class Session
             }
         }
 
-        if (PHP_SAPI == 'cli') {
+        if (!ini_get('session.use_cookies')) {
 
             $tmp = (array) $_SESSION;
 
@@ -91,11 +101,11 @@ class Session
         // 记录session_id
         session_write_close();
 
-        if (PHP_SAPI == 'cli') {
-            if (Cookie::get(session_name()) != session_id()) {
-                Cookie::set(session_name(), session_id());
-            }
-            Cookie::shutdown();
+        if (!ini_get('session.use_cookies')) {
+            // TODO: find a better way to write down session id
+            $idPath = self::_idPath();
+            File::ensureDir(dirname($idPath));
+            file_put_contents($idPath, session_id());
         }
 
     }
@@ -159,9 +169,7 @@ class Session
 
     public static function regenerateId()
     {
-        if (PHP_SAPI == 'cli') {
-            session_id(null);
-        } elseif (PHP_SAPI != 'cli-server') {
+        if (PHP_SAPI != 'cli-server') {
             session_regenerate_id();
         }
     }
