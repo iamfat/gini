@@ -134,7 +134,17 @@ class App extends \Gini\Controller\CLI
                 $info->error ? "($info->error)":''
             );
         }
+    }
 
+    // exit if there is dependencies error
+    private function _check_module_error()
+    {
+        $info = \Gini\Core::moduleInfo(APP_ID);
+        if ($info && $info->error) {
+            // e.g. [ERROR] gapper: "mail/*" missing!
+            printf("\e[31m[ERROR] %s\e[0m\n", $info->id. ': ' . $info->error);
+            exit(1);
+        }
     }
 
     private function _prepare_walkthrough($root, $prefix, $callback)
@@ -230,6 +240,8 @@ class App extends \Gini\Controller\CLI
 
     public function actionPreview($args)
     {
+        $this->_check_module_error();
+
         $addr = $args[0] ?: 'localhost:3000';
         $command
             = sprintf("php -S %s -c %s -t %s 2>&1"
@@ -426,6 +438,8 @@ class App extends \Gini\Controller\CLI
 
     public function actionCache($args)
     {
+        $this->_check_module_error();
+
         if (count($args) == 0) $args = ['class', 'view', 'config'];
 
         if (in_array('class', $args)) {
@@ -447,6 +461,8 @@ class App extends \Gini\Controller\CLI
 
     public function actionUpdate($args)
     {
+        $this->_check_module_error();
+
         if (count($args) == 0) $args = ['orm', 'web', 'composer'];
 
         if (in_array('composer', $args)) {
