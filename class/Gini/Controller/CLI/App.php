@@ -140,7 +140,7 @@ class App extends \Gini\Controller\CLI
     {
         $errors = $this->_diagnose();
         if (!count($errors)) {
-            echo "\e[32mWell Done! There is no error.\e[0m\n";
+            echo "\e[32mDoctor: Well Done! There is no error.\e[0m\n";
             return;
         }
 
