@@ -5,14 +5,14 @@ namespace Gini\Logger;
     abstract class Handler
     {
         private static $_LEVEL_VALUES = [
-            \Psr\Log\LogLevel::EMERGENCY => 800,
-            \Psr\Log\LogLevel::ALERT => 700,
-            \Psr\Log\LogLevel::CRITICAL => 600,
-            \Psr\Log\LogLevel::ERROR => 500,
-            \Psr\Log\LogLevel::WARNING => 400,
-            \Psr\Log\LogLevel::NOTICE => 300,
-            \Psr\Log\LogLevel::INFO => 200,
-            \Psr\Log\LogLevel::DEBUG => 100,
+            Level::EMERGENCY => 800,
+            Level::ALERT => 700,
+            Level::CRITICAL => 600,
+            Level::ERROR => 500,
+            Level::WARNING => 400,
+            Level::NOTICE => 300,
+            Level::INFO => 200,
+            Level::DEBUG => 100,
         ];
 
         protected $_name;
@@ -22,7 +22,7 @@ namespace Gini\Logger;
         public function __construct($name, $level, array $options = array())
         {
             $this->_name = $name;
-            $this->_level = $level ?: \Psr\Log\LogLevel::DEBUG;
+            $this->_level = $level ?: Level::DEBUG;
             $this->_levelValue = $this->levelValue($this->_level);
         }
 

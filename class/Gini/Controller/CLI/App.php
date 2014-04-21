@@ -230,6 +230,7 @@ class App extends \Gini\Controller\CLI
 
     public function actionPreview($args)
     {
+        
         $addr = $args[0] ?: 'localhost:3000';
         $command
             = sprintf("php -S %s -c %s -t %s 2>&1"
@@ -369,8 +370,13 @@ class App extends \Gini\Controller\CLI
 
     private function _update_orm($args)
     {
+        // ORM required class map.
+        if (!isset($GLOBALS['gini.class_map'])) {
+            echo "\e[31mYou need to run \e[1m\"gini cache class\"\e[0;31m before update ORM.\e[0m\n";
+            return;
+        }
         // enumerate orms
-        printf("Updating database structures according ORM definition...\n");
+        echo "Updating database structures according ORM definition...\n";
 
         $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
         foreach ($orm_dirs as $orm_dir) {
@@ -579,6 +585,9 @@ class App extends \Gini\Controller\CLI
 
     public function actionBuild($args)
     {
+        //require composer of gini module
+        require_once SYS_PATH.'/vendor/autoload.php';
+
         $info = \Gini\Core::moduleInfo(APP_ID);
         $build_base = $info->path . '/build';
 
@@ -632,6 +641,9 @@ class App extends \Gini\Controller\CLI
 
     public function actionWatch($args)
     {
+        //require composer of gini module
+        require_once SYS_PATH.'/vendor/autoload.php';
+
         $watcher = new \Lurker\ResourceWatcher;
 
         // Config
