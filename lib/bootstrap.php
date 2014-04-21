@@ -54,7 +54,4 @@ if (file_exists($class_path.'.phar')) {
     require $class_path . '/Gini/Core.php';
 }
 
-//require composer of gini module
-require_once __DIR__.'/../vendor/autoload.php';
-
 \Gini\Core::start();

@@ -12,8 +12,7 @@
         "bin/gini"
     ],
     "require": {
-        "php": ">=5.4.0",
-        "psr/log": "~1.0"
+        "php": ">=5.4.0"
     },
     "require-dev": {
         "linkorb/jsmin-php": "dev-master",
