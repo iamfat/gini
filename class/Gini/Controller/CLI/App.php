@@ -134,7 +134,57 @@ class App extends \Gini\Controller\CLI
                 $info->error ? "($info->error)":''
             );
         }
+    }
 
+    public function actionDoctor()
+    {
+        $errors = $this->_diagnose();
+        if (!count($errors)) {
+            echo "\e[32mDoctor: Well Done! There is no error.\e[0m\n";
+            return;
+        }
+
+        foreach ($errors as $type=>$errs) {
+            if (!is_array($errs)) {
+                $errs = [$errs];
+            }
+            echo "\e[31m[ERROR] " . $type . "\e[0m\n";
+            echo "\t\e[2m" . implode("\n", $errs) . "\e[0m\n";
+        }
+        exit(1);
+    }
+
+    // exit if there is error
+    private function _diagnose()
+    {
+        $errors = [];
+
+        // check if /tmp/gini-session is writable
+        $path_gini_session = sys_get_temp_dir() . '/gini-session';
+        if (!is_writable($path_gini_session)) {
+            $errors['gini-session'] = $path_gini_session . ' is not writable';
+        }
+
+        // check gini dependencies
+        foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+            if (!$info->error) continue;
+            $errors['gini.json dependencies'] = $errors['gini.json dependencies'] ?: [];
+            $errors['gini.json dependencies'][] = $name . ': ' . $info->error;
+        }
+
+        // check composer requires
+        foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+            $file_json = $info->path . '/composer.json';
+            $file_lock = $info->path . '/composer.lock';
+            $path_vendor = $info->path . '/vendor';
+            if (!file_exists($file_json)) continue;
+            if (!file_exists($file_lock) || !is_dir($path_vendor)) {
+                $errors['composer requires'] = $errors['composer requires'] ?: [];
+                $errors['composer requires'][] = $name . ': please execute "composer install"';
+            }
+        }
+
+        return $errors;
     }
 
     private function _prepare_walkthrough($root, $prefix, $callback)
@@ -230,7 +280,8 @@ class App extends \Gini\Controller\CLI
 
     public function actionPreview($args)
     {
-        
+        $this->actionDoctor();
+
         $addr = $args[0] ?: 'localhost:3000';
         $command
             = sprintf("php -S %s -c %s -t %s 2>&1"
@@ -432,6 +483,8 @@ class App extends \Gini\Controller\CLI
 
     public function actionCache($args)
     {
+        $this->actionDoctor();
+
         if (count($args) == 0) $args = ['class', 'view', 'config'];
 
         if (in_array('class', $args)) {
@@ -453,6 +506,8 @@ class App extends \Gini\Controller\CLI
 
     public function actionUpdate($args)
     {
+        $this->actionDoctor();
+
         if (count($args) == 0) $args = ['orm', 'web', 'composer'];
 
         if (in_array('composer', $args)) {
