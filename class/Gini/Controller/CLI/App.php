@@ -140,50 +140,87 @@ class App extends \Gini\Controller\CLI
     {
         $errors = $this->_diagnose();
         if (!count($errors)) {
-            echo "\e[32mDoctor: Well Done! There is no error.\e[0m\n";
+            echo "🍺  \e[32mYou are ready now! Let's roll!\e[0m\n\n";
             return;
         }
+    }
 
-        foreach ($errors as $type=>$errs) {
-            if (!is_array($errs)) {
-                $errs = [$errs];
-            }
-            echo "\e[31m[ERROR] " . $type . "\e[0m\n";
-            echo "\t\e[2m" . implode("\n", $errs) . "\e[0m\n";
+    private function _outputErrors(array $errors)
+    {
+        foreach ($errors as $err) {
+            echo "   \e[31m*\e[0m $err\n";
         }
-        exit(1);
+
     }
 
     // exit if there is error
-    private function _diagnose()
+    private function _diagnose($items=null)
     {
         $errors = [];
 
-        // check if /tmp/gini-session is writable
-        $path_gini_session = sys_get_temp_dir() . '/gini-session';
-        if (!is_writable($path_gini_session)) {
-            $errors['gini-session'] = $path_gini_session . ' is not writable';
-        }
-
-        // check gini dependencies
-        foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            if (!$info->error) continue;
-            $errors['gini.json dependencies'] = $errors['gini.json dependencies'] ?: [];
-            $errors['gini.json dependencies'][] = $name . ': ' . $info->error;
-        }
-
-        // check composer requires
-        foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            $file_json = $info->path . '/composer.json';
-            $file_lock = $info->path . '/composer.lock';
-            $path_vendor = $info->path . '/vendor';
-            if (!file_exists($file_json)) continue;
-            if (!file_exists($file_lock) || !is_dir($path_vendor)) {
-                $errors['composer requires'] = $errors['composer requires'] ?: [];
-                $errors['composer requires'][] = $name . ': please execute "composer install"';
+        if (!$items || in_array('dependencies', $items)) {
+            echo "Checking module dependencies...\n";
+            // check gini dependencies
+            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+                if (!$info->error) continue;
+                $errors['dependencies'][] = "$name: $info->error";
             }
+            if ($errors['dependencies']) {
+                $this->_outputErrors($errors['dependencies']);
+            } else {
+                echo "   \e[32mdone.\e[0m\n";
+            }
+            echo "\n";
+        }
+        
+        // check composer requires
+        if (!$items || in_array('composer', $items)) {
+            echo "Checking composer dependencies...\n";
+            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+                $file_json = $info->path . '/composer.json';
+                $file_lock = $info->path . '/composer.lock';
+                $path_vendor = $info->path . '/vendor';
+                if (!file_exists($file_json)) continue;
+                if (!file_exists($file_lock) || !is_dir($path_vendor)) {
+                    $errors['composer'][] = $name . ': composer packages missing!';
+                }
+            }
+            if ($errors['composer']) {
+                $this->_outputErrors($errors['composer']);
+            } else {
+                echo "   \e[32mdone.\e[0m\n";
+            }
+            echo "\n";
+        }
+        
+        if (!$items || in_array('file', $items)) {
+            echo "Checking file/directory modes...\n";
+            // check if /tmp/gini-session is writable
+            $path_gini_session = sys_get_temp_dir() . '/gini-session';
+            if (is_dir($path_gini_session) && !is_writable($path_gini_session)) {
+                $errors['file'][] = "$path_gini_session is not writable!";
+            }
+            if ($errors['file']) {
+                $this->_outputErrors($errors['file']);
+            } else {
+                echo "   \e[32mdone.\e[0m\n";
+            }
+            echo "\n";
         }
 
+        if (!$items || in_array('web', $items)) {
+            echo "Checking web dependencies...\n";
+            if (!file_exists(APP_PATH . '/web')) {
+                $errors['web'][] = "Please run \e[1m\"gini update web\"\e[0m to generate web directory!";
+            }
+            if ($errors['web']) {
+                $this->_outputErrors($errors['web']);
+            } else {
+                echo "\e[32mOK\e[0m\n";
+            }
+            echo "\n";
+        }
+        
         return $errors;
     }
 
@@ -280,7 +317,8 @@ class App extends \Gini\Controller\CLI
 
     public function actionPreview($args)
     {
-        $this->actionDoctor();
+        $errors = $this->_diagnose(['dependencies', 'web']);
+        if ($errors) return;
 
         $addr = $args[0] ?: 'localhost:3000';
         $command
@@ -483,7 +521,8 @@ class App extends \Gini\Controller\CLI
 
     public function actionCache($args)
     {
-        $this->actionDoctor();
+        $errors = $this->_diagnose(['dependencies']);
+        if ($errors) return;
 
         if (count($args) == 0) $args = ['class', 'view', 'config'];
 
@@ -506,8 +545,6 @@ class App extends \Gini\Controller\CLI
 
     public function actionUpdate($args)
     {
-        $this->actionDoctor();
-
         if (count($args) == 0) $args = ['orm', 'web', 'composer'];
 
         if (in_array('composer', $args)) {

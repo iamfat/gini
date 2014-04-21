@@ -17,6 +17,7 @@
     "require-dev": {
         "linkorb/jsmin-php": "dev-master",
         "natxet/CssMin": "dev-master",
-        "henrikbjorn/lurker": "*"
+        "henrikbjorn/lurker": "*",
+        "satooshi/php-coveralls": "dev-master"
     }
 }

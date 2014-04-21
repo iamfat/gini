@@ -1,0 +1,4 @@
+repo_token: iDOSLLuQYYCR8XC5IJZ52xWhTFjm4mwr7
+src_dir: ./
+coverage_clover: ./clover.xml
+json_path: ./coveralls.json
