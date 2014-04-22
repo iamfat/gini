@@ -17,7 +17,7 @@ namespace Gini {
 
     class URI
     {
-        static function url($url=null, $query=null, $fragment=null)
+        public static function url($url=null, $query=null, $fragment=null)
         {
             if (!$url) {
                 $url = \Gini\CGI::route();
@@ -82,17 +82,17 @@ namespace Gini {
             return $url;
         }
 
-        static function encode($text)
+        public static function encode($text)
         {
             return rawurlencode(strtr($text, ['.'=>'\.', '/'=>'\/']));
         }
 
-        static function decode($text)
+        public static function decode($text)
         {
             return strtr($text, ['\.'=>'.', '\/'=>'/']);
         }
 
-        static function anchor($url, $text = null, $extra=null, $options=array())
+        public static function anchor($url, $text = null, $extra=null, $options=array())
         {
             if ($extra) $extra = ' '.$extra;
             if (!$text) $text = $url;
@@ -101,7 +101,7 @@ namespace Gini {
             return '<a href="'.$url.'"'.$extra.'>'.$text.'</a>';
         }
 
-        static function mailto($mail, $name=null, $extra=null)
+        public static function mailto($mail, $name=null, $extra=null)
         {
             if (!$name) $name = $mail;
             if ($extra) $extra = ' '.$extra;
@@ -109,7 +109,7 @@ namespace Gini {
         }
 
         protected static $_base, $_rurl;
-        static function setup()
+        public static function setup()
         {
             $host = $_SERVER['HTTP_HOST'];
             $scheme = $_SERVER['HTTPS'] ? 'https':'http';
@@ -120,7 +120,7 @@ namespace Gini {
             self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl;
         }
 
-        static function base($base=null)
+        public static function base($base=null)
         {
             if ($base) {
                 self::$_base = $base;
@@ -129,7 +129,7 @@ namespace Gini {
             return self::$_base;
         }
 
-        static function rurl($path, $type)
+        public static function rurl($path, $type)
         {
             $base = self::$_rurl[$type] ?: (self::$_rurl['*'] ?: '');
             if (substr($base, -1) != '/') $base .= '/';
@@ -152,7 +152,7 @@ namespace {
     }
 
     if (function_exists('MAILTO')) {
-        die("URL() was declared by other libraries, which may cause problems!");
+        die("MAILTO() was declared by other libraries, which may cause problems!");
     } else {
         function MAILTO($mail, $name=null, $extra=null)
         {
