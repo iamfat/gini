@@ -216,7 +216,7 @@ class App extends \Gini\Controller\CLI
             if ($errors['web']) {
                 $this->_outputErrors($errors['web']);
             } else {
-                echo "\e[32mOK\e[0m\n";
+                echo "   \e[32mdone.\e[0m\n";
             }
             echo "\n";
         }
