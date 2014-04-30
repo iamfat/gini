@@ -772,8 +772,12 @@ class App extends \Gini\Controller\CLI
 
         // Web
         $paths
-            = \Gini\Core::pharFilePaths(RAW_DIR, 'assets')
-                + \Gini\Core::pharFilePaths(RAW_DIR, 'less');
+            = array_merge(
+                \Gini\Core::pharFilePaths(RAW_DIR, 'assets'),
+                \Gini\Core::pharFilePaths(RAW_DIR, 'js'),
+                \Gini\Core::pharFilePaths(RAW_DIR, 'less')
+            );
+
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
                 passthru("gini update web");
