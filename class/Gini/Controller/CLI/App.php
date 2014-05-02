@@ -694,49 +694,12 @@ class App extends \Gini\Controller\CLI
         }
     }
 
-    public function actionInstall($args)
-    {
-        $installed_list = [];
-        $install = function ($info) use (&$install, &$installed_list) {
-            if (isset($installed_list[$info->id])) return;
-            // need to install
-            $installed_list[$info->id] = true;
-            foreach ($info->dependencies as $name => $version) {
-                $app = \Gini\Core::moduleInfo($name);
-                if ($app === false) {
-                    echo "Installing $name...\n";
-                    // gini install path/to/modules
-                    $cmd = strtr(
-                        getenv("GINI_INSTALL_COMMAND")
-                            ?: 'git clone git@gini.genee.cn:gini/%name %base/%name',
-                        [
-                            '%name' => escapeshellcmd($name),
-                            '%base' => escapeshellcmd($_SERVER['GINI_MODULE_BASE_PATH'])
-                        ]
-                    );
-                    passthru($cmd);
-                    $app = \Gini\Core::import($name, $version, $info);
-                    if ($app) {
-                        $install($app);
-                    }
-                } elseif (!\Gini\Core::checkVersion($app->version, $version)) {
-                } else {
-                    $install($app);
-                }
-            }
-            $this->_run_composer_bin($info);
-        };
-
-        $app = \Gini\Core::moduleInfo(APP_ID);
-        $install($app);
-    }
-
     public function actionWatch($args)
     {
         //require composer of gini module
         require_once SYS_PATH.'/vendor/autoload.php';
 
-        $watcher = new \Lurker\ResourceWatcher;
+        $watcher = new \Lurker\ResourceWatcher(in_array('-r', $args) ? new \Lurker\Tracker\RecursiveIteratorTracker : null);
 
         // Config
         $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
