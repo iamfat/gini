@@ -104,7 +104,7 @@ class Session
         if (!ini_get('session.use_cookies')) {
             // TODO: find a better way to write down session id
             $idPath = self::_idPath();
-            File::ensureDir(dirname($idPath));
+            File::ensureDir(dirname($idPath), 0775);
             file_put_contents($idPath, session_id());
         }
 

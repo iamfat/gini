@@ -4,7 +4,7 @@ namespace Gini;
 
 class Util
 {
-    public static function array_replace_keys(array & $arr, $key_arr)
+    public static function arrayReplaceKeys(array & $arr, $key_arr)
     {
         $new_arr = array();
         foreach ($arr as $k=>$v) {
@@ -14,45 +14,16 @@ class Util
                 $new_arr[$k]=$v;
         }
 
-        return $arr = & $new_arr;
+        return $arr = $new_arr;
     }
 
-    static function & make_array( array & $old_arr, $key_key, $val_key) {
-        $new_arr=array();
-        foreach ($old_arr as $o) {
-            if (is_object($o)) {
-                $new_arr[$o->$key_key]=$o->$val_key;
-            } else {
-                $new_arr[$o[$key_key]]=$o[$val_key];
-            }
-        }
-
-        return $new_arr;
-    }
-
-    static function & array_concat(array $arr, $suffix) {
-        foreach ($arr as & $v) {
-            $v.=$suffix;
-        }
-
-        return $arr;
-    }
-
-    public static function array_prepend(array &$arr, $key, &$value)
-    {
-        $new_arr = $arr;
-        array_splice($arr, 0);
-        $arr[$key] = $value;
-        $arr += $new_arr;
-    }
-
-    public static function array_merge_deep(array $arr, array $arr1)
+    public static function arrayMergeDeep(array $arr, array $arr1)
     {
         foreach ($arr1 as $k=>&$v) {
             if (is_string($k)) {
                 if (isset($arr[$k]) && is_array($v)) {
                     if(!is_array($arr[$k])) $arr[$k]=array();
-                    $arr[$k] = self::array_merge_deep($arr[$k], $v);
+                    $arr[$k] = self::arrayMergeDeep($arr[$k], $v);
                 } else {
                     $arr[$k] = $v;
                 }

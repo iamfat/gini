@@ -100,7 +100,7 @@ class Config
                         return $_SERVER[$matches[1]] ?: $matches[0];
                     }, $content);
                     $config = (array) yaml_parse($content);
-                    $items[$category] = \Gini\Util::array_merge_deep($items[$category], $config);
+                    $items[$category] = \Gini\Util::arrayMergeDeep($items[$category], $config);
                     break;
                 }
 

@@ -41,21 +41,21 @@ namespace Gini {
         private $_alias;
 
         private static $_uniqid = 0;
-        function uniqid()
+        public function uniqid()
         {
             return (self::$_uniqid++);
         }
 
-        static function reset()
+        public static function reset()
         {
             self::$_uniqid = 0;
         }
 
-        static function setup()
+        public static function setup()
         {
         }
 
-        function __construct($name)
+        public function __construct($name)
         {
             parent::__construct($name);
             $this->_table = 't'.$this->uniqid();
@@ -97,7 +97,7 @@ namespace Gini {
             return '('.implode( ' '.$op.' ', $where).')';
         }
 
-        function limit($start, $per_page = null)
+        public function limit($start, $per_page = null)
         {
             $this->resetFetch();
 
@@ -110,7 +110,7 @@ namespace Gini {
             return $this;
         }
 
-        function whose($field)
+        public function whose($field)
         {
             $this->resetFetch();
             if ($this->_where) {
@@ -121,12 +121,12 @@ namespace Gini {
             return $this;
         }
 
-        function andWhose($field)
+        public function andWhose($field)
         {
             return $this->whose($field);
         }
 
-        function orWhose($field)
+        public function orWhose($field)
         {
             $this->resetFetch();
             $this->_where[] = 'OR';
@@ -135,7 +135,7 @@ namespace Gini {
             return $this;
         }
 
-        function whoIs($field)
+        public function whoIs($field)
         {
             $this->resetFetch();
             $this->_field = $field;
@@ -143,22 +143,22 @@ namespace Gini {
             return $this;
         }
 
-        function andWhoIs($field)
+        public function andWhoIs($field)
         {
             return $this->whoIs($field);
         }
 
-        function whichIs($field)
+        public function whichIs($field)
         {
             return $this->whoIs($field);
         }
 
-        function andWhichIs($field)
+        public function andWhichIs($field)
         {
             return $this->whoIs($field);
         }
 
-        function orWhoIs($field)
+        public function orWhoIs($field)
         {
             $this->resetFetch();
             $this->_where[] = 'OR';
@@ -167,18 +167,18 @@ namespace Gini {
             return $this;
         }
 
-        function orWhichIs($field)
+        public function orWhichIs($field)
         {
             return $this->orWhoIs($field);
         }
 
-        function of($those)
+        public function of($those)
         {
             // TO BE IMPLEMENTED
             return $this;
         }
 
-        function alias($name)
+        public function alias($name)
         {
             $this->resetFetch();
             $this->_alias[$name] = $this->_table;
@@ -186,7 +186,7 @@ namespace Gini {
             return $this;
         }
 
-        function isIn()
+        public function isIn()
         {
             $values = func_get_args();
 
@@ -213,7 +213,7 @@ namespace Gini {
             return $this;
         }
 
-        function isNotIn()
+        public function isNotIn()
         {
             $values = func_get_args();
 
@@ -242,7 +242,7 @@ namespace Gini {
             return $this;
         }
 
-        function match($op, $v)
+        public function match($op, $v)
         {
             assert($this->_field);
 
@@ -298,52 +298,52 @@ namespace Gini {
         }
 
         // is(1), is('hello'), is('@name')
-        function is($v)
+        public function is($v)
         {
             return $this->match('=', $v);
         }
 
-        function isNot($v)
+        public function isNot($v)
         {
             return $this->match('<>', $v);
         }
 
-        function beginsWith($v)
+        public function beginsWith($v)
         {
             return $this->match('^=', $v);
         }
 
-        function contains($v)
+        public function contains($v)
         {
             return $this->match('*=', $v);
         }
 
-        function endsWith($v)
+        public function endsWith($v)
         {
             return $this->match('$=', $v);
         }
 
-        function isLessThan($v)
+        public function isLessThan($v)
         {
             return $this->match('<', $v);
         }
 
-        function isGreaterThan($v)
+        public function isGreaterThan($v)
         {
             return $this->match('>', $v);
         }
 
-        function isGreaterThanOrEqual($v)
+        public function isGreaterThanOrEqual($v)
         {
             return $this->match('>=', $v);
         }
 
-        function isLessThanOrEqual($v)
+        public function isLessThanOrEqual($v)
         {
             return $this->match('<=', $v);
         }
 
-        function isBetween($a, $b)
+        public function isBetween($a, $b)
         {
             assert($this->_field);
             $db = $this->db;
@@ -354,7 +354,7 @@ namespace Gini {
             return $this;
         }
 
-        function orderBy($field, $mode='asc')
+        public function orderBy($field, $mode='asc')
         {
             $this->resetFetch();
 
@@ -374,7 +374,7 @@ namespace Gini {
             return $this;
         }
 
-        function makeSQL()
+        public function makeSQL()
         {
             $db = $this->db;
             $table = $this->_table;

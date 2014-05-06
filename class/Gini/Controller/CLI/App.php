@@ -134,7 +134,94 @@ class App extends \Gini\Controller\CLI
                 $info->error ? "($info->error)":''
             );
         }
+    }
 
+    public function actionDoctor()
+    {
+        $errors = $this->_diagnose();
+        if (!count($errors)) {
+            echo "🍺  \e[32mYou are ready now! Let's roll!\e[0m\n\n";
+            return;
+        }
+    }
+
+    private function _outputErrors(array $errors)
+    {
+        foreach ($errors as $err) {
+            echo "   \e[31m*\e[0m $err\n";
+        }
+
+    }
+
+    // exit if there is error
+    private function _diagnose($items=null)
+    {
+        $errors = [];
+
+        if (!$items || in_array('dependencies', $items)) {
+            echo "Checking module dependencies...\n";
+            // check gini dependencies
+            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+                if (!$info->error) continue;
+                $errors['dependencies'][] = "$name: $info->error";
+            }
+            if ($errors['dependencies']) {
+                $this->_outputErrors($errors['dependencies']);
+            } else {
+                echo "   \e[32mdone.\e[0m\n";
+            }
+            echo "\n";
+        }
+        
+        // check composer requires
+        if (!$items || in_array('composer', $items)) {
+            echo "Checking composer dependencies...\n";
+            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+                $file_json = $info->path . '/composer.json';
+                $file_lock = $info->path . '/composer.lock';
+                $path_vendor = $info->path . '/vendor';
+                if (!file_exists($file_json)) continue;
+                if (!file_exists($file_lock) || !is_dir($path_vendor)) {
+                    $errors['composer'][] = $name . ': composer packages missing!';
+                }
+            }
+            if ($errors['composer']) {
+                $this->_outputErrors($errors['composer']);
+            } else {
+                echo "   \e[32mdone.\e[0m\n";
+            }
+            echo "\n";
+        }
+        
+        if (!$items || in_array('file', $items)) {
+            echo "Checking file/directory modes...\n";
+            // check if /tmp/gini-session is writable
+            $path_gini_session = sys_get_temp_dir() . '/gini-session';
+            if (is_dir($path_gini_session) && !is_writable($path_gini_session)) {
+                $errors['file'][] = "$path_gini_session is not writable!";
+            }
+            if ($errors['file']) {
+                $this->_outputErrors($errors['file']);
+            } else {
+                echo "   \e[32mdone.\e[0m\n";
+            }
+            echo "\n";
+        }
+
+        if (!$items || in_array('web', $items)) {
+            echo "Checking web dependencies...\n";
+            if (!file_exists(APP_PATH . '/web')) {
+                $errors['web'][] = "Please run \e[1m\"gini update web\"\e[0m to generate web directory!";
+            }
+            if ($errors['web']) {
+                $this->_outputErrors($errors['web']);
+            } else {
+                echo "   \e[32mdone.\e[0m\n";
+            }
+            echo "\n";
+        }
+        
+        return $errors;
     }
 
     private function _prepare_walkthrough($root, $prefix, $callback)
@@ -230,6 +317,9 @@ class App extends \Gini\Controller\CLI
 
     public function actionPreview($args)
     {
+        $errors = $this->_diagnose(['dependencies', 'web']);
+        if ($errors) return;
+
         $addr = $args[0] ?: 'localhost:3000';
         $command
             = sprintf("php -S %s -c %s -t %s 2>&1"
@@ -369,8 +459,13 @@ class App extends \Gini\Controller\CLI
 
     private function _update_orm($args)
     {
+        // ORM required class map.
+        if (!isset($GLOBALS['gini.class_map'])) {
+            echo "\e[31mYou need to run \e[1m\"gini cache class\"\e[0;31m before update ORM.\e[0m\n";
+            return;
+        }
         // enumerate orms
-        printf("Updating database structures according ORM definition...\n");
+        echo "Updating database structures according ORM definition...\n";
 
         $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
         foreach ($orm_dirs as $orm_dir) {
@@ -426,6 +521,9 @@ class App extends \Gini\Controller\CLI
 
     public function actionCache($args)
     {
+        $errors = $this->_diagnose(['dependencies']);
+        if ($errors) return;
+
         if (count($args) == 0) $args = ['class', 'view', 'config'];
 
         if (in_array('class', $args)) {
@@ -579,6 +677,9 @@ class App extends \Gini\Controller\CLI
 
     public function actionBuild($args)
     {
+        //require composer of gini module
+        require_once SYS_PATH.'/vendor/autoload.php';
+
         $info = \Gini\Core::moduleInfo(APP_ID);
         $build_base = $info->path . '/build';
 
@@ -593,46 +694,12 @@ class App extends \Gini\Controller\CLI
         }
     }
 
-    public function actionInstall($args)
-    {
-        $installed_list = [];
-        $install = function ($info) use (&$install, &$installed_list) {
-            if (isset($installed_list[$info->id])) return;
-            // need to install
-            $installed_list[$info->id] = true;
-            foreach ($info->dependencies as $name => $version) {
-                $app = \Gini\Core::moduleInfo($name);
-                if ($app === false) {
-                    echo "Installing $name...\n";
-                    // gini install path/to/modules
-                    $cmd = strtr(
-                        getenv("GINI_INSTALL_COMMAND")
-                            ?: 'git clone git@gini.genee.cn:gini/%name %base/%name',
-                        [
-                            '%name' => escapeshellcmd($name),
-                            '%base' => escapeshellcmd($_SERVER['GINI_MODULE_BASE_PATH'])
-                        ]
-                    );
-                    passthru($cmd);
-                    $app = \Gini\Core::import($name, $version, $info);
-                    if ($app) {
-                        $install($app);
-                    }
-                } elseif (!\Gini\Core::checkVersion($app->version, $version)) {
-                } else {
-                    $install($app);
-                }
-            }
-            $this->_run_composer_bin($info);
-        };
-
-        $app = \Gini\Core::moduleInfo(APP_ID);
-        $install($app);
-    }
-
     public function actionWatch($args)
     {
-        $watcher = new \Lurker\ResourceWatcher;
+        //require composer of gini module
+        require_once SYS_PATH.'/vendor/autoload.php';
+
+        $watcher = new \Lurker\ResourceWatcher(in_array('-r', $args) ? new \Lurker\Tracker\RecursiveIteratorTracker : null);
 
         // Config
         $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
@@ -668,8 +735,12 @@ class App extends \Gini\Controller\CLI
 
         // Web
         $paths
-            = \Gini\Core::pharFilePaths(RAW_DIR, 'assets')
-                + \Gini\Core::pharFilePaths(RAW_DIR, 'less');
+            = array_merge(
+                \Gini\Core::pharFilePaths(RAW_DIR, 'assets'),
+                \Gini\Core::pharFilePaths(RAW_DIR, 'js'),
+                \Gini\Core::pharFilePaths(RAW_DIR, 'less')
+            );
+
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
                 passthru("gini update web");

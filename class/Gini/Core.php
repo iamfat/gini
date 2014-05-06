@@ -27,14 +27,14 @@ namespace Gini {
          *
          * @var array
          **/
-        static $GLOBALS;
+        public static $GLOBALS;
 
         /**
          * The array contains all loaded module info.
          *
          * @var array
          **/
-        static $MODULE_INFO;
+        public static $MODULE_INFO;
 
         /**
          * Fetch module info from provided path.

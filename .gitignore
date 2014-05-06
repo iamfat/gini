@@ -3,6 +3,8 @@
 .DS_Store
 /vendor/
 /report/
+/build/
+/node_modules/
 *.lock
 
 raw/l10n/template.pot

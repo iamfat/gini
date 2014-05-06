@@ -16,7 +16,7 @@ namespace Gini;
 /**
  * Logger Class
  */
-class Logger extends \Psr\Log\AbstractLogger
+class Logger
 {
     protected static $_LOGGERS = [];
 
@@ -50,7 +50,7 @@ class Logger extends \Psr\Log\AbstractLogger
 
         foreach ((array) \Gini\Config::get("logger.{$this->_name}") as $handlerName => $options) {
             $options = (array) $options;
-            $level = isset($options['level']) ? $options['level'] : \Psr\Log\LogLevel::DEBUG;
+            $level = isset($options['level']) ? $options['level'] : Logger\Level::DEBUG;
             $handlerClass = "\Gini\Logger\\$handlerName";
             $handler = \Gini\IoC::construct($handlerClass, $this->_name, $level, $options);
             $this->_handlers[] = $handler;
@@ -106,7 +106,7 @@ class Logger extends \Psr\Log\AbstractLogger
         }
 
         // interal debugging support
-        if ($level == \Psr\Log\LogLevel::DEBUG && static::isDebugging()) {
+        if ($level == Logger\Level::DEBUG && static::isDebugging()) {
 
             $trace = array_slice(debug_backtrace(), 2, 1)[0];
             $func = $trace['function'];
@@ -133,6 +133,113 @@ class Logger extends \Psr\Log\AbstractLogger
 
         }
 
+    }
+
+    /**
+     * System is unusable.
+     *
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function emergency($message, array $context = array())
+    {
+        $this->log(Logger\Level::EMERGENCY, $message, $context);
+    }
+
+    /**
+     * Action must be taken immediately.
+     *
+     * Example: Entire website down, database unavailable, etc. This should
+     * trigger the SMS alerts and wake you up.
+     *
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function alert($message, array $context = array())
+    {
+        $this->log(Logger\Level::ALERT, $message, $context);
+    }
+
+    /**
+     * Critical conditions.
+     *
+     * Example: Application component unavailable, unexpected exception.
+     *
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function critical($message, array $context = array())
+    {
+        $this->log(Logger\Level::CRITICAL, $message, $context);
+    }
+
+    /**
+     * Runtime errors that do not require immediate action but should typically
+     * be logged and monitored.
+     *
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function error($message, array $context = array())
+    {
+        $this->log(Logger\Level::ERROR, $message, $context);
+    }
+
+    /**
+     * Exceptional occurrences that are not errors.
+     *
+     * Example: Use of deprecated APIs, poor use of an API, undesirable things
+     * that are not necessarily wrong.
+     *
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function warning($message, array $context = array())
+    {
+        $this->log(Logger\Level::WARNING, $message, $context);
+    }
+
+    /**
+     * Normal but significant events.
+     *
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function notice($message, array $context = array())
+    {
+        $this->log(Logger\Level::NOTICE, $message, $context);
+    }
+
+    /**
+     * Interesting events.
+     *
+     * Example: User logs in, SQL logs.
+     *
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function info($message, array $context = array())
+    {
+        $this->log(Logger\Level::INFO, $message, $context);
+    }
+
+    /**
+     * Detailed debug information.
+     *
+     * @param string $message
+     * @param array $context
+     * @return null
+     */
+    public function debug($message, array $context = array())
+    {
+        $this->log(Logger\Level::DEBUG, $message, $context);
     }
 
 }

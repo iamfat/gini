@@ -5,14 +5,14 @@ namespace Gini\Logger;
 class SysLog extends Handler
 {
     private static $_LEVEL2PRIORITY = [
-        \Psr\Log\LogLevel::EMERGENCY => \LOG_EMERG,
-        \Psr\Log\LogLevel::ALERT => \LOG_ALERT,
-        \Psr\Log\LogLevel::CRITICAL => \LOG_CRIT,
-        \Psr\Log\LogLevel::ERROR => \LOG_ERR,
-        \Psr\Log\LogLevel::WARNING => \LOG_WARNING,
-        \Psr\Log\LogLevel::NOTICE => \LOG_NOTICE,
-        \Psr\Log\LogLevel::INFO => \LOG_INFO,
-        \Psr\Log\LogLevel::DEBUG => \LOG_DEBUG,
+        Level::EMERGENCY => \LOG_EMERG,
+        Level::ALERT => \LOG_ALERT,
+        Level::CRITICAL => \LOG_CRIT,
+        Level::ERROR => \LOG_ERR,
+        Level::WARNING => \LOG_WARNING,
+        Level::NOTICE => \LOG_NOTICE,
+        Level::INFO => \LOG_INFO,
+        Level::DEBUG => \LOG_DEBUG,
     ];
 
     public function log($level, $message, array $context = array())
