@@ -521,6 +521,11 @@ class App extends \Gini\Controller\CLI
 
     public function actionCache($args)
     {
+        if (APP_ID == 'gini') {
+            echo "Oops. Please do not run \"gini cache\" HERE!\n";
+            return;
+        }
+        
         $errors = $this->_diagnose(['dependencies']);
         if ($errors) return;
 
@@ -552,12 +557,12 @@ class App extends \Gini\Controller\CLI
             echo "\n";
         }
 
-        if (in_array('orm', $args)) {
+        if (in_array('orm', $args) && APP_ID != 'gini') {
             $this->_update_orm($args);
             echo "\n";
         }
 
-        if (in_array('web', $args)) {
+        if (in_array('web', $args) && APP_ID != 'gini') {
             $this->_update_web($args);
             echo "\n";
         }
