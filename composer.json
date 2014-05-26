@@ -11,6 +11,15 @@
     "bin": [
         "bin/gini"
     ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://satis.genee.cn"
+        },
+        {
+            "packagist": false
+        }
+    ],
     "require": {
         "php": ">=5.4.0"
     },

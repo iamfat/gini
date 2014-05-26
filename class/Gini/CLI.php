@@ -133,39 +133,51 @@ class CLI
 
     public static function main(array $argv)
     {
-        if (count($argv) < 1) {
-            static::commandHelp($argv);
-            exit;
+        $cmd = count($argv) > 0 ? strtolower($argv[0]) : '';
+
+        if ($cmd[0] == '@') {
+            // @app: automatically set APP_PATH and run
+            $app_base_path = isset($_SERVER['GINI_MODULE_BASE_PATH']) ?
+                                $_SERVER['GINI_MODULE_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..';
+
+            $cmd = substr($cmd, 1);
+            $_SERVER['GINI_APP_PATH'] = $app_base_path . '/' .$cmd;
+            if (!is_dir($_SERVER['GINI_APP_PATH'] )) {
+                exit("\e[1;34mgini\e[0m: missing app '$cmd'.\n");
+            }
+
+            array_shift($argv);
+            $eargv = array(escapeshellcmd($_SERVER['SCRIPT_FILENAME']));
+            foreach ($argv as $arg) {
+                $eargv[] = escapeshellcmd($arg);
+            }
+            proc_close(proc_open(implode(' ', $eargv), array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER));
+
+            return;
         }
 
-        $cli = strtolower($argv[0]);
-        switch ($cli) {
+        switch ($cmd) {
         case '-':
             $method = 'commandAvailable';
             break;
         case '-v':
             $method = 'commandVersion';
             break;
-        default:
-            $method = 'command'.$cli;
+        case '-h':
+            $argv = ['help'];
+            break;
+        case 'root':
+            $method = 'commandRoot';
+            break;
         }
 
-        if ($cli && method_exists(__CLASS__, $method)) {
+        if ($method && method_exists(__CLASS__, $method)) {
             call_user_func(array(__CLASS__, $method), $argv);
         } else {
-            $GLOBALS['GINI.CURRENT_CLI'] = $cli;
-            static::exec($argv);
+            $GLOBALS['GINI.CURRENT_CLI'] = $cmd;
+            static::dispatch($argv);
         }
 
-    }
-
-    public static function commandHelp(array $argv)
-    {
-        echo "usage: \e[1;34mgini\e[0m <command> [<args>]\n\n";
-        echo "The most commonly used git commands are:\n";
-        foreach (self::$built_in_commands as $k => $v) {
-            printf("   \e[1;34m%-10s\e[0m %s\n", $k, $v);
-        }
     }
 
     public static function commandRoot()
@@ -173,11 +185,10 @@ class CLI
         echo $_SERVER['GINI_APP_PATH']."\n";
     }
 
-    public static function commandVersion(array $argv)
+    public static function commandVersion()
     {
-        // list available cli programs
-        $info = \Gini\Core::moduleInfo($argv[1] ?: APP_ID);
-        echo "$info->name ($info->version)\n";
+        $info = \Gini\Core::moduleInfo('gini');
+        echo "$info->name ($info->id/$info->version)\n";
     }
 
     public static function commandAvailable(array $argv)
@@ -199,31 +210,6 @@ class CLI
 
         }
         echo "\n";
-    }
-
-    public static function exec(array $argv)
-    {
-        $cmd = $argv[0];
-        if ($cmd[0] == '@') {
-            // @app: automatically set APP_PATH and run
-            $app_base_path = isset($_SERVER['GINI_MODULE_BASE_PATH']) ?
-                                $_SERVER['GINI_MODULE_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..';
-
-            $cmd = substr($cmd, 1);
-            $_SERVER['GINI_APP_PATH'] = $app_base_path . '/' .$cmd;
-            if (!is_dir($_SERVER['GINI_APP_PATH'] )) {
-                exit("\e[1;34mgini\e[0m: missing app '$cmd'.\n");
-            }
-
-            array_shift($argv);
-            $eargv = array(escapeshellcmd($_SERVER['SCRIPT_FILENAME']));
-            foreach ($argv as $arg) {
-                $eargv[] = escapeshellcmd($arg);
-            }
-            proc_close(proc_open(implode(' ', $eargv), array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER));
-        } else {
-            self::dispatch($argv);
-        }
     }
 
     public static function exception($e)

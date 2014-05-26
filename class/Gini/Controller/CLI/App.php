@@ -141,6 +141,7 @@ class App extends \Gini\Controller\CLI
         $errors = $this->_diagnose();
         if (!count($errors)) {
             echo "🍺  \e[32mYou are ready now! Let's roll!\e[0m\n\n";
+
             return;
         }
     }
@@ -172,7 +173,7 @@ class App extends \Gini\Controller\CLI
             }
             echo "\n";
         }
-        
+
         // check composer requires
         if (!$items || in_array('composer', $items)) {
             echo "Checking composer dependencies...\n";
@@ -192,7 +193,7 @@ class App extends \Gini\Controller\CLI
             }
             echo "\n";
         }
-        
+
         if (!$items || in_array('file', $items)) {
             echo "Checking file/directory modes...\n";
             // check if /tmp/gini-session is writable
@@ -220,7 +221,7 @@ class App extends \Gini\Controller\CLI
             }
             echo "\n";
         }
-        
+
         return $errors;
     }
 
@@ -462,6 +463,7 @@ class App extends \Gini\Controller\CLI
         // ORM required class map.
         if (!isset($GLOBALS['gini.class_map'])) {
             echo "\e[31mYou need to run \e[1m\"gini cache class\"\e[0;31m before update ORM.\e[0m\n";
+
             return;
         }
         // enumerate orms
@@ -523,9 +525,10 @@ class App extends \Gini\Controller\CLI
     {
         if (APP_ID == 'gini') {
             echo "Oops. Please do not run \"gini cache\" HERE!\n";
+
             return;
         }
-        
+
         $errors = $this->_diagnose(['dependencies']);
         if ($errors) return;
 
@@ -754,6 +757,30 @@ class App extends \Gini\Controller\CLI
 
         echo "watching config/class/view/orm/web...\n";
         $watcher->start();
+    }
+
+    public function actionVersion($argv)
+    {
+        $info = \Gini\Core::moduleInfo(APP_ID);
+
+        $version = $argv[0];
+        if ($version) {
+            // set current version
+            $path = $info->path;
+            $info->version = $version;
+            \Gini\Core::saveModuleInfo($info);
+        }
+
+        echo "$info->name ($info->id/$info->version)\n";
+    }
+
+    public function actionPublish($argv)
+    {
+        // TODO: publish current module to gini-modules.genee.cn
+        // $version = $argv[0];
+        // $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
+        // $target = escapeshellarg(APP_PATH.'/temp.tgz');
+        // passthru("git --git-dir=$GIT_DIR archive $version --format tgz > /dev/null");
     }
 
 }
