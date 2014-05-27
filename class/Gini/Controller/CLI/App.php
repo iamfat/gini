@@ -225,29 +225,33 @@ class App extends \Gini\Controller\CLI
         return $errors;
     }
 
-    private function _prepare_walkthrough($root, $prefix, $callback)
+    private function _eachFilesIn($root, $callback)
     {
-        $dir = $root . '/' . $prefix;
-        if (!is_dir($dir)) return;
-        $dh = opendir($dir);
-        if ($dh) {
-            while (false !== ($name = readdir($dh))) {
-                if ($name[0] == '.') continue;
+        $walk = function($root, $prefix, $callback) use (&$walk) {
+            $dir = $root . '/' . $prefix;
+            if (!is_dir($dir)) return;
+            $dh = opendir($dir);
+            if ($dh) {
+                while (false !== ($name = readdir($dh))) {
+                    if ($name[0] == '.') continue;
 
-                $file = $prefix ? $prefix . '/' . $name : $name;
-                $full_path = $root . '/' . $file;
+                    $file = $prefix ? $prefix . '/' . $name : $name;
+                    $full_path = $root . '/' . $file;
 
-                if (is_dir($full_path)) {
-                    $this->_prepare_walkthrough($root, $file, $callback);
-                    continue;
+                    if (is_dir($full_path)) {
+                        $walk($root, $file, $callback);
+                        continue;
+                    }
+
+                    if ($callback) {
+                        $callback($file);
+                    }
                 }
-
-                if ($callback) {
-                    $callback($file);
-                }
+                closedir($dh);
             }
-            closedir($dh);
-        }
+        };
+        
+        $walk($root, '', $callback);
     }
 
     private function _cache_config()
@@ -274,7 +278,7 @@ class App extends \Gini\Controller\CLI
         $paths = \Gini\Core::pharFilePaths(CLASS_DIR, '');
         $class_map = array();
         foreach ($paths as $class_dir) {
-            $this->_prepare_walkthrough($class_dir, '', function ($file) use ($class_dir, &$class_map) {
+            $this->_eachFilesIn($class_dir, function ($file) use ($class_dir, &$class_map) {
                 if (preg_match('/^(.+)\.php$/', $file, $parts)) {
                     $class_name = trim(strtolower($parts[1]), '/');
                     $class_name = strtr($class_name, '-', '_');
@@ -296,7 +300,7 @@ class App extends \Gini\Controller\CLI
         $paths = \Gini\Core::pharFilePaths(VIEW_DIR, '');
         $view_map = array();
         foreach ($paths as $view_dir) {
-            $this->_prepare_walkthrough($view_dir, '', function ($file) use ($view_dir, &$view_map) {
+            $this->_eachFilesIn($view_dir, function ($file) use ($view_dir, &$view_map) {
                 // if (preg_match('/^([^\/]+)\/(.+)\.\1$/', $file , $parts)) {
                 //     $view_name = $parts[1] . '/' .$parts[2];
                 //     $view_map[$view_name] = $view_dir . '/' . $file;
@@ -380,35 +384,6 @@ class App extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
-    private function _uglify_js_loop($src, $dst, $raw)
-    {
-        if (!is_dir($src)) return;
-        $dh = opendir($src);
-        if ($dh) {
-            if (!file_exists($dst)) {
-                mkdir($dst);
-            };
-            while (false!==($name=readdir($dh))) {
-                if ($name[0] == '.') continue;
-                $src_path = $src . '/' . $name;
-                $dst_path = $dst . '/' . $name;
-                if (is_dir($src_path)) {
-                    self::_uglify_js_loop($src_path, $dst_path, $raw);
-                }
-                else {
-                    if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
-                        // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
-                        printf("   %s\n", str_replace($raw, '', $src_path));
-                        $command = sprintf("uglifyjs %s -o %s",
-                            escapeshellarg($src_path), escapeshellarg($dst_path));
-                        exec($command);
-                    }
-                }
-            }
-            closedir($dh);
-        }
-    }
-
     private function _uglify_js()
     {
         printf("%s\n", "Uglifying JS...");
@@ -420,7 +395,19 @@ class App extends \Gini\Controller\CLI
         $less_map = array();
         foreach ($pinfo as $p) {
             $js_dir = $p->path . '/' . RAW_DIR . '/js';
-            self::_uglify_js_loop($js_dir, $ugly_js_dir, $js_dir);
+            $this->_eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir) {
+                $src_path = $js_dir . '/' . $file;
+                $dst_path = $ugly_js_dir . '/' . $file;
+
+                if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+                    // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
+                    \Gini\File::ensureDir(dirname($dst_path));
+                    printf("   %s\n", $file);
+                    $command = sprintf("uglifyjs %s -o %s",
+                        escapeshellarg($src_path), escapeshellarg($dst_path));
+                    exec($command);
+                }
+            });
         }
 
         echo "   \e[32mdone.\e[0m\n";
@@ -435,7 +422,7 @@ class App extends \Gini\Controller\CLI
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
         foreach ($pinfo as $p) {
             $src_dir = $p->path . '/' . RAW_DIR . '/assets';
-            $this->_prepare_walkthrough($src_dir, '', function ($file) use ($src_dir, $assets_dir) {
+            $this->_eachFilesIn($src_dir, function ($file) use ($src_dir, $assets_dir) {
                 $src_path = $src_dir . '/' . $file;
 
                 $dst_path = $assets_dir . '/' . $file;
@@ -483,7 +470,7 @@ class App extends \Gini\Controller\CLI
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) continue;
 
-            $this->_prepare_walkthrough($orm_dir, '', function ($file) use ($orm_dir) {
+            $this->_eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
                 $oname = preg_replace('|.php$|', '', $file);
                 if ($oname == 'Object') return;
                 printf("   %s\n", $oname);
@@ -591,7 +578,7 @@ class App extends \Gini\Controller\CLI
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) continue;
 
-            $this->_prepare_walkthrough($orm_dir, '', function ($file) use ($orm_dir) {
+            $this->_eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
                 $oname = strtolower(preg_replace('|.php$|', '', $file));
                 if ($oname == 'object') return;
                 printf("   %s\n", $oname);
