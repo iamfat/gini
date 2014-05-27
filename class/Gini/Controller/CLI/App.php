@@ -533,12 +533,6 @@ class App extends \Gini\Controller\CLI
 
     public function actionCache($args)
     {
-        if (APP_ID == 'gini') {
-            echo "Oops. Please do not run \"gini cache\" HERE!\n";
-
-            return;
-        }
-
         $errors = $this->_diagnose(['dependencies']);
         if ($errors) return;
 
