@@ -380,6 +380,35 @@ class App extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
+    private function _uglify_js_loop($src, $dst, $raw)
+    {
+        if (!is_dir($src)) return;
+        $dh = opendir($src);
+        if ($dh) {
+            if (!file_exists($dst)) {
+                mkdir($dst);
+            };
+            while (false!==($name=readdir($dh))) {
+                if ($name[0] == '.') continue;
+                $src_path = $src . '/' . $name;
+                $dst_path = $dst . '/' . $name;
+                if (is_dir($src_path)) {
+                    self::_uglify_js_loop($src_path, $dst_path, $raw);
+                }
+                else {
+                    if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+                        // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
+                        printf("   %s\n", str_replace($raw, '', $src_path));
+                        $command = sprintf("uglifyjs %s -o %s",
+                            escapeshellarg($src_path), escapeshellarg($dst_path));
+                        exec($command);
+                    }
+                }
+            }
+            closedir($dh);
+        }
+    }
+
     private function _uglify_js()
     {
         printf("%s\n", "Uglifying JS...");
@@ -391,26 +420,7 @@ class App extends \Gini\Controller\CLI
         $less_map = array();
         foreach ($pinfo as $p) {
             $js_dir = $p->path . '/' . RAW_DIR . '/js';
-            if (!is_dir($js_dir)) continue;
-            $dh = opendir($js_dir);
-            if ($dh) {
-                while (false !== ($name = readdir($dh))) {
-                    if ($name[0] == '.') continue;
-                    if (fnmatch('*.js', $name)) {
-                        $src_path = $js_dir . '/' . $name;
-                        $dst_path = $ugly_js_dir . '/' . $name;
-                        if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
-                            // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
-                            printf("   %s\n", $name);
-                            $command = sprintf("uglifyjs %s -o %s",
-                                escapeshellarg($src_path), escapeshellarg($dst_path));
-                            exec($command);
-                        }
-                    }
-                }
-                closedir($dh);
-            }
-
+            self::_uglify_js_loop($js_dir, $ugly_js_dir, $js_dir);
         }
 
         echo "   \e[32mdone.\e[0m\n";
