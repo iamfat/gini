@@ -2,7 +2,6 @@
 
 namespace Gini\Dev;
 
-require_once __DIR__ . '/../vendor/autoload.php';
 // require_once __DIR__ . "/macro.php";
 require_once __DIR__ . "/obfuscator.php";
 

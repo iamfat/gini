@@ -427,6 +427,12 @@ namespace Gini {
 
             define('APP_ID', $info->id);
 
+            // load composer if detected
+            $composer_path = APP_PATH.'/vendor/autoload.php';
+            if (file_exists($composer_path)) {
+                require_once($composer_path);
+            }
+
             Config::setup();
             Event::setup();
 

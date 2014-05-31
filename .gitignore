@@ -5,6 +5,6 @@
 /report/
 /build/
 /node_modules/
-*.lock
-
+composer.lock
+composer.json
 raw/l10n/template.pot
