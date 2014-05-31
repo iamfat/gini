@@ -92,7 +92,7 @@ abstract class ORM
             $inheritance[$name] = $class;
             if ($name == 'object') break;
         }
-        
+
         return $inheritance;
     }
 

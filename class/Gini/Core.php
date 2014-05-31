@@ -99,6 +99,14 @@ namespace Gini {
             return self::$MODULE_INFO[$id] ?: false;
         }
 
+        public static function saveModuleInfo($info)
+        {
+            $info_script = $info->path.'/gini.json';
+            unset($info->path);
+            $json = json_encode($info, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+            file_put_contents($info_script, $json);
+        }
+
         /**
          * Check if the version matches version requirement.
          *
@@ -418,6 +426,12 @@ namespace Gini {
             }
 
             define('APP_ID', $info->id);
+
+            // load composer if detected
+            $composer_path = APP_PATH.'/vendor/autoload.php';
+            if (file_exists($composer_path)) {
+                require_once($composer_path);
+            }
 
             Config::setup();
             Event::setup();

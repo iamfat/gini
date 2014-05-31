@@ -4,7 +4,7 @@ namespace Gini;
 
 class Session
 {
-    
+
     private static function _idPath()
     {
         return sys_get_temp_dir() . '/gini-session/' . posix_getpwuid(posix_getuid())['name'] . '/' . posix_getsid(0);

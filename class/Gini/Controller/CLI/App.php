@@ -65,22 +65,22 @@ class App extends \Gini\Controller\CLI
 
         $path = $_SERVER['PWD'];
 
-        $prompt = array(
+        $prompt = [
             'id' => 'Id',
             'name' => 'Name',
             'description' => 'Description',
             'version' => 'Version',
             'dependencies' => 'Dependencies',
-            );
+        ];
 
-        $default = array(
+        $default = [
             'name' => ucwords(basename($path)),
             'id' => strtolower(basename($path)),
             'path' => $path,
             'description' => 'App description...',
             'version' => '0.1.0',
             'dependencies' => '[]',
-            );
+        ];
 
         foreach ($prompt as $k => $v) {
             $data[$k] = readline($v . " [\e[31m" . ($default[$k]?:'N/A') . "\e[0m]: ");
@@ -141,6 +141,7 @@ class App extends \Gini\Controller\CLI
         $errors = $this->_diagnose();
         if (!count($errors)) {
             echo "🍺  \e[32mYou are ready now! Let's roll!\e[0m\n\n";
+
             return;
         }
     }
@@ -172,17 +173,16 @@ class App extends \Gini\Controller\CLI
             }
             echo "\n";
         }
-        
+
         // check composer requires
         if (!$items || in_array('composer', $items)) {
             echo "Checking composer dependencies...\n";
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-                $file_json = $info->path . '/composer.json';
-                $file_lock = $info->path . '/composer.lock';
-                $path_vendor = $info->path . '/vendor';
-                if (!file_exists($file_json)) continue;
-                if (!file_exists($file_lock) || !is_dir($path_vendor)) {
-                    $errors['composer'][] = $name . ': composer packages missing!';
+                if ($info->composer) {
+                    if (!file_exists(APP_PATH.'/vendor')) {
+                        $errors['composer'][] = $name . ': composer packages missing!';
+                    }
+                    break;
                 }
             }
             if ($errors['composer']) {
@@ -192,7 +192,7 @@ class App extends \Gini\Controller\CLI
             }
             echo "\n";
         }
-        
+
         if (!$items || in_array('file', $items)) {
             echo "Checking file/directory modes...\n";
             // check if /tmp/gini-session is writable
@@ -220,33 +220,37 @@ class App extends \Gini\Controller\CLI
             }
             echo "\n";
         }
-        
+
         return $errors;
     }
 
-    private function _prepare_walkthrough($root, $prefix, $callback)
+    private function _eachFilesIn($root, $callback)
     {
-        $dir = $root . '/' . $prefix;
-        if (!is_dir($dir)) return;
-        $dh = opendir($dir);
-        if ($dh) {
-            while (false !== ($name = readdir($dh))) {
-                if ($name[0] == '.') continue;
+        $walk = function($root, $prefix, $callback) use (&$walk) {
+            $dir = $root . '/' . $prefix;
+            if (!is_dir($dir)) return;
+            $dh = opendir($dir);
+            if ($dh) {
+                while (false !== ($name = readdir($dh))) {
+                    if ($name[0] == '.') continue;
 
-                $file = $prefix ? $prefix . '/' . $name : $name;
-                $full_path = $root . '/' . $file;
+                    $file = $prefix ? $prefix . '/' . $name : $name;
+                    $full_path = $root . '/' . $file;
 
-                if (is_dir($full_path)) {
-                    $this->_prepare_walkthrough($root, $file, $callback);
-                    continue;
+                    if (is_dir($full_path)) {
+                        $walk($root, $file, $callback);
+                        continue;
+                    }
+
+                    if ($callback) {
+                        $callback($file);
+                    }
                 }
-
-                if ($callback) {
-                    $callback($file);
-                }
+                closedir($dh);
             }
-            closedir($dh);
-        }
+        };
+        
+        $walk($root, '', $callback);
     }
 
     private function _cache_config()
@@ -271,9 +275,9 @@ class App extends \Gini\Controller\CLI
         printf("%s\n", "Updating class cache...");
 
         $paths = \Gini\Core::pharFilePaths(CLASS_DIR, '');
-        $class_map = array();
+        $class_map = [];
         foreach ($paths as $class_dir) {
-            $this->_prepare_walkthrough($class_dir, '', function ($file) use ($class_dir, &$class_map) {
+            $this->_eachFilesIn($class_dir, function ($file) use ($class_dir, &$class_map) {
                 if (preg_match('/^(.+)\.php$/', $file, $parts)) {
                     $class_name = trim(strtolower($parts[1]), '/');
                     $class_name = strtr($class_name, '-', '_');
@@ -293,9 +297,9 @@ class App extends \Gini\Controller\CLI
         printf("%s\n", "Updating view cache...");
 
         $paths = \Gini\Core::pharFilePaths(VIEW_DIR, '');
-        $view_map = array();
+        $view_map = [];
         foreach ($paths as $view_dir) {
-            $this->_prepare_walkthrough($view_dir, '', function ($file) use ($view_dir, &$view_map) {
+            $this->_eachFilesIn($view_dir, function ($file) use ($view_dir, &$view_map) {
                 // if (preg_match('/^([^\/]+)\/(.+)\.\1$/', $file , $parts)) {
                 //     $view_name = $parts[1] . '/' .$parts[2];
                 //     $view_map[$view_name] = $view_dir . '/' . $file;
@@ -327,11 +331,11 @@ class App extends \Gini\Controller\CLI
                 , APP_PATH . '/raw/cli-server.ini'
                 , APP_PATH.'/web');
 
-        $descriptors = array(
-                array('file', '/dev/tty', 'r'),
-                array('file', '/dev/tty', 'w'),
-                array('file', '/dev/tty', 'w')
-        );
+        $descriptors = [
+            ['file', '/dev/tty', 'r'],
+            ['file', '/dev/tty', 'w'],
+            ['file', '/dev/tty', 'w']
+        ];
 
         $proc = proc_open($command, $descriptors, $pipes);
         if (is_resource($proc)) {
@@ -347,7 +351,7 @@ class App extends \Gini\Controller\CLI
         \Gini\File::ensureDir($css_dir);
 
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
-        $less_map = array();
+        $less_map = [];
         foreach ($pinfo as $p) {
             $less_dir = $p->path . '/' . RAW_DIR . '/less';
             if (!is_dir($less_dir)) continue;
@@ -387,29 +391,22 @@ class App extends \Gini\Controller\CLI
         \Gini\File::ensureDir($ugly_js_dir);
 
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
-        $less_map = array();
+        $less_map = [];
         foreach ($pinfo as $p) {
             $js_dir = $p->path . '/' . RAW_DIR . '/js';
-            if (!is_dir($js_dir)) continue;
-            $dh = opendir($js_dir);
-            if ($dh) {
-                while (false !== ($name = readdir($dh))) {
-                    if ($name[0] == '.') continue;
-                    if (fnmatch('*.js', $name)) {
-                        $src_path = $js_dir . '/' . $name;
-                        $dst_path = $ugly_js_dir . '/' . $name;
-                        if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
-                            // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
-                            printf("   %s\n", $name);
-                            $command = sprintf("uglifyjs %s -o %s",
-                                escapeshellarg($src_path), escapeshellarg($dst_path));
-                            exec($command);
-                        }
-                    }
-                }
-                closedir($dh);
-            }
+            $this->_eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir) {
+                $src_path = $js_dir . '/' . $file;
+                $dst_path = $ugly_js_dir . '/' . $file;
 
+                if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+                    // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
+                    \Gini\File::ensureDir(dirname($dst_path));
+                    printf("   %s\n", $file);
+                    $command = sprintf("uglifyjs %s -o %s",
+                        escapeshellarg($src_path), escapeshellarg($dst_path));
+                    exec($command);
+                }
+            });
         }
 
         echo "   \e[32mdone.\e[0m\n";
@@ -424,7 +421,7 @@ class App extends \Gini\Controller\CLI
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
         foreach ($pinfo as $p) {
             $src_dir = $p->path . '/' . RAW_DIR . '/assets';
-            $this->_prepare_walkthrough($src_dir, '', function ($file) use ($src_dir, $assets_dir) {
+            $this->_eachFilesIn($src_dir, function ($file) use ($src_dir, $assets_dir) {
                 $src_path = $src_dir . '/' . $file;
 
                 $dst_path = $assets_dir . '/' . $file;
@@ -462,6 +459,7 @@ class App extends \Gini\Controller\CLI
         // ORM required class map.
         if (!isset($GLOBALS['gini.class_map'])) {
             echo "\e[31mYou need to run \e[1m\"gini cache class\"\e[0;31m before update ORM.\e[0m\n";
+
             return;
         }
         // enumerate orms
@@ -471,7 +469,7 @@ class App extends \Gini\Controller\CLI
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) continue;
 
-            $this->_prepare_walkthrough($orm_dir, '', function ($file) use ($orm_dir) {
+            $this->_eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
                 $oname = preg_replace('|.php$|', '', $file);
                 if ($oname == 'Object') return;
                 printf("   %s\n", $oname);
@@ -489,34 +487,52 @@ class App extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
-    private function _run_composer_bin($app)
-    {
-        if (!file_exists($app->path.'/composer.json')) return;
-        echo "composer update for \e[1m$app->id\e[0m...\n";
-        // gini install path/to/modules
-        $composer_bin = getenv("COMPOSER_BIN")?:"composer";
-        $cmd = sprintf("$composer_bin update -d %s", escapeshellarg($app->path));
-        // echo "$ $cmd\n";
-        passthru($cmd);
-    }
-
     private function _update_composer($args)
     {
-        $updated_list = [];
-        $update = function ($info) use (&$update, &$updated_list) {
-            $updated_list[$info->id] = true;
-            foreach ($info->dependencies as $name => $version) {
-                if (isset($updated_list[$name])) continue;
-                $app = \Gini\Core::moduleInfo($name);
-                if ($app) {
-                    $update($app);
-                }
-            }
-            $this->_run_composer_bin($info);
-        };
+
+        echo "Generating Composer configuration file...\n";
 
         $app = \Gini\Core::moduleInfo(APP_ID);
-        $update($app);
+
+        $composer_json = [
+            'name' => $app->id,
+            'description' => $app->description,
+            'license' => 'proprietary',
+            'repositories' => [
+                ['type'=>'composer', 'url'=>'http://satis.genee.cn'],
+                ['packagist'=>false]
+            ]
+        ];
+        
+        $walked = [];
+        $walk = function ($info) use (&$walk, &$walked, &$composer_json) {
+            $walked[$info->id] = true;
+            foreach ($info->dependencies as $name => $version) {
+                if (isset($walked[$name])) continue;
+                $app = \Gini\Core::moduleInfo($name);
+                if ($app) {
+                    $walk($app);
+                }
+            }
+            $composer_json = \Gini\Util::arrayMergeDeep($info->composer ?: [], $composer_json);
+        };
+
+        $walk($app);
+        
+        if (isset($composer_json['require']) || isset($composer_json['require-dev'])) {
+            file_put_contents(APP_PATH.'/composer.json', J($composer_json, JSON_PRETTY_PRINT));
+            // echo "composer update for \e[1m$app->id\e[0m...\n";
+            // // gini install path/to/modules
+            // $composer_bin = getenv("COMPOSER_BIN")?:"composer";
+            // $cmd = sprintf("$composer_bin update -d %s", escapeshellarg($app->path));
+            // // echo "$ $cmd\n";
+            // passthru($cmd);
+        } else {
+            unlink(APP_PATH.'/composer.json');
+        }
+
+        echo "   \e[32mdone.\e[0m\n";
+
     }
 
     public function actionCache($args)
@@ -552,12 +568,12 @@ class App extends \Gini\Controller\CLI
             echo "\n";
         }
 
-        if (in_array('orm', $args)) {
+        if (in_array('orm', $args) && APP_ID != 'gini') {
             $this->_update_orm($args);
             echo "\n";
         }
 
-        if (in_array('web', $args)) {
+        if (in_array('web', $args) && APP_ID != 'gini') {
             $this->_update_web($args);
             echo "\n";
         }
@@ -579,7 +595,7 @@ class App extends \Gini\Controller\CLI
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) continue;
 
-            $this->_prepare_walkthrough($orm_dir, '', function ($file) use ($orm_dir) {
+            $this->_eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
                 $oname = strtolower(preg_replace('|.php$|', '', $file));
                 if ($oname == 'object') return;
                 printf("   %s\n", $oname);
@@ -677,9 +693,6 @@ class App extends \Gini\Controller\CLI
 
     public function actionBuild($args)
     {
-        //require composer of gini module
-        require_once SYS_PATH.'/vendor/autoload.php';
-
         $info = \Gini\Core::moduleInfo(APP_ID);
         $build_base = $info->path . '/build';
 
@@ -696,9 +709,6 @@ class App extends \Gini\Controller\CLI
 
     public function actionWatch($args)
     {
-        //require composer of gini module
-        require_once SYS_PATH.'/vendor/autoload.php';
-
         $watcher = new \Lurker\ResourceWatcher(in_array('-r', $args) ? new \Lurker\Tracker\RecursiveIteratorTracker : null);
 
         // Config
@@ -749,6 +759,79 @@ class App extends \Gini\Controller\CLI
 
         echo "watching config/class/view/orm/web...\n";
         $watcher->start();
+    }
+
+    public function actionVersion($argv)
+    {
+        $info = \Gini\Core::moduleInfo(APP_ID);
+
+        $version = $argv[0];
+        if ($version) {
+            // set current version
+            $path = $info->path;
+            $info->version = $version;
+            \Gini\Core::saveModuleInfo($info);
+        }
+
+        echo "$info->name ($info->id/$info->version)\n";
+    }
+
+    public function actionPublish($argv)
+    {
+        count($argv) > 0 or die("Usage: gini publish <version>\n\n");
+
+        $appId = APP_ID;
+        // TODO: publish current module to gini-modules.genee.cn
+        $version = $argv[0];
+        $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
+        $command = "git --git-dir=$GIT_DIR archive $version --format tgz 2> /dev/null";
+        
+        $path = "$appId/$version.tgz";
+        
+        $ph = popen($command, 'r');
+        if (is_resource($ph)) {
+            
+            $content = '';
+            while (!feof($ph)) {
+                $content .= fread($ph, 4096);
+            }
+            
+            if (strlen($content) == 0) {
+                die("\e[31mError: $appId/$version missing!\e[0m\n");
+            }
+
+            $client = new \Sabre\DAV\Client(['baseUri' => 'http://gini-modules.genee.cn/']);
+            $client->request('MKCOL', $appId);
+            $response = $client->request('PUT', $path, $content);
+            if ($response['statusCode'] >= 200 && $response['statusCode'] <= 206) {
+                echo "$appId/$version was published successfully.\n";
+            }
+            
+            pclose($ph);
+        }
+
+    }
+
+    public function actionUnpublish($argv)
+    {
+        count($argv) > 0 or die("Usage: gini unpublish <version>\n\n");
+
+        $version = $argv[0];
+        $appId = APP_ID;
+        $path = "$appId/$version.tgz";
+
+        $client = new \Sabre\DAV\Client(['baseUri' => 'http://gini-modules.genee.cn/']);
+        $response = $client->request('HEAD', $path);
+        if ($response['statusCode'] == 200) {
+            echo "Unpublishing $appId/$version...\n";
+            $response = $client->request('DELETE', $path);
+            if ($response['statusCode'] == 200) {
+                echo "done.\n";
+            }
+        } else {
+            echo "Failed to find $path\n";
+        }
+
     }
 
 }
