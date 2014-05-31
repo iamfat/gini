@@ -496,7 +496,7 @@ class App extends \Gini\Controller\CLI
 
         $composer_json = [
             'name' => $app->id,
-            'description' => $app->description,
+            'description' => $app->description ?: '',
             'license' => 'proprietary',
             'repositories' => [
                 ['type'=>'composer', 'url'=>'http://satis.genee.cn'],
