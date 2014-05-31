@@ -15,11 +15,11 @@ before_install:
 
 install:
   - echo 'date.timezone = "Asia/Shanghai"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
-  - composer install --dev --no-interaction
   
 before_script:
-  - composer update
   - bin/gini cache
+  - bin/gini update composer
+  - composer install --dev --no-interaction
   
 script:
   - phpunit
