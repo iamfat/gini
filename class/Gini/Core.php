@@ -126,12 +126,15 @@ namespace Gini {
             } else {
                 if ($path[0] != '/') {
                     $id = $path;
-                    // relative path?
-                    if ($parent) {
-                        $npath = $parent->path . '/modules/'.$path;
-                    } else {
-                        $npath = 'modules/'.$path;
-                    }
+                    // relative path? disabled recurring structure
+                    // if ($parent) {
+                    //     $npath = $parent->path . '/modules/'.$path;
+                    // } else {
+                    //     $npath = 'modules/'.$path;
+                    // }
+
+                    // use flat structure
+                    $npath = 'modules/'.$path;
 
                     $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
                 } else {
@@ -145,9 +148,10 @@ namespace Gini {
                     if ($parent) {
                         $parent->error = "{$id}:{$versionRange} required!";
                     }
+
                     return false;
                 }
-                
+
                 $info->path = $path;
             }
 
