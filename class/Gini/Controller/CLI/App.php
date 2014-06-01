@@ -129,9 +129,9 @@ class App extends \Gini\Controller\CLI
             printf("%s %s %s %s %s\e[0m\n",
                 $info->error ? "\e[31m":'',
                 mb_str_pad($name, 20, ' '),
-                mb_str_pad($info->version, 10, ' '),
+                mb_str_pad($info->version, 15, ' '),
                 mb_str_pad($info->name, 30, ' '),
-                $info->error ? "($info->error)":''
+                $info->error ?: \Gini\File::relativePath($info->path, APP_PATH)
             );
         }
     }
@@ -781,13 +781,12 @@ class App extends \Gini\Controller\CLI
         count($argv) > 0 or die("Usage: gini publish <version>\n\n");
 
         $appId = APP_ID;
-        // TODO: publish current module to gini-modules.genee.cn
+        // TODO: publish current module to gini-index.genee.cn
         $version = $argv[0];
         $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
         $command = "git --git-dir=$GIT_DIR archive $version --format tgz 2> /dev/null";
         
         $path = "$appId/$version.tgz";
-        
         $ph = popen($command, 'r');
         if (is_resource($ph)) {
             
@@ -800,7 +799,14 @@ class App extends \Gini\Controller\CLI
                 die("\e[31mError: $appId/$version missing!\e[0m\n");
             }
 
-            $client = new \Sabre\DAV\Client(['baseUri' => 'http://gini-modules.genee.cn/']);
+            $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+            
+            // sometimes people will run publish before run composer
+            if (!class_exists('\Sabre\DAV\Client')) {
+                require_once SYS_PATH.'/vendor/autoload.php';
+            }
+
+            $client = new \Sabre\DAV\Client(['baseUri' => $uri]);
             $client->request('MKCOL', $appId);
             $response = $client->request('PUT', $path, $content);
             if ($response['statusCode'] >= 200 && $response['statusCode'] <= 206) {
@@ -820,7 +826,13 @@ class App extends \Gini\Controller\CLI
         $appId = APP_ID;
         $path = "$appId/$version.tgz";
 
-        $client = new \Sabre\DAV\Client(['baseUri' => 'http://gini-modules.genee.cn/']);
+        $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+
+        if (!class_exists('\Sabre\DAV\Client')) {
+            require_once SYS_PATH.'/vendor/autoload.php';
+        }
+
+        $client = new \Sabre\DAV\Client(['baseUri' => $uri]);
         $response = $client->request('HEAD', $path);
         if ($response['statusCode'] == 200) {
             echo "Unpublishing $appId/$version...\n";
@@ -832,6 +844,68 @@ class App extends \Gini\Controller\CLI
             echo "Failed to find $path\n";
         }
 
+    }
+
+    /**
+     * Install related modules
+     *
+     * @param string $argv 
+     * @return void
+     */
+    public function actionInstall($argv)
+    {
+        (count($argv) > 0 || APP_ID != 'gini') or die("Usage: gini install <module> <version>\n\n");
+
+        if (!class_exists('\Sabre\DAV\Client')) {
+            require_once SYS_PATH.'/vendor/autoload.php';
+        }
+        $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+        $client = new \Sabre\DAV\Client(['baseUri' => $uri]);
+            
+        if (count($argv) > 0) {
+            // e.g. gini install xxx
+            $module = $argv[0];
+            if (count($argv) > 1) {
+                $version = $argv[1];
+            } else {
+                $version = readline('Please provide a version constraint for the '.$module.' requirement:');
+            }
+            
+            // fetch index.json
+            $response = $client->request('GET', $module.'/index.json');
+            $indexInfo = json_decode($response['body'], true);
+            
+            // find latest match version
+            foreach ($indexInfo as $version => $info) {
+                
+            }
+            
+        } else {
+            // run: gini install, then you should be in module directory
+            if (APP_ID != 'gini') {
+                // try to install its dependencies
+                $app = \Gini\Core::moduleInfo(APP_ID);
+
+                $walked = [];
+                $walk = function ($info) use (&$walk, &$walked, &$composer_json) {
+                    $walked[$info->id] = true;
+                    foreach ($info->dependencies as $name => $version) {
+                        if (isset($walked[$name])) continue;
+                        $app = \Gini\Core::moduleInfo($name);
+                        if ($app) {
+                            $walk($app);
+                        }
+                    }
+
+                    // $response = $client->request('GET', $path);
+                };
+
+                $walk($app);
+            }
+        }
+        
+        count($argv) > 0 or die("Usage: gini install <module> <version>\n\n");
+        
     }
 
 }
