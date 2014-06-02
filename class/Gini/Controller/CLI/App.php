@@ -904,7 +904,21 @@ class App extends \Gini\Controller\CLI
         }
 
         $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
-        $client = new \Sabre\DAV\Client(['baseUri' => $uri]);
+
+        $userName = readline('User: ');
+        echo 'Password: ';
+        `stty -echo`;
+        $password = rtrim(fgets(STDIN), "\n");
+        `stty echo`;
+        echo "\n";
+
+        $options = [
+            'baseUri' => $uri,
+            'userName' => $userName,
+            'password' => $password,
+        ];
+
+        $client = new \Sabre\DAV\Client($options);
 
         $installedModules = [];
         $installModule = function ($module, $versionRange, $targetDir, $isApp=false) use (&$installModule, &$installedModules, $client) {
