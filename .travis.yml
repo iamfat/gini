@@ -18,9 +18,4 @@ install:
   
 before_script:
   - bin/gini cache
-  - bin/gini update composer
   - composer install --dev --no-interaction
-  
-script:
-  - phpunit
-  - vendor/bin/coveralls

@@ -1,7 +1,7 @@
 {
     "name": "iamfat/gini",
     "description": "Gini PHP Framework",
-    "license": "proprietary",
+    "license": "MIT",
     "type": "library",
     "authors": [
         {
@@ -12,12 +12,9 @@
     "bin": [
         "bin/gini"
     ],
-    "require": {
-        "linkorb/jsmin-php": "dev-master",
-        "natxet/CssMin": "dev-master"
-    },
     "require-dev": {
-        "henrikbjorn/lurker": "*",
-        "satooshi/php-coveralls": "dev-master"
+        "linkorb/jsmin-php": "dev-master",
+        "natxet/CssMin": "3.*",
+        "henrikbjorn/lurker": "1.*"
     }
 }
