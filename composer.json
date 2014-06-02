@@ -1,0 +1,23 @@
+{
+    "name": "iamfat/gini",
+    "description": "Gini PHP Framework",
+    "license": "proprietary",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Jia Huang",
+            "email": "iamfat@gmail.com"
+        }
+    ],
+    "bin": [
+        "bin/gini"
+    ],
+    "require": {
+        "linkorb/jsmin-php": "dev-master",
+        "natxet/CssMin": "dev-master"
+    },
+    "require-dev": {
+        "henrikbjorn/lurker": "*",
+        "satooshi/php-coveralls": "dev-master"
+    }
+}
