@@ -811,11 +811,32 @@ class App extends \Gini\Controller\CLI
                 require_once SYS_PATH.'/vendor/autoload.php';
             }
 
-            $client = new \Sabre\DAV\Client(['baseUri' => $uri]);
-            $client->request('MKCOL', $appId);
+            $userName = readline('User: ');
+            echo 'Password: ';
+            `stty -echo`;
+            $password = rtrim(fgets(STDIN), "\n");
+            `stty echo`;
+            echo "\n";
+
+            $options = [
+                'baseUri' => $uri,
+                'userName' => $userName,
+                'password' => $password,
+            ];
+
+            $client = new \Sabre\DAV\Client($options);
+            $response = $client->request('MKCOL', $appId);
+            if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                // Authentication required
+                // 'Authorization: Basic '. base64_encode("user:password")
+                die ("Failed to publish $appId/$version.\n");
+            }
+            
             $response = $client->request('PUT', $path, $content);
             if ($response['statusCode'] >= 200 && $response['statusCode'] <= 206) {
                 echo "$appId/$version was published successfully.\n";
+            } else {
+                die ("Failed to publish $appId/$version.\n");
             }
 
             pclose($ph);
@@ -837,13 +858,28 @@ class App extends \Gini\Controller\CLI
             require_once SYS_PATH.'/vendor/autoload.php';
         }
 
-        $client = new \Sabre\DAV\Client(['baseUri' => $uri]);
+        $userName = readline('User: ');
+        echo 'Password: ';
+        `stty -echo`;
+        $password = rtrim(fgets(STDIN), "\n");
+        `stty echo`;
+        echo "\n";
+
+        $options = [
+            'baseUri' => $uri,
+            'userName' => $userName,
+            'password' => $password,
+        ];
+
+        $client = new \Sabre\DAV\Client($options);
         $response = $client->request('HEAD', $path);
         if ($response['statusCode'] == 200) {
             echo "Unpublishing $appId/$version...\n";
             $response = $client->request('DELETE', $path);
             if ($response['statusCode'] == 200) {
                 echo "done.\n";
+            } else {
+                echo "failed.\n";
             }
         } else {
             echo "Failed to find $path\n";
