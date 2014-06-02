@@ -103,26 +103,9 @@ namespace Gini {
         {
             $info_script = $info->path.'/gini.json';
             unset($info->path);
+            unset($info->error);
             $json = json_encode($info, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
             file_put_contents($info_script, $json);
-        }
-
-        /**
-         * Check if the version matches version requirement.
-         *
-         * @param string $version The version to check.
-         * @param string $versionRequired Version requirement, e.g. "*", ">=2.3.4"
-         * @return bool
-         **/
-        public static function checkVersion($version, $versionRequired)
-        {
-            if ($versionRequired != '*' &&  preg_match('/^\s*(<=|>=|<|>|=)?\s*(.+)$/', $versionRequired, $parts)) {
-                if (!version_compare($version, $parts[2], $parts[1] ?: '>=')) {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         /**
@@ -135,21 +118,23 @@ namespace Gini {
          *
          * @return object|false Module information
          **/
-        public static function import($path, $version='*', $parent=null)
+        public static function import($path, $versionRange='*', $parent=null)
         {
             if (isset(self::$MODULE_INFO[$path])) {
                 $info = self::$MODULE_INFO[$path];
                 $path = $info->path;
             } else {
-
                 if ($path[0] != '/') {
                     $id = $path;
-                    // relative path?
-                    if ($parent) {
-                        $npath = $parent->path . '/modules/'.$path;
-                    } else {
-                        $npath = 'modules/'.$path;
-                    }
+                    // relative path? disabled recurring structure
+                    // if ($parent) {
+                    //     $npath = $parent->path . '/modules/'.$path;
+                    // } else {
+                    //     $npath = 'modules/'.$path;
+                    // }
+
+                    // use flat structure
+                    $npath = 'modules/'.$path;
 
                     $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
                 } else {
@@ -161,29 +146,31 @@ namespace Gini {
                 if ($info === false) {
                     // throw new \Exception("{$id} required but missing!");
                     if ($parent) {
-                        $parent->error = "\"{$id}/{$version}\" missing!";
+                        $parent->error = "{$id}:{$versionRange} required!";
                     }
 
                     return false;
                 }
+
                 $info->path = $path;
             }
 
             if (!$info) return false;
 
             if ($parent) {
-                if (!self::checkVersion($info->version, $version)) {
-                    $parent->error = "{$info->id}/{$version} required!";
-                    // throw new \Exception("{$info->id}/{$version} required but not match!");
+                $version = new Version($info->version);
+                if (!$version->satisfies($versionRange)) {
+                    $parent->error = "{$info->id}:{$versionRange} required!";
+                    // throw new \Exception("{$info->id}:{$versionRange} required but not match!");
                     return false;
                 }
             }
 
             if (isset(self::$MODULE_INFO[$path])) return self::$MODULE_INFO[$path];
 
-            foreach ((array) $info->dependencies as $app => $version) {
+            foreach ((array) $info->dependencies as $app => $versionRange) {
                 if (!$app) continue;
-                self::import($app, $version, $info);
+                self::import($app, $versionRange, $info);
             }
 
             $inserted = false;

@@ -11,20 +11,17 @@
 
 namespace Gini\Controller\CLI;
 
-if (!function_exists('mb_str_pad')) {
+class App extends \Gini\Controller\CLI
+{
 
-    function mb_str_pad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
+    protected function _strPad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
     {
         $diff = mb_strwidth( $input ) - mb_strlen( $input );
 
         return str_pad( $input, $pad_length + $diff, $pad_string, $pad_type );
     }
-}
 
-class App extends \Gini\Controller\CLI
-{
-
-    private function _init_phpunit()
+    private function _iniPHPUnit()
     {
         $gini = \Gini\Core::moduleInfo('gini');
 
@@ -57,7 +54,7 @@ class App extends \Gini\Controller\CLI
     {
         if (count($args) > 0) {
             if (in_array('phpunit', $args)) {
-                return $this->_init_phpunit();
+                return $this->_iniPHPUnit();
             }
 
             return;
@@ -98,9 +95,11 @@ class App extends \Gini\Controller\CLI
         echo "gini init\n";
         echo "gini modules\n";
         echo "gini cache [class|view|config]\n";
-        echo "gini update [modules|orm|web]\n";
-        echo "gini server <host:port>\n";
-        echo "gini install\n";
+        echo "gini update [composer|modules|orm|web]\n";
+        echo "gini preview <host:port>\n";
+        echo "gini version <version>\n";
+        echo "gini publish <version>\n";
+        echo "gini unpublish <version>\n";
         echo "gini build\n";
     }
 
@@ -126,12 +125,20 @@ class App extends \Gini\Controller\CLI
     public function actionModules($args)
     {
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+
+            if (!$info->error) {
+                $rPath = \Gini\File::relativePath($info->path, APP_PATH);
+                if ($rPath[0] == '.') {
+                    $rPath = '@/'.\Gini\File::relativePath($info->path, dirname(SYS_PATH));
+                }
+            }
+
             printf("%s %s %s %s %s\e[0m\n",
                 $info->error ? "\e[31m":'',
-                mb_str_pad($name, 20, ' '),
-                mb_str_pad($info->version, 10, ' '),
-                mb_str_pad($info->name, 30, ' '),
-                $info->error ? "($info->error)":''
+                $this->_strPad($name, 20, ' '),
+                $this->_strPad($info->version, 15, ' '),
+                $this->_strPad($info->name, 30, ' '),
+                $info->error ?: $rPath
             );
         }
     }
@@ -226,7 +233,7 @@ class App extends \Gini\Controller\CLI
 
     private function _eachFilesIn($root, $callback)
     {
-        $walk = function($root, $prefix, $callback) use (&$walk) {
+        $walk = function ($root, $prefix, $callback) use (&$walk) {
             $dir = $root . '/' . $prefix;
             if (!is_dir($dir)) return;
             $dh = opendir($dir);
@@ -249,7 +256,7 @@ class App extends \Gini\Controller\CLI
                 closedir($dh);
             }
         };
-        
+
         $walk($root, '', $callback);
     }
 
@@ -503,7 +510,7 @@ class App extends \Gini\Controller\CLI
                 ['packagist'=>false]
             ]
         ];
-        
+
         $walked = [];
         $walk = function ($info) use (&$walk, &$walked, &$composer_json) {
             $walked[$info->id] = true;
@@ -518,7 +525,7 @@ class App extends \Gini\Controller\CLI
         };
 
         $walk($app);
-        
+
         if (isset($composer_json['require']) || isset($composer_json['require-dev'])) {
             file_put_contents(APP_PATH.'/composer.json', J($composer_json, JSON_PRETTY_PRINT));
             // echo "composer update for \e[1m$app->id\e[0m...\n";
@@ -781,32 +788,59 @@ class App extends \Gini\Controller\CLI
         count($argv) > 0 or die("Usage: gini publish <version>\n\n");
 
         $appId = APP_ID;
-        // TODO: publish current module to gini-modules.genee.cn
+        // TODO: publish current module to gini-index.genee.cn
         $version = $argv[0];
         $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
         $command = "git --git-dir=$GIT_DIR archive $version --format tgz 2> /dev/null";
-        
+
         $path = "$appId/$version.tgz";
-        
         $ph = popen($command, 'r');
         if (is_resource($ph)) {
-            
+
             $content = '';
             while (!feof($ph)) {
                 $content .= fread($ph, 4096);
             }
-            
+
             if (strlen($content) == 0) {
                 die("\e[31mError: $appId/$version missing!\e[0m\n");
             }
 
-            $client = new \Sabre\DAV\Client(['baseUri' => 'http://gini-modules.genee.cn/']);
-            $client->request('MKCOL', $appId);
+            $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+
+            // sometimes people will run publish before run composer
+            if (!class_exists('\Sabre\DAV\Client')) {
+                require_once SYS_PATH.'/vendor/autoload.php';
+            }
+
+            $userName = readline('User: ');
+            echo 'Password: ';
+            `stty -echo`;
+            $password = rtrim(fgets(STDIN), "\n");
+            `stty echo`;
+            echo "\n";
+
+            $options = [
+                'baseUri' => $uri,
+                'userName' => $userName,
+                'password' => $password,
+            ];
+
+            $client = new \Sabre\DAV\Client($options);
+            $response = $client->request('MKCOL', $appId);
+            if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                // Authentication required
+                // 'Authorization: Basic '. base64_encode("user:password")
+                die ("Failed to publish $appId/$version.\n");
+            }
+            
             $response = $client->request('PUT', $path, $content);
             if ($response['statusCode'] >= 200 && $response['statusCode'] <= 206) {
                 echo "$appId/$version was published successfully.\n";
+            } else {
+                die ("Failed to publish $appId/$version.\n");
             }
-            
+
             pclose($ph);
         }
 
@@ -820,16 +854,149 @@ class App extends \Gini\Controller\CLI
         $appId = APP_ID;
         $path = "$appId/$version.tgz";
 
-        $client = new \Sabre\DAV\Client(['baseUri' => 'http://gini-modules.genee.cn/']);
+        $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+
+        if (!class_exists('\Sabre\DAV\Client')) {
+            require_once SYS_PATH.'/vendor/autoload.php';
+        }
+
+        $userName = readline('User: ');
+        echo 'Password: ';
+        `stty -echo`;
+        $password = rtrim(fgets(STDIN), "\n");
+        `stty echo`;
+        echo "\n";
+
+        $options = [
+            'baseUri' => $uri,
+            'userName' => $userName,
+            'password' => $password,
+        ];
+
+        $client = new \Sabre\DAV\Client($options);
         $response = $client->request('HEAD', $path);
         if ($response['statusCode'] == 200) {
             echo "Unpublishing $appId/$version...\n";
             $response = $client->request('DELETE', $path);
             if ($response['statusCode'] == 200) {
                 echo "done.\n";
+            } else {
+                echo "failed.\n";
             }
         } else {
             echo "Failed to find $path\n";
+        }
+
+    }
+
+    /**
+     * Install related modules
+     *
+     * @param  string $argv
+     * @return void
+     */
+    public function actionInstall($argv)
+    {
+        (count($argv) > 0 || APP_ID != 'gini') or die("Usage: gini install <module> <version>\n\n");
+
+        if (!class_exists('\Sabre\DAV\Client')) {
+            require_once SYS_PATH.'/vendor/autoload.php';
+        }
+
+        $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+        $client = new \Sabre\DAV\Client(['baseUri' => $uri]);
+
+        $installedModules = [];
+        $installModule = function ($module, $versionRange, $targetDir, $isApp=false) use (&$installModule, &$installedModules, $client) {
+
+            if (isset($installedModules[$module])) {
+                $info = $installedModules[$module];
+                $v = new \Gini\Version($info->version);
+                // if installed version is incorrect, abort the operation.
+                if (!$v->satisfies($versionRange)) {
+                    die("Conflict detected on $module! Installed: {$v->fullVersion} Expecting: $versionRange\n");
+                }
+            } else {
+
+                // fetch index.json
+                echo "Fetching INDEX file for {$module}...\n";
+                $response = $client->request('GET', $module.'/index.json');
+                if ($response['statusCode'] !== 200) {
+                    die("Failed to fetch INDEX file.\n");
+                }
+
+                $indexInfo = json_decode($response['body'], true);
+                // find latest match version
+                foreach ($indexInfo as $version => $info) {
+                    $v = new \Gini\Version($version);
+                    if ($v->satisfies($versionRange)) {
+                        if ($matched) {
+                            if ($matched->compare($v) <= 0) continue;
+                        }
+                        $matched = $v;
+                    }
+                }
+
+                if (!$matched) {
+                    die("Failed to locate required version!\n");
+                }
+
+                $version = $matched->fullVersion;
+                $info = (object) $indexInfo[$version];
+
+                $tarPath = "{$module}/{$version}.tgz";
+                echo "Downloading {$module} from {$tarPath}...\n";
+                $response = $client->request('GET', $tarPath);
+                if ($response['statusCode'] !== 200) {
+                    die("Failed to fetch INDEX file.\n");
+                }
+
+                if ($isApp) {
+                    $modulePath = $targetDir;
+                } else {
+                    $modulePath = "$targetDir/modules/$module";
+                }
+
+                \Gini\File::ensureDir($modulePath);
+                echo "Extracting {$module} to {$modulePath}...\n";
+                $ph = popen('tar -zx -C '.escapeshellcmd($modulePath), 'w');
+                if (is_resource($ph)) {
+                    fwrite($ph, $response['body']);
+                    pclose($ph);
+                }
+
+                $installedModules[$module] = $info;
+            }
+
+            if ($info) {
+                foreach ((array) $info->dependencies as $m => $r) {
+                    if ($m == 'gini') continue;
+                    $installModule($m, $r, $targetDir, false);
+                }
+            }
+
+         };
+
+        if (count($argv) > 0) {
+            // e.g. gini install xxx
+            $module = $argv[0];
+
+            if (count($argv) > 1) {
+                $versionRange = $argv[1];
+            } else {
+                $versionRange = readline('Please provide a version constraint for the '.$module.' requirement:');
+            }
+
+            $installModule($module, $versionRange, getcwd()."/$module", true);
+
+        } else {
+            // run: gini install, then you should be in module directory
+            if (APP_ID != 'gini') {
+                // try to install its dependencies
+                $app = \Gini\Core::moduleInfo(APP_ID);
+                $installedModules[APP_ID] = $app;
+                $installModule(APP_ID, $app->version, APP_PATH, true);
+           }
         }
 
     }
