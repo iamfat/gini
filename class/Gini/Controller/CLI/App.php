@@ -95,9 +95,11 @@ class App extends \Gini\Controller\CLI
         echo "gini init\n";
         echo "gini modules\n";
         echo "gini cache [class|view|config]\n";
-        echo "gini update [modules|orm|web]\n";
-        echo "gini server <host:port>\n";
-        echo "gini install\n";
+        echo "gini update [composer|modules|orm|web]\n";
+        echo "gini preview <host:port>\n";
+        echo "gini version <version>\n";
+        echo "gini publish <version>\n";
+        echo "gini unpublish <version>\n";
         echo "gini build\n";
     }
 
