@@ -15,6 +15,7 @@
     "require-dev": {
         "linkorb/jsmin-php": "dev-master",
         "natxet/CssMin": "3.*",
-        "henrikbjorn/lurker": "1.*"
+        "henrikbjorn/lurker": "1.*",
+        "sabre/dav": "2.*"
     }
 }
