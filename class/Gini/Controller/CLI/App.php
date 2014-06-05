@@ -878,7 +878,7 @@ class App extends \Gini\Controller\CLI
         if ($response['statusCode'] == 200) {
             echo "Unpublishing $appId/$version...\n";
             $response = $client->request('DELETE', $path);
-            if ($response['statusCode'] == 200) {
+            if ($response['statusCode'] >= 200 && $response <= 206) {
                 echo "done.\n";
             } else {
                 echo "failed.\n";
