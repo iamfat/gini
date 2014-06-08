@@ -833,7 +833,7 @@ class App extends \Gini\Controller\CLI
                 // 'Authorization: Basic '. base64_encode("user:password")
                 die ("Failed to publish $appId/$version.\n");
             }
-            
+
             $response = $client->request('PUT', $path, $content);
             if ($response['statusCode'] >= 200 && $response['statusCode'] <= 206) {
                 echo "$appId/$version was published successfully.\n";
@@ -945,7 +945,7 @@ class App extends \Gini\Controller\CLI
                     $v = new \Gini\Version($version);
                     if ($v->satisfies($versionRange)) {
                         if ($matched) {
-                            if ($matched->compare($v) <= 0) continue;
+                            if ($matched->compare($v) > 0) continue;
                         }
                         $matched = $v;
                     }
@@ -989,7 +989,7 @@ class App extends \Gini\Controller\CLI
                 }
             }
 
-         };
+        };
 
         if (count($argv) > 0) {
             // e.g. gini install xxx
