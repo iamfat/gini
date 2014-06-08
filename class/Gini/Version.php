@@ -22,7 +22,7 @@ class Version
         $this->fullVersion = $version;
 
         if (!isset(self::$versionCache[$version])) {
-            $this->valid = preg_match('`^(\d+)(?:\.(\d+|[*x]))?(?:\.(\d+|[*x])?)(?:-([^+]+))?(?:\+(.+))?$`', $version, $parts);
+            $this->valid = preg_match('`^(\d+)(?:\.(\d+|[*x]))?(?:\.(\d+|[*x]))?(?:-([^+]+))?(?:\+(.+))?$`', $version, $parts);
             $this->majorVersion = $parts[1];
             $this->minorVersion = is_numeric($parts[2]) ? $parts[2] : 'x';
             $this->patchVersion = is_numeric($parts[3]) ? $parts[3] : 'x';
@@ -90,13 +90,66 @@ class Version
                 $v->patchVersion == 'x' ? '0': $v->patchVersion,
             ]) . '-0';
 
+            if ($v->majorVersion == 0) {
+
+                if ($v->minorVersion == 0) {
+                    if ($this->compare("0.0.{$v->patchVersion}") == 0) return true;
+                    return false;
+                } else {
+                    $maxVer = implode('.', [
+                        0,
+                        $v->minorVersion + 1,
+                        0,
+                    ]) . '-0';
+                }
+
+            } else {
+                $maxVer = implode('.', [
+                    $v->majorVersion + 1,
+                    0,
+                    0,
+                ]) . '-0';
+            }
+
+            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) return true;
+
+        } elseif ($v->majorVersion == 'x') {
+            // e.g. */x => any versions
+            return true;
+        } elseif ($v->minorVersion == 'x') {
+            // e.g. 1.x => 1.0.0-0 AND < 2.0.0-0
+
+            $minVer = implode('.', [
+                $v->majorVersion,
+                0,
+                0,
+            ]) . '-0';
+
             $maxVer = implode('.', [
                 $v->majorVersion + 1,
                 0,
                 0,
             ]) . '-0';
 
-            if ($this->compare($minVer) >=0 && $this->compare($maxVer) <=0) return true;
+            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) return true;
+
+        } elseif ($v->patchVersion == 'x') {
+
+            // e.g. 1.2.x => >= 1.2.0-0 AND < 1.3.0-0
+
+            $minVer = implode('.', [
+                $v->majorVersion,
+                $v->minorVersion,
+                0,
+            ]) . '-0';
+
+            $maxVer = implode('.', [
+                $v->majorVersion,
+                $v->minorVersion + 1,
+                0,
+            ]) . '-0';
+
+            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) return true;
 
         } else {
             $ret = $this->compare($v);
@@ -125,7 +178,8 @@ class Version
 
         $satisfies = function ($versionRange) {
             if (!preg_match_all('`\s*(\S+)(?:\s+(-)\s|$)?`', $versionRange, $parts, PREG_PATTERN_ORDER)) return false;
-            foreach ($parts[1] as $i => $versionUnit) {
+            for ($i = 0, $max = count($parts[1]); $i < $max; $i++) {
+                $versionUnit = $parts[1][$i];
                 if ($parts[2][$i] == '-') {
                     if (!$this->satisfiesUnit('>=' . $versionUnit)) return false;
                     $parts[1][$i+1] = '<='.$parts[1][$i+1];

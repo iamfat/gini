@@ -1,0 +1,6 @@
+image: iamfat/gini
+
+script:
+  - composer install --dev --prefer-dist --no-interaction
+  - bin/gini cache
+  - phpunit
