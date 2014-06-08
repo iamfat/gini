@@ -39,6 +39,10 @@ class Version extends \Gini\PHPUnit\CLI {
     {
         // 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0
         $versions = [
+            '1.0.0-0',
+            '1.0.0-1',
+            '1.0.0-2',
+            '1.0.0-11',
             '1.0.0-alpha',
             '1.0.0-alpha.1',
             '1.0.0-alpha.beta',
@@ -74,7 +78,9 @@ class Version extends \Gini\PHPUnit\CLI {
             ['>1.2.3', '1.2.5', true],
             ['<1.2.3', '1.2.5', false],
             ['<1.2.3', '1.2.0', true],
-            ['~0.2.0', '0.2.0-alpha', true]
+            ['~0.2.0', '0.2.0-alpha', true],
+            ['~0.2.0', '0.2.0-0', true],
+            ['~0.2.0', '0.2.0-1', true],
         ];
         
         foreach ($tests as $t) {
