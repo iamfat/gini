@@ -507,9 +507,12 @@ class App extends \Gini\Controller\CLI
             'license' => 'proprietary',
             'repositories' => [
                 ['type'=>'composer', 'url'=>'http://satis.genee.cn'],
-                ['packagist'=>false]
             ]
         ];
+
+        if (in_array('--no-packagist', $args)) {
+            $composer_json['repositories'][] = ['packagist'=>false];
+        }
 
         $walked = [];
         $walk = function ($info) use (&$walk, &$walked, &$composer_json) {
