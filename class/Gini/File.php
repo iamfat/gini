@@ -229,4 +229,34 @@ class File
             return $mime_type;
         }
     }
+
+    public static function eachFilesIn($root, $callback)
+    {
+        $walk = function ($root, $prefix, $callback) use (&$walk) {
+            $dir = $root . '/' . $prefix;
+            if (!is_dir($dir)) return;
+            $dh = opendir($dir);
+            if ($dh) {
+                while (false !== ($name = readdir($dh))) {
+                    if ($name[0] == '.') continue;
+
+                    $file = $prefix ? $prefix . '/' . $name : $name;
+                    $full_path = $root . '/' . $file;
+
+                    if (is_dir($full_path)) {
+                        $walk($root, $file, $callback);
+                        continue;
+                    }
+
+                    if ($callback) {
+                        $callback($file);
+                    }
+                }
+                closedir($dh);
+            }
+        };
+
+        $walk($root, '', $callback);
+    }
+
 }
