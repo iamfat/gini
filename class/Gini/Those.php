@@ -2,14 +2,14 @@
 
 /*
 
-$user = those('user')
+$user = those('users')
     ->whose('id')->isIn(1, 2, 3)
     ->orWhose('atime')->isGreaterThan(3)
     ->andWhose('age')->isBetween(5, 15);
 
-$user = those('user')
-    ->whoIs('employer')->of(
-        those('user')
+$user = the('user')
+    ->whoIsThe('employer')->of(
+        those('users')
             ->whose('name')->beginsWith('Zhang')
             ->andWhose('room')->isIn(
                 those('room')->whose('building')->is(
@@ -18,7 +18,22 @@ $user = those('user')
             )
     );
 
-$user = those users who is the employer of
+$user = the user who is the employer of
+those users whose name begins with Zhang and whose room is in
+those room whose building is Building(1).
+
+$users = those('users')
+    ->whoAre('employers')->of(
+        those('users')
+            ->whose('name')->beginsWith('Zhang')
+            ->andWhose('room')->isIn(
+                those('room')->whose('building')->is(
+                    a('building', 1)
+                )
+            )
+    );
+
+$users = those users who are those employers of
 those users whose name begins with Zhang and whose room is in
 those room whose building is Building(1).
 

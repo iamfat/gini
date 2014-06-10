@@ -50,7 +50,7 @@ class Version
 
     protected function satisfiesUnit($versionUnit)
     {
-        if (!preg_match('/^\s*(<=|>=|[<>~^])?\s*(.+)$/', $versionUnit, $parts)) {
+        if (!preg_match('/^\s*(?:(<=|>=|[<>~^])\s*)?(.+)$/', $versionUnit, $parts)) {
             return false;
         }
 

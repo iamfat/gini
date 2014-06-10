@@ -7,7 +7,7 @@ class Composer extends \Gini\Controller\CLI
 	
 	public function __index($args)
 	{
-		echo "gini composer update\n";
+		echo "gini composer init\n";
 	}
 
 	public function actionInit($args)
@@ -47,15 +47,16 @@ class Composer extends \Gini\Controller\CLI
         if (isset($composer_json['require']) || isset($composer_json['require-dev'])) {
         	if (file_exists(APP_PATH.'/composer.json')) {
         		$confirm = strtolower(readline('File exists. Overwrite? [Y/n] '));
-        		if (!$confirm || $confirm == 'y') {
-            		file_put_contents(APP_PATH.'/composer.json', J($composer_json, JSON_PRETTY_PRINT));
-         			echo "   \e[32mdone.\e[0m\n";
-         			return;
+        		if ($confirm && $confirm != 'y') {
+					echo "   \e[33mcanceled.\e[0m\n";
+					return;
        			}
         	}
+
+    		file_put_contents(APP_PATH.'/composer.json', J($composer_json, JSON_PRETTY_PRINT));
+ 			echo "   \e[32mdone.\e[0m\n";
         }
 
-		echo "   \e[33mcanceled.\e[0m\n";
 	}
 
 }
