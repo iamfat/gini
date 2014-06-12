@@ -256,7 +256,7 @@ class CLI
         $candidates = [];
         while (count($argv) > 0) {
             $arg = array_shift($argv);
-            if (!preg_match('|^[a-z]\w+$|', $arg)) break;
+            if (!preg_match('|^[a-z][\w-]+\w$|', $arg)) break;
             if ($path) $path .= '/' . $arg;
             else $path = $arg;
             $candidates[$path] = $argv;
@@ -264,17 +264,20 @@ class CLI
 
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
-            $basename = basename($path);
+            $basename = array_reduce(explode('_', strtr(basename($path), '-', '_')), function($v, $i) {
+                return ($v ?: '') . ucwords($i);
+            }) ;
             $dirname = dirname($path);
+            
             $class_namespace = '\Gini\Controller\CLI\\';
             if ($dirname != '.') {
-                $class_namespace .= str_replace('/', '_', $dirname).'\\';
+                $class_namespace .= strtr($dirname, ['-'=>'_', '/'=>'\\']).'\\';
             }
+
             $class = $class_namespace . $basename;
-            $class = str_replace('-', '_', $class);
             if (class_exists($class)) break;
-            $class = $class_namespace . 'Controller_' . $basename;
-            $class = str_replace('-', '_', $class);
+
+            $class = $class_namespace . 'Controller' . $basename;
             if (class_exists($class)) break;
         }
 

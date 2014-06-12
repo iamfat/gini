@@ -56,16 +56,22 @@ class CGI
 
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
-            $basename = strtr(basename($path), '-', '_') ;
+            $basename = array_reduce(explode('_', strtr(basename($path), '-', '_')), function($v, $i) {
+                return ($v ?: '') . ucwords($i);
+            }) ;
             $dirname = dirname($path);
+            
             $class_namespace = '\Gini\Controller\CGI\\';
             if ($dirname != '.') {
                 $class_namespace .= strtr($dirname, ['-'=>'_', '/'=>'\\']).'\\';
             }
+
             $class = $class_namespace . $basename;
             if (class_exists($class)) break;
-            $class = $class_namespace . 'Controller_' . $basename;
+
+            $class = $class_namespace . 'Controller' . $basename;
             if (class_exists($class)) break;
+
             if ($basename != 'index') {
                 $class = $class_namespace . 'Index';
                 if (class_exists($class)) {
