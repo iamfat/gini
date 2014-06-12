@@ -7,7 +7,7 @@ class Index extends \Gini\Controller\CLI
 
 	private function _configFile()
 	{
-		return getcwd().'/.gini.conf';
+		return posix_getpwuid(posix_getuid())['dir'] .'/.gini.conf';
 	}
 
 	private function _config()
@@ -81,7 +81,7 @@ class Index extends \Gini\Controller\CLI
 	        $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
 	        $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
 	        $config['token'] = $rpc->createToken($username, $password);
-	        file_put_contents($this->_configFile(), $config);
+	        yaml_emit_file($this->_configFile(), $config);
 
 			echo "You've successfully logged in as $username.\n";
         } catch (\Gini\RPC\Exception $e) {
