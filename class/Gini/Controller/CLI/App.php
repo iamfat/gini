@@ -127,7 +127,13 @@ class App extends \Gini\Controller\CLI
             if (!$info->error) {
                 $rPath = \Gini\File::relativePath($info->path, APP_PATH);
                 if ($rPath[0] == '.') {
-                    $rPath = '@/'.\Gini\File::relativePath($info->path, dirname(SYS_PATH));
+                    $rPath = \Gini\File::relativePath($info->path, dirname(SYS_PATH));
+
+                    if ($rPath[0] == '.') {
+                        $rPath = '@/'.\Gini\File::relativePath($info->path, $_SERVER['GINI_MODULE_BASE_PATH']);
+                    } else {
+                        $rPath = '!/'.$rPath;
+                    }
                 }
             }
 
