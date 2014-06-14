@@ -60,4 +60,24 @@ class Util
         return $password;
     }
 
+    public static function pathAndArgs(array $argv, $guessCase = false) {
+        $path = '';
+        $candidates = [];
+
+        while (count($argv) > 0) {
+            if ($guessCase) {
+                $arg = array_reduce(explode('_', strtr(array_shift($argv), '-', '_')), function($v, $i) {
+                    return ($v ?: '') . ucwords($i);
+                });
+            } else {
+                $arg = strtr(array_shift($argv), ['-'=>'', '_'=>'']);
+            }
+            if (!preg_match('|^[a-z][a-z0-9]+$|i', $arg)) break;
+            $path .= '/' . $arg;
+            $candidates[$path] = $argv;
+        }
+
+        return $candidates;
+    }
+
 }

@@ -191,24 +191,82 @@ class CLI
         echo "$info->name ($info->id/$info->version)\n";
     }
 
-    public static function commandAvailable(array $argv)
+    public static function possibleCommands($argv)
     {
-        // list available cli programs
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/Controller/CLI');
-        foreach ($paths as $path) {
-            if (!is_dir($path)) continue;
+        $candidates = Util::pathAndArgs($argv, true);
 
-            $dh = opendir($path);
-            if ($dh) {
-                while ($name = readdir($dh)) {
-                    if ($name[0] == '.') continue;
-                    if (!is_file($path . '/' . $name)) continue;
-                    printf("%s\t", strtolower(basename($name, '.php')));
+        // list available cli programs
+        $candidates = ['/' => $argv] + $candidates;
+
+        $commands = [];
+        $class = null;
+        foreach (array_reverse($candidates) as $path => $params) {
+            $paths = \Gini\Core::pharFilePaths(CLASS_DIR, rtrim('Gini/Controller/CLI/'.$path, '/'));
+            foreach ($paths as $p) {
+                if (!is_dir($p)) continue;
+
+                $dh = opendir($p);
+                if ($dh) {
+                    while ($name = readdir($dh)) {
+                        if ($name[0] == '.') continue;
+                        if (!is_file($p . '/' . $name)) continue;
+                        $commands[] = strtolower(basename($name, '.php'));
+                    }
+                    closedir($dh);
                 }
-                closedir($dh);
+
+            }
+
+            if (count($commands) > 0) break; // break the loop if hits.
+
+            // enumerate actions in class
+            $path = ltrim($path, '/');
+            $basename = basename($path);
+            $dirname = dirname($path);
+            
+            $class_namespace = '\Gini\Controller\CLI\\';
+            if ($dirname != '.') {
+                $class_namespace .= strtr($dirname, ['/'=>'\\']).'\\';
+            }
+
+            $class = $class_namespace . $basename;
+            if (class_exists($class)) break;
+
+            $class = $class_namespace . 'Controller' . $basename;
+            if (class_exists($class)) break;
+        }
+
+        if (count($commands) == 0) {
+
+            if ($class && class_exists($class)) {
+                $rc = new \ReflectionClass($class);
+                $methods = $rc->getMethods(\ReflectionMethod::IS_PUBLIC);
+                foreach ($methods as $m) {
+                    if (strncmp('action', $m->name, 6) != 0) continue;
+                    if (preg_match_all('`([A-Z]+[a-z\d]+|.+)`', substr($m->name, 6), $parts)) {
+                        $method = array_reduce($parts[0], function($v, $i){
+                            return ($v ? $v . '-' :  '') . strtolower($i);
+                        });
+                        $commands[] = $method;
+                    }
+                }
             }
 
         }
+
+        return $commands;
+    }
+
+    public static function commandAvailable($argv)
+    {
+        array_shift($argv);
+
+        $commands = self::possibleCommands($argv);
+
+        array_walk($commands, function($command) {
+            echo "$command\n";
+        });
+
         echo "\n";
     }
 
@@ -247,31 +305,17 @@ class CLI
 
     public static function dispatch(array $argv)
     {
-        $orig_argv = $argv;
-
-        $cmd = reset($argv);
-
-        $path = '';
-
-        $candidates = [];
-        while (count($argv) > 0) {
-            $arg = array_shift($argv);
-            if (!preg_match('|^[a-z][\w-]+\w$|', $arg)) break;
-            if ($path) $path .= '/' . $arg;
-            else $path = $arg;
-            $candidates[$path] = $argv;
-        }
+        $candidates = Util::pathAndArgs($argv);
 
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
-            $basename = array_reduce(explode('_', strtr(basename($path), '-', '_')), function($v, $i) {
-                return ($v ?: '') . ucwords($i);
-            }) ;
+            $path = ltrim($path, '/');
+            $basename = basename($path);
             $dirname = dirname($path);
             
             $class_namespace = '\Gini\Controller\CLI\\';
             if ($dirname != '.') {
-                $class_namespace .= strtr($dirname, ['-'=>'_', '/'=>'\\']).'\\';
+                $class_namespace .= strtr($dirname, ['/'=>'\\']).'\\';
             }
 
             $class = $class_namespace . $basename;
@@ -283,7 +327,7 @@ class CLI
 
         if (!$class || !class_exists($class, false)) {
             $class = '\Gini\Controller\CLI\App';
-            $params = $orig_argv;
+            $params = $argv;
         }
 
         \Gini\Config::set('runtime.controller_path', $path);
@@ -291,8 +335,8 @@ class CLI
 
         $controller = \Gini\IoC::construct($class);
 
-        $action = preg_replace('/[-_]/', '', $params[0]);
-        if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {
+        $action = $params[0];
+        if ($action && method_exists($controller, 'action'.$action)) {
             $action = 'action'.$action;
             array_shift($params);
         } elseif (!$action && method_exists($controller, '__index')) {

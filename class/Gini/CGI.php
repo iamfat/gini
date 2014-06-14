@@ -44,26 +44,18 @@ class CGI
         $args = explode('/', $route);
 
         $path = '';
-        $candidates = array('index' => $args);
-        while (count($args) > 0) {
-            $arg = array_shift($args);
-            if (!preg_match('|^[a-z-_][\w-]*$|', $arg)) break;
-            $arg = strtolower($arg);
-            if ($path) $path .= '/' . $arg;
-            else $path = $arg;
-            $candidates[$path] = $args;
-        }
+        $candidates = array('/Index' => $args) + Util::pathAndArgs($args);
 
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
-            $basename = array_reduce(explode('_', strtr(basename($path), '-', '_')), function($v, $i) {
-                return ($v ?: '') . ucwords($i);
-            }) ;
+            
+            $path = ltrim($path, '/');
+            $basename = basename($path);
             $dirname = dirname($path);
             
             $class_namespace = '\Gini\Controller\CGI\\';
             if ($dirname != '.') {
-                $class_namespace .= strtr($dirname, ['-'=>'_', '/'=>'\\']).'\\';
+                $class_namespace .= strtr($dirname, ['/'=>'\\']).'\\';
             }
 
             $class = $class_namespace . $basename;
@@ -87,7 +79,7 @@ class CGI
         \Gini\Config::set('runtime.controller_class', $class);
         $controller = \Gini\IoC::construct($class);
 
-        $action = preg_replace('/[-_]/', '', $params[0]);
+        $action = strtr($params[0], ['-'=>'', '_'=>'']);
         if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {
             $action = 'action'.$action;
             array_shift($params);

@@ -1,43 +1,45 @@
 {
-	"id": "gini",
-	"name": "Gini Framework",
-	"author": "Jia Huang",
-	"email": "iamfat@gmail.com",
-	"version": "0.6.0-0",
-	"build": {
-		"copy": [
-			"bin",
-			"lib",
-			"raw",
-			"data",
-			"composer.json",
-			"vendor"
-		]
-	},
-	"composer": {
-	    "name": "iamfat/gini",
-	    "description": "Gini PHP Framework",
-	    "license": "MIT",
-	    "type": "library",
-	    "authors": [
-	        {
-	            "name": "Jia Huang",
-	            "email": "iamfat@gmail.com"
-	        }
-	    ],
-		"bin": [
-			"bin/gini"
-		],
-		"scripts": {
-			"post-package-install": "composer update",
-			"post-package-update": "composer update"
-		},
-		 "require-dev": {
-			"linkorb/jsmin-php": "dev-master",
-			"natxet/CssMin": "3.*",
-			"henrikbjorn/lurker": "1.*",
-			"sabre/dav": "2.*"
-		}
-	},
-	"dependencies": {}
+    "id": "gini",
+    "name": "Gini Framework",
+    "author": "Jia Huang",
+    "email": "iamfat@gmail.com",
+    "version": "0.6.0-1",
+    "build": {
+        "copy": [
+            "bin",
+            "lib",
+            "raw",
+            "data",
+            "composer.json",
+            "vendor"
+        ]
+    },
+    "composer": {
+        "name": "iamfat/gini",
+        "description": "Gini PHP Framework",
+        "license": "MIT",
+        "type": "library",
+        "authors": [
+            {
+                "name": "Jia Huang",
+                "email": "iamfat@gmail.com"
+            }
+        ],
+        "bin": [
+            "bin/gini"
+        ],
+        "scripts": {
+            "post-package-install": "composer update",
+            "post-package-update": "composer update"
+        },
+        "require-dev": {
+            "linkorb/jsmin-php": "dev-master",
+            "natxet/CssMin": "3.*",
+            "henrikbjorn/lurker": "1.*",
+            "sabre/dav": "2.*"
+        }
+    },
+    "dependencies": [
+
+    ]
 }

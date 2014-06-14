@@ -206,7 +206,6 @@ namespace Gini {
             //定义类后缀与类路径的对应关系
             // $class = strtolower($class);
             $path = str_replace('\\', '/', $class);
-
             if (isset($GLOBALS['gini.class_map'])) {
                 $path = strtolower($path);
                 if (isset($GLOBALS['gini.class_map'][$path])) {
@@ -427,7 +426,10 @@ namespace Gini {
             foreach (self::$MODULE_INFO as $name => $info) {
                 // use CamelCase instead of underscore_case
                 // $class = '\\'.str_replace('-', '_', $name);
-                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
+                $class = '\Gini\Module\\'.array_reduce(explode('_', str_replace('-', '_', $name)), function($v, $i) {
+                    return $v.ucwords($i);
+                });
+
                 if (!$info->error && method_exists($class, 'setup')) {
                     call_user_func($class.'::setup');
                 }
@@ -447,7 +449,10 @@ namespace Gini {
             foreach (array_reverse(self::$MODULE_INFO) as $name => $info) {
                 // use CamelCase instead of underscore_case
                 // $class = '\\'.str_replace('-', '_', $name);
-                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
+                $class = '\Gini\Module\\'.array_reduce(explode('_', str_replace('-', '_', $name)), function($v, $i) {
+                    return $v.ucwords($i);
+                });
+
                 if (!$info->error && method_exists($class, 'shutdown')) {
                     call_user_func($class.'::shutdown');
                 }
