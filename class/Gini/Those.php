@@ -428,7 +428,7 @@ namespace {
     } else {
         function a($name, $criteria = null)
         {
-            $name = str_replace('/', '\\', $name);
+            $name = implode('\\', array_map('ucwords', explode('/', $name)));
             $class_name = '\Gini\ORM\\'.$name;
 
             return \Gini\IoC::construct($class_name, $criteria);
