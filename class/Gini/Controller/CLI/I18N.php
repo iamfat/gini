@@ -97,7 +97,7 @@ class I18N extends \Gini\Controller\CLI
             echo "merge: $appname.po\n";
             $cmd = sprintf('msgcat -o %1$s %2$s',
                    escapeshellarg($pofile),
-                   implode(' ', array_map(escapeshellarg, $paths)));
+                   implode(' ', array_map('escapeshellarg', $paths)));
             passthru($cmd);
 
             $mofile = $lodir . '/'.$appname.'.mo';

@@ -71,7 +71,7 @@ class App extends \Gini\Controller\CLI
         ];
 
         $default = [
-            'name' => ucwords(basename($path)),
+            'name' => ucwords(str_replace('-', ' ', basename($path))),
             'id' => strtolower(basename($path)),
             'path' => $path,
             'description' => 'App description...',

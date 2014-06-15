@@ -255,9 +255,7 @@ class CLI
                 foreach ($methods as $m) {
                     if (strncmp('action', $m->name, 6) != 0) continue;
                     if (preg_match_all('`([A-Z]+[a-z\d]+|.+)`', substr($m->name, 6), $parts)) {
-                        $method = array_reduce($parts[0], function ($v, $i) {
-                            return ($v ? $v . '-' :  '') . strtolower($i);
-                        });
+                        $method = strtolower(implode('-', $parts[0]));
                         if ($params[0] === $method) {
                             $commands = [];
                             break;
@@ -320,6 +318,10 @@ class CLI
 
     public static function dispatch(array $argv)
     {
+        if (!isset($GLOBALS['gini.class_map'])) {
+            echo "\e[33mNOTICE: You are currently executing commands without cache!\e[0m\n\n";
+        }
+ 
         $candidates = Util::pathAndArgs($argv, true);
 
         $class = null;

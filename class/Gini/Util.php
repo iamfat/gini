@@ -67,11 +67,9 @@ class Util
 
         while (count($argv) > 0) {
             if ($guessCase) {
-                $arg = array_reduce(explode('_', strtr(array_shift($argv), '-', '_')), function ($v, $i) {
-                    return ($v ?: '') . ucwords($i);
-                });
+                $arg = implode('', array_map('ucwords', explode('_', str_replace('-', '_', array_shift($argv)))));
             } else {
-                $arg = strtr(array_shift($argv), ['-'=>'', '_'=>'']);
+                $arg = str_replace('-', '_', array_shift($argv));
             }
             if (!preg_match('|^[a-z][a-z0-9]+$|i', $arg)) break;
             $path .= '/' . $arg;
