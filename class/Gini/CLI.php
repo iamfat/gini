@@ -320,7 +320,7 @@ class CLI
 
     public static function dispatch(array $argv)
     {
-        $candidates = Util::pathAndArgs($argv);
+        $candidates = Util::pathAndArgs($argv, true);
 
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {

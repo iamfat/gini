@@ -44,7 +44,7 @@ class CGI
         $args = explode('/', $route);
 
         $path = '';
-        $candidates = array('/Index' => $args) + Util::pathAndArgs($args);
+        $candidates = array('/index' => $args) + Util::pathAndArgs($args);
 
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
