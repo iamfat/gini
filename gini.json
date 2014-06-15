@@ -28,10 +28,6 @@
         "bin": [
             "bin/gini"
         ],
-        "scripts": {
-            "post-package-install": "composer update",
-            "post-package-update": "composer update"
-        },
         "require-dev": {
             "linkorb/jsmin-php": "dev-master",
             "natxet/CssMin": "3.*",

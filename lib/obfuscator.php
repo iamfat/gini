@@ -498,13 +498,30 @@ class Obfuscator
         return strtr($str, $this->php_tokens);
     }
 
+    private static function _loadGiniComposer()
+    {
+        if (file_exists(SYS_PATH.'/vendor/autoload.php')) {
+            // gini was installed independently.
+            require_once SYS_PATH.'/vendor/autoload.php';
+        } elseif (file_exists(SYS_PATH.'/../../vendor/autoload.php')) {
+            // gini was installed via composer way.
+            require_once SYS_PATH.'/../../vendor/autoload.php';
+        }
+    }
+
     public static function minify_js($js)
     {
+        if (!class_exists('\JSMin')) {
+            self::_loadGiniComposer();
+        }
         return \JSMin::minify($js);
     }
 
     public static function minify_css($css)
     {
+        if (!class_exists('\CssMin')) {
+            self::_loadGiniComposer();
+        }
         return \CssMin::minify($css);
     }
 

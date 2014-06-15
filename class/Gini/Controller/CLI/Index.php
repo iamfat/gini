@@ -5,14 +5,25 @@ namespace Gini\Controller\CLI;
 class Index extends \Gini\Controller\CLI
 {
 
-    private function _configFile()
+    private static function _loadGiniComposer()
+    {
+        if (file_exists(SYS_PATH.'/vendor/autoload.php')) {
+            // gini was installed independently.
+            require_once SYS_PATH.'/vendor/autoload.php';
+        } elseif (file_exists(SYS_PATH.'/../../autoload.php')) {
+            // gini was installed via composer way.
+            require_once SYS_PATH.'/../../autoload.php';
+        }
+    }
+
+    private static function _configFile()
     {
         return posix_getpwuid(posix_getuid())['dir'] .'/.gini.conf';
     }
 
-    private function _config()
+    private static function _config()
     {
-        $configFile = $this->_configFile();
+        $configFile = self::_configFile();
         if (file_exists($configFile)) {
             $config = yaml_parse(@file_get_contents($configFile));
         }
@@ -20,11 +31,16 @@ class Index extends \Gini\Controller\CLI
         return (array) $config;
     }
 
-    private function _davOptionsAndHeaders()
+    private static function _serverUri()
     {
-        $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+        return $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+    }
 
-        $config = $this->_config();
+    private static function _davOptionsAndHeaders()
+    {
+        $uri = self::_serverUri();
+
+        $config = self::_config();
         if (isset($config['token'])) {
             // Use Token
             $options = [ 'baseUri' => $uri ];
@@ -79,10 +95,10 @@ class Index extends \Gini\Controller\CLI
         $config = [ 'username' => $username ];
 
         try {
-            $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+            $uri = self::_serverUri();
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
             $config['token'] = $rpc->createToken($username, $password);
-            yaml_emit_file($this->_configFile(), $config);
+            yaml_emit_file(self::_configFile(), $config);
 
             echo "You've successfully logged in as $username.\n";
         } catch (\Gini\RPC\Exception $e) {
@@ -93,7 +109,7 @@ class Index extends \Gini\Controller\CLI
 
     public function actionLogout($args)
     {
-        $configFile = $this->_configFile();
+        $configFile = self::_configFile();
         if (file_exists($configFile)) {
             unlink($configFile);
         }
@@ -103,7 +119,7 @@ class Index extends \Gini\Controller\CLI
 
     public function actionWho($args)
     {
-        $config = $this->_config();
+        $config = self::_config();
         if (isset($config['username'])) {
             echo "Hey! You are \e[33m".$config['username']."\e[0m!\n";
         } else {
@@ -116,7 +132,6 @@ class Index extends \Gini\Controller\CLI
         count($argv) > 0 or die("Usage: gini index publish <version>\n\n");
 
         $appId = APP_ID;
-        // TODO: publish current module to gini-index.genee.cn
         $version = $argv[0];
         $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
         $command = "git --git-dir=$GIT_DIR archive $version --format tgz 2> /dev/null";
@@ -136,10 +151,10 @@ class Index extends \Gini\Controller\CLI
 
             // sometimes people will run publish before run composer
             if (!class_exists('\Sabre\DAV\Client')) {
-                require_once SYS_PATH.'/vendor/autoload.php';
+                self::_loadGiniComposer();
             }
 
-            list($options, $headers) = $this->_davOptionsAndHeaders();
+            list($options, $headers) = self::_davOptionsAndHeaders();
 
             $client = new \Sabre\DAV\Client($options);
             $response = $client->request('MKCOL', $appId, null, $headers);
@@ -170,10 +185,10 @@ class Index extends \Gini\Controller\CLI
         $path = "$appId/$version.tgz";
 
         if (!class_exists('\Sabre\DAV\Client')) {
-            require_once SYS_PATH.'/vendor/autoload.php';
+            self::_loadGiniComposer();
         }
 
-        list($options, $headers) = $this->_davOptionsAndHeaders();
+        list($options, $headers) = self::_davOptionsAndHeaders();
 
         $client = new \Sabre\DAV\Client($options);
         $response = $client->request('HEAD', $path, null, $headers);
@@ -196,10 +211,10 @@ class Index extends \Gini\Controller\CLI
         (count($argv) > 0 || APP_ID != 'gini') or die("Usage: gini index install <module> <version>\n\n");
 
         if (!class_exists('\Sabre\DAV\Client')) {
-            require_once SYS_PATH.'/vendor/autoload.php';
+            self::_loadGiniComposer();
         }
 
-        list($options, $headers) = $this->_davOptionsAndHeaders();
+        list($options, $headers) = self::_davOptionsAndHeaders();
 
         $client = new \Sabre\DAV\Client($options);
 
