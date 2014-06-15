@@ -5,12 +5,12 @@ namespace Gini\Controller\CLI;
 class Web extends \Gini\Controller\CLI
 {
 
-	public function __index($args)
-	{
-		echo "gini web update\n";
+    public function __index($args)
+    {
+        echo "gini web update\n";
         echo "gini web preview\n";
         echo "gini web clean\n";
-	}
+    }
 
     private function _convert_less()
     {
@@ -109,8 +109,8 @@ class Web extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
-	public function actionUpdate($args)
-	{
+    public function actionUpdate($args)
+    {
         $web_dir = APP_PATH . '/web';
         \Gini\File::ensureDir($web_dir);
         $cgi_path = realpath(dirname(realpath($_SERVER['SCRIPT_FILENAME'])) . '/../lib/cgi.php');
@@ -121,7 +121,7 @@ class Web extends \Gini\Controller\CLI
         $this->_merge_assets();
         $this->_convert_less();
         $this->_uglify_js();
-	}
+    }
 
     public function actionPreview($args)
     {
@@ -149,12 +149,12 @@ class Web extends \Gini\Controller\CLI
 
     public function actionClean($args)
     {
-    	if (!file_exists(APP_PATH.'/web')) {
-    		die("You don't need to clean web dir since it does not exists.\n");
-    	}
+        if (!file_exists(APP_PATH.'/web')) {
+            die("You don't need to clean web dir since it does not exists.\n");
+        }
 
-    	echo "Removing Web Directory...\n";
-    	\Gini\File::removeDir(APP_PATH.'/web');
+        echo "Removing Web Directory...\n";
+        \Gini\File::removeDir(APP_PATH.'/web');
         echo "   \e[32mdone.\e[0m\n";
     }
 

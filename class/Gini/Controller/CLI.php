@@ -50,11 +50,6 @@ abstract class CLI
         $this->__unknown($params);
     }
 
-    public function actionHelp($params)
-    {
-        echo "\e[1;34mgini\e[0m: help is unavailable.\n";
-    }
-
     public function __unknown($params)
     {
         echo "\e[1;34mgini\e[0m: unknown command.\n";

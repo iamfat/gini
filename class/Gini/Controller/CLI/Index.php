@@ -5,33 +5,33 @@ namespace Gini\Controller\CLI;
 class Index extends \Gini\Controller\CLI
 {
 
-	private function _configFile()
-	{
-		return posix_getpwuid(posix_getuid())['dir'] .'/.gini.conf';
-	}
+    private function _configFile()
+    {
+        return posix_getpwuid(posix_getuid())['dir'] .'/.gini.conf';
+    }
 
-	private function _config()
-	{
-		$configFile = $this->_configFile();
-		if (file_exists($configFile)) {
-	        $config = yaml_parse(@file_get_contents($configFile));
-		}
+    private function _config()
+    {
+        $configFile = $this->_configFile();
+        if (file_exists($configFile)) {
+            $config = yaml_parse(@file_get_contents($configFile));
+        }
 
-		return (array) $config;
-	}
+        return (array) $config;
+    }
 
-	private function _davOptionsAndHeaders()
-	{
+    private function _davOptionsAndHeaders()
+    {
         $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
 
-		$config = $this->_config();
-		if (isset($config['token'])) {
-			// Use Token
+        $config = $this->_config();
+        if (isset($config['token'])) {
+            // Use Token
             $options = [ 'baseUri' => $uri ];
             $headers = [ 'Authorization' => 'Gini '.$config['token'] ];
-            
-		} else {
-			// Use Username / Password
+
+        } else {
+            // Use Username / Password
             $userName = readline('User: ');
             echo 'Password: ';
             `stty -echo`;
@@ -45,30 +45,30 @@ class Index extends \Gini\Controller\CLI
                 'password' => $password,
             ];
 
-			$headers = [];
-		}
+            $headers = [];
+        }
 
-		return [$options, $headers];
-	}
+        return [$options, $headers];
+    }
 
-	public function __index($args)
-	{
-		echo "gini index who\n";
-		echo "gini index login <user>\n";
-		echo "gini index logout\n";
-		echo "gini index publish <version>\n";
-		echo "gini index unpublish <version>\n";
+    public function __index($args)
+    {
+        echo "gini index who\n";
+        echo "gini index login <user>\n";
+        echo "gini index logout\n";
+        echo "gini index publish <version>\n";
+        echo "gini index unpublish <version>\n";
         echo "gini index install <module> <version>\n";
-		echo "gini index search <keyword>\n";
- 	}
+        echo "gini index search <keyword>\n";
+    }
 
-	public function actionLogin($args)
-	{
-		if (count($args) > 0) {
-			$username = trim($args[0]);
-		} else {
+    public function actionLogin($args)
+    {
+        if (count($args) > 0) {
+            $username = trim($args[0]);
+        } else {
             $username = readline('User: ');
-		}
+        }
 
         echo 'Password: ';
         `stty -echo`;
@@ -77,39 +77,39 @@ class Index extends \Gini\Controller\CLI
         echo "\n";
 
         $config = [ 'username' => $username ];
-        
-        try {
-	        $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
-	        $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
-	        $config['token'] = $rpc->createToken($username, $password);
-	        yaml_emit_file($this->_configFile(), $config);
 
-			echo "You've successfully logged in as $username.\n";
+        try {
+            $uri = $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+            $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
+            $config['token'] = $rpc->createToken($username, $password);
+            yaml_emit_file($this->_configFile(), $config);
+
+            echo "You've successfully logged in as $username.\n";
         } catch (\Gini\RPC\Exception $e) {
-			echo "Server Error: ".$e->getMessage()."\n";
+            echo "Server Error: ".$e->getMessage()."\n";
         }
 
-	}
+    }
 
-	public function actionLogout($args)
-	{
-		$configFile = $this->_configFile();
-		if (file_exists($configFile)) {
-			unlink($configFile);
-		}
+    public function actionLogout($args)
+    {
+        $configFile = $this->_configFile();
+        if (file_exists($configFile)) {
+            unlink($configFile);
+        }
 
-		echo "You are logged out now.\n";
-	}
+        echo "You are logged out now.\n";
+    }
 
-	public function actionWho($args)
-	{
-		$config = $this->_config();
+    public function actionWho($args)
+    {
+        $config = $this->_config();
         if (isset($config['username'])) {
-    		echo "Hey! You are \e[33m".$config['username']."\e[0m!\n";
-    	} else {
-    		echo "Oops. You are \e[33mNOBODY\e[0m!\n";
-    	}
-	}
+            echo "Hey! You are \e[33m".$config['username']."\e[0m!\n";
+        } else {
+            echo "Oops. You are \e[33mNOBODY\e[0m!\n";
+        }
+    }
 
     public function actionPublish($argv)
     {
@@ -139,7 +139,7 @@ class Index extends \Gini\Controller\CLI
                 require_once SYS_PATH.'/vendor/autoload.php';
             }
 
-			list($options, $headers) = $this->_davOptionsAndHeaders();
+            list($options, $headers) = $this->_davOptionsAndHeaders();
 
             $client = new \Sabre\DAV\Client($options);
             $response = $client->request('MKCOL', $appId, null, $headers);

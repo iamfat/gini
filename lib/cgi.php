@@ -2,6 +2,8 @@
 
 namespace Gini;
 
+define('GINI_MUST_CACHE_AUTOLOAD', 1);
+
 require_once __DIR__."/bootstrap.php";
 
 class Application

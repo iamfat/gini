@@ -215,6 +215,10 @@ namespace Gini {
                 return;
             }
 
+            if (defined('GINI_MUST_CACHE_AUTOLOAD')) {
+                die ("Missing Autoloading Cache!\n");
+            }
+
             $file = self::_require(CLASS_DIR, $path);
         }
 
@@ -426,7 +430,7 @@ namespace Gini {
             foreach (self::$MODULE_INFO as $name => $info) {
                 // use CamelCase instead of underscore_case
                 // $class = '\\'.str_replace('-', '_', $name);
-                $class = '\Gini\Module\\'.array_reduce(explode('_', str_replace('-', '_', $name)), function($v, $i) {
+                $class = '\Gini\Module\\'.array_reduce(explode('_', str_replace('-', '_', $name)), function ($v, $i) {
                     return $v.ucwords($i);
                 });
 
@@ -449,7 +453,7 @@ namespace Gini {
             foreach (array_reverse(self::$MODULE_INFO) as $name => $info) {
                 // use CamelCase instead of underscore_case
                 // $class = '\\'.str_replace('-', '_', $name);
-                $class = '\Gini\Module\\'.array_reduce(explode('_', str_replace('-', '_', $name)), function($v, $i) {
+                $class = '\Gini\Module\\'.array_reduce(explode('_', str_replace('-', '_', $name)), function ($v, $i) {
                     return $v.ucwords($i);
                 });
 
@@ -470,7 +474,7 @@ namespace {
      * Shortcut for global variables in Gini
      *
      * @param  string $key Name of global variable
-     * @param string[optional] string given when setting
+     *                     @param string[optional] string given when setting
      * @return mixed
      **/
     if (function_exists('_G')) {

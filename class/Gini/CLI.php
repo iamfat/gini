@@ -20,11 +20,6 @@ class CLI
     const PARSE_IN_ARG = 1;
     const PARSE_IN_QUOTE = 2;
 
-    static $built_in_commands = array(
-        'help' => 'Help',
-        '-' => 'List available commands',
-        );
-
     public static function parseArguments($line)
     {
         $max = strlen($line);
@@ -157,14 +152,15 @@ class CLI
         }
 
         switch ($cmd) {
-        case '-':
+        case '--':
             $method = 'commandAvailable';
             break;
         case '-v':
             $method = 'commandVersion';
             break;
+        case '':
         case '-h':
-            $argv = ['help'];
+            $method = 'commandHelp';
             break;
         case 'root':
             $method = 'commandRoot';
@@ -182,7 +178,7 @@ class CLI
 
     public static function commandRoot()
     {
-        echo $_SERVER['GINI_APP_PATH']."\n";
+        echo APP_PATH."\n";
     }
 
     public static function commandVersion()
@@ -191,12 +187,20 @@ class CLI
         echo "$info->name ($info->id/$info->version)\n";
     }
 
+    public static function commandHelp()
+    {
+        echo "Usage: gini <command>\n";
+        echo "where <command> is one of:\n";
+        echo "    ".implode(",  ", self::possibleCommands([]))."\n\n";
+        echo "gini -v    show gini version\n";
+        echo "gini -h    show quick help\n";
+        echo "\n";
+    }
+
     public static function possibleCommands($argv)
     {
-        $candidates = Util::pathAndArgs($argv, true);
-
         // list available cli programs
-        $candidates = ['/' => $argv] + $candidates;
+        $candidates = ['/'=>[]] + Util::pathAndArgs($argv, true);
 
         $commands = [];
         $class = null;
@@ -209,8 +213,8 @@ class CLI
                 if ($dh) {
                     while ($name = readdir($dh)) {
                         if ($name[0] == '.') continue;
-                        if (!is_file($p . '/' . $name)) continue;
-                        $commands[] = strtolower(basename($name, '.php'));
+                       if (!is_file($p . '/' . $name)) continue;
+                         $commands[] = strtolower(basename($name, '.php'));
                     }
                     closedir($dh);
                 }
@@ -223,7 +227,7 @@ class CLI
             $path = ltrim($path, '/');
             $basename = basename($path);
             $dirname = dirname($path);
-            
+
             $class_namespace = '\Gini\Controller\CLI\\';
             if ($dirname != '.') {
                 $class_namespace .= strtr($dirname, ['/'=>'\\']).'\\';
@@ -234,19 +238,30 @@ class CLI
 
             $class = $class_namespace . 'Controller' . $basename;
             if (class_exists($class)) break;
+
+            $class = null;
         }
 
-        if (count($commands) == 0) {
+        if (count($commands) == 0 || $path == '/') {
 
-            if ($class && class_exists($class)) {
+            if (!$class) {
+                $class = '\Gini\Controller\CLI\App';
+                $params = $argv;
+            }
+
+            if (class_exists($class)) {
                 $rc = new \ReflectionClass($class);
                 $methods = $rc->getMethods(\ReflectionMethod::IS_PUBLIC);
                 foreach ($methods as $m) {
                     if (strncmp('action', $m->name, 6) != 0) continue;
                     if (preg_match_all('`([A-Z]+[a-z\d]+|.+)`', substr($m->name, 6), $parts)) {
-                        $method = array_reduce($parts[0], function($v, $i){
+                        $method = array_reduce($parts[0], function ($v, $i) {
                             return ($v ? $v . '-' :  '') . strtolower($i);
                         });
+                        if ($params[0] === $method) {
+                            $commands = [];
+                            break;
+                        }
                         $commands[] = $method;
                     }
                 }
@@ -263,7 +278,7 @@ class CLI
 
         $commands = self::possibleCommands($argv);
 
-        array_walk($commands, function($command) {
+        array_walk($commands, function ($command) {
             echo "$command\n";
         });
 
@@ -312,7 +327,7 @@ class CLI
             $path = ltrim($path, '/');
             $basename = basename($path);
             $dirname = dirname($path);
-            
+
             $class_namespace = '\Gini\Controller\CLI\\';
             if ($dirname != '.') {
                 $class_namespace .= strtr($dirname, ['/'=>'\\']).'\\';

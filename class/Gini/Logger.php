@@ -25,7 +25,6 @@ class Logger
      *
      * @param  string $name Name of the logger
      * @return Logger
-     * @author Jia Huang
      */
     public static function of($name)
     {

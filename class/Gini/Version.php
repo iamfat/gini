@@ -94,6 +94,7 @@ class Version
 
                 if ($v->minorVersion == 0) {
                     if ($this->compare("0.0.{$v->patchVersion}") == 0) return true;
+
                     return false;
                 } else {
                     $maxVer = implode('.', [

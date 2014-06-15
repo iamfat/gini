@@ -5,14 +5,14 @@ namespace Gini\Controller\CLI;
 class ORM extends \Gini\Controller\CLI
 {
 
-	public function __index($args)
-	{
-		echo "gini orm update\n";
-		echo "gini orm export\n";
-	}
+    public function __index($args)
+    {
+        echo "gini orm update\n";
+        echo "gini orm export\n";
+    }
 
- 	public function actionUpdate($args)
-	{
+    public function actionUpdate($args)
+    {
         // ORM required class map.
         if (!isset($GLOBALS['gini.class_map'])) {
             echo "\e[31mYou need to run \e[1m\"gini cache class\"\e[0;31m before update ORM.\e[0m\n";
@@ -29,7 +29,7 @@ class ORM extends \Gini\Controller\CLI
             \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
                 $oname = preg_replace('|.php$|', '', $file);
                 if ($oname == 'Object') return;
- 
+
                 $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
@@ -48,10 +48,10 @@ class ORM extends \Gini\Controller\CLI
         }
 
         echo "   \e[32mdone.\e[0m\n";
-	}
+    }
 
-	public function actionExport($args)
-	{
+    public function actionExport($args)
+    {
         printf("Exporting ORM structures...\n\n");
 
         $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
@@ -91,6 +91,6 @@ class ORM extends \Gini\Controller\CLI
             });
 
         }
-	}
+    }
 
 }

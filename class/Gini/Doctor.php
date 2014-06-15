@@ -70,7 +70,7 @@ class Doctor
         if (!$items || in_array('web', $items)) {
             echo "Checking web dependencies...\n";
             if (!file_exists(APP_PATH . '/web')) {
-                $errors['web'][] = "Please run \e[1m\"gini update web\"\e[0m to generate web directory!";
+                $errors['web'][] = "Please run \e[1m\"gini web update\"\e[0m to generate web directory!";
             }
             if ($errors['web']) {
                 static::_outputErrors($errors['web']);

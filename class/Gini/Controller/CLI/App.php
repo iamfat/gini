@@ -90,20 +90,14 @@ class App extends \Gini\Controller\CLI
         file_put_contents($path . '/gini.json', $gini_json);
     }
 
-    public function actionHelp($args)
+    public function __index($args)
     {
         echo "gini init\n";
         echo "gini modules\n";
         echo "gini cache [clean]\n";
-        echo "gini preview <host:port>\n";
         echo "gini version <version>\n";
         echo "gini build\n";
         echo "gini install [module [version]]\n";
-    }
-
-    public function __index($args)
-    {
-        $this->actionHelp($args);
     }
 
     public function actionInfo($args)
@@ -112,10 +106,9 @@ class App extends \Gini\Controller\CLI
 
         $info = \Gini\Core::moduleInfo($path);
         if ($info) {
-            foreach ($info as $k => $v) {
-                if (is_array($v)) $v = J($v);
-                printf("%s = %s\n", $k, $v);
-            }
+            $info = (array) $info;
+            unset($info['path']);
+            echo yaml_emit($info);
         }
 
     }
@@ -305,23 +298,19 @@ class App extends \Gini\Controller\CLI
         $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini cache config");
+                passthru("gini config update");
             });
         });
 
-        // Class
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, '');
+        // Class && View
+        $paths
+            = array_merge(
+                \Gini\Core::pharFilePaths(CLASS_DIR, ''),
+                \Gini\Core::pharFilePaths(VIEW_DIR, '')
+            );
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini cache class");
-            });
-        });
-
-        // View
-        $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'view');
-        array_walk($paths, function ($path) use ($watcher) {
-            $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini cache view");
+                passthru("gini cache");
             });
         });
 
@@ -329,7 +318,7 @@ class App extends \Gini\Controller\CLI
         $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini update orm");
+                passthru("gini orm update");
             });
         });
 
@@ -343,7 +332,7 @@ class App extends \Gini\Controller\CLI
 
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini update web");
+                passthru("gini web update");
             });
         });
 
