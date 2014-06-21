@@ -312,9 +312,33 @@ class Index extends \Gini\Controller\CLI
         }
     }
 
+    protected function _strPad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
+    {
+        $diff = mb_strwidth( $input ) - mb_strlen( $input );
+
+        return str_pad( $input, $pad_length + $diff, $pad_string, $pad_type );
+    }
+
     public function actionSearch($argv)
     {
-        die("Oh Shoot! I forgot to implement this.\n");
+        count($argv) > 0 or die("Usage: gini index search <keywords>\n\n");
+
+        try {
+            $uri = self::_serverUri();
+            $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
+            $modules = $rpc->search($argv[0]);
+
+            foreach ((array) $modules as $m) {
+                printf("%s %s %s %s\e[0m\n",
+                    $this->_strPad($m['id'], 20, ' '),
+                    $this->_strPad($m['version'], 15, ' '),
+                    $this->_strPad($m['name'], 30, ' ')
+                );
+            }
+
+        } catch (\Gini\RPC\Exception $e) {
+            echo "Server Error: ".$e->getMessage()."\n";
+        }
     }
 
 }
