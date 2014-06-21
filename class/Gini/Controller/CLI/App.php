@@ -347,9 +347,21 @@ class App extends \Gini\Controller\CLI
         $version = $argv[0];
         if ($version) {
             // set current version
-            $path = $info->path;
+            $v = new \Gini\Version($version);
+            $v->compare($info->version) > 0 or die("A newer version (>{$info->version}) is required!\n");
+
             $info->version = $version;
             \Gini\Core::saveModuleInfo($info);
+
+            // commit it if it is a git repo
+            if (is_dir(APP_PATH.'/.git')) {
+                $WORK_TREE = escapeshellarg(APP_PATH);
+                $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
+                $GIT_MSG = escapeshellarg("Bumped version to $version");
+                $command = "git --git-dir=$GIT_DIR --work-tree=$WORK_TREE commit -m $GIT_MSG gini.json && git --git-dir=$GIT_DIR tag $version";
+                passthru($command);
+                return;
+            }
         }
 
         echo "$info->name ($info->id/$info->version)\n";
