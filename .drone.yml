@@ -1,6 +1,8 @@
-image: iamfat/gini
+image: iamfat/gini-dev
 
 script:
-  - composer install --dev --prefer-dist --no-interaction
+  - composer self-update
+  - composer install --dev --no-interaction
   - bin/gini cache
-  - phpunit
+  - bin/gini config update
+  - /usr/local/share/composer/vendor/bin/phpunit
