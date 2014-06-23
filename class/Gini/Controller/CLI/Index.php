@@ -329,7 +329,7 @@ class Index extends \Gini\Controller\CLI
             $modules = $rpc->search($argv[0]);
 
             foreach ((array) $modules as $m) {
-                printf("%s %s %s %s\e[0m\n",
+                printf("%s %s %s\e[0m\n",
                     $this->_strPad($m['id'], 20, ' '),
                     $this->_strPad($m['version'], 15, ' '),
                     $this->_strPad($m['name'], 30, ' ')
