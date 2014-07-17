@@ -200,6 +200,7 @@ class Database
         }
 
         if (is_array($params)) {
+            $this->_driver->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
             \Gini\Logger::of('core')->debug("Database query prepare = {SQL}", ['SQL'=>preg_replace('/\s+/', ' ', $SQL)]);
             $st = $this->_driver->prepare($SQL);
             if (!$st) return false;

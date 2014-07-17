@@ -210,7 +210,8 @@ namespace Gini {
 
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'INNER JOIN '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table)
+                $field_name = $db->ident($this->_table, $this->_field.'_id');
+                $this->_join[] = 'INNER JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
                     . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
@@ -237,7 +238,8 @@ namespace Gini {
 
             $v = reset($values);
             if ($v instanceof Those) {
-                $this->_join[] = 'LEFT JOIN '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table)
+                $field_name = $db->ident($this->_table, $this->_field.'_id');
+                $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
                     . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
@@ -395,6 +397,10 @@ namespace Gini {
             $table = $this->_table;
 
             $from_SQL = 'FROM ' . $db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
+
+            if ($this->_join) {
+                $from_SQL .= ' ' . implode(' ', $this->_join);
+            }
 
             if ($this->_where) {
                 $from_SQL .= ' WHERE ' . implode(' ', $this->_where);
