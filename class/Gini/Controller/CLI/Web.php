@@ -71,8 +71,8 @@ class Web extends \Gini\Controller\CLI
                     // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
                     \Gini\File::ensureDir(dirname($dst_path));
                     printf("   %s\n", $file);
-                    $command = sprintf("uglifyjs %s -o %s",
-                        escapeshellarg($src_path), escapeshellarg($dst_path));
+                    $command = sprintf("uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s",
+                        escapeshellarg($src_path), time(), escapeshellarg($dst_path));
                     exec($command);
                 }
             });
