@@ -50,14 +50,6 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->SQL_idents = $args[1] ?: null;
         $this->SQL_params = $args[2] ?: null;
 
-        $count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $SQL);
-        $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM)\s/', '$1 COUNT($2) AS "count" $3', $count_SQL);
-        $count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1."id")', $count_SQL);
-        $count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
-        $count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
-
-        $this->count_SQL = $count_SQL;
-
         return $this;
     }
 
@@ -95,6 +87,16 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
         switch ($scope) {
         case 'count':
+            if (!isset($this->count_SQL) && $this->SQL) {
+                // guess count_SQL via SQL
+                $count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $SQL);
+                $count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
+                $count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
+                $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM)\s/', '$1 COUNT($2) AS "count" $3', $count_SQL);
+                $count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1."id")', $count_SQL);
+
+                $this->count_SQL = $count_SQL;
+            }
             $this->total_count = $this->count_SQL ? $this->db->value($this->count_SQL, $this->SQL_idents, $this->SQL_params) : 0;
             break;
         default:
