@@ -95,7 +95,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
         switch ($scope) {
         case 'count':
-            $this->total_count = $this->count_SQL ? $this->db->value($this->count_SQL) : 0;
+            $this->total_count = $this->count_SQL ? $this->db->value($this->count_SQL, $this->SQL_idents, $this->SQL_params) : 0;
             break;
         default:
             if ($this->SQL) {
