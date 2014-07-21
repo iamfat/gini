@@ -89,7 +89,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         case 'count':
             if (!isset($this->count_SQL) && $this->SQL) {
                 // guess count_SQL via SQL
-                $count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $SQL);
+                $count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
                 $count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
                 $count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
                 $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM)\s/', '$1 COUNT($2) AS "count" $3', $count_SQL);
