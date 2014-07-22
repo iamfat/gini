@@ -92,7 +92,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                 $count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
                 $count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
                 $count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
-                $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM)\s/', '$1 COUNT($2) AS "count" $3', $count_SQL);
+                $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 COUNT($2) AS "count" $3', $count_SQL);
                 $count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1."id")', $count_SQL);
 
                 $this->count_SQL = $count_SQL;
