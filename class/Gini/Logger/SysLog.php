@@ -29,7 +29,9 @@ class SysLog extends Handler
 
         $message = strtr($message, $replacements);
 
+        openlog(APP_ID, LOG_ODELAY, LOG_LOCAL0);
         syslog(self::$_LEVEL2PRIORITY[$level], $message);
+        closelog();
     }
 
 }
