@@ -17,6 +17,10 @@ namespace Gini\CGI {
 
         function validate($key, $assertion, $message)
         {
+            if (is_callable($assertion)) {
+                $assertion = $assertion();
+            }
+
             if (!$assertion) {
                 $this->_errors[$key] = $message;
             }
