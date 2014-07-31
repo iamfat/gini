@@ -79,8 +79,13 @@ class Event
             }
 
             $this->_pass = false;
-            if (is_callable($callback)) {
-                $return = call_user_func_array($callback, $params);
+            if ($callback) {
+                if (is_callable($callback)) {
+                    $return = call_user_func_array($callback, $params);
+                }
+                else {
+                    $return = null;
+                }
             }
 
             if (!$this->_pass) {
