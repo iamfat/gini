@@ -15,7 +15,6 @@ namespace Gini\CGI\Response;
 
         function content()
         {
-            return false;
         }
 
     }

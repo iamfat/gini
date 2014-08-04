@@ -17,6 +17,11 @@ namespace Gini\CGI {
 
         function validate($key, $assertion, $message)
         {
+
+            if (isset($this->_errors[$key])) {
+                return $this;
+            }
+
             if (is_object($assertion) && ($assertion instanceof \Closure)) {
                 $assertion = $assertion();
             }
