@@ -21,7 +21,7 @@ namespace Gini\CGI {
                 $assertion = $assertion();
             }
 
-            if (!$assertion) {
+            if (!$assertion && !isset($this->_errors[$key])) {
                 $this->_errors[$key] = $message;
             }
 
