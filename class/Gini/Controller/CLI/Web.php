@@ -52,6 +52,29 @@ class Web extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
+    private function _uglify_js_dir($from, $to)
+    {
+        \Gini\File::ensureDir($to);
+
+        \Gini\File::eachFilesIn($from, function ($file) use ($from, $to) {
+            $src_path = $from . '/' . $file;
+            $dst_path = $to . '/' . $file;
+
+            if (is_dir($src_path)) {
+                return $this->_uglify_js_dir($src_path, $dst_path);
+            }
+
+            if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+                // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
+                \Gini\File::ensureDir(dirname($dst_path));
+                printf("   %s\n", $file);
+                $command = sprintf("uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s",
+                    escapeshellarg($src_path), time(), escapeshellarg($dst_path));
+                exec($command);
+            }
+        });
+    }
+
     private function _uglify_js()
     {
         printf("%s\n", "Uglifying JS...");
@@ -63,19 +86,7 @@ class Web extends \Gini\Controller\CLI
         $less_map = [];
         foreach ($pinfo as $p) {
             $js_dir = $p->path . '/' . RAW_DIR . '/js';
-            \Gini\File::eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir) {
-                $src_path = $js_dir . '/' . $file;
-                $dst_path = $ugly_js_dir . '/' . $file;
-
-                if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
-                    // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
-                    \Gini\File::ensureDir(dirname($dst_path));
-                    printf("   %s\n", $file);
-                    $command = sprintf("uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s",
-                        escapeshellarg($src_path), time(), escapeshellarg($dst_path));
-                    exec($command);
-                }
-            });
+            $this->_uglify_js_dir($js_dir, $ugly_js_dir);
         }
 
         echo "   \e[32mdone.\e[0m\n";
