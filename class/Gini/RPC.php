@@ -29,12 +29,14 @@ class RPC
 
         $id = base_convert($this->_uniqid ++, 10, 36);
 
-        $raw_data = $this->post([
+        $raw_data = $this->post(J([
             'jsonrpc' => '2.0',
             'method' => $method,
             'params' => $params,
             'id' => $id,
-        ]);
+        ]));
+
+        \Gini\Logger::of('core')->debug("RPC <= {data}", ['data'=>$raw_data]);
 
         $data = @json_decode($raw_data, true);
         if (!isset($data['result'])) {
@@ -42,11 +44,11 @@ class RPC
                 $message = sprintf('remote error: %s', $data['error']['message']);
                 $code = $data['error']['code'];
                 throw IoC::construct('\Gini\RPC\Exception', $message, $code);
-            } elseif ($id != $data['id']) {
-                $message = 'wrong response id!';
-                throw IoC::construct('\Gini\RPC\Exception', $message);
             } elseif (is_null($data)) {
                 $message = sprintf('unknown error with raw data: %s', $raw_data ?: '(null)');
+                throw IoC::construct('\Gini\RPC\Exception', $message);
+            } elseif ($id != $data['id']) {
+                $message = 'wrong response id!';
                 throw IoC::construct('\Gini\RPC\Exception', $message);
             }
         }
@@ -77,17 +79,19 @@ class RPC
             ),
         ));
 
-        $post_data = J($post_data);
-
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 
-        $data = curl_exec($ch);
+        \Gini\Logger::of('core')->debug("RPC => {data}", ['data'=>$post_data]);
 
+        $data = curl_exec($ch);
         $errno = curl_errno($ch);
         if ($errno) {
-            \Gini\Logger::of('core')->debug("RPC error: {error}", ['error'=>curl_error($ch)]);
-            $data = null;
+            $message = curl_error($ch);
+            curl_close($ch);
+
+            \Gini\Logger::of('core')->error("RPC cURL error: {message}", ['message'=>$message]);
+            throw IoC::construct('\Gini\RPC\Exception', "cURL error: $message");
         }
 
         curl_close($ch);
