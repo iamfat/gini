@@ -224,7 +224,7 @@ class CLI
             if (count($commands) > 0) break; // break the loop if hits.
 
             // enumerate actions in class
-            $path = ltrim($path, '/');
+            $path = strtr(ltrim($path, '/'), ['-'=>'', '_'=>'']);
             $basename = basename($path);
             $dirname = dirname($path);
 
@@ -326,7 +326,7 @@ class CLI
 
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
-            $path = ltrim($path, '/');
+            $path = strtr(ltrim($path, '/'), ['-'=>'', '_'=>'']);
             $basename = basename($path);
             $dirname = dirname($path);
 

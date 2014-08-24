@@ -45,11 +45,10 @@ class CGI
 
         $path = '';
         $candidates = array('/index' => $args) + Util::pathAndArgs($args);
-
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
 
-            $path = ltrim($path, '/');
+            $path = strtr(ltrim($path, '/'), ['-'=>'', '_'=>'']);
             $basename = basename($path);
             $dirname = dirname($path);
 
