@@ -301,21 +301,6 @@ class SQLite extends \PDO implements Driver
 
     }
 
-    public function beginTransaction()
-    {
-        @$this->query("BEGIN TRANSACTION");
-    }
-
-    public function commit()
-    {
-        @$this->query("COMMIT TRANSACTION");
-    }
-
-    public function rollback()
-    {
-        @$this->query("ROLLBACK TRANSACTION");
-    }
-
     public function dropTable($table)
     {
         $this->query('DROP TABLE IF EXISTS '.$this->quoteIdent($table));
@@ -341,18 +326,5 @@ class SQLite extends \PDO implements Driver
 
         return true;
     }
-
-    //COMMENTED FOR STABILITY REASON
-    // function snapshot($filename, $tables) {
-    //     // TODO
-    //     // NOT IMPLEMENTED
-    //     return false;
-    // }
-    //
-    // function restore($filename, &$retore_filename, $tables) {
-    //     // TODO
-    //     // NOT IMPLEMENTED
-    //     return false;
-    // }
 
 }
