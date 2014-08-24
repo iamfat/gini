@@ -47,7 +47,8 @@ class Logger
     {
         $this->_name = $name;
 
-        foreach ((array) \Gini\Config::get("logger.{$this->_name}") as $handlerName => $options) {
+        $config = \Gini\Config::get("logger.{$this->_name}") ?: \Gini\Config::get("logger.default");
+        foreach ($config as $handlerName => $options) {
             $options = (array) $options;
             $level = isset($options['level']) ? $options['level'] : Logger\Level::DEBUG;
             $handlerClass = "\Gini\Logger\\$handlerName";
