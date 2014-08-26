@@ -99,7 +99,7 @@ class Config
                     $content = preg_replace_callback('/\$\((.+?)\)/', function ($matches) {
                         return $_SERVER[$matches[1]] ?: $matches[0];
                     }, $content);
-                    $config = (array) yaml_parse($content);
+                    $config = \Symfony\Component\Yaml\Yaml::parse($content);
                     $items[$category] = \Gini\Util::arrayMergeDeep($items[$category], $config);
                     break;
                 }

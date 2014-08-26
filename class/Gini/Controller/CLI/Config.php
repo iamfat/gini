@@ -32,7 +32,7 @@ class Config extends \Gini\Controller\CLI
     {
         $items = \Gini\Config::fetch();
         // echo J($items, JSON_PRETTY_PRINT);
-        echo yaml_emit($items, YAML_UTF8_ENCODING);
+        echo \Symfony\Component\Yaml\Yaml::dump($items);
     }
 
 }
