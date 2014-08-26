@@ -25,7 +25,7 @@ class Index extends \Gini\Controller\CLI
     {
         $configFile = self::_configFile();
         if (file_exists($configFile)) {
-            $config = yaml_parse(@file_get_contents($configFile));
+            $config = \Symfony\Component\Yaml\Yaml::parse(@file_get_contents($configFile));
         }
 
         return (array) $config;
@@ -98,7 +98,8 @@ class Index extends \Gini\Controller\CLI
             $uri = self::_serverUri();
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
             $config['token'] = $rpc->createToken($username, $password);
-            yaml_emit_file(self::_configFile(), $config);
+
+            file_put_contents(self::_configFile(), \Symfony\Component\Yaml\Yaml::dump($config));
 
             echo "You've successfully logged in as $username.\n";
         } catch (\Gini\RPC\Exception $e) {

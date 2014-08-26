@@ -108,7 +108,7 @@ class App extends \Gini\Controller\CLI
         if ($info) {
             $info = (array) $info;
             unset($info['path']);
-            echo yaml_emit($info);
+            echo \Symfony\Component\Yaml\Yaml::dump($info);
         }
 
     }
