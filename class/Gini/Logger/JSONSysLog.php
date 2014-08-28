@@ -21,7 +21,7 @@ class JSONSysLog extends Handler
 
         if (empty($context)) return;
 
-        $message = "[{$this->_name}] @cee: " . json_encode($context);
+        $message = "[{$this->_name}] @cee: " . J($context);
 
         openlog(APP_ID, LOG_ODELAY, LOG_LOCAL0);
         syslog(self::$_LEVEL2PRIORITY[$level], $message);
