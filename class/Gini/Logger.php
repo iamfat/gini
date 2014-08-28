@@ -8,6 +8,23 @@
  **/
 
 /**
+ * Example:
+ *
+ * ---
+ * core:
+ *     SysLog: disabled
+ *     JSONSysLog:
+ *         level: error
+ * other:
+ *     SysLog:
+ *         level: error
+ * ...
+ *
+ * \Gini\Logger::of('core')->error('', []);
+ *
+ **/
+
+/**
  * Define DocBlock
  **/
 
@@ -49,7 +66,7 @@ class Logger
 
         $config = \Gini\Config::get("logger.{$this->_name}") ?: \Gini\Config::get("logger.default");
         foreach ($config as $handlerName => $options) {
-	    if (!is_array($options) continue;  // ignore when "disabled" or invalid value passed.
+            if (!is_array($options)) continue;  // ignore when "disabled" or invalid value passed.
             $level = isset($options['level']) ? $options['level'] : Logger\Level::DEBUG;
             $handlerClass = "\Gini\Logger\\$handlerName";
             $handler = \Gini\IoC::construct($handlerClass, $this->_name, $level, $options);
