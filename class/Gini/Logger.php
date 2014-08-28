@@ -49,7 +49,7 @@ class Logger
 
         $config = \Gini\Config::get("logger.{$this->_name}") ?: \Gini\Config::get("logger.default");
         foreach ($config as $handlerName => $options) {
-            $options = (array) $options;
+	    if (!is_array($options) continue;  // ignore when "disabled" or invalid value passed.
             $level = isset($options['level']) ? $options['level'] : Logger\Level::DEBUG;
             $handlerClass = "\Gini\Logger\\$handlerName";
             $handler = \Gini\IoC::construct($handlerClass, $this->_name, $level, $options);
