@@ -8,6 +8,23 @@
  **/
 
 /**
+ * Example:
+ *
+ * ---
+ * core:
+ *     SysLog: disabled
+ *     JSONSysLog:
+ *         level: error
+ * other:
+ *     SysLog:
+ *         level: error
+ * ...
+ *
+ * \Gini\Logger::of('core')->error('', []);
+ *
+ **/
+
+/**
  * Define DocBlock
  **/
 

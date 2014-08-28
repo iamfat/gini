@@ -15,11 +15,13 @@ class JSONSysLog extends Handler
         Level::DEBUG => \LOG_DEBUG,
     ];
 
-    public function log($level, array $data)
+    public function log($level, $message, array $context = array())
     {
         if (!$this->isLoggable($level)) return;
 
-        $message = "[{$this->_name}] @cee: " . json_encode($data);
+        if (empty($context)) return;
+
+        $message = "[{$this->_name}] @cee: " . json_encode($context);
 
         openlog(APP_ID, LOG_ODELAY, LOG_LOCAL0);
         syslog(self::$_LEVEL2PRIORITY[$level], $message);
