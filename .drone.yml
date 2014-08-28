@@ -1,8 +1,11 @@
 image: iamfat/gini-dev
 
 script:
-  - composer self-update
   - composer install --dev --no-interaction
-  - bin/gini cache
-  - bin/gini config update
-  - /usr/local/share/composer/vendor/bin/phpunit
+  - bin/gini cache && bin/gini config update
+  - source /etc/profile.d/composer.sh && source /etc/profile.d/sonar-runner.sh
+  - phpunit
+  - >
+    sonar-runner -D sonar.host.url=http://172.17.42.1:9000 
+    -D sonar.jdbc.url="jdbc:mysql://mysql:3306/sonar?useUnicode=true&characterEncoding=utf8" 
+    -D sonar.jdbc.username=genee -D sonar.jdbc.password=83719730
