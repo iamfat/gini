@@ -144,7 +144,7 @@ class App extends \Gini\Controller\CLI
     {
         $errors = \Gini\Doctor::diagnose();
         if (!count($errors)) {
-            echo "🍺  \e[32mYou are ready now! Let's roll!\e[0m\n\n";
+            echo "\e[32mYou are ready now! Let's roll!\e[0m\n\n";
 
             return;
         }
