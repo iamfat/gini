@@ -284,8 +284,8 @@ class SQLite extends \PDO implements Driver
         return sprintf('%s %s%s%s'
                 , $this->quoteIdent($key)
                 , $this->_normalizeType($field['type'])
-                , $field['null']? '': ' NOT NULL'
-                , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']):''
+                , $field['null'] ? '' : ' NOT NULL'
+                , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : ''
                 );
     }
 

@@ -255,10 +255,10 @@ abstract class ORM
                     if ($pv == '*') {
                         $field['type'] = 'text';
                     } else {
-                        $field['type'] = 'varchar('.($pv?:255).')';
+                        $field['type'] = 'varchar('.($pv ?: 255).')';
                     }
                     break;
-                case 'array':
+                case 'array' :
                     $field['type'] = 'text';
                     break;
                 case 'null':

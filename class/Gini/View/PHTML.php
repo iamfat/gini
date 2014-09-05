@@ -19,7 +19,7 @@ class PHTML implements Engine
             ob_start();
 
             extract($this->_vars);
-            include($this->_path);
+            include $this->_path;
 
             $output = ob_get_contents();
             ob_end_clean();

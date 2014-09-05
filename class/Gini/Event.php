@@ -82,8 +82,7 @@ class Event
             if ($callback) {
                 if (is_callable($callback)) {
                     $return = call_user_func_array($callback, $params);
-                }
-                else {
+                } else {
                     $return = null;
                 }
             }

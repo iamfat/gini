@@ -10,12 +10,12 @@ namespace Gini\CGI {
     {
         private $_errors;
 
-        function errors()
+        public function errors()
         {
             return $this->_errors;
         }
 
-        function validate($key, $assertion, $message)
+        public function validate($key, $assertion, $message)
         {
 
             if (isset($this->_errors[$key])) {
@@ -33,10 +33,10 @@ namespace Gini\CGI {
             return $this;
         }
 
-        function done()
+        public function done()
         {
             if (count($this->_errors) > 0) {
-                throw new Validator\Exception;
+                throw new Validator\Exception();
             }
         }
     }

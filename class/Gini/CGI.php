@@ -118,7 +118,7 @@ class CGI
                     }
                 }
                 error_log(sprintf("    %d) %s%s() in %s on line %d", $n + 1,
-                                $t['class'] ? $t['class'].'::':'',
+                                $t['class'] ? $t['class'].'::' : '',
                                 $t['function'],
                                 $file,
                                 $t['line']));

@@ -4,7 +4,7 @@ namespace Gini\Controller\CLI;
 
     class Cron extends \Gini\Controller\CLI
     {
-        function __index($args)
+        public function __index($args)
         {
             $helps = array(
                 'list' => 'List crons',
@@ -16,14 +16,14 @@ namespace Gini\Controller\CLI;
             }
         }
 
-        function actionList($args)
+        public function actionList($args)
         {
             foreach ((array) \Gini\Config::get('cron') as $cron) {
                 printf("gini @%s %s\n", APP_ID, $cron['command']);
             }
         }
 
-        function actionExport($args)
+        public function actionExport($args)
         {
             if ($args[0]) {
                 $user = $args[0];
@@ -31,7 +31,7 @@ namespace Gini\Controller\CLI;
 
             foreach ((array) \Gini\Config::get('cron') as $cron) {
                 if ($cron['comment']) printf("# %s\n", $cron['comment']);
-                printf("%s%s\tgini @%s %s\n\n", $cron['interval'], $user ? "\t$user":'', APP_ID, $cron['command']);
+                printf("%s%s\tgini @%s %s\n\n", $cron['interval'], $user ? "\t$user" : '', APP_ID, $cron['command']);
             }
         }
 

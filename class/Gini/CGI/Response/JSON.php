@@ -6,12 +6,12 @@ namespace Gini\CGI\Response;
     {
         private $_content;
 
-        function __construct($content)
+        public function __construct($content)
         {
             $this->_content = $content;
         }
 
-        function output()
+        public function output()
         {
             header('Content-Type: application/json');
             if ($this->_content !== null) {
@@ -20,7 +20,7 @@ namespace Gini\CGI\Response;
             }
         }
 
-        function content()
+        public function content()
         {
             return $this->_content;
         }

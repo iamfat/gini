@@ -36,32 +36,37 @@ class Index extends \Gini\Controller\CLI
         return $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
     }
 
-    private static function _davOptionsAndHeaders()
+    private static function _davOptionsAndHeaders($userLogin = false)
     {
         $uri = self::_serverUri();
+        $options = [ 'baseUri' => $uri ];
+        $headers = [];
 
-        $config = self::_config();
-        if (isset($config['token'])) {
-            // Use Token
-            $options = [ 'baseUri' => $uri ];
-            $headers = [ 'Authorization' => 'Gini '.$config['token'] ];
-
-        } else {
+        if ($userLogin) {
+            echo "\n";
             // Use Username / Password
             $userName = readline('User: ');
             echo 'Password: ';
             `stty -echo`;
             $password = rtrim(fgets(STDIN), "\n");
             `stty echo`;
-            echo "\n";
+            echo "\n\n";
 
-            $options = [
-                'baseUri' => $uri,
-                'userName' => $userName,
-                'password' => $password,
-            ];
+            $options['userName'] = $userName;
+            $options['password'] = $password;
 
-            $headers = [];
+        } else {
+            $config = self::_config();
+
+            if (isset($_SERVER['GINI_INDEX_TOKEN'])) {
+                $token = $_SERVER['GINI_INDEX_TOKEN'];
+            } elseif (isset($config['token'])) {
+                $token = $config['token'];
+            } else {
+                $token = null;
+            }
+
+            if ($token) $headers[ 'Authorization'] = 'Gini '.$token;
         }
 
         return [$options, $headers];
@@ -154,23 +159,47 @@ class Index extends \Gini\Controller\CLI
                 self::_loadGiniComposer();
             }
 
+            echo "Publishing $appId/$version...\n";
+
             list($options, $headers) = self::_davOptionsAndHeaders();
-
             $client = new \Sabre\DAV\Client($options);
-            $response = $client->request('MKCOL', $appId, null, $headers);
-            if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-                // Authentication required
-                // 'Authorization: Basic '. base64_encode("user:password")
-                die ("Failed to publish $appId/$version.\n");
+
+            while (true) {
+                $response = $client->request('MKCOL', $appId, null, $headers);
+                if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                    // Authentication required
+                    // prompt user/password and try again
+                    if (!isset($options['userName'])) {
+                        list($options, $headers) = self::_davOptionsAndHeaders(true);
+                        $client = new \Sabre\DAV\Client($options);
+                        continue;
+                    }
+                    die ("Access denied for publishing $appId/$version.\n");
+                }
+                break;
             }
 
-            $response = $client->request('PUT', $path, $content, $headers);
-            if ($response['statusCode'] >= 200 && $response['statusCode'] <= 206) {
-                echo "$appId/$version was published successfully.\n";
-            } else {
-                die ("Failed to publish $appId/$version.\n");
+            while (true) {
+                $response = $client->request('PUT', $path, $content, $headers);
+                if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                    // Authentication required
+                    // prompt user/password and try again
+                    if (!isset($options['userName'])) {
+                        list($options, $headers) = self::_davOptionsAndHeaders(true);
+                        $client = new \Sabre\DAV\Client($options);
+                        continue;
+                    }
+                    die ("Access denied for publishing $appId/$version.\n");
+                }
+
+                if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                    die ("Error: ".$response['statusCode']."\n");
+                }
+
+                break;
             }
 
+            echo "$appId/$version was published successfully.\n";
             pclose($ph);
         }
 
@@ -188,22 +217,52 @@ class Index extends \Gini\Controller\CLI
             self::_loadGiniComposer();
         }
 
-        list($options, $headers) = self::_davOptionsAndHeaders();
+        echo "Unpublishing $appId/$version...\n";
 
+        list($options, $headers) = self::_davOptionsAndHeaders();
         $client = new \Sabre\DAV\Client($options);
-        $response = $client->request('HEAD', $path, null, $headers);
-        if ($response['statusCode'] == 200) {
-            echo "Unpublishing $appId/$version...\n";
-            $response = $client->request('DELETE', $path, null, $headers);
-            if ($response['statusCode'] >= 200 && $response <= 206) {
-                echo "done.\n";
-            } else {
-                echo "failed.\n";
+
+        while (true) {
+            $response = $client->request('HEAD', $path, null, $headers);
+            if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                // Authentication required
+                // prompt user/password and try again
+                if (!isset($options['userName'])) {
+                    list($options, $headers) = self::_davOptionsAndHeaders(true);
+                    $client = new \Sabre\DAV\Client($options);
+                    continue;
+                }
+                die ("Access denied for unpublishing $appId/$version.\n");
             }
-        } else {
-            echo "Failed to find $path\n";
+
+            if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                die ("Failed to find $path\n");
+            }
+
+            break;
         }
 
+        while (true) {
+            $response = $client->request('DELETE', $path, null, $headers);
+            if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                // Authentication required
+                // prompt user/password and try again
+                if (!isset($options['userName'])) {
+                    list($options, $headers) = self::_davOptionsAndHeaders(true);
+                    $client = new \Sabre\DAV\Client($options);
+                    continue;
+                }
+                die ("Access denied for unpublishing $appId/$version.\n");
+            }
+
+            if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                die ("Error: ".$response['statusCode']."\n");
+            }
+
+            break;
+        }
+
+        echo "Done.\n";
     }
 
     public function actionInstall($argv)
@@ -215,11 +274,10 @@ class Index extends \Gini\Controller\CLI
         }
 
         list($options, $headers) = self::_davOptionsAndHeaders();
-
         $client = new \Sabre\DAV\Client($options);
 
         $installedModules = [];
-        $installModule = function ($module, $versionRange, $targetDir, $isApp=false) use (&$installModule, &$installedModules, $client, $headers) {
+        $installModule = function ($module, $versionRange, $targetDir, $isApp=false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
 
             if (isset($installedModules[$module])) {
                 $info = $installedModules[$module];
@@ -231,10 +289,25 @@ class Index extends \Gini\Controller\CLI
             } else {
 
                 // fetch index.json
-                echo "Fetching INDEX file for {$module}...\n";
-                $response = $client->request('GET', $module.'/index.json', null, $headers);
-                if ($response['statusCode'] !== 200) {
-                    die("Failed to fetch INDEX file.\n");
+                echo "Fetching catalog of {$module}...\n";
+                while (true) {
+                    $response = $client->request('GET', $module.'/index.json', null, $headers);
+                    if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                        // Authentication required
+                        // prompt user/password and try again
+                        if (!isset($options['userName'])) {
+                            list($options, $headers) = self::_davOptionsAndHeaders(true);
+                            $client = new \Sabre\DAV\Client($options);
+                            continue;
+                        }
+                        die ("Access denied for fetch catalog of {$module} .\n");
+                    }
+
+                    if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                        die ("Error: ".$response['statusCode']."\n");
+                    }
+
+                    break;
                 }
 
                 $indexInfo = json_decode($response['body'], true);
@@ -258,9 +331,24 @@ class Index extends \Gini\Controller\CLI
 
                 $tarPath = "{$module}/{$version}.tgz";
                 echo "Downloading {$module} from {$tarPath}...\n";
-                $response = $client->request('GET', $tarPath, null, $headers);
-                if ($response['statusCode'] !== 200) {
-                    die("Failed to fetch INDEX file.\n");
+                while (true) {
+                    $response = $client->request('GET', $tarPath, null, $headers);
+                    if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                        // Authentication required
+                        // prompt user/password and try again
+                        if (!isset($options['userName'])) {
+                            list($options, $headers) = self::_davOptionsAndHeaders(true);
+                            $client = new \Sabre\DAV\Client($options);
+                            continue;
+                        }
+                        die ("Access denied for fetch catalog of {$module} .\n");
+                    }
+
+                    if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                        die ("Error: ".$response['statusCode']."\n");
+                    }
+
+                    break;
                 }
 
                 if ($isApp) {
@@ -270,7 +358,7 @@ class Index extends \Gini\Controller\CLI
                 }
 
                 \Gini\File::ensureDir($modulePath);
-                echo "Extracting {$module} to {$modulePath}...\n";
+                echo "Extracting {$module}...\n";
                 $ph = popen('tar -zx -C '.escapeshellcmd($modulePath), 'w');
                 if (is_resource($ph)) {
                     fwrite($ph, $response['body']);
@@ -278,6 +366,8 @@ class Index extends \Gini\Controller\CLI
                 }
 
                 $installedModules[$module] = $info;
+
+                echo "\n";
             }
 
             if ($info) {

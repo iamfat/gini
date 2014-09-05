@@ -4,7 +4,7 @@ namespace Gini;
 
 class Config
 {
-    static $items = [];
+    public static $items = [];
 
     public static function export()
     {
@@ -90,7 +90,7 @@ class Config
                 case 'php':
                     $config = & $items[$category];
                     call_user_func(function () use (&$config, $file) {
-                        include($file);
+                        include $file;
                     });
                     break;
                 case 'yml':

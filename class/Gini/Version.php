@@ -66,8 +66,8 @@ class Version
 
             $minVer = implode('.', [
                 $v->majorVersion,
-                $v->minorVersion == 'x' ? '0': $v->minorVersion,
-                $v->patchVersion == 'x' ? '0': $v->patchVersion,
+                $v->minorVersion == 'x' ? '0' : $v->minorVersion,
+                $v->patchVersion == 'x' ? '0' : $v->patchVersion,
             ]) . '-0';
 
             $maxVer = implode('.', [
@@ -86,8 +86,8 @@ class Version
 
             $minVer = implode('.', [
                 $v->majorVersion,
-                $v->minorVersion == 'x' ? '0': $v->minorVersion,
-                $v->patchVersion == 'x' ? '0': $v->patchVersion,
+                $v->minorVersion == 'x' ? '0' : $v->minorVersion,
+                $v->patchVersion == 'x' ? '0' : $v->patchVersion,
             ]) . '-0';
 
             if ($v->majorVersion == 0) {

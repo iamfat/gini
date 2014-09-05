@@ -112,7 +112,7 @@ namespace Gini {
         public static function setup()
         {
             $host = $_SERVER['HTTP_HOST'];
-            $scheme = $_SERVER['HTTPS'] ? 'https':'http';
+            $scheme = $_SERVER['HTTPS'] ? 'https' : 'http';
             $dir = dirname($_SERVER['SCRIPT_NAME']);
             if (substr($dir, -1) != '/') $dir .= '/';
             self::$_base = $scheme.'://'.$host.$dir;

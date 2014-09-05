@@ -5,15 +5,15 @@ namespace Gini\CGI\Response;
     class Nothing
     {
 
-        function __construct()
+        public function __construct()
         {
         }
 
-        function output()
+        public function output()
         {
         }
 
-        function content()
+        public function content()
         {
         }
 

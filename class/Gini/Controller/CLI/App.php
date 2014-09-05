@@ -80,7 +80,7 @@ class App extends \Gini\Controller\CLI
         ];
 
         foreach ($prompt as $k => $v) {
-            $data[$k] = readline($v . " [\e[31m" . ($default[$k]?:'N/A') . "\e[0m]: ");
+            $data[$k] = readline($v . " [\e[31m" . ($default[$k] ?: 'N/A') . "\e[0m]: ");
             if (!$data[$k]) $data[$k] = $default[$k];
         }
 
@@ -131,7 +131,7 @@ class App extends \Gini\Controller\CLI
             }
 
             printf("%s %s %s %s %s\e[0m\n",
-                $info->error ? "\e[31m":'',
+                $info->error ? "\e[31m" : '',
                 $this->_strPad($name, 20, ' '),
                 $this->_strPad($info->version, 15, ' '),
                 $this->_strPad($info->name, 30, ' '),
@@ -244,7 +244,7 @@ class App extends \Gini\Controller\CLI
             @mkdir($build_dir, 0755, true);
         }
 
-        require_once(SYS_PATH.'/lib/packer.php');
+        require_once SYS_PATH.'/lib/packer.php';
         foreach ($build->pack as $dir) {
             if (!is_dir("$app_dir/$dir")) {
                 continue;
@@ -292,7 +292,7 @@ class App extends \Gini\Controller\CLI
 
     public function actionWatch($args)
     {
-        $watcher = new \Lurker\ResourceWatcher(in_array('-r', $args) ? new \Lurker\Tracker\RecursiveIteratorTracker : null);
+        $watcher = new \Lurker\ResourceWatcher(in_array('-r', $args) ? new \Lurker\Tracker\RecursiveIteratorTracker : null());
 
         // Config
         $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
@@ -360,6 +360,7 @@ class App extends \Gini\Controller\CLI
                 $GIT_MSG = escapeshellarg("Bumped version to $version");
                 $command = "git --git-dir=$GIT_DIR --work-tree=$WORK_TREE commit -m $GIT_MSG gini.json && git --git-dir=$GIT_DIR tag $version";
                 passthru($command);
+
                 return;
             }
         }

@@ -229,9 +229,9 @@ class MySQL extends \PDO implements Driver
         return sprintf('%s %s%s%s%s'
                 , $this->quoteIdent($key)
                 , $field['type']
-                , $field['null']? '': ' NOT NULL'
-                , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']):''
-                , $field['serial'] ? ' AUTO_INCREMENT':''
+                , $field['null'] ? '' : ' NOT NULL'
+                , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : ''
+                , $field['serial'] ? ' AUTO_INCREMENT' : ''
                 );
     }
 

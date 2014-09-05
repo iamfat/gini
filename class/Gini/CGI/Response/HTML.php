@@ -6,18 +6,18 @@ namespace Gini\CGI\Response;
     {
         private $_content;
 
-        function __construct($content)
+        public function __construct($content)
         {
             $this->_content = $content;
         }
 
-        function output()
+        public function output()
         {
             header('Content-Type: text/html');
             file_put_contents('php://output', (string) $this->_content);
         }
 
-        function content()
+        public function content()
         {
             return $this->_content;
         }

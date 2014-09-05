@@ -306,7 +306,7 @@ class CLI
                     }
                 }
                 fprintf(STDERR, "%3d. %s%s() in (%s:%d)\n", $n + 1,
-                                $t['class'] ? $t['class'].'::':'',
+                                $t['class'] ? $t['class'].'::' : '',
                                 $t['function'],
                                 $file,
                                 $t['line']);
@@ -321,7 +321,7 @@ class CLI
         if (!isset($GLOBALS['gini.class_map'])) {
             echo "\e[33mNOTICE: You are currently executing commands without cache!\e[0m\n\n";
         }
- 
+
         $candidates = Util::pathAndArgs($argv, true);
 
         $class = null;

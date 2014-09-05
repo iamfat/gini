@@ -209,7 +209,7 @@ namespace Gini {
             if (isset($GLOBALS['gini.class_map'])) {
                 $path = strtolower($path);
                 if (isset($GLOBALS['gini.class_map'][$path])) {
-                    require_once($GLOBALS['gini.class_map'][$path]);
+                    require_once $GLOBALS['gini.class_map'][$path];
                 }
 
                 return;
@@ -240,7 +240,7 @@ namespace Gini {
             } else {
                 $file = self::locatePharFile($base, $name.'.php', $scope);
                 if ($file) {
-                    require_once($file);
+                    require_once $file;
 
                     return $file;
                 }
@@ -419,7 +419,7 @@ namespace Gini {
             // load composer if detected
             $composer_path = APP_PATH.'/vendor/autoload.php';
             if (file_exists($composer_path)) {
-                require_once($composer_path);
+                require_once $composer_path;
             }
 
             Config::setup();
@@ -469,7 +469,7 @@ namespace {
      * Shortcut for global variables in Gini
      *
      * @param  string $key Name of global variable
-     *                     @param string[optional] string given when setting
+     * @param string[optional] string given when setting
      * @return mixed
      **/
     if (function_exists('_G')) {
