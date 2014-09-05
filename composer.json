@@ -21,7 +21,7 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "http://satis.genee.cn"
+            "url": "http://gini-satis.genee.cn"
         }
     ]
 }
