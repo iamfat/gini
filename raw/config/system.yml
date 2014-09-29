@@ -16,8 +16,8 @@ log:
   option: 5
   facility: 8
 rurl_mod:
-    js:
-        query: '_v=$(VERSION)&_t=$(TIMESTAMP)'
-    css:
-        query: '_v=$(VERSION)'
+  js:
+    query: '_v=$(VERSION)'
+  css:
+    query: '_v=$(VERSION)'
 ...
