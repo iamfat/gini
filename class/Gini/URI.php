@@ -129,11 +129,25 @@ namespace Gini {
             return self::$_base;
         }
 
+        private static function _rurl_mod($url, $type)
+        {
+            $info = \Gini\Core::moduleInfo(APP_ID);
+            $config = (array) \Gini\Config::get('system.rurl_mod');
+            if ($type) {
+                $query = $config[$type]['query'];
+                $query = $query ? strtr($query, [
+                    '$(TIMESTAMP)'=> time(),
+                    '$(VERSION)'=> $info->version
+                ]) : null;
+            }
+            return empty($query) ? $url : self::url($url, $query);
+        }
+
         public static function rurl($path, $type)
         {
             $base = self::$_rurl[$type] ?: (self::$_rurl['*'] ?: '');
             if (substr($base, -1) != '/') $base .= '/';
-            return $base . $path;
+            return self::_rurl_mod($base . $path, $type);
         }
 
     }
