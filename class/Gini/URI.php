@@ -136,8 +136,8 @@ namespace Gini {
             if ($type) {
                 $query = $config[$type]['query'];
                 $query = $query ? strtr($query, [
-                    '${TIMESTAMP}'=> time(),
-                    '${VERSION}'=> $info->version
+                    '$(TIMESTAMP)'=> time(),
+                    '$(VERSION)'=> $info->version
                 ]) : null;
             }
             return empty($query) ? $url : self::url($url, $query);
