@@ -15,4 +15,9 @@ log:
   ident: gini
   option: 5
   facility: 8
+rurl_cache_control:
+    - pattern: /main\.js$/
+      type: version
+    #- pattern: /\.js$/
+    #  type: timestamp
 ...
