@@ -1,4 +1,4 @@
-image: iamfat/gini-dev
+image: genee/gini-dev
 
 script:
   - composer install --no-interaction
