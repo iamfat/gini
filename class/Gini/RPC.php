@@ -29,12 +29,15 @@ class RPC
 
         $id = base_convert($this->_uniqid ++, 10, 36);
 
+        $rpcTimeout = Config::get('rpc.timeout');
+        $timeout = $rpcTimeout[$method] ?: $rpcTimeout['default'];
+
         $raw_data = $this->post(J([
             'jsonrpc' => '2.0',
             'method' => $method,
             'params' => $params,
             'id' => $id,
-        ]));
+        ]), $timeout);
 
         \Gini\Logger::of('core')->debug("RPC <= {data}", ['data'=>$raw_data]);
 
