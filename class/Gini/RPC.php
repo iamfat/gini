@@ -49,10 +49,10 @@ class RPC
                 throw IoC::construct('\Gini\RPC\Exception', $message, $code);
             } elseif (is_null($data)) {
                 $message = sprintf('unknown error with raw data: %s', $raw_data ?: '(null)');
-                throw IoC::construct('\Gini\RPC\Exception', $message);
+                throw IoC::construct('\Gini\RPC\Exception', $message, -32400);
             } elseif ($id != $data['id']) {
                 $message = 'wrong response id!';
-                throw IoC::construct('\Gini\RPC\Exception', $message);
+                throw IoC::construct('\Gini\RPC\Exception', $message, -32400);
             }
         }
 
@@ -85,7 +85,7 @@ class RPC
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 
-        \Gini\Logger::of('core')->debug("RPC => {data}", ['data'=>$post_data]);
+        \Gini\Logger::of('core')->debug("RPC => {url}: {data}", ['url'=>$this->_url, 'data'=>$post_data]);
 
         $data = curl_exec($ch);
         $errno = curl_errno($ch);
@@ -94,7 +94,7 @@ class RPC
             curl_close($ch);
 
             \Gini\Logger::of('core')->error("RPC cURL error: {message}", ['message'=>$message]);
-            throw IoC::construct('\Gini\RPC\Exception', "cURL error: $message");
+            throw IoC::construct('\Gini\RPC\Exception', "transport error: $message", -32300);
         }
 
         curl_close($ch);
