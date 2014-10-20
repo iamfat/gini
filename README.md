@@ -1,4 +1,5 @@
 # Overview
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/iamfat/gini?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Gini PHP Framework is a MVC(Model-View-Controller) framework like any other PHP framework. 
 
 
