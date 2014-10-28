@@ -29,9 +29,13 @@ namespace Gini\Controller\CLI;
                 $user = $args[0];
             }
 
+            $gini_bin = $_SERVER['_'];
+            $prefix = $cron['prefix'] ?: (\Gini\Config::get('app.cron')['prefix'] ?: '');
+            $suffix = $cron['suffix'] ?: (\Gini\Config::get('app.cron')['suffix'] ?: '');
+
             foreach ((array) \Gini\Config::get('cron') as $cron) {
                 if ($cron['comment']) printf("# %s\n", $cron['comment']);
-                printf("%s%s\tgini @%s %s\n\n", $cron['interval'], $user ? "\t$user" : '', APP_ID, $cron['command']);
+                printf("%s%s\t%s%s @%s %s%s\n\n", $cron['interval'], $user ? "\t$user" : '', $prefix, $gini_bin, APP_ID, $cron['command'], $suffix);
             }
         }
 
