@@ -352,7 +352,7 @@ class CLI
 
         $controller = \Gini\IoC::construct($class);
 
-        $action = $params[0];
+        $action = strtr($params[0], ['-'=>'', '_'=>'']);
         if ($action && method_exists($controller, 'action'.$action)) {
             $action = 'action'.$action;
             array_shift($params);
