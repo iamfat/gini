@@ -59,12 +59,11 @@ namespace Gini {
             $name; $description; $version;
             $dependencies;
             */
-
             if ($path[0] != '/' && $path[0] != '.') {
                 // 相对路径
-                $path = $_SERVER['GINI_MODULE_BASE_PATH'] . '/' . $path;
+                $npath = getcwd().'/modules/'.$path;
+                $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
             }
-
             // $path = realpath($path);
 
             $info_script = $path.'/gini.json';
@@ -134,14 +133,13 @@ namespace Gini {
                     // }
 
                     // use flat structure
-                    $npath = 'modules/'.$path;
-
+                    $npath = getcwd().'/modules/'.$path;
                     $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/'.$path;
                 } else {
                     $id = basename($path);
                 }
 
-                $path = realpath($path);
+                $path = realpath($path) ?: $path;
                 $info = self::fetchModuleInfo($path);
                 if ($info === false) {
                     // throw new \Exception("{$id} required but missing!");

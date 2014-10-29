@@ -15,7 +15,6 @@ if (!isset($_SERVER['GINI_APP_PATH'])) {
         $base = implode('/', array_slice($path_arr, 0, $i));
         if (file_exists($base . '/gini.json')) {
             $_SERVER['GINI_APP_PATH'] = $base;
-            chdir($_SERVER['GINI_APP_PATH']);
             break;
         }
     }
@@ -28,6 +27,8 @@ if (!isset($_SERVER['GINI_MODULE_BASE_PATH'])) {
 if (!isset($_SERVER['GINI_APP_PATH'])) {
     $_SERVER['GINI_APP_PATH'] = SYS_PATH;
 }
+
+chdir($_SERVER['GINI_APP_PATH']);
 
 // load class map
 $class_map_file = $_SERVER['GINI_APP_PATH'].'/cache/class_map.json';
