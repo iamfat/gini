@@ -8,17 +8,19 @@ require_once __DIR__ . "/obfuscator.php";
 class Packer
 {
     private $file;
-
     private $phar;
-    private $phar_base;
 
     public function __construct($file)
     {
+        $this->phar = [];
+        $this->file = $file;
+        /*
         if (ini_get('phar.readonly')) {
             die ("Please set \x1b[1mphar.readonly=Off\x1b[0m in php.ini\n");
         }
         ini_set('phar.readonly', false);
 
+        $file = "$file.phar";
         // touch($file);
         try {
             $this->phar = new \Phar($file, 0, basename($file));
@@ -28,6 +30,7 @@ class Packer
         }
 
         $this->phar->setStub('<?php echo "GINI PACK FILE.\n"; __HALT_COMPILER();?>');
+        */
     }
 
     private static function relativePath($path, $base)
@@ -46,6 +49,18 @@ class Packer
 
     }
 
+    public function finish()
+    {
+        foreach ($this->phar as $f => $cnt) {
+            $file = $this->file . '/' . $f;
+            $dir = dirname($file);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            file_put_contents($file, $cnt);
+        }
+    }   
+
     public function encode_file($path, $base)
     {
         $rpath = self::relativePath($path, $base);
@@ -57,7 +72,7 @@ class Packer
             $total = strlen($content);
 
             // 预编译代码
-            if (class_exists('Macro')) {
+            if (class_exists('\\Gini\\Dev\\Macro')) {
                 $content = Macro::compile($content);
             }
 

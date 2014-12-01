@@ -250,9 +250,10 @@ class App extends \Gini\Controller\CLI
                 continue;
             }
 
-            echo "  Packing $dir.phar...\n";
-            $packer = \Gini\IoC::construct('\Gini\Dev\Packer', "$build_dir/$dir.phar");
+            echo "  Packing $dir...\n";
+            $packer = \Gini\IoC::construct('\Gini\Dev\Packer', "$build_dir/$dir");
             $packer->import("$app_dir/$dir");
+            $packer->finish();
             echo "\n";
         }
 

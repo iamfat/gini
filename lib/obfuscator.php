@@ -609,29 +609,6 @@ class Obfuscator
                 'jsMinifier' => '\Gini\Dev\Obfuscator::minify_js',
             ]);
 
-            // $fds = [
-            // 	0 => ['pipe', 'r'],
-            // 	1 => ['pipe', 'w'],
-            // ];
-
-            // $ph = proc_open('tidy -q -utf8', $fds, $pipes);
-            // if ($ph) {
-            // 	fwrite($pipes[0], $output);
-            // 	fclose($pipes[0]);
-            // 	$output = stream_get_contents($pipes[1]);
-            // 	fclose($pipes[1]);
-            // 	proc_close($ph);
-            // }
-
-            // $ph = proc_open('htmlminify', $fds, $pipes);
-            // if ($ph) {
-            // 	fwrite($pipes[0], $output);
-            // 	fclose($pipes[0]);
-            // 	$output = stream_get_contents($pipes[1]);
-            // 	fclose($pipes[1]);
-            // 	proc_close($ph);
-            // 	// echo $output."\n";
-            // }
         }
 
         $output = $this->convert_php_tokens($output);
