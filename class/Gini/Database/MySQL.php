@@ -26,10 +26,10 @@ class MySQL extends \PDO implements Driver
 
             $rs = $this->query($SQL);
             while ($r = $rs->fetchObject()) {
-                $this->_table_status[$r->Name] = (object) array(
+                $this->_table_status[$r->Name] = (object) [
                     'engine' => strtolower($r->Engine),
                     'collation' => $r->Collation,
-                );
+                ];
             }
         }
     }
