@@ -323,6 +323,9 @@ abstract class ORM
                 case 'primary':
                     $indexes['PRIMARY'] = ['type' => 'primary', 'fields'=>$vv];
                     break;
+                case 'fulltext':
+                    $indexes['_MIDX_'.$k] = ['type' => 'fulltext', 'fields'=>$vv];
+                    break;
                 default:
                     $indexes['_MIDX_'.$k] = ['fields'=>$vv];
                 }

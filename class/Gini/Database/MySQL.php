@@ -244,6 +244,9 @@ class MySQL extends \PDO implements Driver
         case 'unique':
             $type='UNIQUE '. $this->quoteIdent($key);
             break;
+        case 'fulltext':
+            $type='FULLTEXT '. $this->quoteIdent($key);
+            break;
         default:
             $type='INDEX '. $this->quoteIdent($key);
         }
