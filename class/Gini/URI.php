@@ -140,6 +140,7 @@ namespace Gini {
                     '$(VERSION)'=> $info->version
                 ]) : null;
             }
+
             return empty($query) ? $url : self::url($url, $query);
         }
 
