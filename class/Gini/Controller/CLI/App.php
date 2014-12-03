@@ -293,7 +293,7 @@ class App extends \Gini\Controller\CLI
 
     public function actionWatch($args)
     {
-        $watcher = new \Lurker\ResourceWatcher(in_array('-r', $args) ? new \Lurker\Tracker\RecursiveIteratorTracker : null());
+        $watcher = new \Lurker\ResourceWatcher(in_array('-r', $args) ? new \Lurker\Tracker\RecursiveIteratorTracker() : null);
 
         // Config
         $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
