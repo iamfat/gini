@@ -80,6 +80,30 @@ class Doctor
             echo "\n";
         }
 
+        // enumerate all doctor extensions
+        if ((
+                !$items || (
+                    in_array('dependencies', $items) && in_array('module_spec', $items)
+                )
+            ) && !isset($errors['dependencies'])
+        ) {
+            // check gini dependencies
+            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
+                $diag_func = "$class::diagnose";
+                if (is_callable($diag_func)) {
+                    echo "Checking Module[$name]...\n";
+                    $module_errors = call_user_func($diag_func);
+                    if ($module_errors) {
+                        static::_outputErrors($module_errors);
+                    } else {
+                        echo "   \e[32mdone.\e[0m\n";
+                    }
+                    echo "\n";
+                }
+            }
+        }
+
         return $errors;
     }
 
