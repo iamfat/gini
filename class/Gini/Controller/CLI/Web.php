@@ -20,7 +20,6 @@ class Web extends \Gini\Controller\CLI
         \Gini\File::ensureDir($css_dir);
 
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
-        $less_map = [];
         foreach ($pinfo as $p) {
             foreach ([
                 $p->path.'/'.RAW_DIR.'/assets/css',
@@ -68,7 +67,6 @@ class Web extends \Gini\Controller\CLI
         \Gini\File::ensureDir($ugly_js_dir);
 
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
-        $less_map = [];
         foreach ($pinfo as $p) {
             foreach ([
                 $p->path . '/' . RAW_DIR . '/js',
