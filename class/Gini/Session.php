@@ -49,8 +49,10 @@ class Session
             $cookie_params['domain']
         );
 
-        if ($_POST['gini-session']) {
+        if (isset($_POST['gini-session'])) {
             session_id($_POST['gini-session']);
+        } elseif (isset($_SERVER['HTTP_X_GINI_SESSION'])) {
+            session_id($_SERVER['HTTP_X_GINI_SESSION']);
         }
 
         set_error_handler(function () {}, E_ALL ^ E_NOTICE);

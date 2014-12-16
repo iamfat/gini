@@ -7,18 +7,20 @@ class RPC
     private $_url;
     private $_path;
     private $_cookie;
+    private $_header = [];
     private $_uniqid = 1;
 
-    public function __construct($url, $path=null, $cookie=null)
+    public function __construct($url, $path=null, $cookie=null, $header=[])
     {
         $this->_url = $url;
         $this->_path = $path;
         $this->_cookie = $cookie ?: IoC::construct('\Gini\RPC\Cookie');
+        $this->_header = (array) $header;
     }
 
     public function __get($name)
     {
-        return IoC::construct('\Gini\RPC', $this->_url, $this->_path ? $this->_path . '/' . $name : $name, $this->_cookie);
+        return IoC::construct('\Gini\RPC', $this->_url, $this->_path ? $this->_path . '/' . $name : $name, $this->_cookie, $this->_header);
     }
 
     public function __call($method, $params)
@@ -59,11 +61,19 @@ class RPC
         return $data['result'];
     }
 
+    public function setHeader(array $header)
+    {
+        $this->_header = array_merge($this->_header, $header);
+    }
+
     public function post($post_data, $timeout = 5)
     {
         $cookie_file = $this->_cookie->file;
 
         $ch = curl_init();
+
+        $header = $this->_header;
+        $header['Content-Type'] = 'application/json';
 
         curl_setopt_array($ch, array(
             CURLOPT_COOKIEJAR => $cookie_file,
@@ -77,9 +87,7 @@ class RPC
             CURLOPT_RETURNTRANSFER => true,
             // CURLOPT_FRESH_CONNECT => false,
             CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?: 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type' => 'application/json',
-            ),
+            CURLOPT_HTTPHEADER => $header,
         ));
 
         curl_setopt($ch, CURLOPT_POST, true);
