@@ -294,26 +294,24 @@ class CLI
             }
         }
         $line = $e->getLine();
-        printf("[E] \e[1m%s\e[0m (\e[1;34m%s\e[0m:$line)\n", $message, $file, $line);
-        // if (is debugging) {
-            $trace = array_slice($e->getTrace(), 1, 3);
-            foreach ($trace as $n => $t) {
-                $file = $t['file'];
-                foreach (\Gini\Core::$MODULE_INFO as $info) {
-                    if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                        $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
-                        break;
-                    }
+        printf("\e[31m[E] \e[1m%s\e[0m\n", $message);
+        error_log(sprintf("[E] %s (%s:%d)", $message, $file, $line));
+        $trace = array_slice($e->getTrace(), 1, 3);
+        foreach ($trace as $n => $t) {
+            $file = $t['file'];
+            foreach (\Gini\Core::$MODULE_INFO as $info) {
+                if (0 == strncmp($file, $info->path, strlen($info->path))) {
+                    $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
+                    break;
                 }
-                fprintf(STDERR, "%3d. %s%s() in (%s:%d)\n", $n + 1,
-                                $t['class'] ? $t['class'].'::' : '',
-                                $t['function'],
-                                $file,
-                                $t['line']);
-
             }
-            fprintf(STDERR, "\n");
-        // }
+            error_log(sprintf("%3d. %s%s() in (%s:%d)", $n + 1,
+                            $t['class'] ? $t['class'].'::' : '',
+                            $t['function'],
+                            $file,
+                            $t['line']));
+
+        }
     }
 
     public static function dispatch(array $argv)

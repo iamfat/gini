@@ -369,9 +369,9 @@ namespace Gini {
         /**
          * @ignore Assertion Handler
          **/
-        public static function assertion($file, $line, $code)
+        public static function assertion($file, $line, $code, $desc=null)
         {
-            throw new \ErrorException($code, 0, 1, $file, $line);
+            throw new \ErrorException($desc ?: $code, -1, 1, $file, $line);
         }
 
         /**
