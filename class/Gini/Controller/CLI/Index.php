@@ -388,9 +388,8 @@ class Index extends \Gini\Controller\CLI
             } else {
                 $versionRange = readline('Please provide a version constraint for the '.$module.' requirement:');
             }
-
-            $installModule($module, $versionRange, getcwd()."/$module", true);
-
+            
+            $installModule($module, $versionRange, $_SERVER['PWD']."/$module", true);
         } else {
             // run: gini install, then you should be in module directory
             if (APP_ID != 'gini') {
