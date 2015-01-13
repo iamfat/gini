@@ -15,14 +15,18 @@ class JSONSysLog extends Handler
         Level::DEBUG => \LOG_DEBUG,
     ];
 
-    public function log($level, $message, array $context = array())
+    public function log($level, $message, array $context = [])
     {
         if (!$this->isLoggable($level)) return;
 
-        if (empty($context)) return;
+        $replacements = [];
+        foreach ($context as $key => $val) {
+            $replacements['{'.$key.'}'] = $val;
+        }
 
-        $context['@name'] = $this->_name;
-        $context['@message'] = $message;
+        $context['@ident'] = $this->_name;
+        $context['@message'] = strtr($message, $replacements);
+
         $message = "@cee: " . J($context);
 
         openlog(APP_ID, LOG_ODELAY, LOG_LOCAL0);
