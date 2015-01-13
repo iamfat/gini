@@ -20,9 +20,16 @@ class JSONSysLog extends Handler
         if (!$this->isLoggable($level)) return;
 
         $replacements = [];
-        foreach ($context as $key => $val) {
-            $replacements['{'.$key.'}'] = $val;
-        }
+        $_fillReplacements = function(&$replacements, $context, $prefix = '') use (&$_fillReplacements) {
+            foreach ($context as $key => $val) {
+                if (is_array($val)) {
+                    $_fillReplacements($replacements, $val, $prefix.$key.'.');
+                } else {
+                    $replacements['{'.$prefix.$key.'}'] = $val;
+                }
+            }
+        };
+        $_fillReplacements($replacements, $context);
 
         $context['@ident'] = $this->_name;
         $context['@message'] = strtr($message, $replacements);

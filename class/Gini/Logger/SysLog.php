@@ -23,9 +23,16 @@ class SysLog extends Handler
         $context['ident'] = $this->_name;
 
         $replacements = [];
-        foreach ($context as $key => $val) {
-            $replacements['{'.$key.'}'] = $val;
-        }
+        $_fillReplacements = function(&$replacements, $context, $prefix = '') use (&$_fillReplacements) {
+            foreach ($context as $key => $val) {
+                if (is_array($val)) {
+                    $_fillReplacements($replacements, $val, $prefix.$key.'.');
+                } else {
+                    $replacements['{'.$prefix.$key.'}'] = $val;
+                }
+            }
+        };
+        $_fillReplacements($replacements, $context);
 
         $message = strtr($message, $replacements);
 
