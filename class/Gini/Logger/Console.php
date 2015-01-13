@@ -17,7 +17,7 @@ class Console extends Handler
 
     public function log($level, $message, array $context = array())
     {
-        if (!$this->isLoggable($level)) return;
+        if (PHP_SAPI != 'cli' || !$this->isLoggable($level) ) return;
 
         $message = "[{ident}] $message";
         $context['ident'] = $this->_name;
