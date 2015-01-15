@@ -36,18 +36,17 @@ class Database
      * @param  string|null $name Name of the database configured in database.yml
      * @return object
      **/
-    public static function db($name=null)
+    public static function db($name = null)
     {
         $name = $name ?: 'default';
         if (!isset(self::$DB[$name])) {
-
             $opt = \Gini\Config::get('database.'.$name);
             if (is_string($opt)) {
                 // 是一个别名
                 $db = static::db($opt);
             } else {
                 if (!is_array($opt)) {
-                    throw new Database\Exception('database "' . $name . '" was not configured correctly!');
+                    throw new Database\Exception('database "'.$name.'" was not configured correctly!');
                 }
 
                 $db = \Gini\IoC::construct('\Gini\Database', $opt['dsn'], $opt['username'], $opt['password'], $opt['options']);
@@ -64,7 +63,7 @@ class Database
      * @param  string|null $name Name of the database configured in database.yml
      * @return void
      **/
-    public static function shutdown($name=null)
+    public static function shutdown($name = null)
     {
         $name = $name ?: 'default';
         if (!isset(static::$DB[$name])) {
@@ -86,9 +85,9 @@ class Database
      * @param  string|null $name Name of the database configured in database.yml
      * @return void
      **/
-    public function __construct($dsn, $username=null, $password=null, $options=null)
+    public function __construct($dsn, $username = null, $password = null, $options = null)
     {
-        list($driver_name,) = explode(':', $dsn, 2);
+        list($driver_name, ) = explode(':', $dsn, 2);
         $driver_class = '\Gini\Database\\'.$driver_name;
         $this->_driver = \Gini\IoC::construct($driver_class, $dsn, $username, $password, $options);
         if (!$this->_driver instanceof Database\Driver) {
@@ -144,7 +143,7 @@ class Database
     {
         if (is_array($s)) {
             foreach ($s as &$i) {
-                $i=$this->quote($i);
+                $i = $this->quote($i);
             }
 
             return implode(',', $s);
@@ -201,13 +200,18 @@ class Database
 
         if (is_array($params)) {
             $this->_driver->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
-            \Gini\Logger::of('core')->debug("Database query prepare = {SQL}", ['SQL'=>preg_replace('/\s+/', ' ', $SQL)]);
+            \Gini\Logger::of('core')->debug("Database query prepare = {SQL}", ['SQL' => preg_replace('/\s+/', ' ', $SQL)]);
             $st = $this->_driver->prepare($SQL);
-            if (!$st) return false;
+            if (!$st) {
+                return false;
+            }
 
-            \Gini\Logger::of('core')->debug("Database query execute = {params}", ['params'=>J($params)]);
+            \Gini\Logger::of('core')->debug("Database query execute = {params}", ['params' => J($params)]);
             $success = $st->execute($params);
-            if (!$success) return false;
+            if (!$success) {
+                return false;
+            }
+
             return new Database\Statement($st);
         }
 
@@ -216,7 +220,10 @@ class Database
         ]);
 
         $st = $this->_driver->query($SQL);
-        if (!$st) return false;
+        if (!$st) {
+            return false;
+        }
+
         return new Database\Statement($st);
     }
 
@@ -228,11 +235,12 @@ class Database
     public function value()
     {
         $args = func_get_args();
-        $result = call_user_func_array([$this,'query'], $args);
+        $result = call_user_func_array([$this, 'query'], $args);
 
         return $result ? $result->value() : null;
     }
 
+    private $_transactionLevel = 0;
     /**
      * Begin a transaction.
      *
@@ -240,7 +248,12 @@ class Database
      **/
     public function beginTransaction()
     {
-        $this->_driver->beginTransaction();
+        // check if you are at the top of the transaction;
+        if ($this->_transactionLevel == 0) {
+            $this->_driver->beginTransaction();
+        }
+
+        $this->_transactionLevel++;
 
         return $this;
     }
@@ -252,7 +265,10 @@ class Database
      **/
     public function commit()
     {
-        $this->_driver->commit();
+        $this->_transactionLevel--;
+        if ($this->_transactionLevel == 0) {
+            $this->_driver->commit();
+        }
 
         return $this;
     }
@@ -350,5 +366,4 @@ class Database
     //
     //     return $this->_driver->restore($filename, $tables);
     // }
-
 } // END class
