@@ -265,9 +265,11 @@ class Database
      **/
     public function commit()
     {
-        $this->_transactionLevel--;
-        if ($this->_transactionLevel == 0) {
-            $this->_driver->commit();
+        if ($this->_transactionLevel > 0) {
+            $this->_transactionLevel--;
+            if ($this->_transactionLevel == 0) {
+                $this->_driver->commit();
+            }
         }
 
         return $this;
@@ -280,7 +282,12 @@ class Database
      **/
     public function rollback()
     {
-        $this->_driver->rollBack();
+        if ($this->_transactionLevel > 0) {
+            $this->_transactionLevel--;
+            if ($this->_transactionLevel == 0) {
+                $this->_driver->rollBack();
+            }
+        }
 
         return $this;
     }
