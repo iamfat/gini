@@ -43,7 +43,7 @@ TEMPL;
 <?php
 
 $gini_dirs = [
-    isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] . '/lib' : __DIR__ . '/../../gini/lib',
+    isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] . '/lib' : __DIR__ . '/../../../gini/lib',
     (getenv("COMPOSER_HOME") ?: getenv("HOME") . '/.composer') . '/vendor/iamfat/gini/lib',
     '/usr/share/local/gini/lib',
 ];
