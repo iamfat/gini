@@ -363,6 +363,10 @@ namespace Gini {
          **/
         public static function error($errno , $errstr, $errfile, $errline, $errcontext)
         {
+            // error was suppressed with the @-operator
+            if (0 === error_reporting()) {
+                return false;
+            }
             throw new \ErrorException($errstr, $errno, 1, $errfile, $errline);
         }
 
