@@ -241,6 +241,7 @@ class Database
     }
 
     private $_transactionLevel = 0;
+    private $_transactionRollback = false;
     /**
      * Begin a transaction.
      *
@@ -250,6 +251,7 @@ class Database
     {
         // check if you are at the top of the transaction;
         if ($this->_transactionLevel == 0) {
+            $this->_transactionRollback = false;
             $this->_driver->beginTransaction();
         }
 
@@ -268,7 +270,11 @@ class Database
         if ($this->_transactionLevel > 0) {
             $this->_transactionLevel--;
             if ($this->_transactionLevel == 0) {
-                $this->_driver->commit();
+                if ($this->_transactionRollback) {
+                    $this->_driver->rollback();
+                } else {
+                    $this->_driver->commit();
+                }
             }
         }
 
@@ -286,6 +292,8 @@ class Database
             $this->_transactionLevel--;
             if ($this->_transactionLevel == 0) {
                 $this->_driver->rollBack();
+            } else {
+                $this->_transactionRollback = true;
             }
         }
 
