@@ -44,9 +44,10 @@ class Web extends \Gini\Controller\CLI
                                 || filemtime($src_path) > filemtime($dst_path)) {
                             // lessc -x raw/less/$$LESS.less web/assets/css/$$LESS.css ; \
                             printf("   %s => %s\n", $name, $css);
-                            $command = sprintf("lessc -x %s %s"
+                            $command = sprintf("lessc %s %s %s"
                                     , escapeshellarg($src_path)
                                     , escapeshellarg($dst_path)
+                                    , '--clean-css="--s1 --advanced --compatibility=ie8"'
                                     );
                             exec($command);
                         }
