@@ -4,15 +4,15 @@ namespace Gini\HTTP;
 
 class Response
 {
-    public $header=[];
-    public $status=null;
-    public $body=null;
+    public $header = [];
+    public $status = null;
+    public $body = null;
 
     public function __construct($data, $status)
     {
-        list($header, $body)=explode("\n\n", str_replace("\r", "", $data), 2);
+        list($header, $body) = explode("\n\n", str_replace("\r", "", $data), 2);
 
-        $this->body=trim($body);
+        $this->body = trim($body);
 
         $header = explode("\n", $header);
         $status = array_shift($header);

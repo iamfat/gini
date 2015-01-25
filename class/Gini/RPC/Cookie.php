@@ -13,6 +13,8 @@ class Cookie
 
     public function __destruct()
     {
-         if ($this->file && file_exists($this->file)) unlink($this->file);
+        if ($this->file && file_exists($this->file)) {
+            unlink($this->file);
+        }
     }
 }

@@ -17,10 +17,9 @@ final class API extends \Gini\Controller\CGI
                 'id' => $id,
             ];
         } else {
-             $response = \Gini\API::dispatch((array) $request);
+            $response = \Gini\API::dispatch((array) $request);
         }
 
         return \Gini\IoC::construct('\Gini\CGI\Response\JSON', $response);
     }
-
 }

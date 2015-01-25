@@ -46,7 +46,7 @@ class Logger
     public static function of($name)
     {
         if (!isset(self::$_LOGGERS[$name])) {
-           self::$_LOGGERS[$name] = new Logger($name);
+            self::$_LOGGERS[$name] = new Logger($name);
         }
 
         return self::$_LOGGERS[$name];
@@ -66,13 +66,14 @@ class Logger
 
         $config = \Gini\Config::get("logger.{$this->_name}") ?: \Gini\Config::get("logger.default");
         foreach ($config as $handlerName => $options) {
-            if (!is_array($options)) continue;  // ignore when "disabled" or invalid value passed.
+            if (!is_array($options)) {
+                continue;
+            }  // ignore when "disabled" or invalid value passed.
             $level = isset($options['level']) ? $options['level'] : Logger\Level::DEBUG;
             $handlerClass = "\Gini\Logger\\$handlerName";
             $handler = \Gini\IoC::construct($handlerClass, $this->_name, $level, $options);
             $this->_handlers[] = $handler;
         }
-
     }
 
     /**
@@ -82,7 +83,7 @@ class Logger
      **/
     public static function isDebugging()
     {
-        return file_exists(APP_PATH . '/.debug');
+        return file_exists(APP_PATH.'/.debug');
     }
 
     /**
@@ -95,9 +96,11 @@ class Logger
     {
         static $tracablePattern;
         if (!isset($tracablePattern)) {
-            $tracablePattern = file(APP_PATH . '/.debug', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $tracablePattern = file(APP_PATH.'/.debug', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         }
-        if (count($tracablePattern) == 0) return true;
+        if (count($tracablePattern) == 0) {
+            return true;
+        }
         foreach ($tracablePattern as $pattern) {
             if (preg_match('`'.$pattern.'`', $func)) {
                 return true;
@@ -124,7 +127,6 @@ class Logger
 
         // interal debugging support
         if ($level == Logger\Level::DEBUG && static::isDebugging()) {
-
             $trace = array_slice(debug_backtrace(), 2, 1)[0];
             $func = $trace['function'];
             if (isset($trace['class'])) {
@@ -147,9 +149,7 @@ class Logger
                 $message = strtr($message, $replacements);
                 fputs(STDERR, "\e[1;30m$message\e[0m\n");
             }
-
         }
-
     }
 
     /**
@@ -258,5 +258,4 @@ class Logger
     {
         $this->log(Logger\Level::DEBUG, $message, $context);
     }
-
 }

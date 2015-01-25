@@ -9,5 +9,4 @@ class Index extends Layout
         $this->view->title = 'Gini PHP Framework';
         $this->view->body = V('body');
     }
-
 }

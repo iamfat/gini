@@ -2,19 +2,17 @@
 
 namespace Gini\CGI\Response;
 
-    class Nothing
+class Nothing
+{
+    public function __construct()
     {
-
-        public function __construct()
-        {
-        }
-
-        public function output()
-        {
-        }
-
-        public function content()
-        {
-        }
-
     }
+
+    public function output()
+    {
+    }
+
+    public function content()
+    {
+    }
+}

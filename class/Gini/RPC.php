@@ -10,7 +10,7 @@ class RPC
     private $_header = [];
     private $_uniqid = 1;
 
-    public function __construct($url, $path=null, $cookie=null, $header=[])
+    public function __construct($url, $path = null, $cookie = null, $header = [])
     {
         $this->_url = $url;
         $this->_path = $path;
@@ -20,14 +20,18 @@ class RPC
 
     public function __get($name)
     {
-        return IoC::construct('\Gini\RPC', $this->_url, $this->_path ? $this->_path . '/' . $name : $name, $this->_cookie, $this->_header);
+        return IoC::construct('\Gini\RPC', $this->_url, $this->_path ? $this->_path.'/'.$name : $name, $this->_cookie, $this->_header);
     }
 
     public function __call($method, $params)
     {
-        if ($method === __FUNCTION__) return null;
+        if ($method === __FUNCTION__) {
+            return;
+        }
 
-        if ($this->_path) $method = $this->_path . '/' . $method;
+        if ($this->_path) {
+            $method = $this->_path.'/'.$method;
+        }
 
         $id = base_convert($this->_uniqid ++, 10, 36);
 
@@ -41,7 +45,7 @@ class RPC
             'id' => $id,
         ]), $timeout);
 
-        \Gini\Logger::of('core')->debug("RPC <= {data}", ['data'=>$raw_data]);
+        \Gini\Logger::of('core')->debug("RPC <= {data}", ['data' => $raw_data]);
 
         $data = @json_decode($raw_data, true);
         if (!isset($data['result'])) {
@@ -93,7 +97,7 @@ class RPC
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 
-        \Gini\Logger::of('core')->debug("RPC => {url}: {data}", ['url'=>$this->_url, 'data'=>$post_data]);
+        \Gini\Logger::of('core')->debug("RPC => {url}: {data}", ['url' => $this->_url, 'data' => $post_data]);
 
         $data = curl_exec($ch);
         $errno = curl_errno($ch);
@@ -101,7 +105,7 @@ class RPC
             $message = curl_error($ch);
             curl_close($ch);
 
-            \Gini\Logger::of('core')->error("RPC cURL error: {message}", ['message'=>$message]);
+            \Gini\Logger::of('core')->error("RPC cURL error: {message}", ['message' => $message]);
             throw IoC::construct('\Gini\RPC\Exception', "transport error: $message", -32300);
         }
 
@@ -109,5 +113,4 @@ class RPC
 
         return $data;
     }
-
 }

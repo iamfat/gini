@@ -4,7 +4,6 @@ namespace Gini\Controller\CLI\CI;
 
 class PHPUnit extends \Gini\Controller\CLI
 {
-
     public function __index($args)
     {
         echo "gini ci phpunit init\n";
@@ -36,7 +35,7 @@ class PHPUnit extends \Gini\Controller\CLI
 </phpunit>
 TEMPL;
 
-        file_exists(APP_PATH.'/phpunit.xml.dist') 
+        file_exists(APP_PATH.'/phpunit.xml.dist')
             or file_put_contents(APP_PATH.'/phpunit.xml.dist', $phpunit_content);
 
         $phpunit_gini = <<<'TEMPL'
@@ -60,11 +59,10 @@ die("missing Gini PHPUnit Components!\n");
 TEMPL;
 
         \Gini\File::ensureDir(APP_PATH.'/tests/unit');
-        file_exists(APP_PATH.'/tests/unit/gini.php') 
+        file_exists(APP_PATH.'/tests/unit/gini.php')
             or file_put_contents(APP_PATH.'/tests/unit/gini.php', $phpunit_gini);
-        
-        echo "   \e[32mdone.\e[0m\n";
 
+        echo "   \e[32mdone.\e[0m\n";
     }
 
     public function actionCreate($args)
@@ -73,13 +71,13 @@ TEMPL;
 
         $class = $args[0];
         preg_match('|^[\w\\\]+$|', $class) or die("Usage: gini ci phpunit create <Class\\For\\Test>\n");
-        
+
         echo "Creating $class\n";
 
         $pos = strrpos($class, '\\');
         if ($pos === false) {
             $namespace = '';
-            $name = $class; 
+            $name = $class;
         } else {
             $namespace = '\\'.trim(substr($class, 0, $pos), '\\');
             $name = trim(substr($class, $pos + 1), '\\');
@@ -92,7 +90,7 @@ namespace Gini\PHPUnit{$namespace};
 
 require_once __DIR__ . '/../gini.php';
 
-class {$name} extends \Gini\PHPUnit\CLI {        
+class {$name} extends \Gini\PHPUnit\CLI {
 
     public function testHello() {
         \$this->assertTrue(false, "PLEASE IMPLEMENT THIS!");
@@ -102,7 +100,7 @@ class {$name} extends \Gini\PHPUnit\CLI {
 
 TEMPL;
 
-        $dir = APP_PATH . '/tests/unit';
+        $dir = APP_PATH.'/tests/unit';
         if ($namespace) {
             $dir .= strtr($namespace, '\\', '/');
         }
@@ -114,8 +112,5 @@ TEMPL;
         } else {
             echo "   \e[31mfile exists!\e[0m\n";
         }
-
     }
-
 }
-

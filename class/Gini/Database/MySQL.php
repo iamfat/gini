@@ -10,10 +10,9 @@ class MySQL extends \PDO implements Driver
     private $_table_status;
     private $_table_schema;
 
-    private function _updateTableStatus($table=null)
+    private function _updateTableStatus($table = null)
     {
         if ($table || !$this->_table_status) {
-
             if ($table && $table != '*') {
                 unset($this->_table_status[$table]);
                 $SQL = sprintf('SHOW TABLE STATUS FROM %s WHERE "Name"=%s',
@@ -34,7 +33,7 @@ class MySQL extends \PDO implements Driver
         }
     }
 
-    public function __construct($dsn, $username=null, $password=null, $options=null)
+    public function __construct($dsn, $username = null, $password = null, $options = null)
     {
         $options = (array) $options;
         $options += [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''];
@@ -104,11 +103,11 @@ class MySQL extends \PDO implements Driver
         //检查所有Fields
         $curr_fields = $curr_schema['fields'];
         $missing_fields = array_diff_key($fields, $curr_fields);
-        foreach ($missing_fields as $key=>$field) {
-            $field_sql[]='ADD '.$this->_fieldSQL($key, $field);
+        foreach ($missing_fields as $key => $field) {
+            $field_sql[] = 'ADD '.$this->_fieldSQL($key, $field);
         }
 
-        foreach ($curr_fields as $key=>$curr_field) {
+        foreach ($curr_fields as $key => $curr_field) {
             $field = $fields[$key];
             if ($field) {
                 $curr_type = $this->_normalizeType($curr_field['type']);
@@ -117,9 +116,7 @@ class MySQL extends \PDO implements Driver
                     || $field['null'] != $curr_field['null']
                     || $field['default'] != $curr_field['default']
                     || $field['serial'] != $curr_field['serial']) {
-                    $field_sql[] = sprintf('CHANGE %s %s'
-                        , $this->quoteIdent($key)
-                        , $this->_fieldSQL($key, $field));
+                    $field_sql[] = sprintf('CHANGE %s %s', $this->quoteIdent($key), $this->_fieldSQL($key, $field));
                 }
             }
             /*
@@ -148,25 +145,21 @@ class MySQL extends \PDO implements Driver
         $curr_indexes = $curr_schema['indexes'];
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
-        foreach ($missing_indexes as $key=>$val) {
-            $field_sql[] = sprintf('ADD %s'
-                , $this->_alterIndexSQL($key, $val));
+        foreach ($missing_indexes as $key => $val) {
+            $field_sql[] = sprintf('ADD %s', $this->_alterIndexSQL($key, $val));
         }
 
-        foreach ($curr_indexes as $key=>$curr_val) {
+        foreach ($curr_indexes as $key => $curr_val) {
             $val = & $indexes[$key];
             if ($val) {
-                if ( $val['type'] != $curr_val['type']
+                if ($val['type'] != $curr_val['type']
                     || array_diff($val, $curr_val)) {
-
-                    $field_sql[]=sprintf('DROP %s, ADD %s'
-                        , $this->_alterIndexSQL($key, $curr_val, true)
-                        , $this->_alterIndexSQL($key, $val));
+                    $field_sql[] = sprintf('DROP %s, ADD %s', $this->_alterIndexSQL($key, $curr_val, true), $this->_alterIndexSQL($key, $val));
                 }
             }
             // remove other indexes
             else {
-                $field_sql[]=sprintf('DROP INDEX %s', $this->quoteIdent($key) );
+                $field_sql[] = sprintf('DROP INDEX %s', $this->quoteIdent($key));
             }
         }
 
@@ -176,33 +169,32 @@ class MySQL extends \PDO implements Driver
             $this->query($SQL);
             $this->tableSchema($table, true);
         }
-
     }
 
     public function tableSchema($name, $refresh = false)
     {
         if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
-
             $ds = $this->query(sprintf('SHOW FIELDS FROM "%s"', $name));
 
-            $fields=array();
-            if ($ds) while($dr = $ds->fetchObject()) {
+            $fields = array();
+            if ($ds) {
+                while ($dr = $ds->fetchObject()) {
+                    $field = array('type' => $this->_normalizeType($dr->Type));
 
-                $field = array('type' => $this->_normalizeType($dr->Type));
+                    if ($dr->Default !== null) {
+                        $field['default'] = $dr->Default;
+                    }
 
-                if ($dr->Default !== null) {
-                    $field['default'] = $dr->Default;
+                    if ($dr->null != 'NO') {
+                        $field['null'] = true;
+                    }
+
+                    if (false !== strpos($dr->Extra, 'auto_increment')) {
+                        $field['serial'] = true;
+                    }
+
+                    $fields[$dr->Field] = $field;
                 }
-
-                if ($dr->Null != 'NO') {
-                    $field['null'] = true;
-                }
-
-                if (false !== strpos($dr->Extra, 'auto_increment')) {
-                    $field['serial'] = true;
-                }
-
-                $fields[$dr->Field] = $field;
             }
 
             $this->_table_schema[$name]['fields'] = $fields;
@@ -211,10 +203,12 @@ class MySQL extends \PDO implements Driver
         if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
             $ds = $this->query(sprintf('SHOW INDEX FROM %s', $this->quoteIdent($name)));
             $indexes = array();
-            if ($ds) while($row = $ds->fetchObject()) {
-                $indexes[$row->Key_name]['fields'][] = $row->Column_name;
-                if (!$row->Non_unique) {
-                    $indexes[$row->Key_name]['type'] = $row->Key_name == 'PRIMARY' ? 'primary' : 'unique';
+            if ($ds) {
+                while ($row = $ds->fetchObject()) {
+                    $indexes[$row->Key_name]['fields'][] = $row->Column_name;
+                    if (!$row->Non_unique) {
+                        $indexes[$row->Key_name]['type'] = $row->Key_name == 'PRIMARY' ? 'primary' : 'unique';
+                    }
                 }
             }
 
@@ -226,12 +220,7 @@ class MySQL extends \PDO implements Driver
 
     private function _fieldSQL($key, &$field)
     {
-        return sprintf('%s %s%s%s%s'
-                , $this->quoteIdent($key)
-                , $field['type']
-                , $field['null'] ? '' : ' NOT NULL'
-                , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : ''
-                , $field['serial'] ? ' AUTO_INCREMENT' : ''
+        return sprintf('%s %s%s%s%s', $this->quoteIdent($key), $field['type'], $field['null'] ? '' : ' NOT NULL', isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : '', $field['serial'] ? ' AUTO_INCREMENT' : ''
                 );
     }
 
@@ -239,16 +228,16 @@ class MySQL extends \PDO implements Driver
     {
         switch ($val['type']) {
         case 'primary':
-            $type='PRIMARY KEY';
+            $type = 'PRIMARY KEY';
             break;
         case 'unique':
-            $type='UNIQUE '. $this->quoteIdent($key);
+            $type = 'UNIQUE '.$this->quoteIdent($key);
             break;
         case 'fulltext':
-            $type='FULLTEXT '. $this->quoteIdent($key);
+            $type = 'FULLTEXT '.$this->quoteIdent($key);
             break;
         default:
-            $type='INDEX '. $this->quoteIdent($key);
+            $type = 'INDEX '.$this->quoteIdent($key);
         }
 
         if ($no_fields) {
@@ -277,7 +266,6 @@ class MySQL extends \PDO implements Driver
         $this->_updateTableStatus($table);
 
         return $rs !== null;
-
     }
 
     public function dropTable($table)
@@ -337,5 +325,4 @@ class MySQL extends \PDO implements Driver
     //
     //     return $ret == 0;
     // }
-
 }

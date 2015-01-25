@@ -17,13 +17,15 @@ class SysLog extends Handler
 
     public function log($level, $message, array $context = array())
     {
-        if (!$this->isLoggable($level)) return;
+        if (!$this->isLoggable($level)) {
+            return;
+        }
 
         $message = "[{ident}] $message";
         $context['ident'] = $this->_name;
 
         $replacements = [];
-        $_fillReplacements = function(&$replacements, $context, $prefix = '') use (&$_fillReplacements) {
+        $_fillReplacements = function (&$replacements, $context, $prefix = '') use (&$_fillReplacements) {
             foreach ($context as $key => $val) {
                 if (is_array($val)) {
                     $_fillReplacements($replacements, $val, $prefix.$key.'.');
@@ -40,5 +42,4 @@ class SysLog extends Handler
         syslog(self::$_LEVEL2PRIORITY[$level], $message);
         closelog();
     }
-
 }

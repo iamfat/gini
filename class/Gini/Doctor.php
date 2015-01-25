@@ -4,17 +4,15 @@ namespace Gini;
 
 class Doctor
 {
-
     private static function _outputErrors(array $errors)
     {
         foreach ($errors as $err) {
             echo "   \e[31m*\e[0m $err\n";
         }
-
     }
 
     // exit if there is error
-    public static function diagnose($items=null)
+    public static function diagnose($items = null)
     {
         $errors = [];
 
@@ -22,7 +20,9 @@ class Doctor
             echo "Checking module dependencies...\n";
             // check gini dependencies
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-                if (!$info->error) continue;
+                if (!$info->error) {
+                    continue;
+                }
                 $errors['dependencies'][] = "$name: $info->error";
             }
             if ($errors['dependencies']) {
@@ -39,7 +39,7 @@ class Doctor
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
                 if ($info->composer) {
                     if (!file_exists(APP_PATH.'/vendor')) {
-                        $errors['composer'][] = $name . ': composer packages missing!';
+                        $errors['composer'][] = $name.': composer packages missing!';
                     }
                     break;
                 }
@@ -55,7 +55,7 @@ class Doctor
         if (!$items || in_array('file', $items)) {
             echo "Checking file/directory modes...\n";
             // check if /tmp/gini-session is writable
-            $path_gini_session = sys_get_temp_dir() . '/gini-session';
+            $path_gini_session = sys_get_temp_dir().'/gini-session';
             if (is_dir($path_gini_session) && !is_writable($path_gini_session)) {
                 $errors['file'][] = "$path_gini_session is not writable!";
             }
@@ -69,7 +69,7 @@ class Doctor
 
         if (!$items || in_array('web', $items)) {
             echo "Checking web dependencies...\n";
-            if (!file_exists(APP_PATH . '/web')) {
+            if (!file_exists(APP_PATH.'/web')) {
                 $errors['web'][] = "Please run \e[1m\"gini web update\"\e[0m to generate web directory!";
             }
             if ($errors['web']) {
@@ -89,7 +89,7 @@ class Doctor
         ) {
             // check gini dependencies
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-                $class = '\Gini\Module\\'.strtr($name, ['-'=>'', '_'=>'']);
+                $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '']);
                 $diag_func = "$class::diagnose";
                 if (is_callable($diag_func)) {
                     echo "Checking Module[$name]...\n";
@@ -106,5 +106,4 @@ class Doctor
 
         return $errors;
     }
-
 }

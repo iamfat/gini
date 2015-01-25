@@ -76,7 +76,7 @@ namespace Gini {
             $this->_table = 't'.$this->uniqid();
         }
 
-        protected function fetch($scope='fetch')
+        protected function fetch($scope = 'fetch')
         {
             if (!$this->SQL) {
                 $this->makeSQL();
@@ -107,9 +107,14 @@ namespace Gini {
 
         private function _packWhere($where, $op = 'AND')
         {
-            if (!is_array($where)) $where = array($where);
-            if (count($where) <= 1) return $where[0];
-            return '('.implode( ' '.$op.' ', $where).')';
+            if (!is_array($where)) {
+                $where = array($where);
+            }
+            if (count($where) <= 1) {
+                return $where[0];
+            }
+
+            return '('.implode(' '.$op.' ', $where).')';
         }
 
         public function limit($start, $per_page = null)
@@ -212,7 +217,7 @@ namespace Gini {
             if ($v instanceof Those) {
                 $field_name = $db->ident($this->_table, $this->_field.'_id');
                 $this->_join[] = 'INNER JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
-                    . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
+                    .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
@@ -223,7 +228,7 @@ namespace Gini {
                 foreach ($values as $v) {
                     $qv[] = $db->quote($v);
                 }
-                $this->_where[] = $field_name . ' IN (' . implode(', ', $qv) .')';
+                $this->_where[] = $field_name.' IN ('.implode(', ', $qv).')';
             }
 
             return $this;
@@ -240,7 +245,7 @@ namespace Gini {
             if ($v instanceof Those) {
                 $field_name = $db->ident($this->_table, $this->_field.'_id');
                 $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
-                    . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
+                    .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
@@ -248,12 +253,12 @@ namespace Gini {
                     $this->_where = array_merge($this->_where, $v->_where);
                     $this->_where[] = 'AND';
                 }
-                $this->_where[] = $field_name . ' IS NOT NULL';
+                $this->_where[] = $field_name.' IS NOT NULL';
             } else {
                 foreach ($values as $v) {
                     $qv[] = $db->quote($v);
                 }
-                $this->_where[] = $field_name . ' NOT IN (' . implode(', ', $qv) .')';
+                $this->_where[] = $field_name.' NOT IN ('.implode(', ', $qv).')';
             }
 
             return $this;
@@ -268,17 +273,17 @@ namespace Gini {
 
             switch ($op) {
                 case '^=': {
-                    $this->_where[] = $field_name .' LIKE '.$db->quote($v.'%');
+                    $this->_where[] = $field_name.' LIKE '.$db->quote($v.'%');
                 }
                 break;
 
                 case '$=': {
-                    $this->_where[] = $field_name .' LIKE '.$db->quote('%'.$v);
+                    $this->_where[] = $field_name.' LIKE '.$db->quote('%'.$v);
                 }
                 break;
 
                 case '*=': {
-                    $this->_where[] = $field_name .' LIKE '.$db->quote('%'.$v.'%');
+                    $this->_where[] = $field_name.' LIKE '.$db->quote('%'.$v.'%');
                 }
                 break;
 
@@ -289,11 +294,10 @@ namespace Gini {
                         $structure = $o->structure();
                         if (array_key_exists('object', $structure[$field])) {
                             if (!$structure[$field]['object']) {
-                                $obj_where[] = $db->ident($this->_table, $field . '_name') . $op . $db->quote($v->tableName());
-
+                                $obj_where[] = $db->ident($this->_table, $field.'_name').$op.$db->quote($v->tableName());
                             }
 
-                            $obj_where[] = $db->ident($this->_table, $field . '_id') . $op . intval($v->id);
+                            $obj_where[] = $db->ident($this->_table, $field.'_id').$op.intval($v->id);
 
                             if ($op == '<>') {
                                 $this->_where[] = $this->_packWhere($obj_where, 'OR');
@@ -306,7 +310,7 @@ namespace Gini {
                 }
 
                 default: {
-                    $this->_where[] = $field_name . $op . $this->_getValue($v);
+                    $this->_where[] = $field_name.$op.$this->_getValue($v);
                 }
 
             }
@@ -365,13 +369,13 @@ namespace Gini {
             assert($this->_field);
             $db = $this->db;
             $field_name = $db->ident($this->_table, $this->_field);
-            $this->_where[] = '(' . $field_name . '>=' . $this->_getValue($a) .
-                ' AND ' . $field_name . '<' . $this->_getValue($b) . ')';
+            $this->_where[] = '('.$field_name.'>='.$this->_getValue($a).
+                ' AND '.$field_name.'<'.$this->_getValue($b).')';
 
             return $this;
         }
 
-        public function orderBy($field, $mode='asc')
+        public function orderBy($field, $mode = 'asc')
         {
             $this->resetFetch();
 
@@ -380,11 +384,11 @@ namespace Gini {
             switch ($mode) {
                 case 'desc':
                 case 'd':
-                $this->_order_by[] = $db->ident($this->_table, $field) . ' DESC';
+                $this->_order_by[] = $db->ident($this->_table, $field).' DESC';
                 break;
                 case 'asc':
                 case 'a':
-                $this->_order_by[] = $db->ident($this->_table, $field) . ' ASC';
+                $this->_order_by[] = $db->ident($this->_table, $field).' ASC';
                 break;
             }
 
@@ -396,24 +400,24 @@ namespace Gini {
             $db = $this->db;
             $table = $this->_table;
 
-            $from_SQL = 'FROM ' . $db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
+            $from_SQL = 'FROM '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
 
             if ($this->_join) {
-                $from_SQL .= ' ' . implode(' ', $this->_join);
+                $from_SQL .= ' '.implode(' ', $this->_join);
             }
 
             if ($this->_where) {
-                $from_SQL .= ' WHERE ' . implode(' ', $this->_where);
+                $from_SQL .= ' WHERE '.implode(' ', $this->_where);
             }
 
             $this->from_SQL = $from_SQL;
 
             if ($this->_order_by) {
-                $order_SQL = 'ORDER BY ' . implode(', ', $this->_order_by);
+                $order_SQL = 'ORDER BY '.implode(', ', $this->_order_by);
             }
 
             if ($this->_limit) {
-                $limit_SQL = 'LIMIT ' . $this->_limit;
+                $limit_SQL = 'LIMIT '.$this->_limit;
             }
 
             $id_col = $db->ident($table, 'id');
@@ -422,7 +426,6 @@ namespace Gini {
 
             return $this;
         }
-
     }
 
 }

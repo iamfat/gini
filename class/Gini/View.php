@@ -7,7 +7,7 @@ class View
     protected $_vars;
     protected $_path;
 
-    public function __construct($path, $vars=null)
+    public function __construct($path, $vars = null)
     {
         $this->_path = $path;
         $this->_vars = (array) $vars;
@@ -45,7 +45,9 @@ class View
     private $_ob_cache;
     public function __toString()
     {
-        if ($this->_ob_cache !== null) return $this->_ob_cache;
+        if ($this->_ob_cache !== null) {
+            return $this->_ob_cache;
+        }
 
         $path = $this->_path;
         $locale = \Gini\Config::get('system.locale');
@@ -64,7 +66,9 @@ class View
                 if (!$realPath) {
                     $realPath = \Gini\Core::locatePharFile(VIEW_DIR, "$path.$ext");
                 }
-                if ($realPath) break;
+                if ($realPath) {
+                    break;
+                }
             }
         }
 
@@ -74,22 +78,22 @@ class View
         }
 
         return $this->_ob_cache = (string) $output;
-
     }
 
-    public function set($name, $value=null)
+    public function set($name, $value = null)
     {
         if (is_array($name)) {
             array_map(array($this, __FUNCTION__), array_keys($name), array_values($name));
 
             return $this;
         } else {
-            $this->$name=$value;
+            $this->$name = $value;
         }
 
         return $this;
     }
 
-    public static function setup() { }
-
+    public static function setup()
+    {
+    }
 }

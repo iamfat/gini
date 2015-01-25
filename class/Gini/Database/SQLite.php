@@ -18,10 +18,9 @@ class SQLite extends \PDO implements Driver
         return '"'.addslashes($s).'"';
     }
 
-    private function _update_table_status($table=null)
+    private function _update_table_status($table = null)
     {
         if ($table || !$this->_table_status) {
-
             if ($table && $table != '*') {
                 unset($this->_table_status[$table]);
                 $SQL = sprintf('SELECT "name" FROM "sqlite_master" WHERE "type"=\'table\' AND name=%s', $this->quote($table));
@@ -85,7 +84,7 @@ class SQLite extends \PDO implements Driver
             $need_new_table = (count($missing_fields) > 0);
 
             if (!$need_new_table) {
-                foreach ($curr_fields as $key=>$curr_field) {
+                foreach ($curr_fields as $key => $curr_field) {
                     $field = $fields[$key];
                     if ($field) {
                         $curr_type = $this->_normalizeType($curr_field['type']);
@@ -100,12 +99,10 @@ class SQLite extends \PDO implements Driver
                     }
                 }
             }
-
         }
 
         if ($need_new_table) {
-
-            foreach ($curr_indexes as $key=>$curr_val) {
+            foreach ($curr_indexes as $key => $curr_val) {
                 $SQL = sprintf('DROP INDEX %s', $this->quoteIdent($table.'__'.$key));
                 $this->query($SQL);
             }
@@ -115,7 +112,7 @@ class SQLite extends \PDO implements Driver
             $field_names = [];
             $field_values = [];
 
-            foreach ($fields as $key=>$field) {
+            foreach ($fields as $key => $field) {
                 $field_sql[] = $this->_fieldSQL($key, $field);
                 $field_names[] = $this->quoteIdent($key);
                 if (isset($curr_fields[$key])) {
@@ -164,12 +161,11 @@ class SQLite extends \PDO implements Driver
             $SQL = sprintf('ALTER TABLE %s RENAME TO %s', $this->quoteIdent('_new_'.$table), $this->quoteIdent($table));
             $this->query($SQL);
         } else {
-            foreach ($curr_indexes as $key=>$curr_val) {
+            foreach ($curr_indexes as $key => $curr_val) {
                 $val = & $indexes[$key];
                 if ($val) {
-                    if ( $val['type'] != $curr_val['type']
+                    if ($val['type'] != $curr_val['type']
                         || array_diff($val, $curr_val)) {
-
                     } else {
                         continue;
                     }
@@ -183,7 +179,7 @@ class SQLite extends \PDO implements Driver
         }
 
         if ($index_modified) {
-            foreach ($indexes as $key=>$val) {
+            foreach ($indexes as $key => $val) {
                 $SQL = sprintf('CREATE %sINDEX IF NOT EXISTS %s ON %s (%s)',
                             $val['type'] ? 'UNIQUE ' : '',
                             $this->quoteIdent($table.'__'.$key),
@@ -202,18 +198,16 @@ class SQLite extends \PDO implements Driver
     public function tableSchema($name, $refresh = false)
     {
         $indexes = array();
-        $fields=array();
+        $fields = array();
         $primary_keys = array();
 
         if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
-
             $ds = $this->query(sprintf('SELECT sql FROM sqlite_master WHERE type=\'table\' AND name=%s', $this->quote($name)));
             $table_sql = $ds->fetchObject()->sql;
 
             $ds = $this->query(sprintf('PRAGMA table_info(%s)', $this->quoteIdent($name)));
             // cid, name, type, notnull, dflt_value, pk
             while ($dr = $ds->fetchObject()) {
-
                 $field = array('type' => $this->_normalizeType($dr->type));
 
                 if ($dr->dflt_value !== null) {
@@ -250,15 +244,21 @@ class SQLite extends \PDO implements Driver
         if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
             $ds = $this->query(sprintf('PRAGMA index_list("%s")', $this->escape($name)));
 
-            if ($ds) while($row = $ds->fetchObject()) {
-                list($tname,$index_name) = explode('__', $row->name, 2);
-                if ($tname != $name) continue;
-                if ($row->unique) {
-                    $indexes[$index_name]['type'] = 'unique';
-                }
-                $ds2 = $this->query(sprintf('PRAGMA index_info("%s")', $this->escape($row->name)));
-                if ($ds2) while ($row2 = $ds2->fetchObject()) {
-                    $indexes[$index_name]['fields'][] = $row2->name;
+            if ($ds) {
+                while ($row = $ds->fetchObject()) {
+                    list($tname, $index_name) = explode('__', $row->name, 2);
+                    if ($tname != $name) {
+                        continue;
+                    }
+                    if ($row->unique) {
+                        $indexes[$index_name]['type'] = 'unique';
+                    }
+                    $ds2 = $this->query(sprintf('PRAGMA index_info("%s")', $this->escape($row->name)));
+                    if ($ds2) {
+                        while ($row2 = $ds2->fetchObject()) {
+                            $indexes[$index_name]['fields'][] = $row2->name;
+                        }
+                    }
                 }
             }
 
@@ -276,20 +276,15 @@ class SQLite extends \PDO implements Driver
     private function _fieldSQL($key, &$field)
     {
         if ($field['serial']) {
-            return sprintf('%s INTEGER PRIMARY KEY AUTOINCREMENT'
-                    , $this->quoteIdent($key)
+            return sprintf('%s INTEGER PRIMARY KEY AUTOINCREMENT', $this->quoteIdent($key)
                     );
         }
 
-        return sprintf('%s %s%s%s'
-                , $this->quoteIdent($key)
-                , $this->_normalizeType($field['type'])
-                , $field['null'] ? '' : ' NOT NULL'
-                , isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : ''
+        return sprintf('%s %s%s%s', $this->quoteIdent($key), $this->_normalizeType($field['type']), $field['null'] ? '' : ' NOT NULL', isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : ''
                 );
     }
 
-    public function createTable($table, $engine=null)
+    public function createTable($table, $engine = null)
     {
         $engine = $engine ?: 'innodb';    //innodb as default db
 
@@ -298,7 +293,6 @@ class SQLite extends \PDO implements Driver
         $this->_update_table_status($table);
 
         return $rs !== null;
-
     }
 
     public function dropTable($table)
@@ -316,7 +310,9 @@ class SQLite extends \PDO implements Driver
     {
         $rs = $this->query("SELECT name FROM sqlite_master WHERE type='table'");
         while ($r = $rs->fetch(\PDO::FETCH_NUM)) {
-            if (strncmp($r[0], 'sqlite_', 7) == 0) continue;
+            if (strncmp($r[0], 'sqlite_', 7) == 0) {
+                continue;
+            }
             $tables[] = $r[0];
         }
 
@@ -326,5 +322,4 @@ class SQLite extends \PDO implements Driver
 
         return true;
     }
-
 }

@@ -1,7 +1,9 @@
 <?php
 
 namespace Gini\CGI\Validator {
-    class Exception extends \ErrorException {}
+    class Exception extends \ErrorException
+    {
+    }
 }
 
 namespace Gini\CGI {
@@ -17,7 +19,6 @@ namespace Gini\CGI {
 
         public function validate($key, $assertion, $message)
         {
-
             if (isset($this->_errors[$key])) {
                 return $this;
             }

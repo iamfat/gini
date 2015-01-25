@@ -27,7 +27,10 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return (int) $this->total_count;
     }
 
-    public function name() {return $this->name;}
+    public function name()
+    {
+        return $this->name;
+    }
 
     public function __construct($name)
     {
@@ -38,7 +41,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->db = a($name)->db();
     }
 
-    public function __clone() {}
+    public function __clone()
+    {
+    }
 
     public function query()
     {
@@ -54,7 +59,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     }
 
     private $_fetch_flag;
-    protected function setFetchFlag($scope, $enable=true)
+    protected function setFetchFlag($scope, $enable = true)
     {
         if ($enable) {
             $this->_fetch_flag[$scope] = true;
@@ -81,9 +86,11 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         }
     }
 
-    protected function fetch($scope='data')
+    protected function fetch($scope = 'data')
     {
-        if ($this->isFetchFlagged($scope)) return $this;
+        if ($this->isFetchFlagged($scope)) {
+            return $this;
+        }
 
         switch ($scope) {
         case 'count':
@@ -126,7 +133,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     {
         $this->fetch();
         foreach ($this->objects as $object) {
-            if (!$object->delete()) return false;
+            if (!$object->delete()) {
+                return false;
+            }
         }
 
         return true;
@@ -197,7 +206,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             return $this->object($id);
         }
 
-        return null;
+        return;
     }
 
     public function offsetUnset($id)
@@ -205,7 +214,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->fetch();
         unset($this->objects[$id]);
         $this->count = count($this->objects);
-        if ($this->current_id==$id) $this->current_id = key($this->objects);
+        if ($this->current_id == $id) {
+            $this->current_id = key($this->objects);
+        }
     }
 
     public function offsetSet($id, $object)
@@ -213,7 +224,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->fetch();
         $this->objects[$object->id] = $object;
         $this->count = count($this->objects);
-        $this->current_id=$id;
+        $this->current_id = $id;
     }
 
     public function offsetExists($id)
@@ -265,5 +276,4 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
         return $arr;
     }
-
 }

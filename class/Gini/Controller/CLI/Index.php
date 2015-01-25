@@ -4,7 +4,6 @@ namespace Gini\Controller\CLI;
 
 class Index extends \Gini\Controller\CLI
 {
-
     private static function _loadGiniComposer()
     {
         if (file_exists(SYS_PATH.'/vendor/autoload.php')) {
@@ -18,7 +17,7 @@ class Index extends \Gini\Controller\CLI
 
     private static function _configFile()
     {
-        return posix_getpwuid(posix_getuid())['dir'] .'/.gini.conf';
+        return posix_getpwuid(posix_getuid())['dir'].'/.gini.conf';
     }
 
     private static function _config()
@@ -54,7 +53,6 @@ class Index extends \Gini\Controller\CLI
 
             $options['userName'] = $userName;
             $options['password'] = $password;
-
         } else {
             $config = self::_config();
 
@@ -66,7 +64,9 @@ class Index extends \Gini\Controller\CLI
                 $token = null;
             }
 
-            if ($token) $headers[ 'Authorization'] = 'Gini '.$token;
+            if ($token) {
+                $headers[ 'Authorization'] = 'Gini '.$token;
+            }
         }
 
         return [$options, $headers];
@@ -109,7 +109,6 @@ class Index extends \Gini\Controller\CLI
         } catch (\Gini\RPC\Exception $e) {
             echo "Server Error: ".$e->getMessage()."\n";
         }
-
     }
 
     public function actionLogout($args)
@@ -144,7 +143,6 @@ class Index extends \Gini\Controller\CLI
         $path = "$appId/$version.tgz";
         $ph = popen($command, 'r');
         if (is_resource($ph)) {
-
             $content = '';
             while (!feof($ph)) {
                 $content .= fread($ph, 4096);
@@ -174,7 +172,7 @@ class Index extends \Gini\Controller\CLI
                         $client = new \Sabre\DAV\Client($options);
                         continue;
                     }
-                    die ("Access denied for publishing $appId/$version.\n");
+                    die("Access denied for publishing $appId/$version.\n");
                 }
                 break;
             }
@@ -189,11 +187,11 @@ class Index extends \Gini\Controller\CLI
                         $client = new \Sabre\DAV\Client($options);
                         continue;
                     }
-                    die ("Access denied for publishing $appId/$version.\n");
+                    die("Access denied for publishing $appId/$version.\n");
                 }
 
                 if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                    die ("Error: ".$response['statusCode']."\n");
+                    die("Error: ".$response['statusCode']."\n");
                 }
 
                 break;
@@ -202,7 +200,6 @@ class Index extends \Gini\Controller\CLI
             echo "$appId/$version was published successfully.\n";
             pclose($ph);
         }
-
     }
 
     public function actionUnpublish($argv)
@@ -232,11 +229,11 @@ class Index extends \Gini\Controller\CLI
                     $client = new \Sabre\DAV\Client($options);
                     continue;
                 }
-                die ("Access denied for unpublishing $appId/$version.\n");
+                die("Access denied for unpublishing $appId/$version.\n");
             }
 
             if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                die ("Failed to find $path\n");
+                die("Failed to find $path\n");
             }
 
             break;
@@ -252,11 +249,11 @@ class Index extends \Gini\Controller\CLI
                     $client = new \Sabre\DAV\Client($options);
                     continue;
                 }
-                die ("Access denied for unpublishing $appId/$version.\n");
+                die("Access denied for unpublishing $appId/$version.\n");
             }
 
             if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                die ("Error: ".$response['statusCode']."\n");
+                die("Error: ".$response['statusCode']."\n");
             }
 
             break;
@@ -277,7 +274,7 @@ class Index extends \Gini\Controller\CLI
         $client = new \Sabre\DAV\Client($options);
 
         $installedModules = [];
-        $installModule = function ($module, $versionRange, $targetDir, $isApp=false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
+        $installModule = function ($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
 
             if (isset($installedModules[$module])) {
                 $info = $installedModules[$module];
@@ -287,7 +284,6 @@ class Index extends \Gini\Controller\CLI
                     die("Conflict detected on $module! Installed: {$v->fullVersion} Expecting: $versionRange\n");
                 }
             } else {
-
                 // fetch index.json
                 echo "Fetching catalog of {$module}...\n";
                 while (true) {
@@ -300,11 +296,11 @@ class Index extends \Gini\Controller\CLI
                             $client = new \Sabre\DAV\Client($options);
                             continue;
                         }
-                        die ("Access denied for fetch catalog of {$module} .\n");
+                        die("Access denied for fetch catalog of {$module} .\n");
                     }
 
                     if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                        die ("Error: ".$response['statusCode']."\n");
+                        die("Error: ".$response['statusCode']."\n");
                     }
 
                     break;
@@ -316,7 +312,9 @@ class Index extends \Gini\Controller\CLI
                     $v = new \Gini\Version($version);
                     if ($v->satisfies($versionRange)) {
                         if ($matched) {
-                            if ($matched->compare($v) > 0) continue;
+                            if ($matched->compare($v) > 0) {
+                                continue;
+                            }
                         }
                         $matched = $v;
                     }
@@ -341,11 +339,11 @@ class Index extends \Gini\Controller\CLI
                             $client = new \Sabre\DAV\Client($options);
                             continue;
                         }
-                        die ("Access denied for fetch catalog of {$module} .\n");
+                        die("Access denied for fetch catalog of {$module} .\n");
                     }
 
                     if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                        die ("Error: ".$response['statusCode']."\n");
+                        die("Error: ".$response['statusCode']."\n");
                     }
 
                     break;
@@ -372,7 +370,9 @@ class Index extends \Gini\Controller\CLI
 
             if ($info) {
                 foreach ((array) $info->dependencies as $m => $r) {
-                    if ($m == 'gini') continue;
+                    if ($m == 'gini') {
+                        continue;
+                    }
                     $installModule($m, $r, $targetDir, false);
                 }
             }
@@ -388,7 +388,7 @@ class Index extends \Gini\Controller\CLI
             } else {
                 $versionRange = readline('Please provide a version constraint for the '.$module.' requirement:');
             }
-            
+
             $installModule($module, $versionRange, $_SERVER['PWD']."/$module", true);
         } else {
             // run: gini install, then you should be in module directory
@@ -397,15 +397,15 @@ class Index extends \Gini\Controller\CLI
                 $app = \Gini\Core::moduleInfo(APP_ID);
                 $installedModules[APP_ID] = $app;
                 $installModule(APP_ID, $app->version, APP_PATH, true);
-           }
+            }
         }
     }
 
     protected function _strPad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
     {
-        $diff = mb_strwidth( $input ) - mb_strlen( $input );
+        $diff = mb_strwidth($input) - mb_strlen($input);
 
-        return str_pad( $input, $pad_length + $diff, $pad_string, $pad_type );
+        return str_pad($input, $pad_length + $diff, $pad_string, $pad_type);
     }
 
     public function actionSearch($argv)
@@ -424,10 +424,8 @@ class Index extends \Gini\Controller\CLI
                     $this->_strPad($m['name'], 30, ' ')
                 );
             }
-
         } catch (\Gini\RPC\Exception $e) {
             echo "Server Error: ".$e->getMessage()."\n";
         }
     }
-
 }

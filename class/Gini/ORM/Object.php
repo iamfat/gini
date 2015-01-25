@@ -8,11 +8,11 @@ class Object extends \Gini\ORM
     public $_extra = 'array';
 
     protected static $db_name;   // database name
-    protected static $db_index ; // database index,
+    protected static $db_index; // database index,
 
     private $those;    // add to support those API
 
-    public function fetch($force=false)
+    public function fetch($force = false)
     {
         if ($this->criteria() === null && $this->those) {
             //try those API
@@ -25,10 +25,14 @@ class Object extends \Gini\ORM
 
     public function __call($method, $params)
     {
-        if ($method == __CLASS__) return;
+        if ($method == __CLASS__) {
+            return;
+        }
 
         if (method_exists('\Gini\Those', $method)) {
-            if (!$this->those) $this->those = \Gini\IoC::construct('\Gini\Those', $this->name());
+            if (!$this->those) {
+                $this->those = \Gini\IoC::construct('\Gini\Those', $this->name());
+            }
             call_user_func_array(array($this->those, $method), $params);
 
             return $this;
@@ -36,5 +40,4 @@ class Object extends \Gini\ORM
 
         return call_user_func_array(array($this->object, $method), $params);
     }
-
 }

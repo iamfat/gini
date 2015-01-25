@@ -17,7 +17,7 @@ namespace Gini {
 
     class URI
     {
-        public static function url($url=null, $query=null, $fragment=null)
+        public static function url($url = null, $query = null, $fragment = null)
         {
             if (!$url) {
                 $url = \Gini\CGI::route();
@@ -25,7 +25,7 @@ namespace Gini {
 
             $ui = parse_url($url);
 
-            if ($ui['scheme']=='mailto') {
+            if ($ui['scheme'] == 'mailto') {
                 //邮件地址
                 return 'mailto:'.$ui['user'].'@'.$ui['host'];
             }
@@ -42,7 +42,9 @@ namespace Gini {
                 }
             }
 
-            if ($fragment) $ui['fragment']=$fragment;
+            if ($fragment) {
+                $ui['fragment'] = $fragment;
+            }
 
             if ($ui['host']) {
                 $url = $ui['scheme'] ?: 'http';
@@ -50,16 +52,16 @@ namespace Gini {
 
                 if ($ui['user']) {
                     if ($ui['pass']) {
-                        $url.=$ui['user'].':'.$ui['pass'].'@';
+                        $url .= $ui['user'].':'.$ui['pass'].'@';
                     } else {
-                        $url.=$ui['user'].'@';
+                        $url .= $ui['user'].'@';
                     }
                 }
 
                 $url .= $ui['host'];
 
                 if ($ui['port']) {
-                    $url.=':'.$ui['port'];
+                    $url .= ':'.$ui['port'];
                 }
 
                 $url .= '/';
@@ -68,15 +70,15 @@ namespace Gini {
             }
 
             if ($ui['path']) {
-                $url.=ltrim($ui['path'], '/');
+                $url .= ltrim($ui['path'], '/');
             }
 
             if ($ui['query']) {
-                $url.='?'.$ui['query'];
+                $url .= '?'.$ui['query'];
             }
 
             if ($ui['fragment']) {
-                $url.='#'.$ui['fragment'];
+                $url .= '#'.$ui['fragment'];
             }
 
             return $url;
@@ -84,27 +86,36 @@ namespace Gini {
 
         public static function encode($text)
         {
-            return rawurlencode(strtr($text, ['.'=>'\.', '/'=>'\/']));
+            return rawurlencode(strtr($text, ['.' => '\.', '/' => '\/']));
         }
 
         public static function decode($text)
         {
-            return strtr($text, ['\.'=>'.', '\/'=>'/']);
+            return strtr($text, ['\.' => '.', '\/' => '/']);
         }
 
-        public static function anchor($url, $text = null, $extra=null, $options=array())
+        public static function anchor($url, $text = null, $extra = null, $options = array())
         {
-            if ($extra) $extra = ' '.$extra;
-            if (!$text) $text = $url;
+            if ($extra) {
+                $extra = ' '.$extra;
+            }
+            if (!$text) {
+                $text = $url;
+            }
             $url = self::url($url, $options['query'], $options['fragment']);
 
             return '<a href="'.$url.'"'.$extra.'>'.$text.'</a>';
         }
 
-        public static function mailto($mail, $name=null, $extra=null)
+        public static function mailto($mail, $name = null, $extra = null)
         {
-            if (!$name) $name = $mail;
-            if ($extra) $extra = ' '.$extra;
+            if (!$name) {
+                $name = $mail;
+            }
+            if ($extra) {
+                $extra = ' '.$extra;
+            }
+
             return '<a href="mailto:'.$mail.'"'.$extra.'>'.$name.'</a>';
         }
 
@@ -114,13 +125,15 @@ namespace Gini {
             $host = $_SERVER['HTTP_HOST'];
             $scheme = $_SERVER['HTTPS'] ? 'https' : 'http';
             $dir = dirname($_SERVER['SCRIPT_NAME']);
-            if (substr($dir, -1) != '/') $dir .= '/';
+            if (substr($dir, -1) != '/') {
+                $dir .= '/';
+            }
             self::$_base = $scheme.'://'.$host.$dir;
 
             self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl;
         }
 
-        public static function base($base=null)
+        public static function base($base = null)
         {
             if ($base) {
                 self::$_base = $base;
@@ -136,8 +149,8 @@ namespace Gini {
             if ($type) {
                 $query = $config[$type]['query'];
                 $query = $query ? strtr($query, [
-                    '$(TIMESTAMP)'=> time(),
-                    '$(VERSION)'=> $info->version
+                    '$(TIMESTAMP)' => time(),
+                    '$(VERSION)' => $info->version
                 ]) : null;
             }
 
@@ -147,10 +160,12 @@ namespace Gini {
         public static function rurl($path, $type)
         {
             $base = self::$_rurl[$type] ?: (self::$_rurl['*'] ?: '');
-            if (substr($base, -1) != '/') $base .= '/';
-            return self::_rurl_mod($base . $path, $type);
-        }
+            if (substr($base, -1) != '/') {
+                $base .= '/';
+            }
 
+            return self::_rurl_mod($base.$path, $type);
+        }
     }
 
 }
@@ -160,7 +175,7 @@ namespace {
     if (function_exists('URL')) {
         die("URL() was declared by other libraries, which may cause problems!");
     } else {
-        function URL($url=null, $query=null, $fragment=null)
+        function URL($url = null, $query = null, $fragment = null)
         {
             return \Gini\URI::url($url, $query, $fragment);
         }
@@ -169,7 +184,7 @@ namespace {
     if (function_exists('MAILTO')) {
         die("MAILTO() was declared by other libraries, which may cause problems!");
     } else {
-        function MAILTO($mail, $name=null, $extra=null)
+        function MAILTO($mail, $name = null, $extra = null)
         {
             return \Gini\URI::mailto($mail, $name, $extra);
         }

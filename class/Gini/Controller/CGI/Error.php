@@ -28,5 +28,4 @@ class Error extends Layout
         $this->view->title = $title;
         $this->view->body = V('error', ['code' => $code]);
     }
-
 }

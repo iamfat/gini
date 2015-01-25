@@ -23,7 +23,7 @@ class File
      * @param  string $mode default is 0755
      * @return bool
      */
-    public static function ensureDir($path, $mode=0755)
+    public static function ensureDir($path, $mode = 0755)
     {
         if (!is_dir($path)) {
             return mkdir($path, $mode, true);
@@ -41,8 +41,8 @@ class File
     public static function humanReadableBytes($a)
     {
         $unim = array('B','KB','MB','GB','TB','PB');
-        $c=0;
-        while ($a>=1024) {
+        $c = 0;
+        while ($a >= 1024) {
             $a >>= 10;
             $c++;
         }
@@ -62,7 +62,9 @@ class File
             $dh = opendir($path);
             if ($dh) {
                 while ($n = readdir($dh)) {
-                    if($n[0]=='.')continue;
+                    if ($n[0] == '.') {
+                        continue;
+                    }
                     self::removeDir($path.'/'.$n);
                 }
                 closedir($dh);
@@ -89,28 +91,27 @@ class File
         if ($clean_empty) {
             $path = dirname($path);
             while (is_dir($path) && rmdir($path)) {
-                $path=dirname($path);
+                $path = dirname($path);
             }
         }
-
     }
 
-    public static function copy($source, $dest, $mode=0755)
+    public static function copy($source, $dest, $mode = 0755)
     {
         $dh = @opendir($source);
         if ($dh) {
             while ($name = readdir($dh)) {
-                if($name == '.' || $name == '..')
+                if ($name == '.' || $name == '..') {
                     continue;
+                }
 
-                $path = $source . '/' . $name;
+                $path = $source.'/'.$name;
                 if (is_dir($path)) {
-                    self::copy($path, $dest . '/' . $name);
+                    self::copy($path, $dest.'/'.$name);
                 } else {
                     self::ensureDir($dest, $mode);
-                    $dest_path = $dest . '/' . $name;
+                    $dest_path = $dest.'/'.$name;
                     copy($path, $dest_path);
-
                 }
             }
             @closedir($dh);
@@ -119,13 +120,17 @@ class File
 
     public static function traverse($path, $callback)
     {
-        if (false === call_user_func($callback, $path)) return;
+        if (false === call_user_func($callback, $path)) {
+            return;
+        }
         if (is_dir($path)) {
             $path = preg_replace('/[^\/]$/', '$0/', $path);
             $dh = opendir($path);
             if ($dh) {
                 while ($file = readdir($dh)) {
-                    if ($file[0] == '.') continue;
+                    if ($file[0] == '.') {
+                        continue;
+                    }
                     self::traverse($path.$file, $callback);
                 }
                 closedir($dh);
@@ -133,9 +138,11 @@ class File
         }
     }
 
-    public static function relativePath($to, $from=null)
+    public static function relativePath($to, $from = null)
     {
-        if (!$from) $from = getcwd();
+        if (!$from) {
+            $from = getcwd();
+        }
         // some compatibility fixes for Windows paths
         $from = is_dir($from) ? rtrim($from, '\/') : $from;
         $to   = is_dir($to)   ? rtrim($to, '\/') : $to;
@@ -160,7 +167,7 @@ class File
                     $relPath = array_pad($relPath, $padLength, '..');
                     break;
                 } else {
-                    $relPath[0] = './' . $relPath[0];
+                    $relPath[0] = './'.$relPath[0];
                 }
             }
         }
@@ -168,10 +175,12 @@ class File
         return implode('/', $relPath);
     }
 
-    public static function inPaths($path, $paths=array())
+    public static function inPaths($path, $paths = array())
     {
         foreach ($paths as $p) {
-            if(preg_match('|^'.preg_quote($p).'|iu', $path))return true;
+            if (preg_match('|^'.preg_quote($p).'|iu', $path)) {
+                return true;
+            }
         }
 
         return false;
@@ -221,7 +230,6 @@ class File
     public static function mimeType($file)
     {
         if (file_exists($file)) {
-
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mime_type = finfo_file($finfo, $file);
             finfo_close($finfo);
@@ -233,15 +241,19 @@ class File
     public static function eachFilesIn($root, $callback)
     {
         $walk = function ($root, $prefix, $callback) use (&$walk) {
-            $dir = $root . '/' . $prefix;
-            if (!is_dir($dir)) return;
+            $dir = $root.'/'.$prefix;
+            if (!is_dir($dir)) {
+                return;
+            }
             $dh = opendir($dir);
             if ($dh) {
                 while (false !== ($name = readdir($dh))) {
-                    if ($name[0] == '.') continue;
+                    if ($name[0] == '.') {
+                        continue;
+                    }
 
-                    $file = $prefix ? $prefix . '/' . $name : $name;
-                    $full_path = $root . '/' . $file;
+                    $file = $prefix ? $prefix.'/'.$name : $name;
+                    $full_path = $root.'/'.$file;
 
                     if (is_dir($full_path)) {
                         $walk($root, $file, $callback);
@@ -258,5 +270,4 @@ class File
 
         $walk($root, '', $callback);
     }
-
 }

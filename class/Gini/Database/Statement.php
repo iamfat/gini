@@ -17,12 +17,12 @@ class Statement
         $this->_pdo_st = $pdo_st;
     }
 
-    public function row($style=\PDO::FETCH_OBJ)
+    public function row($style = \PDO::FETCH_OBJ)
     {
         return $this->_pdo_st->fetch($style);
     }
 
-    public function rows($style=\PDO::FETCH_OBJ)
+    public function rows($style = \PDO::FETCH_OBJ)
     {
         return $this->_pdo_st->fetchAll($style);
     }
@@ -35,8 +35,10 @@ class Statement
     public function value()
     {
         $r = $this->row(\PDO::FETCH_NUM);
-        if (!$r) return null;
+        if (!$r) {
+            return;
+        }
+
         return $r[0];
     }
-
 } // END class

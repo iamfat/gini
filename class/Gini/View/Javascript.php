@@ -31,5 +31,4 @@ class Javascript implements Engine
 
         return $output;
     }
-
 }

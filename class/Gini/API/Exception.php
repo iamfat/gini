@@ -2,4 +2,6 @@
 
 namespace Gini\API;
 
-class Exception extends \Exception {}
+class Exception extends \Exception
+{
+}

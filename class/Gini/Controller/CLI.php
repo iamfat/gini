@@ -30,9 +30,13 @@ abstract class CLI
      */
     public $params;
 
-    protected function __preAction($action, &$params) { }
+    protected function __preAction($action, &$params)
+    {
+    }
 
-    protected function __postAction($action, &$params, $response) { }
+    protected function __postAction($action, &$params, $response)
+    {
+    }
 
     public function execute()
     {
@@ -54,5 +58,4 @@ abstract class CLI
     {
         echo "\e[1;34mgini\e[0m: unknown command.\n";
     }
-
 }

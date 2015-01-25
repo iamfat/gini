@@ -4,7 +4,6 @@ namespace Gini\Controller\CLI;
 
 class Web extends \Gini\Controller\CLI
 {
-
     public function __index($args)
     {
         echo "gini web update\n";
@@ -12,11 +11,11 @@ class Web extends \Gini\Controller\CLI
         echo "gini web clean\n";
     }
 
-    private function _process_css()
+    private function _process_css($force = false)
     {
         printf("%s\n", "Converting LESS to CSS...");
 
-        $css_dir = APP_PATH . '/web/assets/css';
+        $css_dir = APP_PATH.'/web/assets/css';
         \Gini\File::ensureDir($css_dir);
 
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
@@ -24,30 +23,31 @@ class Web extends \Gini\Controller\CLI
             foreach ([
                 $p->path.'/'.RAW_DIR.'/assets/css',
                 $p->path.'/'.RAW_DIR.'/less',
-                $p->path.'/'.RAW_DIR.'/assets/less'] as $less_dir) {
-                if (!is_dir($less_dir)) continue;
+                $p->path.'/'.RAW_DIR.'/assets/less', ] as $less_dir) {
+                if (!is_dir($less_dir)) {
+                    continue;
+                }
                 $dh = opendir($less_dir);
                 if ($dh) {
                     while (false !== ($name = readdir($dh))) {
-                        if ($name[0] == '.') continue;
+                        if ($name[0] == '.') {
+                            continue;
+                        }
                         if (fnmatch('*.less', $name)) {
-                            $css = basename($name, '.less') . '.css';
+                            $css = basename($name, '.less').'.css';
                         } elseif (fnmatch('*.css', $name)) {
                             $css = $name;
                         } else {
                             continue;
                         }
 
-                        $src_path = $less_dir . '/' . $name;
-                        $dst_path = $css_dir . '/' . $css;
-                        if (!file_exists($dst_path)
+                        $src_path = $less_dir.'/'.$name;
+                        $dst_path = $css_dir.'/'.$css;
+                        if ($force || !file_exists($dst_path)
                                 || filemtime($src_path) > filemtime($dst_path)) {
                             // lessc -x raw/less/$$LESS.less web/assets/css/$$LESS.css ; \
                             printf("   %s => %s\n", $name, $css);
-                            $command = sprintf("lessc %s %s %s"
-                                    , escapeshellarg($src_path)
-                                    , escapeshellarg($dst_path)
-                                    , '--clean-css="--s1 --advanced --compatibility=ie8"'
+                            $command = sprintf("lessc %s %s %s", escapeshellarg($src_path), escapeshellarg($dst_path), '--clean-css="--s1 --advanced --compatibility=ie8"'
                                     );
                             exec($command);
                         }
@@ -60,23 +60,23 @@ class Web extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
-    private function _process_js()
+    private function _process_js($force = false)
     {
         printf("%s\n", "Processing JS...");
 
-        $ugly_js_dir = APP_PATH . '/web/assets/js';
+        $ugly_js_dir = APP_PATH.'/web/assets/js';
         \Gini\File::ensureDir($ugly_js_dir);
 
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
         foreach ($pinfo as $p) {
             foreach ([
-                $p->path . '/' . RAW_DIR . '/js',
-                $p->path . '/' . RAW_DIR . '/assets/js'] as $js_dir) {
+                $p->path.'/'.RAW_DIR.'/js',
+                $p->path.'/'.RAW_DIR.'/assets/js', ] as $js_dir) {
                 \Gini\File::eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir) {
-                    $src_path = $js_dir . '/' . $file;
-                    $dst_path = $ugly_js_dir . '/' . $file;
+                    $src_path = $js_dir.'/'.$file;
+                    $dst_path = $ugly_js_dir.'/'.$file;
 
-                    if (!file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+                    if ($force || !file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
                         // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
                         \Gini\File::ensureDir(dirname($dst_path));
                         printf("   %s\n", $file);
@@ -91,7 +91,7 @@ class Web extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
-    private function _merge_assets()
+    private function _merge_assets($force = false)
     {
         printf("%s\n", "Merging all assets...");
         $assets_dir = APP_PATH.'/web/assets';
@@ -99,17 +99,20 @@ class Web extends \Gini\Controller\CLI
 
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
         foreach ($pinfo as $p) {
-            $src_dir = $p->path . '/' . RAW_DIR . '/assets';
+            $src_dir = $p->path.'/'.RAW_DIR.'/assets';
             \Gini\File::eachFilesIn($src_dir, function ($file) use ($src_dir, $assets_dir) {
                 //ignore less|css|js since we will process them later.
-                if (preg_match('/^(?:less|css|js)\//', $file)) return;
+                if (preg_match('/^(?:less|css|js)\//', $file)) {
+                    return;
+                }
 
-                $src_path = $src_dir . '/' . $file;
+                $src_path = $src_dir.'/'.$file;
 
-                $dst_path = $assets_dir . '/' . $file;
+                $dst_path = $assets_dir.'/'.$file;
                 \Gini\File::ensureDir(dirname($dst_path));
 
-                if (!file_exists($dst_path)
+                if ($force
+                     || !file_exists($dst_path)
                      || filesize($src_path) != filesize($dst_path)
                      || filemtime($src_path) > filemtime($dst_path)) {
                     printf("   copy %s\n", $file);
@@ -124,34 +127,44 @@ class Web extends \Gini\Controller\CLI
 
     public function actionUpdate($args)
     {
-        $web_dir = APP_PATH . '/web';
+        if (APP_ID == 'gini') {
+            echo "\e[31mPlease run it in your App directory!\e[0m\n";
+
+            return;
+        }
+
+        $opt = \Gini\Util::getOpt($args, 'f', ['force']);
+        $force = isset($opt['f']) || isset($opt['force']);
+
+        $web_dir = APP_PATH.'/web';
         \Gini\File::ensureDir($web_dir);
-        $cgi_path = realpath(dirname(realpath($_SERVER['SCRIPT_FILENAME'])) . '/../lib/cgi.php');
-        $index_path = $web_dir . '/index.php';
-        if (file_exists($index_path) || is_link($index_path)) unlink($index_path);
+        $cgi_path = realpath(dirname(realpath($_SERVER['SCRIPT_FILENAME'])).'/../lib/cgi.php');
+        $index_path = $web_dir.'/index.php';
+        if (file_exists($index_path) || is_link($index_path)) {
+            unlink($index_path);
+        }
         file_put_contents($index_path, "<?php require \"$cgi_path\";\n");
 
-        $this->_merge_assets();
-        $this->_process_css();
-        $this->_process_js();
+        $this->_merge_assets($force);
+        $this->_process_css($force);
+        $this->_process_js($force);
     }
 
     public function actionPreview($args)
     {
         $errors = \Gini\Doctor::diagnose(['dependencies', 'web']);
-        if ($errors) return;
+        if ($errors) {
+            return;
+        }
 
         $addr = $args[0] ?: 'localhost:3000';
         $command
-            = sprintf("php -S %s -c %s -t %s 2>&1"
-                    , $addr
-                    , APP_PATH . '/raw/cli-server.ini'
-                    , APP_PATH.'/web');
+            = sprintf("php -S %s -c %s -t %s 2>&1", $addr, APP_PATH.'/raw/cli-server.ini', APP_PATH.'/web');
 
         $descriptors = [
             ['file', '/dev/tty', 'r'],
             ['file', '/dev/tty', 'w'],
-            ['file', '/dev/tty', 'w']
+            ['file', '/dev/tty', 'w'],
                 ];
 
         $proc = proc_open($command, $descriptors, $pipes);
@@ -170,5 +183,4 @@ class Web extends \Gini\Controller\CLI
         \Gini\File::removeDir(APP_PATH.'/web');
         echo "   \e[32mdone.\e[0m\n";
     }
-
 }

@@ -8,7 +8,6 @@ namespace Gini;
  */
 class IoC
 {
-
     protected static $CALLBACKS = [];
 
     protected static function key($name)
@@ -62,5 +61,4 @@ class IoC
     {
         unset(static::$CALLBACKS[self::key($name)]);
     }
-
 }

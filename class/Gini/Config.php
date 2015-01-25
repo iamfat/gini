@@ -24,7 +24,10 @@ class Config
     public static function get($key)
     {
         list($category, $key) = explode('.', $key, 2);
-        if ($key === null) return self::$items[$category];
+        if ($key === null) {
+            return self::$items[$category];
+        }
+
         return self::$items[$category][$key];
     }
 
@@ -35,7 +38,7 @@ class Config
             if ($val === null) {
                 unset(self::$items[$category][$key]);
             } else {
-                self::$items[$category][$key]=$val;
+                self::$items[$category][$key] = $val;
             }
         } else {
             if ($val === null) {
@@ -62,7 +65,7 @@ class Config
     {
         self::clear();
         $exp = 300;
-        $config_file = APP_PATH . '/cache/config.json';
+        $config_file = APP_PATH.'/cache/config.json';
         if (file_exists($config_file)) {
             self::$items = (array) @json_decode(file_get_contents($config_file), true);
         } else {
@@ -73,18 +76,26 @@ class Config
 
     private static function _load_config_dir($base, &$items)
     {
-        if (!is_dir($base)) return;
+        if (!is_dir($base)) {
+            return;
+        }
 
         $dh = opendir($base);
         if ($dh) {
             while ($name = readdir($dh)) {
-                if ($name[0] == '.') continue;
+                if ($name[0] == '.') {
+                    continue;
+                }
 
-                $file = $base . '/' . $name;
-                if (!is_file($file)) continue;
+                $file = $base.'/'.$name;
+                if (!is_file($file)) {
+                    continue;
+                }
 
                 $category = pathinfo($name, PATHINFO_FILENAME);
-                if (!isset($items[$category])) $items[$category] = [];
+                if (!isset($items[$category])) {
+                    $items[$category] = [];
+                }
 
                 switch (pathinfo($name, PATHINFO_EXTENSION)) {
                 case 'php':
@@ -103,7 +114,6 @@ class Config
                     $items[$category] = \Gini\Util::arrayMergeDeep($items[$category], $config);
                     break;
                 }
-
             }
             closedir($dh);
         }
@@ -127,5 +137,4 @@ class Config
 
         return $items;
     }
-
 }

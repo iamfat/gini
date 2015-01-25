@@ -4,7 +4,6 @@ namespace Gini\Controller\CLI;
 
 class Composer extends \Gini\Controller\CLI
 {
-
     public function __index($args)
     {
         echo "gini composer init\n";
@@ -21,19 +20,21 @@ class Composer extends \Gini\Controller\CLI
             'description' => $app->description ?: '',
             'license' => 'proprietary',
             'repositories' => [
-                ['type'=>'composer', 'url'=>'http://satis.genee.cn'],
-            ]
+                ['type' => 'composer', 'url' => 'http://satis.genee.cn'],
+            ],
         ];
 
         if (in_array('--no-packagist', $args)) {
-            $composer_json['repositories'][] = ['packagist'=>false];
+            $composer_json['repositories'][] = ['packagist' => false];
         }
 
         $walked = [];
         $walk = function ($info) use (&$walk, &$walked, &$composer_json) {
             $walked[$info->id] = true;
             foreach ($info->dependencies as $name => $version) {
-                if (isset($walked[$name])) continue;
+                if (isset($walked[$name])) {
+                    continue;
+                }
                 $app = \Gini\Core::moduleInfo($name);
                 if ($app) {
                     $walk($app);
@@ -51,13 +52,11 @@ class Composer extends \Gini\Controller\CLI
                     echo "   \e[33mcanceled.\e[0m\n";
 
                     return;
-                   }
+                }
             }
 
             file_put_contents(APP_PATH.'/composer.json', J($composer_json, JSON_PRETTY_PRINT));
             echo "   \e[32mdone.\e[0m\n";
         }
-
     }
-
 }

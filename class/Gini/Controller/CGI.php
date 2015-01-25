@@ -51,7 +51,9 @@ abstract class CGI
      * @param  string $params
      * @return void
      */
-    protected function __preAction($action, &$params) { }
+    protected function __preAction($action, &$params)
+    {
+    }
 
     /**
      * Function called right after action was executed
@@ -61,7 +63,9 @@ abstract class CGI
      * @param  string $response
      * @return void
      */
-    protected function __postAction($action, &$params, $response) { }
+    protected function __postAction($action, &$params, $response)
+    {
+    }
 
     /**
      * Execute current action with parameters
@@ -106,11 +110,10 @@ abstract class CGI
      * @param  array|string|null $query Query parameters need to include in URL
      * @return void
      */
-    public function redirect($url='', $query=null)
+    public function redirect($url = '', $query = null)
     {
         // session_write_close();
-        header('Location: '. URL($url, $query), true, 302);
+        header('Location: '.URL($url, $query), true, 302);
         exit();
     }
-
 }

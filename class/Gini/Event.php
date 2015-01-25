@@ -16,10 +16,10 @@ namespace Gini;
 
 class Event
 {
-    private static $_EVENTS=[];
+    private static $_EVENTS = [];
 
-    private $queue=[];
-    private $sorted=false;
+    private $queue = [];
+    private $sorted = false;
     private $name;
 
     private $_return;
@@ -36,7 +36,7 @@ class Event
             return $a->order > $b->order;
         });
 
-        $this->sorted=true;
+        $this->sorted = true;
     }
 
     public function __construct($name)
@@ -57,14 +57,15 @@ class Event
     private $triggering = false;
     private function _trigger(array $params)
     {
-        if (!$this->sorted) $this->_sort();
+        if (!$this->sorted) {
+            $this->_sort();
+        }
 
         array_unshift($params, $this);
 
         foreach ($this->queue as $hook) {
-
             $return = $hook->return;
-            if (is_array($return) && count($return) == 2 && is_object($return[0]) ) {
+            if (is_array($return) && count($return) == 2 && is_object($return[0])) {
                 // array(object, method)
                 $callback = $return;
             } elseif (is_object($return) && ($return instanceof \Closure)) {
@@ -91,14 +92,15 @@ class Event
                 $this->_return = $return;
             }
 
-            if ($this->_abort) break;
+            if ($this->_abort) {
+                break;
+            }
         }
-
     }
 
-    public function addHandler($return, $weight=0, $key=null)
+    public function addHandler($return, $weight = 0, $key = null)
     {
-        $event = (object) ['weight'=>$weight, 'return'=>$return];
+        $event = (object) ['weight' => $weight, 'return' => $return];
 
         if (!$key) {
             if (is_array($return)
@@ -120,10 +122,9 @@ class Event
         }
 
         $this->queue[$key] = $event;
-
     }
 
-    public static function get($name, $ensure=false)
+    public static function get($name, $ensure = false)
     {
         $e = self::$_EVENTS[$name];
         if (!$e && $ensure) {
@@ -146,7 +147,7 @@ class Event
      * @param  string $weight
      * @return void
      */
-    public static function bind($names, $return, $weight=0)
+    public static function bind($names, $return, $weight = 0)
     {
         $names = static::_normalizeNames($names);
 
@@ -229,5 +230,4 @@ class Event
             }
         }
     }
-
 }

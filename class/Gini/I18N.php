@@ -7,7 +7,7 @@ namespace Gini {
         public static function setup()
         {
             if (!defined('I18N_PATH')) {
-                define('I18N_PATH', APP_PATH . '/i18n');
+                define('I18N_PATH', APP_PATH.'/i18n');
             }
 
             bindtextdomain(APP_ID, I18N_PATH);
@@ -20,7 +20,7 @@ namespace Gini {
         public static function setLocale($locale)
         {
             $full_locale = ($locale ?: 'en_US').'.UTF-8';
-            \Gini\Logger::of('core')->debug("locale = {locale}", ['locale'=>$full_locale]);
+            \Gini\Logger::of('core')->debug("locale = {locale}", ['locale' => $full_locale]);
 
             putenv('LANGUAGE='.$full_locale);
             putenv('LANG='.$full_locale);
@@ -42,9 +42,11 @@ namespace {
     if (function_exists('T')) {
         die("T() was declared by other libraries, which may cause problems!");
     } else {
-        function T($fmt, $params=null)
+        function T($fmt, $params = null)
         {
-            if (!$fmt) return $fmt;
+            if (!$fmt) {
+                return $fmt;
+            }
             if (is_array($fmt)) {
                 $a = \Gini\I18N::stripContext($fmt[0]);  //msgid
                 $b = \Gini\I18N::stripContext($fmt[1]);  //plural msgid

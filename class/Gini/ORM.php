@@ -1,17 +1,17 @@
 <?php
 
 /**
-* Those ORM
-* $object = new \Gini\ORM\Object($id|[criteria array]);
-*
-* @author Jia Huang
-* @version $Id$
-* @copyright Genee, 2014-01-27
-**/
+ * Those ORM
+ * $object = new \Gini\ORM\Object($id|[criteria array]);
+ *
+ * @author Jia Huang
+ * @version $Id$
+ * @copyright Genee, 2014-01-27
+ **/
 
 /**
-* Define DocBlock
-**/
+ * Define DocBlock
+ **/
 
 namespace Gini;
 
@@ -36,7 +36,9 @@ abstract class ORM
      */
     public function __call($method, $params)
     {
-        if ($method == __FUNCTION__) return;
+        if ($method == __FUNCTION__) {
+            return;
+        }
         /*
         orm[user].call[method]
         */
@@ -84,13 +86,15 @@ abstract class ORM
         $inheritance = [];
 
         $class = get_class($this);
-        $name = strtolower(join('', array_slice(explode('\\', $class), -1)));
+        $name = strtolower(implode('', array_slice(explode('\\', $class), -1)));
         $inheritance[$name] = $class;
 
         foreach (class_parents($this) as $class) {
-            $name = strtolower(join('', array_slice(explode('\\', $class), -1)));
+            $name = strtolower(implode('', array_slice(explode('\\', $class), -1)));
             $inheritance[$name] = $class;
-            if ($name == 'object') break;
+            if ($name == 'object') {
+                break;
+            }
         }
 
         return $inheritance;
@@ -145,32 +149,29 @@ abstract class ORM
     public function fetch($force = false)
     {
         if ($force || $this->_db_time == 0) {
-
             if (is_array($this->_criteria) && count($this->_criteria) > 0) {
-
                 $db = $this->db();
 
                 $criteria = $this->normalizeCriteria($this->_criteria);
 
                 //从数据库中获取该数据
-                foreach ($criteria as $k=>$v) {
-                    $where[] = $db->quoteIdent($k) . '=' . $db->quote($v);
+                foreach ($criteria as $k => $v) {
+                    $where[] = $db->quoteIdent($k).'='.$db->quote($v);
                 }
 
                 $schema = $this->schema();
 
                 $fields = array_map([$db, 'quoteIdent'], array_keys($schema['fields']));
 
-                $SQL = 'SELECT ' . implode(', ', $fields)
-                    . ' FROM ' . $db->quoteIdent($this->tableName())
-                    . ' WHERE ' . implode(' AND ', $where) . ' LIMIT 1';
+                $SQL = 'SELECT '.implode(', ', $fields)
+                    .' FROM '.$db->quoteIdent($this->tableName())
+                    .' WHERE '.implode(' AND ', $where).' LIMIT 1';
 
                 $result = $db->query($SQL);
                 //只取第一条记录
                 if ($result) {
                     $data = $result->row(\PDO::FETCH_ASSOC);
                 }
-
             }
 
             //给object赋值
@@ -188,7 +189,6 @@ abstract class ORM
         if ($criteria) {
             $this->criteria($criteria);
         }
-
     }
 
     public function db()
@@ -220,7 +220,7 @@ abstract class ORM
         if ($criteria !== null) {
             //set criteria
             if (is_scalar($criteria)) {
-                $criteria = ['id'=>(int) $criteria];
+                $criteria = ['id' => (int) $criteria];
             }
             $this->_criteria = (array) $criteria;
         }
@@ -236,7 +236,6 @@ abstract class ORM
         $indexes;
 
         foreach ($structure as $k => $v) {
-
             $field = null;
             $index = null;
 
@@ -268,16 +267,16 @@ abstract class ORM
                     $field['default'] = $pv;
                     break;
                 case 'primary':
-                    $indexes['PRIMARY'] = ['type' => 'primary', 'fields'=> [$k]];
+                    $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => [$k]];
                     break;
                 case 'unique':
-                    $indexes['_IDX_'.$k] = ['type' => 'unique', 'fields'=> [$k]];
+                    $indexes['_IDX_'.$k] = ['type' => 'unique', 'fields' => [$k]];
                     break;
                 case 'serial':
                     $field['serial'] = true;
                     break;
                 case 'index':
-                    $indexes['_IDX_'.$k] = ['fields'=>[$k]];
+                    $indexes['_IDX_'.$k] = ['fields' => [$k]];
                 case 'object':
                     // 需要添加新的$field
                     if (!$pv) {
@@ -285,23 +284,23 @@ abstract class ORM
                     }
                     $fields[$k.'_id'] = ['type' => 'bigint'];
                 }
-
             }
 
-            if ($field) $fields[$k] = $field;
-
+            if ($field) {
+                $fields[$k] = $field;
+            }
         }
 
         $db_index = static::$db_index;
         if (count($db_index) > 0) {
             // 索引项
             foreach ($db_index as $k => $v) {
-
                 list($vk, $vv) = explode(':', $v, 2);
                 $vk = trim($vk);
                 $vv = trim($vv);
                 if (!$vv) {
-                    $vv = trim($vk); $vk = null;
+                    $vv = trim($vk);
+                    $vk = null;
                 }
 
                 $vv = explode(',', $vv);
@@ -312,24 +311,23 @@ abstract class ORM
                         if (!$structure[$vvv]['object']) {
                             $vv[] = $vvv.'_name';
                         }
-                        $vvv = $vvv . '_id';
+                        $vvv = $vvv.'_id';
                     }
                 }
 
                 switch ($vk) {
                 case 'unique':
-                    $indexes['_MIDX_'.$k] = ['type' => 'unique', 'fields'=>$vv];
+                    $indexes['_MIDX_'.$k] = ['type' => 'unique', 'fields' => $vv];
                     break;
                 case 'primary':
-                    $indexes['PRIMARY'] = ['type' => 'primary', 'fields'=>$vv];
+                    $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => $vv];
                     break;
                 case 'fulltext':
-                    $indexes['_MIDX_'.$k] = ['type' => 'fulltext', 'fields'=>$vv];
+                    $indexes['_MIDX_'.$k] = ['type' => 'fulltext', 'fields' => $vv];
                     break;
                 default:
-                    $indexes['_MIDX_'.$k] = ['fields'=>$vv];
+                    $indexes['_MIDX_'.$k] = ['fields' => $vv];
                 }
-
             }
         }
 
@@ -338,7 +336,9 @@ abstract class ORM
 
     public function delete()
     {
-        if (!$this->id) return true;
+        if (!$this->id) {
+            return true;
+        }
 
         $db = $this->db();
         $tbl_name = $this->tableName();
@@ -370,7 +370,7 @@ abstract class ORM
             } elseif (array_key_exists('array', $v)) {
                 $db_data[$k] = isset($this->$k)
                     ? J($this->$k)
-                    : ( array_key_exists('null', $v) ? 'null' : '{}' );
+                    : (array_key_exists('null', $v) ? 'null' : '{}');
             } else {
                 $db_data[$k] = $this->$k;
                 if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
@@ -397,14 +397,14 @@ abstract class ORM
         unset($db_data['id']);
 
         if ($id > 0) {
-
-            foreach ($db_data as $k=>$v) {
+            foreach ($db_data as $k => $v) {
                 $pair[] = $db->quoteIdent($k).'='.$db->quote($v);
             }
 
-            if ($pair) $SQL = 'UPDATE '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quoteIdent('id').'='.$db->quote($id);
+            if ($pair) {
+                $SQL = 'UPDATE '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quoteIdent('id').'='.$db->quote($id);
+            }
         } else {
-
             $keys = array_keys($db_data);
             $vals = array_values($db_data);
 
@@ -418,14 +418,12 @@ abstract class ORM
         }
 
         if ($success) {
-
             if (!$id) {
                 $id = $db->lastInsertId();
             }
 
             $this->criteria($id);
             $this->fetch(true);
-
         }
 
         return $success;
@@ -447,7 +445,7 @@ abstract class ORM
     private function _prepareName()
     {
         // remove Gini/ORM
-        list(,,$name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
+        list(, , $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
         $this->_name = $name;
         $this->_tableName = str_replace('/', '_', $name);
     }
@@ -461,7 +459,7 @@ abstract class ORM
     {
         if (!isset($this->_name)) {
             $this->_prepareName();
-         }
+        }
 
         return $this->_name;
     }
@@ -503,7 +501,9 @@ abstract class ORM
                 } else {
                     //object need to be bind later to avoid deadlock.
                     unset($this->$k);
-                    if (!isset($oname)) $oname = strval($data[$k.'_name']);
+                    if (!isset($oname)) {
+                        $oname = strval($data[$k.'_name']);
+                    }
                     if ($oname) {
                         $oi = (object) ['name' => $oname, 'id' => $data[$k.'_id']];
                         $this->_oinfo[$k] = $oi;
@@ -576,18 +576,19 @@ abstract class ORM
      * @param  string $locale
      * @return void
      */
-    public function L($name, $locale=null)
+    public function L($name, $locale = null)
     {
         // 如果之前没有触发数据库查询, 在这里触发一下
         $this->fetch();
 
         // if \Gini\Config::get('system.locale') == 'zh_CN', $object->L('name') will access $object->_extra['i18n'][zh_CN]['name']
-        if (!isset($locale)) $locale = \Gini\Config::get('system.locale');
+        if (!isset($locale)) {
+            $locale = \Gini\Config::get('system.locale');
+        }
         if (isset($this->_extra['@i18n'][$locale][$name])) {
             return $this->_extra['@i18n'][$locale][$name];
         }
 
         return $this->$name;
     }
-
 }

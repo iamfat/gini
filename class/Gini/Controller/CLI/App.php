@@ -7,18 +7,17 @@
  *
  * @package default
  * @author Jia Huang
-**/
+ **/
 
 namespace Gini\Controller\CLI;
 
 class App extends \Gini\Controller\CLI
 {
-
     protected function _strPad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
     {
-        $diff = mb_strwidth( $input ) - mb_strlen( $input );
+        $diff = mb_strwidth($input) - mb_strlen($input);
 
-        return str_pad( $input, $pad_length + $diff, $pad_string, $pad_type );
+        return str_pad($input, $pad_length + $diff, $pad_string, $pad_type);
     }
 
     private function _iniPHPUnit()
@@ -29,17 +28,17 @@ class App extends \Gini\Controller\CLI
 
         $xml = APP_PATH.'/phpunit.xml';
         if (!file_exists($xml)) {
-            copy($gini->path . '/raw/templates/phpunit/phpunit.xml', $xml);
+            copy($gini->path.'/raw/templates/phpunit/phpunit.xml', $xml);
         }
 
-        $dir = APP_PATH . '/tests';
+        $dir = APP_PATH.'/tests';
         if (!file_exists($dir)) {
             mkdir($dir);
         }
 
-        $base = APP_PATH . '/tests/gini.php';
+        $base = APP_PATH.'/tests/gini.php';
         if (!file_exists($base)) {
-            copy($gini->path . '/raw/templates/phpunit/gini.php', $base);
+            copy($gini->path.'/raw/templates/phpunit/gini.php', $base);
         }
 
         echo "\e[1mDONE.\e[0m\n";
@@ -80,14 +79,16 @@ class App extends \Gini\Controller\CLI
         ];
 
         foreach ($prompt as $k => $v) {
-            $data[$k] = readline($v . " [\e[31m" . ($default[$k] ?: 'N/A') . "\e[0m]: ");
-            if (!$data[$k]) $data[$k] = $default[$k];
+            $data[$k] = readline($v." [\e[31m".($default[$k] ?: 'N/A')."\e[0m]: ");
+            if (!$data[$k]) {
+                $data[$k] = $default[$k];
+            }
         }
 
         $data['dependencies'] = (array) @json_decode($data['dependencies']);
 
         $gini_json = J($data, JSON_PRETTY_PRINT);
-        file_put_contents($path . '/gini.json', $gini_json);
+        file_put_contents($path.'/gini.json', $gini_json);
     }
 
     public function __index($args)
@@ -110,13 +111,11 @@ class App extends \Gini\Controller\CLI
             unset($info['path']);
             echo yaml_emit($info);
         }
-
     }
 
     public function actionModules($args)
     {
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-
             if (!$info->error) {
                 $rPath = \Gini\File::relativePath($info->path, APP_PATH);
                 if ($rPath[0] == '.') {
@@ -161,7 +160,7 @@ class App extends \Gini\Controller\CLI
                 if (preg_match('/^(.+)\.php$/', $file, $parts)) {
                     $class_name = trim(strtolower($parts[1]), '/');
                     $class_name = strtr($class_name, '-', '_');
-                    $class_map[$class_name] = $class_dir . '/' . $file;
+                    $class_map[$class_name] = $class_dir.'/'.$file;
                 }
             });
         }
@@ -203,7 +202,9 @@ class App extends \Gini\Controller\CLI
     {
         if (count($args) == 0) {
             $errors = \Gini\Doctor::diagnose(['dependencies']);
-            if ($errors) return;
+            if ($errors) {
+                return;
+            }
 
             $this->_cacheClass();
             echo "\n";
@@ -221,14 +222,15 @@ class App extends \Gini\Controller\CLI
             }
             echo "   \e[32mdone.\e[0m\n";
         }
-
     }
 
     private function _build($build_base, $info)
     {
         echo "Building \e[4m$info->name\e[0m ($info->id-$info->version)...\n";
 
-        if (!isset($info->build)) $info->build = (object) [];
+        if (!isset($info->build)) {
+            $info->build = (object) [];
+        }
         $build = (object) $info->build;
         if (!isset($build->copy)) {
             $build->copy = ['raw'];
@@ -238,7 +240,7 @@ class App extends \Gini\Controller\CLI
         }
 
         $app_dir = $info->path;
-        $build_dir = $build_base . '/' . $info->id;
+        $build_dir = $build_base.'/'.$info->id;
 
         if (!is_dir($build_dir)) {
             @mkdir($build_dir, 0755, true);
@@ -270,7 +272,7 @@ class App extends \Gini\Controller\CLI
             passthru("cp -r $app_dir/$dir $build_dir");
         }
 
-        echo ("  copy gini.json...\n");
+        echo("  copy gini.json...\n");
         passthru("cp $app_dir/gini.json $build_dir/gini.json");
         echo "\n";
     }
@@ -278,7 +280,7 @@ class App extends \Gini\Controller\CLI
     public function actionBuild($args)
     {
         $info = \Gini\Core::moduleInfo(APP_ID);
-        $build_base = $info->path . '/build';
+        $build_base = $info->path.'/build';
 
         if (is_dir($build_base)) {
             passthru("rm -rf $build_base");
@@ -382,5 +384,4 @@ class App extends \Gini\Controller\CLI
         $controller = \Gini\IoC::construct('\Gini\Controller\CLI\Index');
         $controller->actionInstall($argv);
     }
-
 }

@@ -4,10 +4,9 @@ namespace Gini;
 
 class Session
 {
-
     private static function _idPath()
     {
-        return sys_get_temp_dir() . '/gini-session/' . posix_getpwuid(posix_getuid())['name'] . '/' . posix_getsid(0);
+        return sys_get_temp_dir().'/gini-session/'.posix_getpwuid(posix_getuid())['name'].'/'.posix_getsid(0);
     }
 
     public static function setup()
@@ -15,13 +14,11 @@ class Session
         $driver = \Gini\Config::get('system.session_driver');
 
         if ($driver) {
-
             $class = '\Gini\Session\\'.$driver;
 
             self::$driver = \Gini\IoC::construct($class);
 
-            session_set_save_driver ( 'Session::open' , 'Session::close' , 'Session::read' , 'Session::write' , 'Session::destroy' , 'Session::gc' );
-
+            session_set_save_driver('Session::open', 'Session::close', 'Session::read', 'Session::write', 'Session::destroy', 'Session::gc');
         }
 
         $cookie_params = (array) \Gini\Config::get('system.session_cookie');
@@ -34,7 +31,7 @@ class Session
             session_save_path(\Gini\Config::get('system.session_path'));
         }
 
-        if (PHP_SAPI=='cli') {
+        if (PHP_SAPI == 'cli') {
             ini_set('session.use_cookies', 0);
             // TODO: find a better way to save and load session id
             $idPath = self::_idPath();
@@ -43,7 +40,7 @@ class Session
             }
         }
 
-        session_set_cookie_params (
+        session_set_cookie_params(
             $cookie_params['lifetime'],
             $cookie_params['path'],
             $cookie_params['domain']
@@ -71,7 +68,6 @@ class Session
                 unset($_SESSION['@TIMEOUT'][$token]);
             }
         }
-
     }
 
     public static function shutdown()
@@ -84,7 +80,6 @@ class Session
         }
 
         if (!ini_get('session.use_cookies')) {
-
             $tmp = (array) $_SESSION;
 
             set_error_handler(function () {}, E_ALL ^ E_NOTICE);
@@ -109,33 +104,50 @@ class Session
             File::ensureDir(dirname($idPath), 0775);
             file_put_contents($idPath, session_id());
         }
-
     }
 
-    public static function close() { return true; }
-    public static function open() { return true; }
+    public static function close()
+    {
+        return true;
+    }
+    public static function open()
+    {
+        return true;
+    }
     public static function read($id)
     {
-        if (!self::$driver) return true;
+        if (!self::$driver) {
+            return true;
+        }
+
         return self::$driver->read($id);
     }
 
     private static $driver;
     public static function write($id, $data)
     {
-        if (!self::$driver) return true;
+        if (!self::$driver) {
+            return true;
+        }
+
         return self::$driver->write($id, $data);
     }
 
     public static function destroy($id)
     {
-        if (!self::$driver) return true;
+        if (!self::$driver) {
+            return true;
+        }
+
         return self::$driver->destroy($id);
     }
 
     public static function gc($max)
     {
-        if (!self::$driver) return true;
+        if (!self::$driver) {
+            return true;
+        }
+
         return self::$driver->gc($max);
     }
 
@@ -148,14 +160,17 @@ class Session
         }
     }
 
-    public static function tempToken($prefix='', $timeout = 0)
+    public static function tempToken($prefix = '', $timeout = 0)
     {
         $token = uniqid($prefix);
-        if ($timeout > 0) self::makeTimeout($token, $timeout);
+        if ($timeout > 0) {
+            self::makeTimeout($token, $timeout);
+        }
+
         return $token;
     }
 
-    public static function cleanup($entire=false)
+    public static function cleanup($entire = false)
     {
         if ($entire) {
             session_unset();
@@ -166,7 +181,6 @@ class Session
                 unset($_SESSION[$k]);
             }
         }
-
     }
 
     public static function regenerateId()
@@ -175,5 +189,4 @@ class Session
             session_regenerate_id();
         }
     }
-
 }

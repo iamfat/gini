@@ -19,15 +19,16 @@ class API
     public static function dispatch(array $data)
     {
         try {
-
             $id =  $data['id'] ?: null;
 
             if (!isset($data['method'])
                 || !isset($data['params']) || !isset($data['jsonrpc'])
                 || !$data['method']
-                || $data['jsonrpc'] != '2.0') throw new API\Exception('Invalid Request', -32600);
+                || $data['jsonrpc'] != '2.0') {
+                throw new API\Exception('Invalid Request', -32600);
+            }
 
-            $path = strtolower(strtr($data['method'], ['.'=>'/', '::'=>'/']));
+            $path = strtolower(strtr($data['method'], ['.' => '/', '::' => '/']));
             $params = $data['params'];
 
             $path_arr = explode('/', $path);
@@ -39,7 +40,7 @@ class API
             } else {
                 $method = array_pop($path_arr);
                 if (count($path_arr) > 0) {
-                    $class = '\Gini\Controller\API\\' . implode('\\', $path_arr);
+                    $class = '\Gini\Controller\API\\'.implode('\\', $path_arr);
                 } else {
                     $class = '\Gini\Controller\API';
                 }
@@ -49,11 +50,10 @@ class API
                     $o = \Gini\IoC::construct($class);
                     if (method_exists($o, $method)) {
                         $callback = array($o, $method);
-                    } elseif (function_exists($class . '\\' . $method)) {
-                        $callback = $class . '\\' . $method;
+                    } elseif (function_exists($class.'\\'.$method)) {
+                        $callback = $class.'\\'.$method;
                     }
                 }
-
             }
 
             if (!is_callable($callback)) {
@@ -69,7 +69,6 @@ class API
                     'id' => $id,
                 ];
             }
-
         } catch (API\Exception $e) {
             $response = [
                 'jsonrpc' => '2.0',
@@ -83,5 +82,4 @@ class API
 
         return $response;
     }
-
 }

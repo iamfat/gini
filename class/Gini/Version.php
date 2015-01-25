@@ -45,7 +45,6 @@ class Version
             $this->preReleaseVersion = $c['pre-release'];
             $this->buildVersion = $c['build'];
         }
-
     }
 
     protected function satisfiesUnit($versionUnit)
@@ -57,7 +56,9 @@ class Version
         $op = $parts[1];
         $version = $parts[2];
         $v = new Version($version);
-        if (!$v->isValid()) return false;
+        if (!$v->isValid()) {
+            return false;
+        }
 
         if ($op == '~') {
             // ~1.2.3 := >=1.2.3-0 <1.3.0-0
@@ -68,18 +69,18 @@ class Version
                 $v->majorVersion,
                 $v->minorVersion == 'x' ? '0' : $v->minorVersion,
                 $v->patchVersion == 'x' ? '0' : $v->patchVersion,
-            ]) . '-0';
+            ]).'-0';
 
             $maxVer = implode('.', [
                 $v->minorVersion == 'x' ? $v->majorVersion + 1 : $v->majorVersion,
                 $v->minorVersion == 'x' ? '0' : $v->minorVersion + 1,
                 0,
-            ]) . '-0';
+            ]).'-0';
 
-            if ($this->compare($minVer) >=0 && $this->compare($maxVer) <0) return true;
-
+            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) <0) {
+                return true;
+            }
         } elseif ($op == '^') {
-
             // ^1.2.3 := >=1.2.3-0 <2.0.0-0
             // ^1.2 := >=1.2.0-0 <2.0.0-0
             // ^1 := >=1.0.0-0 <2.0.0-0
@@ -88,12 +89,13 @@ class Version
                 $v->majorVersion,
                 $v->minorVersion == 'x' ? '0' : $v->minorVersion,
                 $v->patchVersion == 'x' ? '0' : $v->patchVersion,
-            ]) . '-0';
+            ]).'-0';
 
             if ($v->majorVersion == 0) {
-
                 if ($v->minorVersion == 0) {
-                    if ($this->compare("0.0.{$v->patchVersion}") == 0) return true;
+                    if ($this->compare("0.0.{$v->patchVersion}") == 0) {
+                        return true;
+                    }
 
                     return false;
                 } else {
@@ -101,19 +103,19 @@ class Version
                         0,
                         $v->minorVersion + 1,
                         0,
-                    ]) . '-0';
+                    ]).'-0';
                 }
-
             } else {
                 $maxVer = implode('.', [
                     $v->majorVersion + 1,
                     0,
                     0,
-                ]) . '-0';
+                ]).'-0';
             }
 
-            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) return true;
-
+            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) {
+                return true;
+            }
         } elseif ($v->majorVersion == 'x') {
             // e.g. */x => any versions
             return true;
@@ -124,69 +126,90 @@ class Version
                 $v->majorVersion,
                 0,
                 0,
-            ]) . '-0';
+            ]).'-0';
 
             $maxVer = implode('.', [
                 $v->majorVersion + 1,
                 0,
                 0,
-            ]) . '-0';
+            ]).'-0';
 
-            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) return true;
-
+            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) {
+                return true;
+            }
         } elseif ($v->patchVersion == 'x') {
-
             // e.g. 1.2.x => >= 1.2.0-0 AND < 1.3.0-0
 
             $minVer = implode('.', [
                 $v->majorVersion,
                 $v->minorVersion,
                 0,
-            ]) . '-0';
+            ]).'-0';
 
             $maxVer = implode('.', [
                 $v->majorVersion,
                 $v->minorVersion + 1,
                 0,
-            ]) . '-0';
+            ]).'-0';
 
-            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) return true;
-
+            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) {
+                return true;
+            }
         } else {
             $ret = $this->compare($v);
             if ($op == '') {
-                if ($ret==0) return true;
+                if ($ret == 0) {
+                    return true;
+                }
             } elseif ($op == '<=') {
-                if ($ret<=0) return true;
+                if ($ret <= 0) {
+                    return true;
+                }
             } elseif ($op == '>=') {
-                if ($ret>=0) return true;
+                if ($ret >= 0) {
+                    return true;
+                }
             } elseif ($op == '>') {
-                if ($ret>0) return true;
+                if ($ret>0) {
+                    return true;
+                }
             } elseif ($op == '<') {
-                if ($ret<0) return true;
+                if ($ret<0) {
+                    return true;
+                }
             }
-         }
+        }
 
         return false;
     }
 
     public function satisfies($versionRange)
     {
-        if (!$this->isValid()) return false;
+        if (!$this->isValid()) {
+            return false;
+        }
 
         $versionRange = trim($versionRange);
-        if ($versionRange=='' || $versionRange=='*') return true;
+        if ($versionRange == '' || $versionRange == '*') {
+            return true;
+        }
 
         $satisfies = function ($versionRange) {
-            if (!preg_match_all('`\s*(\S+)(?:\s+(-)\s|$)?`', $versionRange, $parts, PREG_PATTERN_ORDER)) return false;
+            if (!preg_match_all('`\s*(\S+)(?:\s+(-)\s|$)?`', $versionRange, $parts, PREG_PATTERN_ORDER)) {
+                return false;
+            }
             for ($i = 0, $max = count($parts[1]); $i < $max; $i++) {
                 $versionUnit = $parts[1][$i];
                 if ($parts[2][$i] == '-') {
-                    if (!$this->satisfiesUnit('>=' . $versionUnit)) return false;
+                    if (!$this->satisfiesUnit('>='.$versionUnit)) {
+                        return false;
+                    }
                     $parts[1][$i+1] = '<='.$parts[1][$i+1];
                 } else {
                     // and op
-                    if (!$this->satisfiesUnit($versionUnit)) return false;
+                    if (!$this->satisfiesUnit($versionUnit)) {
+                        return false;
+                    }
                 }
             }
 
@@ -195,7 +218,9 @@ class Version
 
         $ranges = explode('||', $versionRange);
         foreach ($ranges as $range) {
-            if ($satisfies(trim($range))) return true;
+            if ($satisfies(trim($range))) {
+                return true;
+            }
         }
 
         return false;
@@ -208,55 +233,79 @@ class Version
 
     public function compare($v)
     {
-        if (!$this->isValid()) return 0;
+        if (!$this->isValid()) {
+            return 0;
+        }
 
-        if (!$v instanceof Version) $v = new Version($v);
-        if (!$v->isValid()) return 0;
+        if (!$v instanceof Version) {
+            $v = new Version($v);
+        }
+        if (!$v->isValid()) {
+            return 0;
+        }
 
-        if ($this->majorVersion > $v->majorVersion) return 1;
-        elseif ($this->majorVersion < $v->majorVersion) return -1;
+        if ($this->majorVersion > $v->majorVersion) {
+            return 1;
+        } elseif ($this->majorVersion < $v->majorVersion) {
+            return -1;
+        }
 
-        if ($this->minorVersion > $v->minorVersion) return 1;
-        elseif ($this->minorVersion < $v->minorVersion) return -1;
+        if ($this->minorVersion > $v->minorVersion) {
+            return 1;
+        } elseif ($this->minorVersion < $v->minorVersion) {
+            return -1;
+        }
 
-        if ($this->patchVersion > $v->patchVersion) return 1;
-        elseif ($this->patchVersion < $v->patchVersion) return -1;
+        if ($this->patchVersion > $v->patchVersion) {
+            return 1;
+        } elseif ($this->patchVersion < $v->patchVersion) {
+            return -1;
+        }
 
         // 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0
         if (!is_null($this->preReleaseVersion)) {
             // 1.0.0-xxx < 1.0.0
-            if (is_null($v->preReleaseVersion)) return -1;
+            if (is_null($v->preReleaseVersion)) {
+                return -1;
+            }
 
             $a = explode('.', $this->preReleaseVersion);
             $b = explode('.', $v->preReleaseVersion);
             foreach ($a as $i => $av) {
-                if (!isset($b[$i])) return 1;
+                if (!isset($b[$i])) {
+                    return 1;
+                }
                 $bv = $b[$i];
                 if (is_numeric($av)) {
-                    if (!is_numeric($bv)) return -1;
-                    elseif ($av < $bv) return -1;
-                    elseif ($av > $bv) return 1;
+                    if (!is_numeric($bv)) {
+                        return -1;
+                    } elseif ($av < $bv) {
+                        return -1;
+                    } elseif ($av > $bv) {
+                        return 1;
+                    }
                 } elseif (is_numeric($bv)) {
                     return 1;
                 } else {
                     // both A-Z
                     $ret = strcasecmp($av, $bv);
-                    if ($ret > 0) return 1;
-                    elseif ($ret < 0) return -1;
+                    if ($ret > 0) {
+                        return 1;
+                    } elseif ($ret < 0) {
+                        return -1;
+                    }
                 }
             }
 
             if (count($b) > count($a)) {
                 return -1;
             }
-
         } elseif (!is_null($v->preReleaseVersion)) {
             return 1;
         }
 
         return 0;
     }
-
 }
 
 /*

@@ -35,8 +35,10 @@ class CGI
             home/page.php        Controller\Page::index('edit', 1)
         */
 
-        $response = self::request(self::$route, ['get'=>$_GET, 'post'=>$_POST, 'files'=>$_FILES, 'route'=>self::$route])->execute();
-        if ($response) $response->output();
+        $response = self::request(self::$route, ['get' => $_GET, 'post' => $_POST, 'files' => $_FILES, 'route' => self::$route])->execute();
+        if ($response) {
+            $response->output();
+        }
     }
 
     public static function request($route, array $env = array())
@@ -47,24 +49,27 @@ class CGI
         $candidates = array('/index' => $args) + Util::pathAndArgs($args);
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
-
-            $path = strtr(ltrim($path, '/'), ['-'=>'', '_'=>'']);
+            $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
             $basename = basename($path);
             $dirname = dirname($path);
 
             $class_namespace = '\Gini\Controller\CGI\\';
             if ($dirname != '.') {
-                $class_namespace .= strtr($dirname, ['/'=>'\\']).'\\';
+                $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
             }
 
-            $class = $class_namespace . $basename;
-            if (class_exists($class)) break;
+            $class = $class_namespace.$basename;
+            if (class_exists($class)) {
+                break;
+            }
 
-            $class = $class_namespace . 'Controller' . $basename;
-            if (class_exists($class)) break;
+            $class = $class_namespace.'Controller'.$basename;
+            if (class_exists($class)) {
+                break;
+            }
 
             if ($basename != 'index') {
-                $class = $class_namespace . 'Index';
+                $class = $class_namespace.'Index';
                 if (class_exists($class)) {
                     array_unshift($params, $basename);
                     break;
@@ -72,14 +77,16 @@ class CGI
             }
         }
 
-        if (!$class || !class_exists($class, false)) self::redirect('error/404');
+        if (!$class || !class_exists($class, false)) {
+            self::redirect('error/404');
+        }
 
         \Gini\Config::set('runtime.controller_path', $path);
         \Gini\Config::set('runtime.controller_class', $class);
         $controller = \Gini\IoC::construct($class);
 
-        $action = strtr($params[0], ['-'=>'', '_'=>'']);
-        if ($action && $action[0]!='_' && method_exists($controller, 'action'.$action)) {
+        $action = strtr($params[0], ['-' => '', '_' => '']);
+        if ($action && $action[0] != '_' && method_exists($controller, 'action'.$action)) {
             $action = 'action'.$action;
             array_shift($params);
         } elseif (method_exists($controller, '__index')) {
@@ -122,12 +129,11 @@ class CGI
                                 $t['function'],
                                 $file,
                                 $t['line']));
-
             }
         }
 
         if (PHP_SAPI != 'cli') {
-            while(@ob_end_clean());    //清空之前的所有显示
+            while (@ob_end_clean());    //清空之前的所有显示
             header('HTTP/1.1 500 Internal Server Error');
         }
     }
@@ -146,10 +152,10 @@ class CGI
         self::$route = $route;
     }
 
-    public static function redirect($url='', $query=null)
+    public static function redirect($url = '', $query = null)
     {
         // session_write_close();
-        header('Location: '. URL($url, $query), true, 302);
+        header('Location: '.URL($url, $query), true, 302);
         exit();
     }
 

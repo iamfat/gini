@@ -17,10 +17,12 @@ class JSONSysLog extends Handler
 
     public function log($level, $message, array $context = [])
     {
-        if (!$this->isLoggable($level)) return;
+        if (!$this->isLoggable($level)) {
+            return;
+        }
 
         $replacements = [];
-        $_fillReplacements = function(&$replacements, $context, $prefix = '') use (&$_fillReplacements) {
+        $_fillReplacements = function (&$replacements, $context, $prefix = '') use (&$_fillReplacements) {
             foreach ($context as $key => $val) {
                 if (is_array($val)) {
                     $_fillReplacements($replacements, $val, $prefix.$key.'.');
@@ -34,11 +36,10 @@ class JSONSysLog extends Handler
         $context['@ident'] = $this->_name;
         $context['@message'] = strtr($message, $replacements);
 
-        $message = "@cee: " . J($context);
+        $message = "@cee: ".J($context);
 
         openlog(APP_ID, LOG_ODELAY, LOG_LOCAL0);
         syslog(self::$_LEVEL2PRIORITY[$level], $message);
         closelog();
     }
-
 }
