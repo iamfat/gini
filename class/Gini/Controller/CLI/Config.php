@@ -27,10 +27,19 @@ class Config extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
-    public function actionExport()
+    public function actionExport($args)
     {
+        $opt = \Gini\Util::getOpt($args, 'h', ['help', 'json', 'yaml']);
+        if (isset($opt['h']) || isset($opt['help'])) {
+            echo "Usage: gini config export [-h|--help] [--json|--yaml]\n";
+            return;
+        }
+        
         $items = \Gini\Config::fetch();
-        // echo J($items, JSON_PRETTY_PRINT);
-        echo yaml_emit($items, YAML_UTF8_ENCODING);
+        if (isset($opt['json'])) {
+            echo J($items, JSON_PRETTY_PRINT)."\n";
+        } else {
+            echo yaml_emit($items, YAML_UTF8_ENCODING);
+        }
     }
 }
