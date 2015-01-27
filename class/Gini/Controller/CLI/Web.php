@@ -72,7 +72,7 @@ class Web extends \Gini\Controller\CLI
             foreach ([
                 $p->path.'/'.RAW_DIR.'/js',
                 $p->path.'/'.RAW_DIR.'/assets/js', ] as $js_dir) {
-                \Gini\File::eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir) {
+                \Gini\File::eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir, $force) {
                     $src_path = $js_dir.'/'.$file;
                     $dst_path = $ugly_js_dir.'/'.$file;
 
@@ -100,7 +100,7 @@ class Web extends \Gini\Controller\CLI
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
         foreach ($pinfo as $p) {
             $src_dir = $p->path.'/'.RAW_DIR.'/assets';
-            \Gini\File::eachFilesIn($src_dir, function ($file) use ($src_dir, $assets_dir) {
+            \Gini\File::eachFilesIn($src_dir, function ($file) use ($src_dir, $assets_dir, $force) {
                 //ignore less|css|js since we will process them later.
                 if (preg_match('/^(?:less|css|js)\//', $file)) {
                     return;
