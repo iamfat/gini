@@ -137,6 +137,8 @@ namespace Gini {
         {
             if ($base) {
                 self::$_base = $base;
+            } elseif (self::$_base === null) {
+                self::setup();
             }
 
             return self::$_base;
@@ -159,6 +161,8 @@ namespace Gini {
 
         public static function rurl($path, $type)
         {
+            if (!self::$_base === null) self::setup();
+
             $base = self::$_rurl[$type] ?: (self::$_rurl['*'] ?: '');
             if (substr($base, -1) != '/') {
                 $base .= '/';
