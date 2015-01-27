@@ -2,10 +2,10 @@
 
 namespace Gini\PHPUnit\Core;
 
-require_once __DIR__ . '/../gini.php';
+require_once __DIR__.'/../gini.php';
 
-class Version extends \Gini\PHPUnit\CLI {
-
+class Version extends \Gini\PHPUnit\CLI
+{
     public function testMainCompare()
     {
         $versions = [
@@ -18,9 +18,9 @@ class Version extends \Gini\PHPUnit\CLI {
             '1.5.0',
             '1.10.0',
             '2.1.0',
-            '2.3.4'
+            '2.3.4',
         ];
-        
+
         foreach ($versions as $ia => $a) {
             $aVersion = new \Gini\Version($a);
             foreach ($versions as $ib => $b) {
@@ -31,10 +31,10 @@ class Version extends \Gini\PHPUnit\CLI {
                 } else {
                     $this->assertEquals($aVersion->compare($b), -1, "expecting $a < $b");
                 }
-            }           
+            }
         }
     }
-    
+
     public function testPreleaseCompare()
     {
         // 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0
@@ -52,9 +52,9 @@ class Version extends \Gini\PHPUnit\CLI {
             '1.0.0-rc.1',
             '1.0.0',
             '1.1.0',
-            '2.1.0'
+            '2.1.0',
         ];
-        
+
         foreach ($versions as $ia => $a) {
             $aVersion = new \Gini\Version($a);
             foreach ($versions as $ib => $b) {
@@ -65,13 +65,12 @@ class Version extends \Gini\PHPUnit\CLI {
                 } else {
                     $this->assertEquals($aVersion->compare($b), -1, "expecting $a < $b");
                 }
-            }           
+            }
         }
-        
     }
-    
-    public function testRange() {
-        
+
+    public function testRange()
+    {
         $tests = [
             ['1.2.3', '1.2.3', true],
             ['1.2.3', '1.2.3-0', false],
@@ -136,16 +135,14 @@ class Version extends \Gini\PHPUnit\CLI {
             ['1', '1.4.5', true],
             ['1', '2.0.0-0', false],
         ];
-        
+
         foreach ($tests as $t) {
             $v = new \Gini\Version($t[1]);
             if ($t[2]) {
-                $this->assertTrue($v->satisfies($t[0]), $t[1] . ' should satisfy ' . $t[0]);
+                $this->assertTrue($v->satisfies($t[0]), $t[1].' should satisfy '.$t[0]);
             } else {
-                $this->assertFalse($v->satisfies($t[0]), $t[1] . ' should not satisfy ' . $t[0]);
+                $this->assertFalse($v->satisfies($t[0]), $t[1].' should not satisfy '.$t[0]);
             }
         }
-
     }
-
 }

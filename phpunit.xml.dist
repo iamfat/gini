@@ -2,7 +2,7 @@
 <phpunit colors="true">
     <testsuites>
         <testsuite name="gini">
-            <directory suffix=".php">./tests</directory>
+            <directory suffix=".php">./tests/unit</directory>
             <exclude>gini.php</exclude>
         </testsuite>
     </testsuites>

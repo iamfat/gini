@@ -2,27 +2,27 @@
 
 namespace Gini\PHPUnit\Core;
 
-require_once __DIR__ . '/../gini.php';
+require_once __DIR__.'/../gini.php';
 
-class IoC extends \Gini\PHPUnit\CLI {
-
-    public function testBind() {
-        
+class IoC extends \Gini\PHPUnit\CLI
+{
+    public function testBind()
+    {
         $a = \Gini\IoC::construct('stdClass');
         $this->assertFalse(isset($a->foo));
-    
-        \Gini\IoC::bind('stdClass', function(){
-            return (object)['foo'=>'bar', 'uniqid'=>uniqid()];
+
+        \Gini\IoC::bind('stdClass', function () {
+            return (object) ['foo' => 'bar', 'uniqid' => uniqid()];
         });
 
         $a = \Gini\IoC::construct('stdClass');
         $this->assertEquals($a->foo, 'bar');
-       
+
         $b = \Gini\IoC::construct('stdClass');
         $this->assertNotEquals($a->uniqid, $b->uniqid);
 
-        \Gini\IoC::singleton('stdClass', function(){
-            return (object)['foo'=>'bar', 'uniqid'=>uniqid()];
+        \Gini\IoC::singleton('stdClass', function () {
+            return (object) ['foo' => 'bar', 'uniqid' => uniqid()];
         });
 
         $a = \Gini\IoC::construct('stdClass');
@@ -32,7 +32,7 @@ class IoC extends \Gini\PHPUnit\CLI {
         $this->assertEquals($b->foo, 'bar');
 
         $this->assertEquals($a->uniqid, $b->uniqid);
-        
+
         \Gini\IoC::instance('stdClass', $a);
         $c = \Gini\IoC::construct('stdClass');
         $this->assertEquals($c->foo, 'bar');
@@ -42,5 +42,4 @@ class IoC extends \Gini\PHPUnit\CLI {
         $a = \Gini\IoC::construct('stdClass');
         $this->assertFalse(isset($a->foo));
     }
-    
 }
