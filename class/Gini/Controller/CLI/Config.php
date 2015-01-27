@@ -10,11 +10,18 @@ class Config extends \Gini\Controller\CLI
         echo "gini config export\n";
     }
 
-    public function actionUpdate()
+    public function actionUpdate($args)
     {
+        $opt = \Gini\Util::getOpt($args, 'he:', ['help', 'env:']);
+        if (isset($opt['h']) || isset($opt['help'])) {
+            echo "Usage: gini config update [-h|--help] [-e|--env=ENV]\n";
+            return;
+        }
+
         printf("%s\n", "Updating configurations...");
 
-        $config_items = \Gini\Config::fetch();
+        $env = $opt['e'] ?: $opt['env'] ?: null;
+        $config_items = \Gini\Config::fetch($env);
 
         $config_file = APP_PATH.'/cache/config.json';
 
@@ -35,7 +42,8 @@ class Config extends \Gini\Controller\CLI
             return;
         }
         
-        $items = \Gini\Config::fetch();
+        \Gini\Config::setup();
+        $items = \Gini\Config::export();
         if (isset($opt['json'])) {
             echo J($items, JSON_PRETTY_PRINT)."\n";
         } else {

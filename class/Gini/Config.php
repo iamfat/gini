@@ -119,7 +119,7 @@ class Config
         }
     }
 
-    public static function fetch()
+    public static function fetch($env=null)
     {
         $items = [];
 
@@ -128,8 +128,9 @@ class Config
             self::_load_config_dir($path, $items);
         }
 
-        if (isset($_SERVER['GINI_ENV'])) {
-            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$_SERVER['GINI_ENV']);
+        $env = $env ?: $_SERVER['GINI_ENV'] ?: '';
+        if ($env) {
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$env);
             foreach ($paths as $path) {
                 self::_load_config_dir($path, $items);
             }
