@@ -6,13 +6,11 @@ class Composer extends \Gini\Controller\CLI
 {
     public function __index($args)
     {
-        echo "gini composer init\n";
+        echo "gini composer init [-n|--no-packagist]\n";
     }
 
     public function actionInit($args)
     {
-        echo "Generating Composer configuration file...\n";
-
         $app = \Gini\Core::moduleInfo(APP_ID);
 
         $composer_json = [
@@ -24,8 +22,12 @@ class Composer extends \Gini\Controller\CLI
             ],
         ];
 
-        if (in_array('--no-packagist', $args)) {
+        $opt = \Gini\Util::getOpt($args, 'n', ['no-packagist']);
+        if (isset($opt['n']) || isset($opt['--no-packagist'])) {
             $composer_json['repositories'][] = ['packagist' => false];
+            echo "Generating Composer configuration file without Packagist...\n";
+        } else {
+            echo "Generating Composer configuration file...\n";
         }
 
         $walked = [];

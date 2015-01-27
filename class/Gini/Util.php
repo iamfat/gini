@@ -128,10 +128,7 @@ class Util
                             if (!$oval) {
                                 $oval = array_shift($argv);
                             }
-                            if (!$oval) {
-                                throw new \Exception("missing arguments");
-                            }
-                            $opt[$okey] = $oval;
+                            $opt[$okey] = $oval ?: false;
                         } else {
                             if (isset($opt[$okey])) {
                                 $opt[$okey] = [$opt[$okey]];

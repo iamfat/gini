@@ -25,13 +25,17 @@ class Cron extends \Gini\Controller\CLI
 
     public function actionExport($args)
     {
-        if ($args[0]) {
-            $user = $args[0];
+        $gini_bin = $_SERVER['_'];
+        $opt = \Gini\Util::getOpt($args, 'hu:', ['help', 'user:', 'prefix:', 'suffix:']);
+
+        if (isset($opt['h']) || isset($opt['help'])) {
+            echo "Usage: gini cron export [-h|--help] [-u|--user=USER] [--prefix=PREFIX] [--suffix=SUFFIX]\n";
+            return;
         }
 
-        $gini_bin = $_SERVER['_'];
-        $prefix = $cron['prefix'] ?: (\Gini\Config::get('app.cron')['prefix'] ?: '');
-        $suffix = $cron['suffix'] ?: (\Gini\Config::get('app.cron')['suffix'] ?: '');
+        $prefix = $opt['prefix'] ?: '';
+        $suffix = $opt['suffix'] ?: '';
+        $user = $opt['u'] ?: $opt['user'] ?: '';
 
         foreach ((array) \Gini\Config::get('cron') as $cron) {
             if ($cron['comment']) {
