@@ -18,6 +18,7 @@ class Web extends \Gini\Controller\CLI
         $css_dir = APP_PATH.'/web/assets/css';
         \Gini\File::ensureDir($css_dir);
 
+        $filemtime = [];
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
         foreach ($pinfo as $p) {
             foreach ([
@@ -43,8 +44,12 @@ class Web extends \Gini\Controller\CLI
 
                         $src_path = $less_dir.'/'.$name;
                         $dst_path = $css_dir.'/'.$css;
-                        if ($force || !file_exists($dst_path)
-                                || filemtime($src_path) > filemtime($dst_path)) {
+
+                        if (!isset($filemtime[$dst_path])) {
+                            $filemtime[$dst_path] = file_exists($dst_path) ? filemtime($dst_path) : 0;
+                        }
+
+                        if ($force || filemtime($src_path) > $filemtime[$dst_path]) {
                             // lessc -x raw/less/$$LESS.less web/assets/css/$$LESS.css ; \
                             printf("   %s => %s\n", $name, $css);
                             $command = sprintf("lessc %s %s %s", escapeshellarg($src_path), escapeshellarg($dst_path), '--clean-css="--s1 --advanced --compatibility=ie8"'
@@ -67,16 +72,21 @@ class Web extends \Gini\Controller\CLI
         $ugly_js_dir = APP_PATH.'/web/assets/js';
         \Gini\File::ensureDir($ugly_js_dir);
 
+        $filemtime = [];
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
         foreach ($pinfo as $p) {
             foreach ([
                 $p->path.'/'.RAW_DIR.'/js',
                 $p->path.'/'.RAW_DIR.'/assets/js', ] as $js_dir) {
-                \Gini\File::eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir, $force) {
+                \Gini\File::eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir, $force, &$filemtime) {
                     $src_path = $js_dir.'/'.$file;
                     $dst_path = $ugly_js_dir.'/'.$file;
 
-                    if ($force || !file_exists($dst_path) || filemtime($src_path) > filemtime($dst_path)) {
+                    if (!isset($filemtime[$dst_path])) {
+                        $filemtime[$dst_path] = file_exists($dst_path) ? filemtime($dst_path) : 0;
+                    }
+
+                    if ($force || filemtime($src_path) > $filemtime[$dst_path]) {
                         // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
                         \Gini\File::ensureDir(dirname($dst_path));
                         printf("   %s\n", $file);
@@ -97,10 +107,11 @@ class Web extends \Gini\Controller\CLI
         $assets_dir = APP_PATH.'/web/assets';
         \Gini\File::ensureDir($assets_dir);
 
+        $filemtime = [];
         $pinfo = (array) \Gini\Core::$MODULE_INFO;
         foreach ($pinfo as $p) {
             $src_dir = $p->path.'/'.RAW_DIR.'/assets';
-            \Gini\File::eachFilesIn($src_dir, function ($file) use ($src_dir, $assets_dir, $force) {
+            \Gini\File::eachFilesIn($src_dir, function ($file) use ($src_dir, $assets_dir, $force, &$filemtime) {
                 //ignore less|css|js since we will process them later.
                 if (preg_match('/^(?:less|css|js)\//', $file)) {
                     return;
@@ -111,10 +122,15 @@ class Web extends \Gini\Controller\CLI
                 $dst_path = $assets_dir.'/'.$file;
                 \Gini\File::ensureDir(dirname($dst_path));
 
+                if (!isset($filemtime[$dst_path])) {
+                    $filemtime[$dst_path] = file_exists($dst_path) ? filemtime($dst_path) : 0;
+                }
+
                 if ($force
+                     || filemtime($src_path) > $filemtime[$dst_path]
                      || !file_exists($dst_path)
                      || filesize($src_path) != filesize($dst_path)
-                     || filemtime($src_path) > filemtime($dst_path)) {
+                ) {
                     printf("   copy %s\n", $file);
                     copy($src_path, $dst_path);
                 }
