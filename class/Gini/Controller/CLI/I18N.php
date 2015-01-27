@@ -79,6 +79,8 @@ class I18N extends \Gini\Controller\CLI
             passthru($cmd);
         }
 
+        echo "done.\n";
+
         //merge po file to different locale directory
     }
 
