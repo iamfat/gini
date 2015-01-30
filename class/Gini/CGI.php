@@ -58,6 +58,11 @@ class CGI
                 $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
             }
 
+            $class = $class_namespace.$basename.'\\Index';
+            if (class_exists($class)) {
+                break;
+            }
+
             $class = $class_namespace.$basename;
             if (class_exists($class)) {
                 break;
