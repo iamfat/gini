@@ -20,9 +20,7 @@ class Error extends Layout
         }
 
         if ($_SERVER['HTTP_X_REQUESTED_WITH']) {
-            $this->view = '';
-
-            return;
+            return false;
         }
 
         $this->view->title = $title;
