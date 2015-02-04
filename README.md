@@ -1,6 +1,6 @@
 # Gini PHP Framework
 
-![Gini Logo](https://avatars1.githubusercontent.com/u/10832987?v=3&s=72)
+![Gini Logo](raw/assets/icon/gini.png)
 
 **Gini** 是一个基于松散模块依赖的MVC PHP框架，深受Kohana, Symphony和Composer的影响。
 
