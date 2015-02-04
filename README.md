@@ -1,8 +1,12 @@
 # Gini PHP Framework
 
+![Gini Logo](https://avatars1.githubusercontent.com/u/10832987?v=3&s=72)
+
 **Gini** 是一个基于松散模块依赖的MVC PHP框架，深受Kohana, Symphony和Composer的影响。
 
 [点击这里进入GitBook阅读具体文档](http://iamfat.gitbooks.io/gini-book/)
+
+[可用的Gini模块](https://github.com/gini-modules)
 
 ## 易用的CLI
 Gini 在命令行下提供了一个 `gini` 命令, 和 `composer` 与 `npm` 类似. 你能够很容易的通过少数几条命令创建CLI的应用，然后通过 `gini foo bar` 的方式调用.
