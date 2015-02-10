@@ -2,7 +2,7 @@
 
 namespace Gini\CGI\Response;
 
-class Nothing
+class Nothing implements \Gini\CGI\Response
 {
     public function __construct()
     {
