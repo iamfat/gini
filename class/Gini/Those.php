@@ -294,7 +294,7 @@ namespace Gini {
                         $structure = $o->structure();
                         if (array_key_exists('object', $structure[$field])) {
                             if (!$structure[$field]['object']) {
-                                $obj_where[] = $db->ident($this->_table, $field.'_name').$op.$db->quote($v->tableName());
+                                $obj_where[] = $db->ident($this->_table, $field.'_name').$op.$db->quote($v->name());
                             }
 
                             $obj_where[] = $db->ident($this->_table, $field.'_id').$op.intval($v->id);
