@@ -2,7 +2,7 @@
 
 namespace Gini\CGI\Response;
 
-class HTML
+class HTML implements \Gini\CGI\Response
 {
     private $_content;
 
