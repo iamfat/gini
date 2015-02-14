@@ -45,7 +45,7 @@ class API
                     $class = '\Gini\Controller\API';
                 }
 
-                if ($method[0] != '_') {
+                if (class_exists($class) && $method[0] != '_') {
                     $method = 'action'.$method;
                     $o = \Gini\IoC::construct($class);
                     if (method_exists($o, $method)) {
