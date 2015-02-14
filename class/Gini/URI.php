@@ -130,7 +130,7 @@ namespace Gini {
             }
             self::$_base = $scheme.'://'.$host.$dir;
 
-            self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl;
+            self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl ?: [ '*' => 'assets' ];
         }
 
         public static function base($base = null)
@@ -163,7 +163,7 @@ namespace Gini {
         {
             if (!self::$_base === null) self::setup();
 
-            $base = self::$_rurl[$type] ?: (self::$_rurl['*'] ?: '');
+            $base = self::$_rurl[$type] ?: (self::$_rurl['*'].'/'.$type ?: '');
             if (substr($base, -1) != '/') {
                 $base .= '/';
             }
