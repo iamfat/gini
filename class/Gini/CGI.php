@@ -119,7 +119,7 @@ class CGI
                 }
             }
             $line = $e->getLine();
-            error_log(sprintf("\e[31m\e[4mERROR\e[0m \e[1m%s\e[0m", $message));
+            error_log(sprintf("ERROR %s", $message));
             $trace = array_slice($e->getTrace(), 1, 5);
             foreach ($trace as $n => $t) {
                 $file = $t['file'];
