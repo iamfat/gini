@@ -43,7 +43,7 @@ class CGI
 
     public static function request($route, array $env = array())
     {
-        $args = explode('/', $route);
+        $args = array_map('rawurldecode', explode('/', $route));
 
         $path = '';
         $candidates = array('/index' => $args) + Util::pathAndArgs($args);
