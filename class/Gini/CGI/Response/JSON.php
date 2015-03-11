@@ -13,7 +13,7 @@ class JSON implements \Gini\CGI\Response
 
     public function output()
     {
-        header('Content-Type: application/json');
+        header('Content-Type: application/json; charset=utf-8');
         if ($this->_content !== null) {
             file_put_contents('php://output',
                     J($this->_content).PHP_EOL);
