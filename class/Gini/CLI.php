@@ -11,7 +11,6 @@
 /**
  * Define DocBlock
  **/
-
 namespace Gini;
 
 class CLI
@@ -92,30 +91,18 @@ class CLI
         $commands = [];
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
-            $paths = \Gini\Core::pharFilePaths(CLASS_DIR, rtrim('Gini/Controller/CLI/'.$path, '/'));
+            $paths = \Gini\Core::pharFilePaths(CLASS_DIR,
+                rtrim('Gini/Controller/CLI/'.ltrim($path, '/'), '/'));
             foreach ($paths as $p) {
                 if (!is_dir($p)) {
                     continue;
                 }
 
-                $dh = opendir($p);
-                if ($dh) {
-                    while ($name = readdir($dh)) {
-                        if ($name[0] == '.') {
-                            continue;
-                        }
-                        if (!is_file($p.'/'.$name)) {
-                            continue;
-                        }
-                        $commands[] = strtolower(basename($name, '.php'));
-                    }
-                    closedir($dh);
-                }
+                \Gini\File::eachFilesIn($p, function ($file) use (&$commands) {
+                    $name = basename(strtolower(explode('/', $file, 2)[0]), '.php');
+                    $commands[$name] = $name;
+                });
             }
-
-            if (count($commands) > 0) {
-                break;
-            } // break the loop if hits.
 
             // enumerate actions in class
             $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
@@ -140,27 +127,25 @@ class CLI
             $class = null;
         }
 
-        if (count($commands) == 0 || $path == '/') {
-            if (!$class) {
-                $class = '\Gini\Controller\CLI\App';
-                $params = $argv;
-            }
+        if (!$class) {
+            $class = '\Gini\Controller\CLI\App';
+            $params = $argv;
+        }
 
-            if (class_exists($class)) {
-                $rc = new \ReflectionClass($class);
-                $methods = $rc->getMethods(\ReflectionMethod::IS_PUBLIC);
-                foreach ($methods as $m) {
-                    if (strncmp('action', $m->name, 6) != 0) {
-                        continue;
+        if (class_exists($class)) {
+            $rc = new \ReflectionClass($class);
+            $methods = $rc->getMethods(\ReflectionMethod::IS_PUBLIC);
+            foreach ($methods as $m) {
+                if (strncmp('action', $m->name, 6) != 0) {
+                    continue;
+                }
+                if (preg_match_all('`([A-Z]+[a-z\d]+|.+)`', substr($m->name, 6), $parts)) {
+                    $method = strtolower(implode('-', $parts[0]));
+                    if ($params[0] === $method) {
+                        $commands = [];
+                        break;
                     }
-                    if (preg_match_all('`([A-Z]+[a-z\d]+|.+)`', substr($m->name, 6), $parts)) {
-                        $method = strtolower(implode('-', $parts[0]));
-                        if ($params[0] === $method) {
-                            $commands = [];
-                            break;
-                        }
-                        $commands[] = $method;
-                    }
+                    $commands[] = $method;
                 }
             }
         }
@@ -255,7 +240,7 @@ class CLI
         if ($action && method_exists($controller, 'action'.$action)) {
             $action = 'action'.$action;
             array_shift($params);
-        } elseif (!$action && method_exists($controller, '__index')) {
+        } elseif (method_exists($controller, '__index')) {
             $action = '__index';
         } else {
             $action = '__unknown';
