@@ -96,6 +96,7 @@ class Doctor
                     $module_errors = call_user_func($diag_func);
                     if ($module_errors) {
                         static::_outputErrors($module_errors);
+                        $errors['dependencies'][] = "Module[$name] found some error";
                     } else {
                         echo "   \e[32mdone.\e[0m\n";
                     }
