@@ -110,7 +110,7 @@ class Config
                     $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\}/', function ($matches) {
                         return $_SERVER[$matches[1]] ?: $matches[0];
                     }, $content);
-                    $config = (array) @yaml_parse($content);
+                    $config = (array) yaml_parse($content);
                     $items[$category] = \Gini\Util::arrayMergeDeep($items[$category], $config);
                     break;
                 }
