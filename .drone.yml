@@ -9,3 +9,13 @@ script:
     sonar-runner -D sonar.host.url=http://172.17.42.1:9000 
     -D sonar.jdbc.url="jdbc:mysql://172.17.42.1:9006/sonar?useUnicode=true&characterEncoding=utf8"
     -D sonar.jdbc.username=genee -D sonar.jdbc.password=83719730
+
+notify:
+  slack:
+    webhook_url: 'https://hooks.slack.com/services/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'
+    username: 'Drone'
+    channel: '#general'
+    on_started: false
+    on_success: true
+    on_failure: true
+
