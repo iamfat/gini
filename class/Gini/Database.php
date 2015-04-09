@@ -381,4 +381,14 @@ class Database
     //
     //     return $this->_driver->restore($filename, $tables);
     // }
+
+    /**
+        * @brief diagnose
+        *
+        * @return 
+     */
+    public function diagnose()
+    {
+        return $this->_driver->diagnose();
+    }
 } // END class

@@ -325,4 +325,31 @@ class MySQL extends \PDO implements Driver
     //
     //     return $ret == 0;
     // }
+    
+    public function diagnose()
+    {
+        // 
+        $engines = [];
+        if (!empty($this->_options['engine'])) {
+            foreach ((array)$this->_options['engine'] as $k=>$v) {
+                array_push($engines, strtolower($v));
+            }
+        }
+        else {
+            array_push($engines, 'innodb');
+        }
+        $engines = array_unique($engines);
+
+        $supportedEngines = [];
+        foreach ($this->query('SHOW ENGINES')->rows() as $obj) {
+            $engine = strtolower($obj->Engine);
+            array_push($supportedEngines, $engine);
+        }
+
+        $diff = array_diff($engines, $supportedEngines);
+        if (!empty($diff)) {
+            return ['MySQL do not support engine: ' . join(',', $diff)];
+        }
+
+    }
 }

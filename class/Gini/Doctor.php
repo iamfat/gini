@@ -80,6 +80,24 @@ class Doctor
             echo "\n";
         }
 
+        //
+        if (!$items || in_array('database', $items)) {
+            $conf = \Gini\Config::get('database');
+            if (!empty($conf)) {
+                echo "Checking Database...\n";
+                foreach ((array)$conf as $key => $opts) {
+                    $db = \Gini\IoC::construct('\Gini\Database', $opts['dsn'], $opts['username'], $opts['password'], $opts['options']);
+                    $database_errors = $db->diagnose();
+                    if ($database_errors) {
+                        static::_outputErrors($module_errors);
+                    } else {
+                        echo "   \e[32mdone.\e[0m\n";
+                    }
+                    echo "\n";
+                }
+            }
+        }
+
         // enumerate all doctor extensions
         if ((
                 !$items || (
