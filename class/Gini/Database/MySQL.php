@@ -341,7 +341,7 @@ class MySQL extends \PDO implements Driver
         $engines = array_unique($engines);
 
         $supportedEngines = [];
-        foreach ($this->query('SHOW ENGINES')->rows() as $obj) {
+        foreach ((new Statement($this->query('SHOW ENGINES')))->rows() as $obj) {
             $engine = strtolower($obj->Engine);
             array_push($supportedEngines, $engine);
         }
