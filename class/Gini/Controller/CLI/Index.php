@@ -103,9 +103,12 @@ class Index extends \Gini\Controller\CLI
             $uri = self::_serverUri();
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
             $config['token'] = $rpc->createToken($username, $password);
-            yaml_emit_file(self::_configFile(), $config);
-
-            echo "You've successfully logged in as $username.\n";
+            if (isset($config['token'])) {
+                yaml_emit_file(self::_configFile(), $config);
+                echo "You've successfully logged in as $username.\n";
+            } else {
+                echo "Access denied!\n";
+            }
         } catch (\Gini\RPC\Exception $e) {
             echo "Server Error: ".$e->getMessage()."\n";
         }
