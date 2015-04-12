@@ -51,21 +51,10 @@ class ORM extends \Gini\PHPUnit\CLI
                 return '\''.addslashes($s).'\'';
             }));
 
-        // Mocking \Gini\ORM\UT_Lab
-        //
-        // class UTSample extends \Gini\ORM\Object {
-        //
-        //     var $name        = 'string:50';
-        //     var $gender      = 'bool';
-        //     var $money       = 'double,default:0';
-        //     var $description = 'string:*,null';
-        //
-        // }
-
-        \Gini\IoC::bind('\Gini\ORM\UTSample', function () use ($db) {
+        \Gini\IoC::bind('\Gini\ORM\UTSample', function ($criteria = null) use ($db) {
 
             $o = $this->getMockBuilder('\Gini\ORM\Object')
-                 ->setMethods(['db', 'structure', 'name', 'tableName'])
+                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                  ->disableOriginalConstructor()
                  ->getMock();
 
@@ -81,15 +70,25 @@ class ORM extends \Gini\PHPUnit\CLI
                 ->method('tableName')
                 ->will($this->returnValue('utsample'));
 
-            $structure = [
-                'id' => [ 'bigint' => null, 'primary' => null, 'serial' => null ],
-                '_extra' => [ 'array' => null ],
-                'object' => [ 'object' => null],
+            $properties = [
+                'id' => 'bigint,primary,serial',
+                '_extra' => 'array',
+                'object' => 'object',
+                'sample' => 'object:utsample',
+                'number' => 'int',
+                'text' => 'string',
             ];
 
             $o->expects($this->any())
-                ->method('structure')
-                ->will($this->returnValue($structure));
+                ->method('properties')
+                ->will($this->returnValue($properties));
+
+            unset($o->id);
+            unset($o->_extra);
+            if (isset($criteria)) {
+                $criteria = $o->normalizeCriteria($o->criteria($criteria));
+                $o->setData($criteria);
+            }
 
             return $o;
         });
@@ -101,7 +100,8 @@ class ORM extends \Gini\PHPUnit\CLI
         parent::tearDown();
     }
 
-    public function testSave()
+    // @disabled
+    public function testSaveObject()
     {
         $o1 = a('utsample');
         $o2 = a('utsample');
@@ -113,9 +113,28 @@ class ORM extends \Gini\PHPUnit\CLI
             ->method('query')
             ->will($this->returnCallback(function ($SQL) {
                 $this->assertEquals($SQL,
-                    'INSERT INTO "utsample" ("_extra","object_name","object_id") VALUES(\'{}\',\'utsample\',10)');
+                    'INSERT INTO "utsample" ("_extra","object_name","object_id","sample_id") VALUES(\'{}\',\'utsample\',10,0)');
             }));
 
         $o1->save();
+    }
+
+    public function testGet()
+    {
+        $o1 = a('utsample', 2);
+        $o1->setData([
+           'id' => 10,
+           'object_name' => 'utsample',
+           'object_id' => 2,
+           'sample_id' => 4,
+        ]);
+
+        $this->assertEquals($o1->id, 10);
+
+        $this->assertEquals($o1->object->id, 2);
+        $this->assertEquals($o1->sample->id, 4);
+
+        $this->assertEquals($o1->object_id, 2);
+        $this->assertEquals($o1->sample_id, 4);
     }
 }
