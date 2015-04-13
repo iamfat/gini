@@ -2,15 +2,17 @@
 
 /**
  * Those ORM
- * $object = new \Gini\ORM\Object($id|[criteria array]);
+ * $object = new \Gini\ORM\Object($id|[criteria array]);.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-01-27
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
 
 namespace Gini;
@@ -28,11 +30,12 @@ abstract class ORM
     protected $_db_time;    //上次数据库同步的时间
 
     /**
-     * Magic method to use Event('orm[$name].call[$method]') to extend ORM object
+     * Magic method to use Event('orm[$name].call[$method]') to extend ORM object.
      *
-     * @param  string $method
-     * @param  string $params
-     * @return mixed  return value of the event
+     * @param string $method
+     * @param string $params
+     *
+     * @return mixed return value of the event
      */
     public function __call($method, $params)
     {
@@ -45,7 +48,7 @@ abstract class ORM
         $name = "call[$method]";
         if (!$this->event('isBinded', $name)) {
             $trace = debug_backtrace();
-            $message = sprintf("[E]: Call to undefined method %s::%s() in %s on line %d",
+            $message = sprintf('[E]: Call to undefined method %s::%s() in %s on line %d',
                                 $trace[1]['class'],
                                 $trace[1]['function'],
                                 $trace[1]['file'],
@@ -77,7 +80,7 @@ abstract class ORM
     }
 
     /**
-     * Return inheritance of the ORM class
+     * Return inheritance of the ORM class.
      *
      * @return array
      */
@@ -100,36 +103,43 @@ abstract class ORM
         return $inheritance;
     }
 
+    public function properties()
+    {
+        $rc = new \ReflectionClass($this);
+        $defaults = $rc->getDefaultProperties();
+
+        $properties = [];
+        foreach ($rc->getProperties() as $p) {
+            if (!$p->isStatic() && $p->isPublic()) {
+                $k = $p->getName();
+                $properties[$k] = $defaults[$k];
+            }
+        }
+
+        //check all injections
+        foreach ((array) self::$_injections as $injection) {
+            $rc = new \ReflectionClass($injection);
+            $defaults = $rc->getDefaultProperties();
+
+            foreach ($rc->getProperties() as $p) {
+                if (!$p->isStatic() && $p->isPublic()) {
+                    $k = $p->getName();
+                    $properties[$k] = $defaults[$k];
+                }
+            }
+        }
+
+        return $properties;
+    }
+
     private static $_structures;
     public function structure()
     {
         $class_name = get_class($this);
         if (!isset(self::$_structures[$class_name])) {
-            $rc = new \ReflectionClass($this);
-            $defaults = $rc->getDefaultProperties();
-
+            $properties = $this->properties();
             $structure = [];
-            foreach ($rc->getProperties() as $p) {
-                if (!$p->isStatic() && $p->isPublic()) {
-                    $k = $p->getName();
-                    $structure[$k] = $defaults[$k];
-                }
-            }
-
-            //check all injections
-            foreach ((array) self::$_injections as $injection) {
-                $rc = new \ReflectionClass($injection);
-                $defaults = $rc->getDefaultProperties();
-
-                foreach ($rc->getProperties() as $p) {
-                    if (!$p->isStatic() && $p->isPublic()) {
-                        $k = $p->getName();
-                        $structure[$k] = $defaults[$k];
-                    }
-                }
-            }
-
-            foreach ($structure as $k => $v) {
+            foreach ($properties as $k => $v) {
                 $params = explode(',', strtolower($v));
                 $v = [];
                 foreach ($params as $p) {
@@ -139,7 +149,6 @@ abstract class ORM
 
                 $structure[$k] = $v;
             }
-
             self::$_structures[$class_name] = $structure;
         }
 
@@ -380,11 +389,14 @@ abstract class ORM
                             $default = '';
                         } elseif (isset($v['datetime'])) {
                             $default = '0000-00-00 00:00:00';
-                        } else {
+                        } elseif (isset($v['int']) || isset($v['bigint']) || isset($v['double'])) {
                             $default = 0;
                         }
                     }
-                    $db_data[$k] = $default;
+
+                    if (!is_null($default)) {
+                        $db_data[$k] = $default;
+                    }
                 }
             }
         }
@@ -405,9 +417,9 @@ abstract class ORM
                 $SQL = 'UPDATE '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quoteIdent('id').'='.$db->quote($id);
             }
         } else {
+            $db_data = array_filter($db_data, function ($v) { return isset($v); });
             $keys = array_keys($db_data);
             $vals = array_values($db_data);
-
             $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.$db->quote($vals).')';
         }
 
@@ -430,10 +442,9 @@ abstract class ORM
     }
 
     /**
-     * Inject structure declaration to current class
+     * Inject structure declaration to current class.
      *
-     * @param  array $injection
-     * @return void
+     * @param array $injection
      */
     public static function inject(array $injection)
     {
@@ -451,9 +462,7 @@ abstract class ORM
     }
 
     /**
-     * Return object name
-     *
-     * @return void
+     * Return object name.
      */
     public function name()
     {
@@ -465,7 +474,7 @@ abstract class ORM
     }
 
     /**
-     * Return corresponding table name of the object
+     * Return corresponding table name of the object.
      *
      * @return string
      */
@@ -479,10 +488,9 @@ abstract class ORM
     }
 
     /**
-     * Set raw data of the object
+     * Set raw data of the object.
      *
-     * @param  string $data
-     * @return void
+     * @param string $data
      */
     public function setData(array $data)
     {
@@ -518,7 +526,7 @@ abstract class ORM
     }
 
     /**
-     * Get raw data of the object
+     * Get raw data of the object.
      *
      * @return array
      */
@@ -549,7 +557,14 @@ abstract class ORM
             return $this->_extra[$name];
         }
 
-        return $this->$name;
+        $ret = $this->$name;
+        if (isset($ret)) {
+            return $ret;
+        }
+        
+        if (isset($this->_db_data[$name])) {
+            return $this->_db_data[$name];
+        }
     }
 
     public function __set($name, $value)
@@ -570,11 +585,10 @@ abstract class ORM
     }
 
     /**
-     * Return localized string by property name
+     * Return localized string by property name.
      *
-     * @param  string $name
-     * @param  string $locale
-     * @return void
+     * @param string $name
+     * @param string $locale
      */
     public function L($name, $locale = null)
     {
