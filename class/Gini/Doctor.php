@@ -100,6 +100,7 @@ class Doctor
 
         if (!$items || in_array('i18n', $items)) {
             echo "Checking Locale...\n";
+            class_exists('\Gini\I18N');
             $locale = \Gini\Config::get('system.locale') ?: 'en_US';
             $lodir = I18N_PATH.'/'.$locale.'/LC_MESSAGES';
             $mofile = $lodir . '/' . APP_ID . '.mo';
