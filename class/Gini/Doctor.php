@@ -98,7 +98,7 @@ class Doctor
             }
         }
 
-        if (!$items || in_array('i18n', $items)) {
+        if (defined('I18N_PATH') && (!$items || in_array('i18n', $items))) {
             echo "Checking Locale...\n";
             $locale = \Gini\Config::get('system.locale') ?: 'en_US';
             $lodir = I18N_PATH.'/'.$locale.'/LC_MESSAGES';
