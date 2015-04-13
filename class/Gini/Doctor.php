@@ -86,7 +86,7 @@ class Doctor
             if (!empty($conf)) {
                 echo "Checking Database...\n";
                 foreach ((array)$conf as $key => $opts) {
-                    $db = \Gini\IoC::construct('\Gini\Database', $opts['dsn'], $opts['username'], $opts['password'], $opts['options']);
+                    $db = \Gini\Database::db($key)
                     $database_errors = $db->diagnose();
                     if ($database_errors) {
                         static::_outputErrors($module_errors);

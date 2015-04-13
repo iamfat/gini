@@ -348,7 +348,7 @@ class MySQL extends \PDO implements Driver
 
         $diff = array_diff($engines, $supportedEngines);
         if (!empty($diff)) {
-            return ['MySQL do not support engine: ' . join(',', $diff)];
+            return ['MySQL does not support following engines: ' . join(',', $diff)];
         }
 
     }
