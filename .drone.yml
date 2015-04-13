@@ -13,9 +13,9 @@ script:
 notify:
   slack:
     webhook_url: 'https://hooks.slack.com/services/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'
-    username: 'Drone'
+    username: 'Drone 传说中的持续集成'
     channel: '#general'
-    on_started: false
+    on_started: true
     on_success: true
     on_failure: true
 
