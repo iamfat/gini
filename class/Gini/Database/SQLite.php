@@ -322,4 +322,8 @@ class SQLite extends \PDO implements Driver
 
         return true;
     }
+
+    public function diagnose()
+    {
+    }
 }

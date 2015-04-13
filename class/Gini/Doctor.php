@@ -80,6 +80,40 @@ class Doctor
             echo "\n";
         }
 
+        //
+        if (!$items || in_array('database', $items)) {
+            $conf = \Gini\Config::get('database');
+            if (!empty($conf)) {
+                echo "Checking Database...\n";
+                foreach ((array)$conf as $key => $opts) {
+                    $db = \Gini\Database::db($key)
+                    $database_errors = $db->diagnose();
+                    if ($database_errors) {
+                        static::_outputErrors($module_errors);
+                    } else {
+                        echo "   \e[32mdone.\e[0m\n";
+                    }
+                    echo "\n";
+                }
+            }
+        }
+
+        if (!$items || in_array('i18n', $items)) {
+            echo "Checking Locale...\n";
+            $locale = \Gini\Config::get('system.locale') ?: 'en_US';
+            $lodir = I18N_PATH.'/'.$locale.'/LC_MESSAGES';
+            $mofile = $lodir . '/' . APP_ID . '.mo';
+            $pofile = $lodir . '/' . APP_ID . '.po';
+
+            if (!file_exists($mofile) || !file_exists($pofile)) {
+                static::_outputErrors(['Please run: gini i18n format ' . $locale]);
+            }
+            else {
+                echo "   \e[32mdone.\e[0m\n";
+            }
+            echo "\n";
+        }
+
         // enumerate all doctor extensions
         if ((
                 !$items || (

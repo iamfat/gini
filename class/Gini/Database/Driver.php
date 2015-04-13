@@ -24,4 +24,6 @@ interface Driver
 
     // function snapshot($filename, $tbls);
     // function restore($filename, &$restore_filename, $tables);
+    
+    public function diagnose();
 } // END interface
