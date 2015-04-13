@@ -1,9 +1,15 @@
 image: genee/gini-dev
 
 script:
+  - >
+    for FILE in $(find {class,view} -name "*.php" -o -name "*.phtml"); do
+      php --syntax-check "$FILE"
+    done
   - composer install --no-interaction
-  - bin/gini cache && bin/gini config update
-  - source /etc/profile.d/composer.sh && source /etc/profile.d/sonar-runner.sh
+  - bin/gini cache
+  - bin/gini config update
+  - source /etc/profile.d/composer.sh
+  - source /etc/profile.d/sonar-runner.sh
   - phpunit
   - >
     sonar-runner -D sonar.host.url=http://172.17.42.1:9000 
