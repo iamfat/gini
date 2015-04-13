@@ -228,6 +228,23 @@ class Database
     }
 
     /**
+     * executes an SQL statement in a single function call
+     * returning the number of rows affected by the statement.
+     *
+     * @param string $SQL 
+     * @return int Number of rows affected
+     * @author Jia Huang
+     */
+    public function exec($SQL)
+    {
+        \Gini\Logger::of('core')->debug("Database exec = {SQL}", [
+            'SQL' => preg_replace('/\s+/', ' ', $SQL)
+        ]);
+
+        return $this->_driver->exec($SQL);
+    }
+
+    /**
      * Run query and get the first field value of the first record.
      *
      * @return mixed
