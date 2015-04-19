@@ -1,29 +1,29 @@
 <?php
 
 /**
- * Database Abstract Layer
+ * Database Abstract Layer.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-01-27
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini;
 
 /**
- * Database Abstract Layer
+ * Database Abstract Layer.
  *
- * @package Gini
  * @author Jia Huang
  **/
 class Database
 {
     /**
-     * Loaded databases;
+     * Loaded databases;.
      *
      * @var array
      **/
@@ -32,8 +32,10 @@ class Database
     private $_driver;
 
     /**
-     * Get a database object by name
-     * @param  string|null $name Name of the database configured in database.yml
+     * Get a database object by name.
+     *
+     * @param string|null $name Name of the database configured in database.yml
+     *
      * @return object
      **/
     public static function db($name = null)
@@ -59,9 +61,9 @@ class Database
     }
 
     /**
-     * Shutdown database by name
-     * @param  string|null $name Name of the database configured in database.yml
-     * @return void
+     * Shutdown database by name.
+     *
+     * @param string|null $name Name of the database configured in database.yml
      **/
     public static function shutdown($name = null)
     {
@@ -72,8 +74,7 @@ class Database
     }
 
     /**
-     * Shutdown all databases
-     * @return void
+     * Shutdown all databases.
      **/
     public static function reset()
     {
@@ -81,13 +82,13 @@ class Database
     }
 
     /**
-     * Instantiate a database object with options
-     * @param  string|null $name Name of the database configured in database.yml
-     * @return void
+     * Instantiate a database object with options.
+     *
+     * @param string|null $name Name of the database configured in database.yml
      **/
     public function __construct($dsn, $username = null, $password = null, $options = null)
     {
-        list($driver_name, ) = explode(':', $dsn, 2);
+        list($driver_name) = explode(':', $dsn, 2);
         $driver_class = '\Gini\Database\\'.$driver_name;
         $this->_driver = \Gini\IoC::construct($driver_class, $dsn, $username, $password, $options);
         if (!$this->_driver instanceof Database\Driver) {
@@ -97,7 +98,7 @@ class Database
 
     /**
      * Quote and concatenate multiple identities
-     *   e.g. ident('db', 'table', 'field') => "db"."table"."field"
+     *   e.g. ident('db', 'table', 'field') => "db"."table"."field".
      *
      * @return string Concatenated SQL identities
      **/
@@ -116,8 +117,9 @@ class Database
      * Quote SQL identities with '"'.
      * If array was provided, convert it to "," concatenated string.
      *
-     * @param  string|array $s String or array of strings to quote
-     * @return string       Quoted identity string
+     * @param string|array $s String or array of strings to quote
+     *
+     * @return string Quoted identity string
      **/
     public function quoteIdent($s)
     {
@@ -136,7 +138,8 @@ class Database
      * Quote SQL value with "'" or not according variable type.
      * If array was provided, convert it to "," concatenated string.
      *
-     * @param  mixed  $s Value or array of values to quote
+     * @param mixed $s Value or array of values to quote
+     *
      * @return string Quoted value
      **/
     public function quote($s)
@@ -159,8 +162,10 @@ class Database
     }
 
     /**
-     * Retrieve a database connection attribute
-     * @param  int    $attr One of the PDO::ATTR_* constants.
+     * Retrieve a database connection attribute.
+     *
+     * @param int $attr One of the PDO::ATTR_* constants.
+     *
      * @return string
      **/
     public function attr($attr)
@@ -169,8 +174,10 @@ class Database
     }
 
     /**
-     * Returns the ID of the last inserted row or sequence value
-     * @param  string|null $name Name of the sequence object from which the ID should be returned.
+     * Returns the ID of the last inserted row or sequence value.
+     *
+     * @param string|null $name Name of the sequence object from which the ID should be returned.
+     *
      * @return string
      **/
     public function lastInsertId($name = null)
@@ -179,11 +186,12 @@ class Database
     }
 
     /**
-     * Query SQL
+     * Query SQL.
      *
-     * @param  string             $SQL    SQL with some placeholders for identities and parameters
-     * @param  array|null         $idents Identities to replace
-     * @param  array|null         $params Parameters to replace
+     * @param string     $SQL    SQL with some placeholders for identities and parameters
+     * @param array|null $idents Identities to replace
+     * @param array|null $params Parameters to replace
+     *
      * @return Database\Statement
      **/
     public function query($SQL, $idents = null, $params = null)
@@ -200,13 +208,13 @@ class Database
 
         if (is_array($params)) {
             $this->_driver->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
-            \Gini\Logger::of('core')->debug("Database query prepare = {SQL}", ['SQL' => preg_replace('/\s+/', ' ', $SQL)]);
+            \Gini\Logger::of('core')->debug('Database query prepare = {SQL}', ['SQL' => preg_replace('/\s+/', ' ', $SQL)]);
             $st = $this->_driver->prepare($SQL);
             if (!$st) {
                 return false;
             }
 
-            \Gini\Logger::of('core')->debug("Database query execute = {params}", ['params' => J($params)]);
+            \Gini\Logger::of('core')->debug('Database query execute = {params}', ['params' => J($params)]);
             $success = $st->execute($params);
             if (!$success) {
                 return false;
@@ -215,8 +223,8 @@ class Database
             return new Database\Statement($st);
         }
 
-        \Gini\Logger::of('core')->debug("Database query = {SQL}", [
-            'SQL' => preg_replace('/\s+/', ' ', $SQL)
+        \Gini\Logger::of('core')->debug('Database query = {SQL}', [
+            'SQL' => preg_replace('/\s+/', ' ', $SQL),
         ]);
 
         $st = $this->_driver->query($SQL);
@@ -231,14 +239,16 @@ class Database
      * executes an SQL statement in a single function call
      * returning the number of rows affected by the statement.
      *
-     * @param string $SQL 
+     * @param string $SQL
+     *
      * @return int Number of rows affected
+     *
      * @author Jia Huang
      */
     public function exec($SQL)
     {
-        \Gini\Logger::of('core')->debug("Database exec = {SQL}", [
-            'SQL' => preg_replace('/\s+/', ' ', $SQL)
+        \Gini\Logger::of('core')->debug('Database exec = {SQL}', [
+            'SQL' => preg_replace('/\s+/', ' ', $SQL),
         ]);
 
         return $this->_driver->exec($SQL);
@@ -320,7 +330,8 @@ class Database
     /**
      * Create one table in the database.
      *
-     * @param  string $table Table name
+     * @param string $table Table name
+     *
      * @return bool
      **/
     public function createTable($table)
@@ -331,8 +342,9 @@ class Database
     /**
      * Adjust table structure according schema.
      *
-     * @param  string $table  Table name
-     * @param  array  $schema Table schema
+     * @param string $table  Table name
+     * @param array  $schema Table schema
+     *
      * @return bool
      **/
     public function adjustTable($table, $schema)
@@ -343,7 +355,8 @@ class Database
     /**
      * Drop one specified table in the database.
      *
-     * @param  string $table Specified table
+     * @param string $table Specified table
+     *
      * @return bool
      **/
     public function dropTable($table)
@@ -400,9 +413,9 @@ class Database
     // }
 
     /**
-        * @brief diagnose
-        *
-        * @return 
+     * @brief diagnose
+     *
+     * @return
      */
     public function diagnose()
     {

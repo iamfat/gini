@@ -1,17 +1,18 @@
 <?php
 
 /**
- * CGI support
+ * CGI support.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-02-07
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini;
 
 class CGI
@@ -119,7 +120,7 @@ class CGI
                 }
             }
             $line = $e->getLine();
-            error_log(sprintf("ERROR %s", $message));
+            error_log(sprintf('ERROR %s', $message));
             $trace = array_slice($e->getTrace(), 1, 5);
             foreach ($trace as $n => $t) {
                 $file = $t['file'];
@@ -129,7 +130,7 @@ class CGI
                         break;
                     }
                 }
-                error_log(sprintf("    %d) %s%s() in %s on line %d", $n + 1,
+                error_log(sprintf('    %d) %s%s() in %s on line %d', $n + 1,
                                 $t['class'] ? $t['class'].'::' : '',
                                 $t['function'],
                                 $file,

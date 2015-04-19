@@ -45,7 +45,7 @@ class RPC
             'id' => $id,
         ]), $timeout);
 
-        \Gini\Logger::of('core')->debug("RPC <= {data}", ['data' => $raw_data]);
+        \Gini\Logger::of('core')->debug('RPC <= {data}', ['data' => $raw_data]);
 
         $data = @json_decode($raw_data, true);
         if (!isset($data['result'])) {
@@ -97,7 +97,7 @@ class RPC
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 
-        \Gini\Logger::of('core')->debug("RPC => {url}: {data}", ['url' => $this->_url, 'data' => $post_data]);
+        \Gini\Logger::of('core')->debug('RPC => {url}: {data}', ['url' => $this->_url, 'data' => $post_data]);
 
         $data = curl_exec($ch);
         $errno = curl_errno($ch);
@@ -105,7 +105,7 @@ class RPC
             $message = curl_error($ch);
             curl_close($ch);
 
-            \Gini\Logger::of('core')->error("RPC cURL error: {message}", ['message' => $message]);
+            \Gini\Logger::of('core')->error('RPC cURL error: {message}', ['message' => $message]);
             throw IoC::construct('\Gini\RPC\Exception', "transport error: $message", -32300);
         }
 

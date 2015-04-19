@@ -20,7 +20,7 @@ namespace Gini {
         public static function setLocale($locale)
         {
             $full_locale = ($locale ?: 'en_US').'.UTF-8';
-            \Gini\Logger::of('core')->debug("locale = {locale}", ['locale' => $full_locale]);
+            \Gini\Logger::of('core')->debug('locale = {locale}', ['locale' => $full_locale]);
 
             putenv('LANGUAGE='.$full_locale);
             putenv('LANG='.$full_locale);
@@ -40,7 +40,7 @@ namespace Gini {
 namespace {
 
     if (function_exists('T')) {
-        die("T() was declared by other libraries, which may cause problems!");
+        die('T() was declared by other libraries, which may cause problems!');
     } else {
         function T($fmt, $params = null)
         {

@@ -1,26 +1,28 @@
 <?php
 
 /**
- * File Manipulation Class
+ * File Manipulation Class.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright , 2014-02-08
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini;
 
 class File
 {
     /**
-     * Ensure the existence of a directory
+     * Ensure the existence of a directory.
      *
-     * @param  string $path
-     * @param  string $mode default is 0755
+     * @param string $path
+     * @param string $mode default is 0755
+     *
      * @return bool
      */
     public static function ensureDir($path, $mode = 0755)
@@ -33,10 +35,9 @@ class File
     }
 
     /**
-     * Convert bytes to human readable string
+     * Convert bytes to human readable string.
      *
-     * @param  string $byte
-     * @return void
+     * @param string $byte
      */
     public static function humanReadableBytes($a)
     {
@@ -53,8 +54,7 @@ class File
     /**
      * Remove a directory recursively.
      *
-     * @param  string $path
-     * @return void
+     * @param string $path
      */
     public static function removeDir($path)
     {
@@ -78,9 +78,8 @@ class File
     /**
      * Delete a file. If the directory where the file located was empty then, remove the directory as well.
      *
-     * @param  string $path
-     * @param  string $clean_empty
-     * @return void
+     * @param string $path
+     * @param string $clean_empty
      */
     public static function delete($path, $clean_empty = false)
     {
@@ -187,9 +186,10 @@ class File
     }
 
     /**
-     * Get file extension
+     * Get file extension.
      *
-     * @param  string $path
+     * @param string $path
+     *
      * @return string File extension
      */
     public static function extension($path)
@@ -198,10 +198,9 @@ class File
     }
 
     /**
-     * Calculate the size of a directory or a file
+     * Calculate the size of a directory or a file.
      *
-     * @param  string $path
-     * @return void
+     * @param string $path
      */
     public static function size($path)
     {
@@ -222,9 +221,10 @@ class File
     }
 
     /**
-     * Get file mime type
+     * Get file mime type.
      *
-     * @param  string $file
+     * @param string $file
+     *
      * @return string File mime type
      */
     public static function mimeType($file)

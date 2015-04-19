@@ -13,7 +13,7 @@ class Web extends \Gini\Controller\CLI
 
     private function _process_css($force = false)
     {
-        printf("%s\n", "Converting LESS to CSS...");
+        printf("%s\n", 'Converting LESS to CSS...');
 
         $css_dir = APP_PATH.'/web/assets/css';
         \Gini\File::ensureDir($css_dir);
@@ -52,7 +52,7 @@ class Web extends \Gini\Controller\CLI
                         if ($force || filemtime($src_path) > $filemtime[$dst_path]) {
                             // lessc -x raw/less/$$LESS.less web/assets/css/$$LESS.css ; \
                             printf("   %s => %s\n", $name, $css);
-                            $command = sprintf("lessc %s %s %s", escapeshellarg($src_path), escapeshellarg($dst_path), '--clean-css="--s1 --advanced --compatibility=ie8"'
+                            $command = sprintf('lessc %s %s %s', escapeshellarg($src_path), escapeshellarg($dst_path), '--clean-css="--s1 --advanced --compatibility=ie8"'
                                     );
                             exec($command);
                         }
@@ -67,7 +67,7 @@ class Web extends \Gini\Controller\CLI
 
     private function _process_js($force = false)
     {
-        printf("%s\n", "Processing JS...");
+        printf("%s\n", 'Processing JS...');
 
         $ugly_js_dir = APP_PATH.'/web/assets/js';
         \Gini\File::ensureDir($ugly_js_dir);
@@ -90,7 +90,7 @@ class Web extends \Gini\Controller\CLI
                         // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
                         \Gini\File::ensureDir(dirname($dst_path));
                         printf("   %s\n", $file);
-                        $command = sprintf("uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s",
+                        $command = sprintf('uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s',
                             escapeshellarg($src_path), time(), escapeshellarg($dst_path));
                         exec($command);
                     }
@@ -103,7 +103,7 @@ class Web extends \Gini\Controller\CLI
 
     private function _merge_assets($force = false)
     {
-        printf("%s\n", "Merging all assets...");
+        printf("%s\n", 'Merging all assets...');
         $assets_dir = APP_PATH.'/web/assets';
         \Gini\File::ensureDir($assets_dir);
 
@@ -175,7 +175,7 @@ class Web extends \Gini\Controller\CLI
 
         $addr = $args[0] ?: 'localhost:3000';
         $command
-            = sprintf("php -S %s -c %s -t %s 2>&1", $addr, APP_PATH.'/raw/cli-server.ini', APP_PATH.'/web');
+            = sprintf('php -S %s -c %s -t %s 2>&1', $addr, APP_PATH.'/raw/cli-server.ini', APP_PATH.'/web');
 
         $descriptors = [
             ['file', '/dev/tty', 'r'],

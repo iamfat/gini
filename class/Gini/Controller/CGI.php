@@ -1,76 +1,73 @@
 <?php
 
 /**
- * CGI Controller
+ * CGI Controller.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-02-08
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini\Controller;
 
 abstract class CGI
 {
     /**
-     * Current action
+     * Current action.
      *
      * @var string
      */
     public $action;
 
     /**
-     * Parameters passed to current action
+     * Parameters passed to current action.
      *
      * @var array
      */
     public $params;
 
     /**
-     * Environmental variables such as $_GET/$_POST/$_FILES/route passed to current controller
+     * Environmental variables such as $_GET/$_POST/$_FILES/route passed to current controller.
      *
      * @var array
      */
     public $env;
 
     /**
-     * route to current controller
+     * route to current controller.
      *
      * @var string
      **/
     public $route;
 
     /**
-     * Function called right before action is being executed
+     * Function called right before action is being executed.
      *
-     * @param  string $action
-     * @param  string $params
-     * @return void
+     * @param string $action
+     * @param string $params
      */
     protected function __preAction($action, &$params)
     {
     }
 
     /**
-     * Function called right after action was executed
+     * Function called right after action was executed.
      *
-     * @param  string $action
-     * @param  string $params
-     * @param  string $response
-     * @return void
+     * @param string $action
+     * @param string $params
+     * @param string $response
      */
     protected function __postAction($action, &$params, $response)
     {
     }
 
     /**
-     * Execute current action with parameters
-     *
-     * @return void
+     * Execute current action with parameters.
      */
     public function execute()
     {
@@ -84,10 +81,11 @@ abstract class CGI
     }
 
     /**
-     * Return POST/GET/FILES in array
+     * Return POST/GET/FILES in array.
      *
-     * @param  string $mode 'get': $_GET, 'post': $_POST, 'files': $_FILES, default: $_POST + $_GET
-     * @return array  Return corresponding form data
+     * @param string $mode 'get': $_GET, 'post': $_POST, 'files': $_FILES, default: $_POST + $_GET
+     *
+     * @return array Return corresponding form data
      */
     public function form($mode = '*')
     {
@@ -104,11 +102,10 @@ abstract class CGI
     }
 
     /**
-     * Redirect to other path
+     * Redirect to other path.
      *
-     * @param  string            $url   URL to redirect
-     * @param  array|string|null $query Query parameters need to include in URL
-     * @return void
+     * @param string            $url   URL to redirect
+     * @param array|string|null $query Query parameters need to include in URL
      */
     public function redirect($url = '', $query = null)
     {

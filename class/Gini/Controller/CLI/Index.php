@@ -38,7 +38,7 @@ class Index extends \Gini\Controller\CLI
     private static function _davOptionsAndHeaders($userLogin = false)
     {
         $uri = self::_serverUri();
-        $options = [ 'baseUri' => $uri ];
+        $options = ['baseUri' => $uri];
         $headers = [];
 
         if ($userLogin) {
@@ -97,7 +97,7 @@ class Index extends \Gini\Controller\CLI
         `stty echo`;
         echo "\n";
 
-        $config = [ 'username' => $username ];
+        $config = ['username' => $username];
 
         try {
             $uri = self::_serverUri();
@@ -110,7 +110,7 @@ class Index extends \Gini\Controller\CLI
                 echo "Access denied!\n";
             }
         } catch (\Gini\RPC\Exception $e) {
-            echo "Server Error: ".$e->getMessage()."\n";
+            echo 'Server Error: '.$e->getMessage()."\n";
         }
     }
 
@@ -194,7 +194,7 @@ class Index extends \Gini\Controller\CLI
                 }
 
                 if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                    die("Error: ".$response['statusCode']."\n");
+                    die('Error: '.$response['statusCode']."\n");
                 }
 
                 break;
@@ -256,7 +256,7 @@ class Index extends \Gini\Controller\CLI
             }
 
             if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                die("Error: ".$response['statusCode']."\n");
+                die('Error: '.$response['statusCode']."\n");
             }
 
             break;
@@ -303,7 +303,7 @@ class Index extends \Gini\Controller\CLI
                     }
 
                     if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                        die("Error: ".$response['statusCode']."\n");
+                        die('Error: '.$response['statusCode']."\n");
                     }
 
                     break;
@@ -346,7 +346,7 @@ class Index extends \Gini\Controller\CLI
                     }
 
                     if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                        die("Error: ".$response['statusCode']."\n");
+                        die('Error: '.$response['statusCode']."\n");
                     }
 
                     break;
@@ -428,7 +428,7 @@ class Index extends \Gini\Controller\CLI
                 );
             }
         } catch (\Gini\RPC\Exception $e) {
-            echo "Server Error: ".$e->getMessage()."\n";
+            echo 'Server Error: '.$e->getMessage()."\n";
         }
     }
 }

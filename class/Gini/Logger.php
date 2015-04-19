@@ -1,14 +1,17 @@
 <?php
+
 /**
- * Logger
+ * Logger.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-01-27
  **/
 
 /**
- * Example:
+ * Example:.
  *
  * ---
  * core:
@@ -21,26 +24,25 @@
  * ...
  *
  * \Gini\Logger::of('core')->error('', []);
- *
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini;
 
 /**
- * Logger Class
+ * Logger Class.
  */
 class Logger
 {
     protected static $_LOGGERS = [];
 
     /**
-     * Get logger by name
+     * Get logger by name.
      *
-     * @param  string $name Name of the logger
+     * @param string $name Name of the logger
+     *
      * @return Logger
      */
     public static function of($name)
@@ -56,7 +58,7 @@ class Logger
     protected $_handlers = [];
 
     /**
-     * Instantiate Logger object by name
+     * Instantiate Logger object by name.
      *
      * @param string $name Logger name
      */
@@ -64,7 +66,7 @@ class Logger
     {
         $this->_name = $name;
 
-        $config = \Gini\Config::get("logger.{$this->_name}") ?: \Gini\Config::get("logger.default");
+        $config = \Gini\Config::get("logger.{$this->_name}") ?: \Gini\Config::get('logger.default');
         foreach ($config as $handlerName => $options) {
             if (!is_array($options)) {
                 continue;
@@ -77,7 +79,7 @@ class Logger
     }
 
     /**
-     * Check if we are debugging something
+     * Check if we are debugging something.
      *
      * @return bool
      **/
@@ -87,9 +89,10 @@ class Logger
     }
 
     /**
-     * Check if the function name matched our debugging patterns in .debug file
+     * Check if the function name matched our debugging patterns in .debug file.
      *
-     * @param  string $func Function name to trace
+     * @param string $func Function name to trace
+     *
      * @return bool
      **/
     public static function isDebuggingFunction($func)
@@ -111,12 +114,11 @@ class Logger
     }
 
     /**
-     * Log function
+     * Log function.
      *
-     * @param  string $level   Log level
-     * @param  string $message Log message
-     * @param  array  $context Log context data
-     * @return void
+     * @param string $level   Log level
+     * @param string $message Log message
+     * @param array  $context Log context data
      */
     public function log($level, $message, array $context = array())
     {
@@ -155,9 +157,8 @@ class Logger
     /**
      * System is unusable.
      *
-     * @param  string $message
-     * @param  array  $context
-     * @return null
+     * @param string $message
+     * @param array  $context
      */
     public function emergency($message, array $context = array())
     {
@@ -170,9 +171,8 @@ class Logger
      * Example: Entire website down, database unavailable, etc. This should
      * trigger the SMS alerts and wake you up.
      *
-     * @param  string $message
-     * @param  array  $context
-     * @return null
+     * @param string $message
+     * @param array  $context
      */
     public function alert($message, array $context = array())
     {
@@ -184,9 +184,8 @@ class Logger
      *
      * Example: Application component unavailable, unexpected exception.
      *
-     * @param  string $message
-     * @param  array  $context
-     * @return null
+     * @param string $message
+     * @param array  $context
      */
     public function critical($message, array $context = array())
     {
@@ -197,9 +196,8 @@ class Logger
      * Runtime errors that do not require immediate action but should typically
      * be logged and monitored.
      *
-     * @param  string $message
-     * @param  array  $context
-     * @return null
+     * @param string $message
+     * @param array  $context
      */
     public function error($message, array $context = array())
     {
@@ -212,9 +210,8 @@ class Logger
      * Example: Use of deprecated APIs, poor use of an API, undesirable things
      * that are not necessarily wrong.
      *
-     * @param  string $message
-     * @param  array  $context
-     * @return null
+     * @param string $message
+     * @param array  $context
      */
     public function warning($message, array $context = array())
     {
@@ -224,9 +221,8 @@ class Logger
     /**
      * Normal but significant events.
      *
-     * @param  string $message
-     * @param  array  $context
-     * @return null
+     * @param string $message
+     * @param array  $context
      */
     public function notice($message, array $context = array())
     {
@@ -238,9 +234,8 @@ class Logger
      *
      * Example: User logs in, SQL logs.
      *
-     * @param  string $message
-     * @param  array  $context
-     * @return null
+     * @param string $message
+     * @param array  $context
      */
     public function info($message, array $context = array())
     {
@@ -250,9 +245,8 @@ class Logger
     /**
      * Detailed debug information.
      *
-     * @param  string $message
-     * @param  array  $context
-     * @return null
+     * @param string $message
+     * @param array  $context
      */
     public function debug($message, array $context = array())
     {

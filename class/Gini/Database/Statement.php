@@ -3,9 +3,8 @@
 namespace Gini\Database;
 
 /**
- * Database statement return by Database::query()
+ * Database statement return by Database::query().
  *
- * @package Gini
  * @author Jia Huang
  **/
 class Statement

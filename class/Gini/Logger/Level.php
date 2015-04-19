@@ -3,7 +3,7 @@
 namespace Gini\Logger;
 
 /**
- * Describes log levels
+ * Describes log levels.
  */
 class Level
 {

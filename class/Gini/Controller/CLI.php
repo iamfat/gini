@@ -1,30 +1,31 @@
 <?php
 
 /**
- * CLI Controller
+ * CLI Controller.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-02-08
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini\Controller;
 
 abstract class CLI
 {
     /**
-     * current action
+     * current action.
      *
      * @var string
      */
     public $action;
 
     /**
-     * current parameters
+     * current parameters.
      *
      * @var array
      */

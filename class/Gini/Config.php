@@ -119,7 +119,7 @@ class Config
         }
     }
 
-    public static function fetch($env=null)
+    public static function fetch($env = null)
     {
         $items = [];
 

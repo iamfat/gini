@@ -127,7 +127,7 @@ class I18N extends \Gini\Controller\CLI
         foreach ($locales as $locale) {
             echo "locale = $locale\n";
             \Gini\I18N::setLocale($locale);
-            echo "  Hello, world! => ".T('Hello, world!')."\n";
+            echo '  Hello, world! => '.T('Hello, world!')."\n";
         }
     }
 }

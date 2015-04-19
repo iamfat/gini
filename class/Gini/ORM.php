@@ -14,7 +14,6 @@
 /**
  * Define DocBlock.
  **/
-
 namespace Gini;
 
 abstract class ORM
@@ -561,7 +560,7 @@ abstract class ORM
         if (isset($ret)) {
             return $ret;
         }
-        
+
         if (isset($this->_db_data[$name])) {
             return $this->_db_data[$name];
         }

@@ -43,11 +43,11 @@ class Util
         list($usec, $sec) = explode(' ', microtime());
         srand((float) $sec + ((float) $usec * 100000));
 
-        $validchars[1] = "0123456789abcdfghjkmnpqrstvwxyz";
-        $validchars[2] = "0123456789abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        $validchars[3] = "0123456789_!@#$%&*()-=+/abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_!@#$%&*()-=+/";
+        $validchars[1] = '0123456789abcdfghjkmnpqrstvwxyz';
+        $validchars[2] = '0123456789abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $validchars[3] = '0123456789_!@#$%&*()-=+/abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_!@#$%&*()-=+/';
 
-        $password  = "";
+        $password  = '';
         $counter   = 0;
         $max_length = strlen($validchars[$level])-1;
 
@@ -145,7 +145,7 @@ class Util
                             if ($o == ':' || $o == '::') {
                                 $oval = array_shift($argv);
                                 if (!$oval) {
-                                    throw new \Exception("missing arguments");
+                                    throw new \Exception('missing arguments');
                                 }
                                 $opt[$okey] = $oval;
                             } else {

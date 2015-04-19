@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini;
+namespace Gini\App;
 
 class Doctor
 {
@@ -85,7 +85,7 @@ class Doctor
             $conf = \Gini\Config::get('database');
             if (!empty($conf)) {
                 echo "Checking Database...\n";
-                foreach ((array)$conf as $key => $opts) {
+                foreach ((array) $conf as $key => $opts) {
                     $db = \Gini\Database::db($key);
                     $database_errors = $db->diagnose();
                     if ($database_errors) {
@@ -102,13 +102,12 @@ class Doctor
             echo "Checking Locale...\n";
             $locale = \Gini\Config::get('system.locale') ?: 'en_US';
             $lodir = I18N_PATH.'/'.$locale.'/LC_MESSAGES';
-            $mofile = $lodir . '/' . APP_ID . '.mo';
-            $pofile = $lodir . '/' . APP_ID . '.po';
+            $mofile = $lodir.'/'.APP_ID.'.mo';
+            $pofile = $lodir.'/'.APP_ID.'.po';
 
             if (!file_exists($mofile) || !file_exists($pofile)) {
-                static::_outputErrors(['Please run: gini i18n format ' . $locale]);
-            }
-            else {
+                static::_outputErrors(['Please run: gini i18n format '.$locale]);
+            } else {
                 echo "   \e[32mdone.\e[0m\n";
             }
             echo "\n";

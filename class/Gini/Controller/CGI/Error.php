@@ -8,14 +8,14 @@ class Error extends Layout
     {
         switch ($code) {
         case 401:
-            $title = "Unauthorized visit";
-            header($_SERVER["SERVER_PROTOCOL"]." 401 Unauthorized");
-            header("Status: 401 Unauthorized");
+            $title = 'Unauthorized visit';
+            header($_SERVER['SERVER_PROTOCOL'].' 401 Unauthorized');
+            header('Status: 401 Unauthorized');
             break;
         case 404:
-            $title = "File not found";
-            header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
-            header("Status: 404 Not Found");
+            $title = 'File not found';
+            header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
+            header('Status: 404 Not Found');
             break;
         }
 

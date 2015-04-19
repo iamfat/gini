@@ -3,8 +3,7 @@
 namespace Gini;
 
 /**
- * Inversion of Control
- *
+ * Inversion of Control.
  */
 class IoC
 {
@@ -37,7 +36,7 @@ class IoC
     {
         static::$CALLBACKS[self::key($name)] = (object) [
             'callback' => $callback,
-            'singleton' => false
+            'singleton' => false,
         ];
     }
 
@@ -45,7 +44,7 @@ class IoC
     {
         static::$CALLBACKS[self::key($name)] = (object) [
             'callback' => $callback,
-            'singleton' => true
+            'singleton' => true,
         ];
     }
 
@@ -53,7 +52,7 @@ class IoC
     {
         static::$CALLBACKS[self::key($name)] = (object) [
             'object' => $object,
-            'singleton' => true
+            'singleton' => true,
         ];
     }
 

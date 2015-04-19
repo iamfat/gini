@@ -1,17 +1,18 @@
 <?php
 
 /**
- * Gini Event
+ * Gini Event.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-02-08
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini;
 
 class Event
@@ -140,22 +141,21 @@ class Event
     }
 
     /**
-     * Bind some events with specified callback with/without weight
+     * Bind some events with specified callback with/without weight.
      *
-     * @param  string $names
-     * @param  string $return
-     * @param  string $weight
-     * @return void
+     * @param string $names
+     * @param string $return
+     * @param string $weight
      */
     public static function bind($names, $return, $weight = 0)
     {
         $names = static::_normalizeNames($names);
 
         \Gini\Logger::of('core')
-            ->debug("{name} <= {return} [{weight}]", [
+            ->debug('{name} <= {return} [{weight}]', [
                 'name' => J($names),
                 'return' => J($return),
-                'weight' => $weight
+                'weight' => $weight,
             ]);
 
         foreach ($names as $name) {
@@ -164,10 +164,9 @@ class Event
     }
 
     /**
-     * Trigger specified events
+     * Trigger specified events.
      *
-     * @param  string $names
-     * @return void
+     * @param string $names
      */
     public static function trigger()
     {
@@ -192,9 +191,10 @@ class Event
     }
 
     /**
-     * Check if an event was binded
+     * Check if an event was binded.
      *
-     * @param  string $name event name
+     * @param string $name event name
+     *
      * @return bool
      */
     public static function isBinded($name)
@@ -205,9 +205,7 @@ class Event
     }
 
     /**
-     * Load event hooks according config
-     *
-     * @return void
+     * Load event hooks according config.
      */
     public static function setup()
     {

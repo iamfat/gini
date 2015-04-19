@@ -70,18 +70,16 @@ class ORM extends \Gini\PHPUnit\CLI
                 ->method('tableName')
                 ->will($this->returnValue('utsample'));
 
-            $properties = [
+            $o->expects($this->any())
+                ->method('properties')
+                ->will($this->returnValue([
                 'id' => 'bigint,primary,serial',
                 '_extra' => 'array',
                 'object' => 'object',
                 'sample' => 'object:utsample',
                 'number' => 'int',
                 'text' => 'string',
-            ];
-
-            $o->expects($this->any())
-                ->method('properties')
-                ->will($this->returnValue($properties));
+            ]));
 
             unset($o->id);
             unset($o->_extra);

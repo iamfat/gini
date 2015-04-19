@@ -16,7 +16,7 @@ class CGI extends \Gini\Controller\CLI
             $_GET[$k] = $v;
         }, $args);
 
-        $env = ['get' => $_GET, 'post' => $_POST, 'files' => $_FILES, 'route' => $route ];
+        $env = ['get' => $_GET, 'post' => $_POST, 'files' => $_FILES, 'route' => $route];
 
         echo "Requesting {$route}...\n";
         $content = \Gini\CGI::request($route, $env)->execute()->content();

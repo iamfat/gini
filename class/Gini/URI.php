@@ -1,18 +1,18 @@
 <?php
 
 /**
- * Gini URI Helpers
+ * Gini URI Helpers.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright , 24 January, 2014
- * @package gini
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini {
 
     class URI
@@ -130,7 +130,7 @@ namespace Gini {
             }
             self::$_base = $scheme.'://'.$host.$dir;
 
-            self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl ?: [ '*' => 'assets' ];
+            self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl ?: ['*' => 'assets'];
         }
 
         public static function base($base = null)
@@ -152,7 +152,7 @@ namespace Gini {
                 $query = $config[$type]['query'];
                 $query = $query ? strtr($query, [
                     '$(TIMESTAMP)' => time(),
-                    '$(VERSION)' => $info->version
+                    '$(VERSION)' => $info->version,
                 ]) : null;
             }
 
@@ -161,7 +161,9 @@ namespace Gini {
 
         public static function rurl($path, $type)
         {
-            if (!self::$_base === null) self::setup();
+            if (!self::$_base === null) {
+                self::setup();
+            }
 
             $base = self::$_rurl[$type] ?: (self::$_rurl['*'].'/'.$type ?: '');
             if (substr($base, -1) != '/') {
@@ -177,7 +179,7 @@ namespace Gini {
 namespace {
 
     if (function_exists('URL')) {
-        die("URL() was declared by other libraries, which may cause problems!");
+        die('URL() was declared by other libraries, which may cause problems!');
     } else {
         function URL($url = null, $query = null, $fragment = null)
         {
@@ -186,7 +188,7 @@ namespace {
     }
 
     if (function_exists('MAILTO')) {
-        die("MAILTO() was declared by other libraries, which may cause problems!");
+        die('MAILTO() was declared by other libraries, which may cause problems!');
     } else {
         function MAILTO($mail, $name = null, $extra = null)
         {
@@ -195,7 +197,7 @@ namespace {
     }
 
     if (function_exists('RURL')) {
-        die("RURL() was declared by other libraries, which may cause problems!");
+        die('RURL() was declared by other libraries, which may cause problems!');
     } else {
         function RURL($path, $type)
         {

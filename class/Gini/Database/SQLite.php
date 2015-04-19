@@ -2,6 +2,7 @@
 
 // SQLITE3 支持
 
+
 namespace Gini\Database;
 
 class SQLite extends \PDO implements Driver

@@ -1,23 +1,23 @@
 <?php
 
 /**
- * Gini Core
+ * Gini Core.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-01-27
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini {
 
     /**
-     * Core Class
+     * Core Class.
      *
-     * @package Gini
      * @author Jia Huang
      **/
     class Core
@@ -118,7 +118,6 @@ namespace Gini {
          * @param   string  $version[optional]  Version Requirement
          * @param   object  $parent[optional]   Parent Module Information
          *
-         *
          * @return object|false Module information
          **/
         public static function import($path, $versionRange = '*', $parent = null)
@@ -203,10 +202,9 @@ namespace Gini {
         }
 
         /**
-         * Gini Autoloader
+         * Gini Autoloader.
          *
          * @param string $class Autoloading class name
-         * @return void
          **/
         public static function autoload($class)
         {
@@ -261,11 +259,12 @@ namespace Gini {
         }
 
         /**
-         * Search Gini modules to locate specific file
+         * Search Gini modules to locate specific file.
          *
          * @param string $phar Phar or Directory path
          * @param string $file File path relative to Phar or Directory
          * @param string $scope[optional] Specify one module to locate the file
+         *
          * @return string|false Return matched file path when avaiable
          **/
         public static function locatePharFile($phar, $file, $scope = null)
@@ -294,10 +293,11 @@ namespace Gini {
         }
 
         /**
-         * Search Gini modules to locate specific file
+         * Search Gini modules to locate specific file.
          *
          * @param string $file File path
          * @param string $scope[optional] Specify one module to locate the file
+         *
          * @return string|false Return matched file path when avaiable
          **/
         public static function locateFile($file, $scope = null)
@@ -321,10 +321,11 @@ namespace Gini {
         }
 
         /**
-         * Get all possible module paths (in phar or not) by given file
+         * Get all possible module paths (in phar or not) by given file.
          *
          * @param string $base Phar or Directory Base
          * @param string $file File path
+         *
          * @return array Return all file paths
          **/
         public static function pharFilePaths($base, $file)
@@ -354,9 +355,10 @@ namespace Gini {
         }
 
         /**
-         * Get all possible module paths by given file
+         * Get all possible module paths by given file.
          *
          * @param string $file File path
+         *
          * @return array Return all file paths
          **/
         public static function filePaths($file)
@@ -407,9 +409,7 @@ namespace Gini {
         }
 
         /**
-         * Function to start the whole gini framework
-         *
-         * @return void
+         * Function to start the whole gini framework.
          **/
         public static function start()
         {
@@ -473,8 +473,6 @@ namespace Gini {
 
         /**
          * Shutdown handler, called when script finished.
-         *
-         * @return void
          **/
         public static function shutdown()
         {
@@ -494,7 +492,7 @@ namespace Gini {
 
 namespace {
 
-    /**
+    /*
      * Shortcut for global variables in Gini
      *
      * @param  string $key Name of global variable
@@ -502,7 +500,7 @@ namespace {
      * @return mixed
      **/
     if (function_exists('_G')) {
-        die("_G() was declared by other libraries, which may cause problems!");
+        die('_G() was declared by other libraries, which may cause problems!');
     } else {
         function _G($key, $value = null)
         {
@@ -514,13 +512,13 @@ namespace {
         }
     }
 
-    /**
+    /*
      * Shortcut for sprintf()
      *
      * @return string
      **/
     if (function_exists('s')) {
-        die("s() was declared by other libraries, which may cause problems!");
+        die('s() was declared by other libraries, which may cause problems!');
     } else {
         function s()
         {
@@ -533,14 +531,14 @@ namespace {
         }
     }
 
-    /**
+    /*
      * Shortcut for htmlentities() + sprintf()
      * e.g. H("Hello, %s!", "world")
      *
      * @return string
      **/
     if (function_exists('H')) {
-        die("H() was declared by other libraries, which may cause problems!");
+        die('H() was declared by other libraries, which may cause problems!');
     } else {
         function H()
         {
@@ -555,14 +553,14 @@ namespace {
         }
     }
 
-    /**
+    /*
      * Shortcut for json_encode() with JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES
      * e.g. H("Hello, %s!", "world")
      *
      * @return string
      **/
     if (function_exists('J')) {
-        die("J() was declared by other libraries, which may cause problems!");
+        die('J() was declared by other libraries, which may cause problems!');
     } else {
         function J($v, $opt = 0)
         {
@@ -572,7 +570,7 @@ namespace {
         }
     }
 
-    /**
+    /*
      * Shortcut for new \Gini\View
      *
      * @param  string          $path Path to the view
@@ -580,7 +578,7 @@ namespace {
      * @return object          \Gini\View object
      **/
     if (function_exists('V')) {
-        die("V() was declared by other libraries, which may cause problems!");
+        die('V() was declared by other libraries, which may cause problems!');
     } else {
         function V($path, $vars = null)
         {

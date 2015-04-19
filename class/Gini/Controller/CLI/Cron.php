@@ -30,6 +30,7 @@ class Cron extends \Gini\Controller\CLI
 
         if (isset($opt['h']) || isset($opt['help'])) {
             echo "Usage: gini cron export [-h|--help] [-u|--user=USER] [--prefix=PREFIX] [--suffix=SUFFIX]\n";
+
             return;
         }
 

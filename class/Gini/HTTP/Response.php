@@ -10,7 +10,7 @@ class Response
 
     public function __construct($data, $status)
     {
-        list($header, $body) = explode("\n\n", str_replace("\r", "", $data), 2);
+        list($header, $body) = explode("\n\n", str_replace("\r", '', $data), 2);
 
         $this->body = trim($body);
 

@@ -3,9 +3,8 @@
 namespace Gini\Database;
 
 /**
- * Database Exception Class
+ * Database Exception Class.
  *
- * @package Gini
  * @author Jia Huang
  **/
 class Exception extends \ErrorException

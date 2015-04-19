@@ -1,17 +1,18 @@
 <?php
 
 /**
- * JSON-RPC API support
+ * JSON-RPC API support.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-02-07
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
-
 namespace Gini;
 
 class API
@@ -57,7 +58,7 @@ class API
             }
 
             if (!is_callable($callback)) {
-                throw new API\Exception("Method not found", -32601);
+                throw new API\Exception('Method not found', -32601);
             }
 
             $result = call_user_func_array($callback, $params);

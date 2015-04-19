@@ -1,15 +1,17 @@
 <?php
 
 /**
- * CLI support
+ * CLI support.
  *
  * @author Jia Huang
+ *
  * @version $Id$
+ *
  * @copyright Genee, 2014-02-07
  **/
 
 /**
- * Define DocBlock
+ * Define DocBlock.
  **/
 namespace Gini;
 
@@ -77,7 +79,7 @@ class CLI
     {
         echo "Usage: gini <command>\n";
         echo "where <command> is one of:\n";
-        echo "    ".implode(",  ", self::possibleCommands([]))."\n\n";
+        echo '    '.implode(',  ', self::possibleCommands([]))."\n\n";
         echo "gini -v    show gini version\n";
         echo "gini -h    show quick help\n";
         echo "\n";
@@ -178,7 +180,7 @@ class CLI
         }
         $line = $e->getLine();
         printf("\e[31m[E] \e[1m%s\e[0m\n", $message);
-        error_log(sprintf("[E] %s (%s:%d)", $message, $file, $line));
+        error_log(sprintf('[E] %s (%s:%d)', $message, $file, $line));
         $trace = array_slice($e->getTrace(), 1, 3);
         foreach ($trace as $n => $t) {
             $file = $t['file'];
@@ -188,7 +190,7 @@ class CLI
                     break;
                 }
             }
-            error_log(sprintf("%3d. %s%s() in (%s:%d)", $n + 1,
+            error_log(sprintf('%3d. %s%s() in (%s:%d)', $n + 1,
                             $t['class'] ? $t['class'].'::' : '',
                             $t['function'],
                             $file,

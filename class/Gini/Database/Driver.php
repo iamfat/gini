@@ -3,9 +3,8 @@
 namespace Gini\Database;
 
 /**
- * Database Driver Interface
+ * Database Driver Interface.
  *
- * @package Gini
  * @author Jia Huang
  **/
 interface Driver
@@ -24,6 +23,6 @@ interface Driver
 
     // function snapshot($filename, $tbls);
     // function restore($filename, &$restore_filename, $tables);
-    
+
     public function diagnose();
 } // END interface

@@ -122,9 +122,9 @@ namespace Gini {
             $this->resetFetch();
 
             if ($per_page > 0) {
-                $this->_limit = sprintf("%d, %d", $start, $per_page);
+                $this->_limit = sprintf('%d, %d', $start, $per_page);
             } else {
-                $this->_limit = sprintf("%d", $start);
+                $this->_limit = sprintf('%d', $start);
             }
 
             return $this;
@@ -433,7 +433,7 @@ namespace Gini {
 namespace {
 
     if (function_exists('a')) {
-        die("a() was declared by other libraries, which may cause problems!");
+        die('a() was declared by other libraries, which may cause problems!');
     } else {
         function a($name, $criteria = null)
         {
@@ -445,7 +445,7 @@ namespace {
 
     // alias to a()
     if (function_exists('an')) {
-        die("an() was declared by other libraries, which may cause problems!");
+        die('an() was declared by other libraries, which may cause problems!');
     } else {
         function an($name, $criteria = null)
         {
@@ -454,7 +454,7 @@ namespace {
     }
 
     if (function_exists('those')) {
-        die("those() was declared by other libraries, which may cause problems!");
+        die('those() was declared by other libraries, which may cause problems!');
     } else {
         function those($name)
         {

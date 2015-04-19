@@ -36,7 +36,7 @@ class JSONSysLog extends Handler
         $context['@ident'] = $this->_name;
         $context['@message'] = strtr($message, $replacements);
 
-        $message = "@cee: ".J($context);
+        $message = '@cee: '.J($context);
 
         openlog(APP_ID, LOG_ODELAY, LOG_LOCAL0);
         syslog(self::$_LEVEL2PRIORITY[$level], $message);

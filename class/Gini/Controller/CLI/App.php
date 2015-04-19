@@ -3,12 +3,10 @@
 /**
  * 模块操作命令行
  * usage: app command [args...]
- *    app new app_path [Name]
+ *    app new app_path [Name].
  *
- * @package default
  * @author Jia Huang
  **/
-
 namespace Gini\Controller\CLI;
 
 class App extends \Gini\Controller\CLI
@@ -24,7 +22,7 @@ class App extends \Gini\Controller\CLI
     {
         $gini = \Gini\Core::moduleInfo('gini');
 
-        echo "Generating PHPUnit files...";
+        echo 'Generating PHPUnit files...';
 
         $xml = APP_PATH.'/phpunit.xml';
         if (!file_exists($xml)) {
@@ -45,9 +43,7 @@ class App extends \Gini\Controller\CLI
     }
 
     /**
-     * 初始化模块
-     *
-     * @return void
+     * 初始化模块.
      **/
     public function actionInit($args)
     {
@@ -141,7 +137,7 @@ class App extends \Gini\Controller\CLI
 
     public function actionDoctor()
     {
-        $errors = \Gini\Doctor::diagnose();
+        $errors = \Gini\App\Doctor::diagnose();
         if (!count($errors)) {
             echo "\e[32mYou are ready now! Let's roll!\e[0m\n\n";
 
@@ -149,78 +145,26 @@ class App extends \Gini\Controller\CLI
         }
     }
 
-    private function _cacheClass()
-    {
-        printf("%s\n", "Updating class cache...");
-
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, '');
-        $class_map = [];
-        foreach ($paths as $class_dir) {
-            \Gini\File::eachFilesIn($class_dir, function ($file) use ($class_dir, &$class_map) {
-                if (preg_match('/^(.+)\.php$/', $file, $parts)) {
-                    $class_name = trim(strtolower($parts[1]), '/');
-                    $class_name = strtr($class_name, '-', '_');
-                    $class_map[$class_name] = $class_dir.'/'.$file;
-                }
-            });
-        }
-
-        \Gini\File::ensureDir(APP_PATH.'/cache');
-        file_put_contents(APP_PATH.'/cache/class_map.json',
-            J($class_map));
-        echo "   \e[32mdone.\e[0m\n";
-    }
-
-    private function _cacheView()
-    {
-        printf("%s\n", "Updating view cache...");
-
-        $paths = \Gini\Core::pharFilePaths(VIEW_DIR, '');
-        $view_map = [];
-        foreach ($paths as $view_dir) {
-            \Gini\File::eachFilesIn($view_dir, function ($file) use ($view_dir, &$view_map) {
-                // if (preg_match('/^([^\/]+)\/(.+)\.\1$/', $file , $parts)) {
-                //     $view_name = $parts[1] . '/' .$parts[2];
-                //     $view_map[$view_name] = $view_dir . '/' . $file;
-                // }
-
-                if (preg_match('/^(.+)\.([^\.]+)$/', $file, $parts)) {
-                    $view_name = $parts[1];
-                    $view_map[$parts[1]] = "$view_dir/$file";
-                    // echo $parts[1]." => $view_dir/$file\n";
-                }
-            });
-        }
-
-        \Gini\File::ensureDir(APP_PATH.'/cache');
-        file_put_contents(APP_PATH.'/cache/view_map.json',
-            J($view_map));
-        echo "   \e[32mdone.\e[0m\n";
-    }
-
     public function actionCache($args)
     {
+        $opt = \Gini\Util::getOpt($args, 'he:', ['help', 'env:']);
+        if (isset($opt['h']) || isset($opt['help'])) {
+            echo "Usage: gini cache [-h|--help] [-e|--env=ENV] [clean]\n";
+
+            return;
+        }
+
+        $env = $opt['e'] ?: $opt['env'] ?: null;
+
         if (count($args) == 0) {
-            $errors = \Gini\Doctor::diagnose(['dependencies']);
+            $errors = \Gini\App\Doctor::diagnose(['dependencies', 'composer']);
             if ($errors) {
                 return;
             }
 
-            $this->_cacheClass();
-            echo "\n";
-
-            $this->_cacheView();
-            echo "\n";
+            \Gini\App\Cache::setup($env);
         } elseif (in_array('clean', $args)) {
-            // clean cache
-            echo "Cleanning Cache...\n";
-            if (file_exists(APP_PATH.'/cache/class_map.json')) {
-                unlink(APP_PATH.'/cache/class_map.json');
-            }
-            if (file_exists(APP_PATH.'/cache/view_map.json')) {
-                unlink(APP_PATH.'/cache/view_map.json');
-            }
-            echo "   \e[32mdone.\e[0m\n";
+            \Gini\App\Cache::clean();
         }
     }
 
@@ -301,7 +245,7 @@ class App extends \Gini\Controller\CLI
         $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini config update");
+                passthru('gini config update');
             });
         });
 
@@ -313,7 +257,7 @@ class App extends \Gini\Controller\CLI
             );
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini cache");
+                passthru('gini cache');
             });
         });
 
@@ -321,7 +265,7 @@ class App extends \Gini\Controller\CLI
         $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini orm update");
+                passthru('gini orm update');
             });
         });
 
@@ -335,7 +279,7 @@ class App extends \Gini\Controller\CLI
 
         array_walk($paths, function ($path) use ($watcher) {
             $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru("gini web update");
+                passthru('gini web update');
             });
         });
 
@@ -372,10 +316,9 @@ class App extends \Gini\Controller\CLI
     }
 
     /**
-     * Install related modules
+     * Install related modules.
      *
-     * @param  string $argv
-     * @return void
+     * @param string $argv
      */
     public function actionInstall($argv)
     {
