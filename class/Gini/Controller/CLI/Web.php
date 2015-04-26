@@ -168,7 +168,7 @@ class Web extends \Gini\Controller\CLI
 
     public function actionPreview($args)
     {
-        $errors = \Gini\Doctor::diagnose(['dependencies', 'web']);
+        $errors = \Gini\App\Doctor::diagnose(['dependencies', 'web']);
         if ($errors) {
             return;
         }
