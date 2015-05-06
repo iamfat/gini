@@ -146,7 +146,7 @@ class MySQL extends \PDO implements Driver
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
         foreach ($missing_indexes as $key => $val) {
-            $field_sql[] = sprintf('ADD %s', $this->_alterIndexSQL($key, $val));
+            $field_sql[] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
         }
 
         foreach ($curr_indexes as $key => $curr_val) {
@@ -154,7 +154,8 @@ class MySQL extends \PDO implements Driver
             if ($val) {
                 if ($val['type'] != $curr_val['type']
                     || array_diff($val, $curr_val)) {
-                    $field_sql[] = sprintf('DROP %s, ADD %s', $this->_alterIndexSQL($key, $curr_val, true), $this->_alterIndexSQL($key, $val));
+                    $field_sql[] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
+                    $field_sql[] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
                 }
             }
             // remove other indexes
@@ -218,13 +219,25 @@ class MySQL extends \PDO implements Driver
         return $this->_table_schema[$name];
     }
 
-    private function _fieldSQL($key, &$field)
+    private function _fieldSQL($key, $field)
     {
         return sprintf('%s %s%s%s%s', $this->quoteIdent($key), $field['type'], $field['null'] ? '' : ' NOT NULL', isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : '', $field['serial'] ? ' AUTO_INCREMENT' : ''
                 );
     }
 
-    private function _alterIndexSQL($key, &$val, $no_fields = false)
+    private function _dropIndexSQL($key, $val)
+    {
+        switch ($val['type']) {
+        case 'primary':
+            $type = 'PRIMARY KEY';
+            break;
+        default:
+            $type = 'INDEX '.$this->quoteIdent($key);
+        }
+        return $type;
+    }
+
+    private function _addIndexSQL($key, $val)
     {
         switch ($val['type']) {
         case 'primary':
@@ -239,12 +252,7 @@ class MySQL extends \PDO implements Driver
         default:
             $type = 'INDEX '.$this->quoteIdent($key);
         }
-
-        if ($no_fields) {
-            return $type;
-        } else {
-            return sprintf('%s (%s)', $type, $this->quoteIdent($val['fields']));
-        }
+        return sprintf('%s (%s)', $type, $this->quoteIdent($val['fields']));
     }
 
     public function createTable($table)
