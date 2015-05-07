@@ -7,7 +7,6 @@ script:
     done
   - composer install --no-interaction
   - bin/gini cache
-  - bin/gini config update
   - source /etc/profile.d/composer.sh
   - source /etc/profile.d/sonar-runner.sh
   - phpunit
