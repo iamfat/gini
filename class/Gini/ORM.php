@@ -522,6 +522,8 @@ abstract class ORM
                 $this->$k = $data[$k];
             }
         }
+
+        return $this;
     }
 
     /**
