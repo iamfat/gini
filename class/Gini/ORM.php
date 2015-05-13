@@ -253,6 +253,7 @@ abstract class ORM
                 case 'bigint':
                 case 'double':
                 case 'datetime':
+                case 'timestamp':
                     $field['type'] = $p;
                     break;
                 case 'bool':
@@ -386,7 +387,7 @@ abstract class ORM
                     if (is_null($default)) {
                         if (isset($v['string'])) {
                             $default = '';
-                        } elseif (isset($v['datetime'])) {
+                        } elseif (isset($v['datetime']) || isset($v['timestamp'])) {
                             $default = '0000-00-00 00:00:00';
                         } elseif (isset($v['int']) || isset($v['bigint']) || isset($v['double'])) {
                             $default = 0;
