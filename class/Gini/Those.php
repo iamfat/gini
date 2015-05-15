@@ -306,6 +306,13 @@ namespace Gini {
                             }
                             break;
                         }
+                    } elseif (is_null($v)) {
+                        if ($op == '<>') {
+                            $this->_where[] = $field_name.' IS NOT NULL';
+                        } else {
+                            $this->_where[] = $field_name.' IS NULL';
+                        }
+                        break;
                     }
                 }
 
