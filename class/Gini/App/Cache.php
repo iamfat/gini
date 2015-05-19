@@ -31,6 +31,9 @@ class Cache
         file_put_contents(APP_PATH.'/cache/class_map.json',
             J($class_map));
         echo "   \e[32mdone.\e[0m\n";
+
+        // load class map
+        $GLOBALS['gini.class_map'] = $class_map;
     }
 
     private static function _cacheView()
@@ -58,6 +61,9 @@ class Cache
         file_put_contents(APP_PATH.'/cache/view_map.json',
             J($view_map));
         echo "   \e[32mdone.\e[0m\n";
+
+        // load view map
+        $GLOBALS['gini.view_map'] = $view_map;
     }
 
     private static function _getORMPlurals()
