@@ -266,6 +266,9 @@ abstract class ORM
                         $field['type'] = 'varchar('.($pv ?: 255).')';
                     }
                     break;
+                case 'text' :
+                    $field['type'] = 'text';
+                    break;
                 case 'array' :
                     $field['type'] = 'text';
                     break;
@@ -385,7 +388,7 @@ abstract class ORM
                 if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
                     $default = $v['default'];
                     if (is_null($default)) {
-                        if (isset($v['string'])) {
+                        if (isset($v['string']) || isset($v['text'])) {
                             $default = '';
                         } elseif (isset($v['datetime']) || isset($v['timestamp'])) {
                             $default = '0000-00-00 00:00:00';
