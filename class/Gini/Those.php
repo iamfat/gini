@@ -222,7 +222,7 @@ namespace Gini {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
                 if ($v->_where) {
-                    $this->_where = array_merge($this->_where, $v->_where);
+                    $this->_where = array_merge((array)$this->_where, $v->_where);
                 }
             } else {
                 foreach ($values as $v) {
@@ -250,7 +250,7 @@ namespace Gini {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
                 if ($v->_where) {
-                    $this->_where = array_merge($this->_where, $v->_where);
+                    $this->_where = array_merge((array)$this->_where, $v->_where);
                     $this->_where[] = 'AND';
                 }
                 $this->_where[] = $field_name.' IS NOT NULL';
