@@ -563,6 +563,18 @@ abstract class ORM
         if (isset($ret)) {
             return $ret;
         }
+        
+        // if $name is  {}_name or {}_id, let us get 
+        if (preg_match('/^(.+)_(name|id)$/', $name, $parts)) {
+            $oname = $parts[1];
+            if (isset($this->_objects[$oname])) {
+                if ($parts[2] == 'name') {
+                    return $oname;
+                } else {
+                    return $this->_objects[$oname]->{$parts[2]};
+                }
+            }
+        }
 
         if (isset($this->_db_data[$name])) {
             return $this->_db_data[$name];
