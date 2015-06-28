@@ -2,7 +2,7 @@
 
 namespace Gini\Controller\CGI;
 
-class Layout extends \Gini\Controller\CGI
+abstract class Layout extends \Gini\Controller\CGI
 {
     public $view;
     protected static $layout_name = 'layout';
