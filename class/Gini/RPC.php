@@ -79,7 +79,7 @@ class RPC
         $header = $this->_header;
         $header['Content-Type'] = 'application/json';
 
-        curl_setopt_array($ch, array(
+        curl_setopt_array($ch, [
             CURLOPT_COOKIEJAR => $cookie_file,
             CURLOPT_COOKIEFILE => $cookie_file,
             CURLOPT_SSL_VERIFYPEER => false,
@@ -92,7 +92,7 @@ class RPC
             // CURLOPT_FRESH_CONNECT => false,
             CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?: 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)',
             CURLOPT_HTTPHEADER => $header,
-        ));
+        ]);
 
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
