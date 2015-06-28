@@ -569,7 +569,7 @@ abstract class ORM
             $oname = $parts[1];
             if (isset($this->_objects[$oname])) {
                 if ($parts[2] == 'name') {
-                    return $oname;
+                    return $this->_objects[$oname]->name();
                 } else {
                     return $this->_objects[$oname]->{$parts[2]};
                 }
