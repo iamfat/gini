@@ -85,8 +85,9 @@ namespace Gini {
             return parent::fetch($scope);
         }
 
-        private function _getValue($v)
+        private function _getValue($v, $raw=false)
         {
+            if ($raw) return $v;
             $db = $this->db;
             if (preg_match('/^@(?:(\w+)\.)?(\w+)$/', $v, $parts)) {
                 //有可能是某个table的field名
@@ -101,7 +102,6 @@ namespace Gini {
 
                 return $db->ident($table, $field);
             }
-
             return $db->quote($v);
         }
 
@@ -317,7 +317,7 @@ namespace Gini {
                 }
 
                 default: {
-                    $this->_where[] = $field_name.$op.$this->_getValue($v);
+                    $this->_where[] = $field_name.$op.$this->_getValue($v, $raw);
                 }
 
             }
@@ -326,14 +326,14 @@ namespace Gini {
         }
 
         // is(1), is('hello'), is('@name')
-        public function is($v)
+        public function is($v, $raw=false)
         {
-            return $this->match('=', $v);
+            return $this->match('=', $v, $raw);
         }
 
-        public function isNot($v)
+        public function isNot($v, $raw=false)
         {
-            return $this->match('<>', $v);
+            return $this->match('<>', $v, $raw);
         }
 
         public function beginsWith($v)
@@ -351,33 +351,33 @@ namespace Gini {
             return $this->match('$=', $v);
         }
 
-        public function isLessThan($v)
+        public function isLessThan($v, $raw=false)
         {
-            return $this->match('<', $v);
+            return $this->match('<', $v, $raw);
         }
 
-        public function isGreaterThan($v)
+        public function isGreaterThan($v, $raw=false)
         {
-            return $this->match('>', $v);
+            return $this->match('>', $v, $raw);
         }
 
-        public function isGreaterThanOrEqual($v)
+        public function isGreaterThanOrEqual($v, $raw=false)
         {
-            return $this->match('>=', $v);
+            return $this->match('>=', $v, $raw);
         }
 
-        public function isLessThanOrEqual($v)
+        public function isLessThanOrEqual($v, $raw=false)
         {
-            return $this->match('<=', $v);
+            return $this->match('<=', $v, $raw);
         }
 
-        public function isBetween($a, $b)
+        public function isBetween($a, $b, $raw=false)
         {
             assert($this->_field);
             $db = $this->db;
             $field_name = $db->ident($this->_table, $this->_field);
-            $this->_where[] = '('.$field_name.'>='.$this->_getValue($a).
-                ' AND '.$field_name.'<'.$this->_getValue($b).')';
+            $this->_where[] = '('.$field_name.'>='.$this->_getValue($a, $raw).
+                ' AND '.$field_name.'<'.$this->_getValue($b, $raw).')';
 
             return $this;
         }
