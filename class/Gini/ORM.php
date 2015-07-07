@@ -185,6 +185,8 @@ abstract class ORM
             //给object赋值
             $this->setData((array) $data);
         }
+
+        return $this;
     }
 
     public function __construct($criteria = null)
