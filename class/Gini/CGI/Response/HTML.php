@@ -5,17 +5,15 @@ namespace Gini\CGI\Response;
 class HTML implements \Gini\CGI\Response
 {
     private $_content;
-    private $_charset;
 
-    public function __construct($content, $charset='utf-8')
+    public function __construct($content)
     {
         $this->_content = $content;
-        $this->_charset = $charset;
     }
 
     public function output()
     {
-        header('Content-Type: text/html; charset:' . $this->_charset);
+        header('Content-Type: text/html; charset:utf-8');
         file_put_contents('php://output', (string) $this->_content);
     }
 
