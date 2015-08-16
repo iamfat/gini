@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 /**
@@ -282,7 +283,7 @@ class Database
             $this->_driver->beginTransaction();
         }
 
-        $this->_transactionLevel++;
+        ++$this->_transactionLevel;
 
         return $this;
     }
@@ -295,7 +296,7 @@ class Database
     public function commit()
     {
         if ($this->_transactionLevel > 0) {
-            $this->_transactionLevel--;
+            --$this->_transactionLevel;
             if ($this->_transactionLevel == 0) {
                 if ($this->_transactionRollback) {
                     $this->_driver->rollback();
@@ -316,7 +317,7 @@ class Database
     public function rollback()
     {
         if ($this->_transactionLevel > 0) {
-            $this->_transactionLevel--;
+            --$this->_transactionLevel;
             if ($this->_transactionLevel == 0) {
                 $this->_driver->rollBack();
             } else {
@@ -422,3 +423,4 @@ class Database
         return $this->_driver->diagnose();
     }
 } // END class
+

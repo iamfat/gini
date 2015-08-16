@@ -163,7 +163,7 @@ class SQLite extends \PDO implements Driver
             $this->query($SQL);
         } else {
             foreach ($curr_indexes as $key => $curr_val) {
-                $val = & $indexes[$key];
+                $val = &$indexes[$key];
                 if ($val) {
                     if ($val['type'] != $curr_val['type']
                         || array_diff($val, $curr_val)) {

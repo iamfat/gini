@@ -33,7 +33,7 @@ class RPC
             $method = $this->_path.'/'.$method;
         }
 
-        $id = base_convert($this->_uniqid ++, 10, 36);
+        $id = base_convert($this->_uniqid++, 10, 36);
 
         $rpcTimeout = Config::get('rpc.timeout');
         $timeout = $rpcTimeout[$method] ?: $rpcTimeout['default'];

@@ -13,11 +13,12 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 class CGI
 {
-    public static function stripslashes(& $value)
+    public static function stripslashes(&$value)
     {
         return is_array($value) ?
                 array_map([__CLASS__, __FUNCTION__], $value) :

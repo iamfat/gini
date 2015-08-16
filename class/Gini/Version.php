@@ -55,7 +55,7 @@ class Version
 
         $op = $parts[1];
         $version = $parts[2];
-        $v = new Version($version);
+        $v = new self($version);
         if (!$v->isValid()) {
             return false;
         }
@@ -77,7 +77,7 @@ class Version
                 0,
             ]).'-0';
 
-            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) <0) {
+            if ($this->compare($minVer) >= 0 && $this->compare($maxVer) < 0) {
                 return true;
             }
         } elseif ($op == '^') {
@@ -170,11 +170,11 @@ class Version
                     return true;
                 }
             } elseif ($op == '>') {
-                if ($ret>0) {
+                if ($ret > 0) {
                     return true;
                 }
             } elseif ($op == '<') {
-                if ($ret<0) {
+                if ($ret < 0) {
                     return true;
                 }
             }
@@ -198,13 +198,13 @@ class Version
             if (!preg_match_all('`\s*(\S+)(?:\s+(-)\s|$)?`', $versionRange, $parts, PREG_PATTERN_ORDER)) {
                 return false;
             }
-            for ($i = 0, $max = count($parts[1]); $i < $max; $i++) {
+            for ($i = 0, $max = count($parts[1]); $i < $max; ++$i) {
                 $versionUnit = $parts[1][$i];
                 if ($parts[2][$i] == '-') {
                     if (!$this->satisfiesUnit('>='.$versionUnit)) {
                         return false;
                     }
-                    $parts[1][$i+1] = '<='.$parts[1][$i+1];
+                    $parts[1][$i + 1] = '<='.$parts[1][$i + 1];
                 } else {
                     // and op
                     if (!$this->satisfiesUnit($versionUnit)) {
@@ -237,8 +237,8 @@ class Version
             return 0;
         }
 
-        if (!$v instanceof Version) {
-            $v = new Version($v);
+        if (!$v instanceof self) {
+            $v = new self($v);
         }
         if (!$v->isValid()) {
             return 0;
