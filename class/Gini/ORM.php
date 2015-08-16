@@ -269,13 +269,6 @@ abstract class ORM
                         $field['type'] = 'varchar('.($pv ?: 255).')';
                     }
                     break;
-                case 'blob':
-                    if ($pv == 'long') {
-                        $field['type'] = 'longblob';
-                    } else {
-                        $field['type'] = 'blob';
-                    }
-                    break;
                 case 'array' :
                     $field['type'] = 'text';
                     break;
