@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini {
 
     /**
@@ -107,16 +108,16 @@ namespace Gini {
             $info_script = $info->path.'/gini.json';
             unset($info->path);
             unset($info->error);
-            $json = json_encode($info, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+            $json = json_encode($info, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
             file_put_contents($info_script, $json);
         }
 
         /**
          * Import a module by its path.
          *
-         * @param   string  $path               Module path
-         * @param   string  $version[optional]  Version Requirement
-         * @param   object  $parent[optional]   Parent Module Information
+         * @param string $path              Module path
+         * @param string $version[optional] Version Requirement
+         * @param object $parent[optional]  Parent Module Information
          *
          * @return object|false Module information
          **/
@@ -261,8 +262,8 @@ namespace Gini {
         /**
          * Search Gini modules to locate specific file.
          *
-         * @param string $phar Phar or Directory path
-         * @param string $file File path relative to Phar or Directory
+         * @param string $phar            Phar or Directory path
+         * @param string $file            File path relative to Phar or Directory
          * @param string $scope[optional] Specify one module to locate the file
          *
          * @return string|false Return matched file path when avaiable
@@ -295,7 +296,7 @@ namespace Gini {
         /**
          * Search Gini modules to locate specific file.
          *
-         * @param string $file File path
+         * @param string $file            File path
          * @param string $scope[optional] Specify one module to locate the file
          *
          * @return string|false Return matched file path when avaiable
@@ -564,7 +565,7 @@ namespace {
     } else {
         function J($v, $opt = 0)
         {
-            $opt |= JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES;
+            $opt |= JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 
             return @json_encode($v, $opt);
         }

@@ -7,6 +7,7 @@
  *
  * @author Jia Huang
  **/
+
 namespace Gini\Controller\CLI;
 
 class App extends \Gini\Controller\CLI
@@ -75,7 +76,7 @@ class App extends \Gini\Controller\CLI
         ];
 
         foreach ($prompt as $k => $v) {
-            $data[$k] = readline($v." [".($default[$k] ?: 'N/A')."]: ");
+            $data[$k] = readline($v.' ['.($default[$k] ?: 'N/A').']: ');
             if (!$data[$k]) {
                 $data[$k] = $default[$k];
             }
