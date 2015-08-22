@@ -287,6 +287,16 @@ class Index extends \Gini\Controller\CLI
                     die("Conflict detected on $module! Installed: {$v->fullVersion} Expecting: $versionRange\n");
                 }
             } else {
+
+                // try to see if we've already got it somewhere
+                if (isset(\Gini\Core::$MODULE_INFO[$module])) {
+                    $info = \Gini\Core::$MODULE_INFO[$module];
+                    $v = new \Gini\Version($info->version);
+                    if ($v->satisfies($versionRange)) {
+                        $matched = $v;
+                    }
+                }
+
                 // fetch index.json
                 echo "Fetching catalog of {$module}...\n";
                 while (true) {
@@ -299,75 +309,82 @@ class Index extends \Gini\Controller\CLI
                             $client = new \Sabre\DAV\Client($options);
                             continue;
                         }
-                        die("Access denied for fetch catalog of {$module} .\n");
-                    }
-
-                    if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                        die('Error: '.$response['statusCode']."\n");
+                        $matched or die("Access denied for fetch catalog of {$module} .\n");
+                        $response = null;
+                    } elseif ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                        $matched or die('Error: '.$response['statusCode']."\n");
+                        $response = null;
                     }
 
                     break;
                 }
 
-                $indexInfo = json_decode($response['body'], true);
-                // find latest match version
-                foreach ($indexInfo as $version => $info) {
-                    $v = new \Gini\Version($version);
-                    if ($v->satisfies($versionRange)) {
-                        if ($matched) {
-                            if ($matched->compare($v) > 0) {
-                                continue;
+                if ($response) {
+                    $indexInfo = (array) json_decode($response['body'], true);
+                    // find latest match version
+                    foreach ($indexInfo as $version => $foo) {
+                        $v = new \Gini\Version($version);
+                        if ($v->satisfies($versionRange)) {
+                            if ($matched) {
+                                if ($matched->compare($v) > 0) {
+                                    continue;
+                                }
                             }
+                            $matched = $v;
                         }
-                        $matched = $v;
                     }
+
                 }
 
                 if (!$matched) {
                     die("Failed to locate required version!\n");
                 }
 
-                $version = $matched->fullVersion;
-                $info = (object) $indexInfo[$version];
+                if (!$info || $matched->fullVersion != $info->version) {
+                    $version = $matched->fullVersion;
+                    $info = (object) $indexInfo[$version];
 
-                $tarPath = "{$module}/{$version}.tgz";
-                echo "Downloading {$module} from {$tarPath}...\n";
-                while (true) {
-                    $response = $client->request('GET', $tarPath, null, $headers);
-                    if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-                        // Authentication required
-                        // prompt user/password and try again
-                        if (!isset($options['userName'])) {
-                            list($options, $headers) = self::_davOptionsAndHeaders(true);
-                            $client = new \Sabre\DAV\Client($options);
-                            continue;
+                    $tarPath = "{$module}/{$version}.tgz";
+                    echo "Downloading {$module} from {$tarPath}...\n";
+                    while (true) {
+                        $response = $client->request('GET', $tarPath, null, $headers);
+                        if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+                            // Authentication required
+                            // prompt user/password and try again
+                            if (!isset($options['userName'])) {
+                                list($options, $headers) = self::_davOptionsAndHeaders(true);
+                                $client = new \Sabre\DAV\Client($options);
+                                continue;
+                            }
+                            die("Access denied for fetch catalog of {$module}.\n");
                         }
-                        die("Access denied for fetch catalog of {$module} .\n");
+
+                        if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                            die('Error: '.$response['statusCode']."\n");
+                        }
+
+                        break;
                     }
 
-                    if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                        die('Error: '.$response['statusCode']."\n");
+                    if ($isApp) {
+                        $modulePath = $targetDir;
+                    } else {
+                        $modulePath = "$targetDir/modules/$module";
                     }
 
-                    break;
-                }
-
-                if ($isApp) {
-                    $modulePath = $targetDir;
+                    \Gini\File::ensureDir($modulePath);
+                    echo "Extracting {$module}...\n";
+                    $ph = popen('tar -zx -C '.escapeshellcmd($modulePath), 'w');
+                    if (is_resource($ph)) {
+                        fwrite($ph, $response['body']);
+                        pclose($ph);
+                    }
                 } else {
-                    $modulePath = "$targetDir/modules/$module";
-                }
-
-                \Gini\File::ensureDir($modulePath);
-                echo "Extracting {$module}...\n";
-                $ph = popen('tar -zx -C '.escapeshellcmd($modulePath), 'w');
-                if (is_resource($ph)) {
-                    fwrite($ph, $response['body']);
-                    pclose($ph);
+                    $version = $info->version;
+                    echo "Found local copy of {$module}/{$version}.\n";
                 }
 
                 $installedModules[$module] = $info;
-
                 echo "\n";
             }
 
@@ -407,7 +424,6 @@ class Index extends \Gini\Controller\CLI
     protected function _strPad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
     {
         $diff = mb_strwidth($input) - mb_strlen($input);
-
         return str_pad($input, $pad_length + $diff, $pad_string, $pad_type);
     }
 
