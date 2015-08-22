@@ -29,6 +29,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 /**
@@ -48,7 +49,7 @@ class Logger
     public static function of($name)
     {
         if (!isset(self::$_LOGGERS[$name])) {
-            self::$_LOGGERS[$name] = new Logger($name);
+            self::$_LOGGERS[$name] = new self($name);
         }
 
         return self::$_LOGGERS[$name];

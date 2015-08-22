@@ -85,9 +85,11 @@ namespace Gini {
             return parent::fetch($scope);
         }
 
-        private function _getValue($v, $raw=false)
+        private function _getValue($v, $raw = false)
         {
-            if ($raw) return $v;
+            if ($raw) {
+                return $v;
+            }
             $db = $this->db;
             if (preg_match('/^@(?:(\w+)\.)?(\w+)$/', $v, $parts)) {
                 //有可能是某个table的field名
@@ -102,6 +104,7 @@ namespace Gini {
 
                 return $db->ident($table, $field);
             }
+
             return $db->quote($v);
         }
 
@@ -214,7 +217,7 @@ namespace Gini {
             $field_name = $db->ident($this->_table, $this->_field);
 
             $v = reset($values);
-            if ($v instanceof Those) {
+            if ($v instanceof self) {
                 $field_name = $db->ident($this->_table, $this->_field.'_id');
                 $this->_join[] = 'INNER JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
                     .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
@@ -222,7 +225,7 @@ namespace Gini {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
                 if ($v->_where) {
-                    $this->_where = array_merge((array)$this->_where, $v->_where);
+                    $this->_where = array_merge((array) $this->_where, $v->_where);
                 }
             } else {
                 foreach ($values as $v) {
@@ -242,7 +245,7 @@ namespace Gini {
             $field_name = $db->ident($this->_table, $this->_field);
 
             $v = reset($values);
-            if ($v instanceof Those) {
+            if ($v instanceof self) {
                 $field_name = $db->ident($this->_table, $this->_field.'_id');
                 $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
                     .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
@@ -250,7 +253,7 @@ namespace Gini {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
                 if ($v->_where) {
-                    $this->_where = array_merge((array)$this->_where, $v->_where);
+                    $this->_where = array_merge((array) $this->_where, $v->_where);
                     $this->_where[] = 'AND';
                 }
                 $this->_where[] = $field_name.' IS NOT NULL';
@@ -326,12 +329,12 @@ namespace Gini {
         }
 
         // is(1), is('hello'), is('@name')
-        public function is($v, $raw=false)
+        public function is($v, $raw = false)
         {
             return $this->match('=', $v, $raw);
         }
 
-        public function isNot($v, $raw=false)
+        public function isNot($v, $raw = false)
         {
             return $this->match('<>', $v, $raw);
         }
@@ -351,27 +354,27 @@ namespace Gini {
             return $this->match('$=', $v);
         }
 
-        public function isLessThan($v, $raw=false)
+        public function isLessThan($v, $raw = false)
         {
             return $this->match('<', $v, $raw);
         }
 
-        public function isGreaterThan($v, $raw=false)
+        public function isGreaterThan($v, $raw = false)
         {
             return $this->match('>', $v, $raw);
         }
 
-        public function isGreaterThanOrEqual($v, $raw=false)
+        public function isGreaterThanOrEqual($v, $raw = false)
         {
             return $this->match('>=', $v, $raw);
         }
 
-        public function isLessThanOrEqual($v, $raw=false)
+        public function isLessThanOrEqual($v, $raw = false)
         {
             return $this->match('<=', $v, $raw);
         }
 
-        public function isBetween($a, $b, $raw=false)
+        public function isBetween($a, $b, $raw = false)
         {
             assert($this->_field);
             $db = $this->db;

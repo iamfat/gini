@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 class Event
@@ -129,7 +130,7 @@ class Event
     {
         $e = self::$_EVENTS[$name];
         if (!$e && $ensure) {
-            $e = self::$_EVENTS[$name] = new Event($name);
+            $e = self::$_EVENTS[$name] = new self($name);
         }
 
         return $e;

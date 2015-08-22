@@ -99,7 +99,7 @@ class Config
 
                 switch (pathinfo($name, PATHINFO_EXTENSION)) {
                 case 'php':
-                    $config = & $items[$category];
+                    $config = &$items[$category];
                     call_user_func(function () use (&$config, $file) {
                         include $file;
                     });

@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini {
 
     /**
@@ -107,7 +108,7 @@ namespace Gini {
             $info_script = $info->path.'/gini.json';
             unset($info->path);
             unset($info->error);
-            $json = json_encode($info, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+            $json = json_encode($info, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
             file_put_contents($info_script, $json);
         }
 
@@ -564,7 +565,7 @@ namespace {
     } else {
         function J($v, $opt = 0)
         {
-            $opt |= JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES;
+            $opt |= JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 
             return @json_encode($v, $opt);
         }

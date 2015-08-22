@@ -4,7 +4,7 @@ namespace Gini;
 
 class Util
 {
-    public static function arrayReplaceKeys(array & $arr, $key_arr)
+    public static function arrayReplaceKeys(array &$arr, $key_arr)
     {
         $new_arr = array();
         foreach ($arr as $k => $v) {
@@ -47,9 +47,9 @@ class Util
         $validchars[2] = '0123456789abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $validchars[3] = '0123456789_!@#$%&*()-=+/abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_!@#$%&*()-=+/';
 
-        $password  = '';
-        $counter   = 0;
-        $max_length = strlen($validchars[$level])-1;
+        $password = '';
+        $counter = 0;
+        $max_length = strlen($validchars[$level]) - 1;
 
         while ($counter < $length) {
             $actChar = substr($validchars[$level], rand(0, $max_length), 1);

@@ -14,6 +14,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 abstract class ORM
@@ -565,8 +566,8 @@ abstract class ORM
         if (isset($ret)) {
             return $ret;
         }
-        
-        // if $name is  {}_name or {}_id, let us get 
+
+        // if $name is  {}_name or {}_id, let us get
         if (preg_match('/^(.+)_(name|id)$/', $name, $parts)) {
             $oname = $parts[1];
             if (isset($this->_objects[$oname])) {

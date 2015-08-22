@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 class API
@@ -20,7 +21,7 @@ class API
     public static function dispatch(array $data)
     {
         try {
-            $id =  $data['id'] ?: null;
+            $id = $data['id'] ?: null;
 
             if (!isset($data['method'])
                 || !isset($data['params']) || !isset($data['jsonrpc'])
