@@ -267,7 +267,7 @@ namespace Gini {
             return $this;
         }
 
-        public function match($op, $v)
+        public function match($op, $v, $raw=false)
         {
             assert($this->_field);
 
