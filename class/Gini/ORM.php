@@ -269,7 +269,8 @@ abstract class ORM
                         $field['type'] = 'varchar('.($pv ?: 255).')';
                     }
                     break;
-                case 'array' :
+                case 'array':
+                case 'object_list':
                     $field['type'] = 'text';
                     break;
                 case 'null':
@@ -383,6 +384,10 @@ abstract class ORM
                 $db_data[$k] = isset($this->$k)
                     ? J($this->$k)
                     : (array_key_exists('null', $v) ? 'null' : '{}');
+            } elseif (array_key_exists('object_list', $v)) {
+                $db_data[$k] = isset($this->$k)
+                    ? J($this->$k->keys())
+                    : (array_key_exists('null', $v) ? 'null' : '[]');
             } else {
                 $db_data[$k] = $this->$k;
                 if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
@@ -522,6 +527,13 @@ abstract class ORM
                 }
             } elseif (array_key_exists('array', $v)) {
                 $this->$k = @json_decode(strval($data[$k]), true);
+            } elseif (array_key_exists('object_list', $v)) {
+                $objects = \Gini\IoC::construct('\Gini\ORMIterator', $v['object_list']);
+                $oids =  (array) @json_decode(strval($data[$k]), true);
+                array_walk($oids, function($id) use ($objects) {
+                    $objects[$id] = true;
+                });
+                $this->$k = $objects;
             } else {
                 $this->$k = $data[$k];
             }

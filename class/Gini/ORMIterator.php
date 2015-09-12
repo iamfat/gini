@@ -23,7 +23,6 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     public function totalCount()
     {
         $this->fetch('count');
-
         return (int) $this->total_count;
     }
 
@@ -161,14 +160,12 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     public function current()
     {
         $this->fetch();
-
         return $this->object($this->current_id);
     }
 
     public function key()
     {
         $this->fetch();
-
         return $this->current_id;
     }
 
@@ -177,14 +174,12 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->fetch();
         next($this->objects);
         $this->current_id = key($this->objects);
-
         return $this->object($this->current_id);
     }
 
     public function valid()
     {
         $this->fetch();
-
         return isset($this->objects[$this->current_id]);
     }
     // Iterator End
@@ -193,7 +188,6 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     public function count()
     {
         $this->fetch();
-
         return (int) $this->count;
     }
     // Countable End
@@ -205,8 +199,6 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         if ($this->count > 0) {
             return $this->object($id);
         }
-
-        return;
     }
 
     public function offsetUnset($id)
@@ -222,15 +214,17 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     public function offsetSet($id, $object)
     {
         $this->fetch();
-        $this->objects[$object->id] = $object;
-        $this->count = count($this->objects);
+        if ($object->id) {
+            $id = $object->id;
+        }
+        $this->objects[$id] = $object;
         $this->current_id = $id;
+        $this->count = count($this->objects);
     }
 
     public function offsetExists($id)
     {
         $this->fetch();
-
         return isset($this->objects[$id]);
     }
 
@@ -240,7 +234,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->fetch();
 
         if ($object->id) {
-            $this->objects = array($object->id => $object) + $this->objects;
+            $this->objects = [$object->id => $object] + $this->objects;
         }
 
         $this->count = count($this->objects);
@@ -253,7 +247,6 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->fetch();
         //反排
         $this->objects = array_reverse($this->objects);
-
         return $this;
     }
 
@@ -275,5 +268,11 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         }
 
         return $arr;
+    }
+
+    public function keys()
+    {
+        $this->fetch();
+        return array_keys($this->objects);
     }
 }
