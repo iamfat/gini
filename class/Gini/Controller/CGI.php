@@ -75,8 +75,10 @@ abstract class CGI
         $action = $this->action ?: '__index';
         $params = (array) $this->params;
 
-        $this->__preAction($action, $params);
-        $response = call_user_func_array(array($this, $action), $params);
+        $response = $this->__preAction($action, $params);
+        if ($response !== false) {
+            $response = call_user_func_array(array($this, $action), $params);
+        }
 
         return $this->__postAction($action, $params, $response) ?: $response;
     }
