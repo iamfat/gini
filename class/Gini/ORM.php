@@ -432,7 +432,7 @@ abstract class ORM
         }
 
         if ($SQL) {
-            $success = $db->query($SQL);
+            $success = !!$db->query($SQL);
         } else {
             $success = true;
         }
