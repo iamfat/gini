@@ -94,7 +94,7 @@ class ORM extends \Gini\Controller\CLI
                     printf("   ├─ %s (%s)\n", $k, implode(',', array_map(function ($k, $v) {
                         return $v ? "$k:$v" : $k;
                     }, array_keys($v), $v)));
-                    $i++;
+                    ++$i;
                 }
 
                 printf("   └─ %s (%s)\n\n", $k, implode(',', array_map(function ($k, $v) {

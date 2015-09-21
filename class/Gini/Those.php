@@ -85,10 +85,10 @@ namespace Gini {
             return parent::fetch($scope);
         }
 
-        private function _getValue($v, $raw = false)
+        private function _getValue($v)
         {
-            if ($raw) {
-                return $v;
+            if ($v instanceof \Gini\Those\SQL) {
+                return strval($v);
             }
             $db = $this->db;
             if (preg_match('/^@(?:(\w+)\.)?(\w+)$/', $v, $parts)) {
@@ -267,7 +267,7 @@ namespace Gini {
             return $this;
         }
 
-        public function match($op, $v, $raw=false)
+        public function match($op, $v)
         {
             assert($this->_field);
 
@@ -320,7 +320,7 @@ namespace Gini {
                 }
 
                 default: {
-                    $this->_where[] = $field_name.$op.$this->_getValue($v, $raw);
+                    $this->_where[] = $field_name.$op.$this->_getValue($v);
                 }
 
             }
@@ -329,14 +329,14 @@ namespace Gini {
         }
 
         // is(1), is('hello'), is('@name')
-        public function is($v, $raw = false)
+        public function is($v)
         {
-            return $this->match('=', $v, $raw);
+            return $this->match('=', $v);
         }
 
-        public function isNot($v, $raw = false)
+        public function isNot($v)
         {
-            return $this->match('<>', $v, $raw);
+            return $this->match('<>', $v);
         }
 
         public function beginsWith($v)
@@ -354,33 +354,33 @@ namespace Gini {
             return $this->match('$=', $v);
         }
 
-        public function isLessThan($v, $raw = false)
+        public function isLessThan($v)
         {
-            return $this->match('<', $v, $raw);
+            return $this->match('<', $v);
         }
 
-        public function isGreaterThan($v, $raw = false)
+        public function isGreaterThan($v)
         {
-            return $this->match('>', $v, $raw);
+            return $this->match('>', $v);
         }
 
-        public function isGreaterThanOrEqual($v, $raw = false)
+        public function isGreaterThanOrEqual($v)
         {
-            return $this->match('>=', $v, $raw);
+            return $this->match('>=', $v);
         }
 
-        public function isLessThanOrEqual($v, $raw = false)
+        public function isLessThanOrEqual($v)
         {
-            return $this->match('<=', $v, $raw);
+            return $this->match('<=', $v);
         }
 
-        public function isBetween($a, $b, $raw = false)
+        public function isBetween($a, $b)
         {
             assert($this->_field);
             $db = $this->db;
             $field_name = $db->ident($this->_table, $this->_field);
-            $this->_where[] = '('.$field_name.'>='.$this->_getValue($a, $raw).
-                ' AND '.$field_name.'<'.$this->_getValue($b, $raw).')';
+            $this->_where[] = '('.$field_name.'>='.$this->_getValue($a).
+                ' AND '.$field_name.'<'.$this->_getValue($b).')';
 
             return $this;
         }
@@ -469,6 +469,15 @@ namespace {
         function those($name)
         {
             return \Gini\IoC::construct('\Gini\Those', $name);
+        }
+    }
+
+    if (function_exists('SQL')) {
+        die('SQL() was declared by other libraries, which may cause problems!');
+    } else {
+        function SQL($SQL)
+        {
+            return \Gini\IoC::construct('\Gini\Those\SQL', $SQL);
         }
     }
 }

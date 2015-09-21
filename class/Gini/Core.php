@@ -115,9 +115,9 @@ namespace Gini {
         /**
          * Import a module by its path.
          *
-         * @param   string  $path               Module path
-         * @param   string  $version[optional]  Version Requirement
-         * @param   object  $parent[optional]   Parent Module Information
+         * @param string $path              Module path
+         * @param string $version[optional] Version Requirement
+         * @param object $parent[optional]  Parent Module Information
          *
          * @return object|false Module information
          **/
@@ -262,8 +262,8 @@ namespace Gini {
         /**
          * Search Gini modules to locate specific file.
          *
-         * @param string $phar Phar or Directory path
-         * @param string $file File path relative to Phar or Directory
+         * @param string $phar            Phar or Directory path
+         * @param string $file            File path relative to Phar or Directory
          * @param string $scope[optional] Specify one module to locate the file
          *
          * @return string|false Return matched file path when avaiable
@@ -296,7 +296,7 @@ namespace Gini {
         /**
          * Search Gini modules to locate specific file.
          *
-         * @param string $file File path
+         * @param string $file            File path
          * @param string $scope[optional] Specify one module to locate the file
          *
          * @return string|false Return matched file path when avaiable

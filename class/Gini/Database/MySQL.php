@@ -221,7 +221,16 @@ class MySQL extends \PDO implements Driver
 
     private function _fieldSQL($key, $field)
     {
-        return sprintf('%s %s%s%s%s', $this->quoteIdent($key), $field['type'], $field['null'] ? '' : ' NOT NULL', isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : '', $field['serial'] ? ' AUTO_INCREMENT' : ''
+        if (isset($field['default'])) {
+            if (($field['type'] == 'datetime' || $field['type'] == 'timestamp')
+                && ($field['default'] == 'CURRENT_TIMESTAMP')) {
+                $default = $field['default'];
+            } else {
+                $default = $this->quote($field['default']);
+            }
+        }
+
+        return sprintf('%s %s%s%s%s', $this->quoteIdent($key), $field['type'], $field['null'] ? '' : ' NOT NULL', $default ? ' DEFAULT '.$default : '', $field['serial'] ? ' AUTO_INCREMENT' : ''
                 );
     }
 

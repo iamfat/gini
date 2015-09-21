@@ -333,7 +333,6 @@ class Index extends \Gini\Controller\CLI
                             $matched = $v;
                         }
                     }
-
                 }
 
                 if (!$matched) {
@@ -424,6 +423,7 @@ class Index extends \Gini\Controller\CLI
     protected function _strPad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
     {
         $diff = mb_strwidth($input) - mb_strlen($input);
+
         return str_pad($input, $pad_length + $diff, $pad_string, $pad_type);
     }
 

@@ -56,7 +56,7 @@ class Util
             // All character must be different
             //if (!strstr($password, $actChar)) {
                 $password .= $actChar;
-            $counter++;
+            ++$counter;
             //}
         }
 

@@ -46,7 +46,7 @@ class File
         $c = 0;
         while ($a >= 1024) {
             $a >>= 10;
-            $c++;
+            ++$c;
         }
 
         return number_format($a).$unim[$c];

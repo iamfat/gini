@@ -198,7 +198,7 @@ class Version
             if (!preg_match_all('`\s*(\S+)(?:\s+(-)\s|$)?`', $versionRange, $parts, PREG_PATTERN_ORDER)) {
                 return false;
             }
-            for ($i = 0, $max = count($parts[1]); $i < $max; $i++) {
+            for ($i = 0, $max = count($parts[1]); $i < $max; ++$i) {
                 $versionUnit = $parts[1][$i];
                 if ($parts[2][$i] == '-') {
                     if (!$this->satisfiesUnit('>='.$versionUnit)) {

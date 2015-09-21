@@ -165,7 +165,8 @@ abstract class ORM
 
                 //从数据库中获取该数据
                 foreach ($criteria as $k => $v) {
-                    $where[] = $db->quoteIdent($k).'='.$db->quote($v);
+                    $where[] = $db->quoteIdent($k).'='.
+                        (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
                 }
 
                 $schema = $this->schema();
@@ -255,9 +256,15 @@ abstract class ORM
                 case 'int':
                 case 'bigint':
                 case 'double':
+                    $field['type'] = $p;
+                    break;
                 case 'datetime':
+                    $field['type'] = $p;
+                    $field['default'] = '0000-00-00 00:00:00';
+                    break;
                 case 'timestamp':
                     $field['type'] = $p;
+                    $field['default'] = 'CURRENT_TIMESTAMP';
                     break;
                 case 'bool':
                     $field['type'] = 'int';
@@ -418,7 +425,8 @@ abstract class ORM
 
         if ($id > 0) {
             foreach ($db_data as $k => $v) {
-                $pair[] = $db->quoteIdent($k).'='.$db->quote($v);
+                $pair[] = $db->quoteIdent($k).'='.
+                   (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
             }
 
             if ($pair) {
@@ -428,7 +436,10 @@ abstract class ORM
             $db_data = array_filter($db_data, function ($v) { return isset($v); });
             $keys = array_keys($db_data);
             $vals = array_values($db_data);
-            $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.$db->quote($vals).')';
+            $quoted_vals = array_map(function ($v) use ($db) {
+                return (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
+            }, $vals);
+            $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.$quoted_vals.')';
         }
 
         if ($SQL) {
@@ -529,8 +540,8 @@ abstract class ORM
                 $this->$k = @json_decode(strval($data[$k]), true);
             } elseif (array_key_exists('object_list', $v)) {
                 $objects = \Gini\IoC::construct('\Gini\ORMIterator', $v['object_list']);
-                $oids =  (array) @json_decode(strval($data[$k]), true);
-                array_walk($oids, function($id) use ($objects) {
+                $oids = (array) @json_decode(strval($data[$k]), true);
+                array_walk($oids, function ($id) use ($objects) {
                     $objects[$id] = true;
                 });
                 $this->$k = $objects;
