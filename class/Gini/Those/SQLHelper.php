@@ -404,4 +404,16 @@ class SQLHelper
 
         return $SQL;
     }
+    
+    public function tableAlias() {
+        return $this->_table;
+    }
+    
+    public function table() {
+        return $this->table_name;
+    }
+    
+    public function db() {
+        return $this->db;
+    }
 }
