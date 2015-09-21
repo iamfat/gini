@@ -439,7 +439,7 @@ abstract class ORM
             $quoted_vals = array_map(function ($v) use ($db) {
                 return (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
             }, $vals);
-            $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.$quoted_vals.')';
+            $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.implode(', ', $quoted_vals).')';
         }
 
         if ($SQL) {
