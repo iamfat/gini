@@ -382,9 +382,16 @@ abstract class ORM
         foreach ($structure as $k => $v) {
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
-                $o = $this->$k;
-                if (!isset($oname)) {
-                    $db_data[$k.'_name'] = $oname ?: $o->name();
+                if ($this->_objects[$k]) {
+                    $o = $this->_objects[$k];
+                    if (!isset($oname)) {
+                        $db_data[$k.'_name'] = $oname ?: $o->name();
+                    }
+                } else {
+                    $o = $this->_oinfo[$k];
+                    if (!isset($oname)) {
+                        $db_data[$k.'_name'] = $oname ?: $o->name;
+                    }
                 }
                 $db_data[$k.'_id'] = $o->id ?: 0;
             } elseif (array_key_exists('array', $v)) {
@@ -618,9 +625,22 @@ abstract class ORM
         } elseif (isset($structure[$name])) {
             $this->$name = $value;
         } else {
-            // 奇怪 如果之前没有强制类型转换 数组赋值会不成功
-            $this->_extra = (array) $this->_extra;
-            $this->_extra[$name] = $value;
+            // if $name is  {}_name or {}_id, let's update oinfo firstly.
+            $is_object = false;
+            if (preg_match('/^(.+)_(name|id)$/', $name, $parts)) {
+                $oname = $parts[1];
+                if (isset($this->_oinfo[$oname])) {
+                    $this->_oinfo[$oname]->{$parts[2]} = $value;
+                    $is_object = true;
+                    unset($this->_objects[$oname]);
+                }
+            }
+
+            if ($is_object == false) {
+                // 奇怪 如果之前没有强制类型转换 数组赋值会不成功
+                $this->_extra = (array) $this->_extra;
+                $this->_extra[$name] = $value;
+            }
         }
     }
 

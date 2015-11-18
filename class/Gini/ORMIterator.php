@@ -132,8 +132,8 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     public function deleteAll()
     {
         $this->fetch();
-        foreach ($this->objects as $object) {
-            if (!$object->delete()) {
+        foreach ($this->objects as $id => $object) {
+            if (!$this->object($id)->delete()) {
                 return false;
             }
         }
