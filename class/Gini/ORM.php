@@ -574,7 +574,7 @@ abstract class ORM
         return $data;
     }
 
-    public function __get($name)
+    public function &__get($name)
     {
         // 如果之前没有触发数据库查询, 在这里触发一下
         $this->fetch();
@@ -585,32 +585,33 @@ abstract class ORM
             $oi = $this->_oinfo[$name];
             $o = a($oi->name, $oi->id);
             $this->_objects[$name] = $o;
-
             return $o;
         } elseif (isset($this->_extra[$name])) {
             // try find it in _extra
             return $this->_extra[$name];
         }
 
-        $ret = $this->$name;
-        if (isset($ret)) {
-            return $ret;
+        // 直接返回, 保证引用, 能够用于数字赋值
+        if (isset($this->$name)) {
+            return $this->$name;
         }
+
+        // 以下返回值为了保证原始数据不被修改, 因此先用$ret复制后再返回
 
         // if $name is  {}_name or {}_id, let us get
         if (preg_match('/^(.+)_(name|id)$/', $name, $parts)) {
             $oname = $parts[1];
             if (isset($this->_objects[$oname])) {
                 if ($parts[2] == 'name') {
-                    return $this->_objects[$oname]->name();
+                    return $ret = $this->_objects[$oname]->name();
                 } else {
-                    return $this->_objects[$oname]->{$parts[2]};
+                    return $ret = $this->_objects[$oname]->{$parts[2]};
                 }
             }
         }
 
         if (isset($this->_db_data[$name])) {
-            return $this->_db_data[$name];
+            return $ret = $this->_db_data[$name];
         }
     }
 
