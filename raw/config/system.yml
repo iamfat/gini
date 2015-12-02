@@ -1,12 +1,13 @@
 ---
 # locale: en_US
-# session_driver: null
-# session_path: /tmp/session
-# session_name: gini-session
-session_cookie:
-  lifetime: 0
-  path: /
-  domain: ~
+session:
+  # save_handler: internal/files
+  # save_path: /tmp/session
+  # name: gini-session
+  cookie:
+    lifetime: 0
+    path: /
+    domain: ~
 timezone: Asia/Shanghai
 postmaster:
   address: support@geneegroup.com

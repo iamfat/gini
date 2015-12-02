@@ -4,6 +4,8 @@ namespace Gini;
 
 class Session
 {
+    private static $_handler;
+
     private static function _idPath()
     {
         return sys_get_temp_dir().'/gini-session/'.posix_getpwuid(posix_getuid())['name'].'/'.posix_getsid(0);
@@ -11,24 +13,28 @@ class Session
 
     public static function setup()
     {
-        $driver = \Gini\Config::get('system.session_driver');
+        $session_conf = (array) \Gini\Config::get('system.session');
+        $cookie_params = (array) $session_conf['cookie'];
 
-        if ($driver) {
-            $class = '\Gini\Session\\'.$driver;
-
-            self::$driver = \Gini\IoC::construct($class);
-
-            session_set_save_driver('Session::open', 'Session::close', 'Session::read', 'Session::write', 'Session::destroy', 'Session::gc');
-        }
-
-        $cookie_params = (array) \Gini\Config::get('system.session_cookie');
-
-        $session_name = \Gini\Config::get('system.session_name') ?: 'gini-session';
+        $session_name = $session_conf['name'] ?: 'gini-session';
         $host_hash = sha1($cookie_params['domain'] ?: $_SERVER['HTTP_HOST']);
         ini_set('session.name', $session_name.'_'.$host_hash);
 
-        if (\Gini\Config::get('system.session_path')) {
-            session_save_path(\Gini\Config::get('system.session_path'));
+        if ($session_conf['save_handler']) {
+            $handler_name = $session_conf['save_handler'];
+            // save_handler = internal/files
+            if (0==strncmp($handler_name, 'internal/', 9)) {
+                ini_set('session.save_handler', substr($handler_name, 9));
+            } else {
+                // save_handler = Database
+                $class = '\Gini\Session\\'.$handler_name;
+                self::$_handler = \Gini\IoC::construct($class);
+                session_set_save_handler(self::$_handler, false);
+            }
+        }
+
+        if ($session_conf['save_path']) {
+            session_save_path($session_conf['save_path']);
         }
 
         if (PHP_SAPI == 'cli') {
@@ -104,51 +110,6 @@ class Session
             File::ensureDir(dirname($idPath), 0775);
             file_put_contents($idPath, session_id());
         }
-    }
-
-    public static function close()
-    {
-        return true;
-    }
-    public static function open()
-    {
-        return true;
-    }
-    public static function read($id)
-    {
-        if (!self::$driver) {
-            return true;
-        }
-
-        return self::$driver->read($id);
-    }
-
-    private static $driver;
-    public static function write($id, $data)
-    {
-        if (!self::$driver) {
-            return true;
-        }
-
-        return self::$driver->write($id, $data);
-    }
-
-    public static function destroy($id)
-    {
-        if (!self::$driver) {
-            return true;
-        }
-
-        return self::$driver->destroy($id);
-    }
-
-    public static function gc($max)
-    {
-        if (!self::$driver) {
-            return true;
-        }
-
-        return self::$driver->gc($max);
     }
 
     public static function makeTimeout($token, $timeout = 0)
