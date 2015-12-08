@@ -23,7 +23,7 @@ class Session
         if ($session_conf['save_handler']) {
             $handler_name = $session_conf['save_handler'];
             // save_handler = internal/files
-            if (0==strncmp($handler_name, 'internal/', 9)) {
+            if (0 == strncmp($handler_name, 'internal/', 9)) {
                 ini_set('session.save_handler', substr($handler_name, 9));
             } else {
                 // save_handler = Database

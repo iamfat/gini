@@ -58,7 +58,7 @@ namespace Gini {
         private static $_uniqid = 0;
         public function uniqid()
         {
-            return (self::$_uniqid++);
+            return self::$_uniqid++;
         }
 
         public static function reset()

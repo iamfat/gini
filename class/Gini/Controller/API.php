@@ -13,7 +13,6 @@
 /**
  * Define DocBlock.
  **/
-
 namespace Gini\Controller;
 
 class API

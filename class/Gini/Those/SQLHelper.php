@@ -18,7 +18,7 @@ class SQLHelper
     private static $_uniqid = 0;
     public function uniqid()
     {
-        return (self::$_uniqid++);
+        return self::$_uniqid++;
     }
 
     public static function reset()
@@ -404,16 +404,19 @@ class SQLHelper
 
         return $SQL;
     }
-    
-    public function tableAlias() {
+
+    public function tableAlias()
+    {
         return $this->_table;
     }
-    
-    public function table() {
+
+    public function table()
+    {
         return $this->table_name;
     }
-    
-    public function db() {
+
+    public function db()
+    {
         return $this->db;
     }
 }

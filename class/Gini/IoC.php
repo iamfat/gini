@@ -29,7 +29,9 @@ class IoC
             return call_user_func_array($o->callback, $args);
         }
 
-        return call_user_func_array([new \ReflectionClass($name), 'newInstance'], $args);
+        $rc = new \ReflectionClass($name);
+
+        return $rc->newInstanceArgs($args);
     }
 
     public static function bind($name, $callback)

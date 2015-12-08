@@ -13,7 +13,6 @@
 /**
  * Define DocBlock.
  **/
-
 namespace Gini;
 
 class File
@@ -42,7 +41,7 @@ class File
      */
     public static function humanReadableBytes($a)
     {
-        $unim = array('B','KB','MB','GB','TB','PB');
+        $unim = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
         $c = 0;
         while ($a >= 1024) {
             $a >>= 10;

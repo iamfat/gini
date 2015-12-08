@@ -7,7 +7,6 @@
  *
  * @author Jia Huang
  **/
-
 namespace Gini\Controller\CLI;
 
 class App extends \Gini\Controller\CLI
@@ -217,7 +216,7 @@ class App extends \Gini\Controller\CLI
             passthru("cp -r $app_dir/$dir $build_dir");
         }
 
-        echo("  copy gini.json...\n");
+        echo "  copy gini.json...\n";
         passthru("cp $app_dir/gini.json $build_dir/gini.json");
         echo "\n";
     }

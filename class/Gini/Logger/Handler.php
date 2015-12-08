@@ -19,7 +19,7 @@ abstract class Handler
     protected $_level;
     protected $_levelValue;
 
-    public function __construct($name, $level, array $options = array())
+    public function __construct($name, $level, array $options = [])
     {
         $this->_name = $name;
         $this->_level = $level ?: Level::DEBUG;
