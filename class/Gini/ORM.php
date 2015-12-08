@@ -14,7 +14,6 @@
 /**
  * Define DocBlock.
  **/
-
 namespace Gini;
 
 abstract class ORM
@@ -244,8 +243,9 @@ abstract class ORM
     {
         $structure = $this->structure();
 
-        $fields;
-        $indexes;
+        $fields = [];
+        $indexes = [];
+        $relations = [];
 
         foreach ($structure as $k => $v) {
             $field = null;
@@ -311,6 +311,41 @@ abstract class ORM
             }
         }
 
+        $db_relation = static::$db_relation;
+        if (count($db_relation) > 0) {
+            foreach ($db_relation as $k => $v) {
+                $params = explode(',', strtolower($v));
+                $vv = [];
+                foreach ($params as $p) {
+                    list($p, $pv) = explode(':', trim($p), 2);
+                    $vv[$p] = $pv;
+                }
+
+                $vvv = [];
+                $vvv['delete'] = $vv['delete'];
+                $vvv['update'] = $vv['update'];
+
+                // correct object name
+                if (array_key_exists('object', (array) $structure[$k])) {
+                    if (!$structure[$k]['object']) {
+                        continue;
+                    }
+                    $vvv['column'] = $k.'_id';
+                    $vvv['ref_table'] = a($structure[$k]['object'])->tableName();
+                    $vvv['ref_column'] = 'id';
+                } elseif ($vv['ref']) {
+                    $ref = explode('.', $vv['ref'], 2);
+                    $vvv['ref_table'] = a($ref[0])->tableName();
+                    $vvv['ref_column'] = $ref[1];
+                } else {
+                    // no ref? ignore this...
+                    continue;
+                }
+
+                $relations[$this->tableName().'_'.$k] = $vvv;
+            }
+        }
+
         $db_index = static::$db_index;
         if (count($db_index) > 0) {
             // 索引项
@@ -351,7 +386,7 @@ abstract class ORM
             }
         }
 
-        return ['fields' => $fields, 'indexes' => $indexes];
+        return ['fields' => $fields, 'indexes' => $indexes, 'relations' => $relations];
     }
 
     public function delete()
@@ -365,7 +400,7 @@ abstract class ORM
 
         $SQL = 'DELETE FROM '.$db->quoteIdent($tbl_name).' WHERE '.$db->quoteIdent('id').'='.$db->quote($this->id);
 
-        return !!$db->query($SQL);
+        return (bool) $db->query($SQL);
     }
 
     public function save()
@@ -444,13 +479,13 @@ abstract class ORM
             $keys = array_keys($db_data);
             $vals = array_values($db_data);
             $quoted_vals = array_map(function ($v) use ($db) {
-                return (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
+                return ($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v);
             }, $vals);
             $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.implode(', ', $quoted_vals).')';
         }
 
         if ($SQL) {
-            $success = !!$db->query($SQL);
+            $success = (bool) $db->query($SQL);
         } else {
             $success = true;
         }
@@ -585,6 +620,7 @@ abstract class ORM
             $oi = $this->_oinfo[$name];
             $o = a($oi->name, $oi->id);
             $this->_objects[$name] = $o;
+
             return $o;
         } elseif (isset($this->_extra[$name])) {
             // try find it in _extra

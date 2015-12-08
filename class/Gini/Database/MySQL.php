@@ -36,7 +36,6 @@ class MySQL extends \PDO implements Driver
     public function __construct($dsn, $username = null, $password = null, $options = null)
     {
         $options = (array) $options;
-        $options += [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''];
         parent::__construct($dsn, $username, $password, $options);
         $this->_options = $options;
 
@@ -45,6 +44,7 @@ class MySQL extends \PDO implements Driver
         }
 
         //enable ANSI mode
+        $this->query('SET NAMES \'utf8\'');
         $this->query('SET sql_mode=\'ANSI\'');
     }
 
@@ -94,10 +94,9 @@ class MySQL extends \PDO implements Driver
             $this->createTable($table);
         }
 
-        $field_sql = array();
+        $field_sql = [];
 
         $fields = $schema['fields'];
-        $indexes = $schema['indexes'];
 
         $curr_schema = $this->tableSchema($table);
         //检查所有Fields
@@ -142,6 +141,8 @@ class MySQL extends \PDO implements Driver
             $field_sql[] = sprintf('DROP %s', $this->quoteIdent('_FOO'));
         }
 
+        // ------ CHECK INDEXES
+        $indexes = $schema['indexes'];
         $curr_indexes = $curr_schema['indexes'];
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
@@ -157,10 +158,31 @@ class MySQL extends \PDO implements Driver
                     $field_sql[] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
                     $field_sql[] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
                 }
-            }
-            // remove other indexes
-            else {
+            } else {
+                // remove other indexes
                 $field_sql[] = sprintf('DROP INDEX %s', $this->quoteIdent($key));
+            }
+        }
+
+        // ------ CHECK RELATIONS
+        $relations = $schema['relations'];
+        $curr_relations = $curr_schema['relations'];
+        $missing_relations = array_diff_key($relations, $curr_relations);
+
+        foreach ($missing_relations as $key => $val) {
+            $field_sql[] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
+        }
+
+        foreach ($curr_relations as $key => $curr_val) {
+            $val = &$relations[$key];
+            if ($val) {
+                if (array_diff($val, $curr_val)) {
+                    $field_sql[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
+                    $field_sql[] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
+                }
+            } else {
+                // remove other relations
+                $field_sql[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
             }
         }
 
@@ -203,7 +225,7 @@ class MySQL extends \PDO implements Driver
 
         if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
             $ds = $this->query(sprintf('SHOW INDEX FROM %s', $this->quoteIdent($name)));
-            $indexes = array();
+            $indexes = [];
             if ($ds) {
                 while ($row = $ds->fetchObject()) {
                     $indexes[$row->Key_name]['fields'][] = $row->Column_name;
@@ -214,6 +236,22 @@ class MySQL extends \PDO implements Driver
             }
 
             $this->_table_schema[$name]['indexes'] = $indexes;
+        }
+
+        if ($refresh || !isset($this->_table_schema[$name]['relations'])) {
+            $ds = $this->query(sprintf('SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = %s AND REFERENCED_TABLE_NAME IS NOT NULL', $this->quote($name)));
+            $relations = [];
+            if ($ds) {
+                while ($row = $ds->fetchObject()) {
+                    $relations[$row->CONSTRAINT_NAME] = [
+                        'table' => $name,
+                        'column' => $row->COLUMN_NAME,
+                        'ref_table' => $row->REFERENCED_TABLE_NAME,
+                        'ref_column' => $row->REFERENCED_COLUMN_NAME,
+                    ];
+                }
+            }
+            $this->_table_schema[$name]['relations'] = $relations;
         }
 
         return $this->_table_schema[$name];
@@ -264,6 +302,46 @@ class MySQL extends \PDO implements Driver
         }
 
         return sprintf('%s (%s)', $type, $this->quoteIdent($val['fields']));
+    }
+
+    private function _addRelationSQL($key, $val)
+    {
+        switch ($val['delete']) {
+            case 'restrict':
+                $deleteAction = 'RESTRICT';
+                break;
+            case 'cascade':
+                $deleteAction = 'CASCADE';
+                break;
+            case 'null':
+                $deleteAction = 'SET NULL';
+                break;
+            default:
+                $deleteAction = 'NO ACTION';
+        }
+
+        switch ($val['update']) {
+            case 'restrict':
+                $updateAction = 'RESTRICT';
+                break;
+            case 'cascade':
+                $updateAction = 'CASCADE';
+                break;
+            case 'null':
+                $updateAction = 'SET NULL';
+                break;
+            default:
+                $updateAction = 'NO ACTION';
+        }
+
+        return sprintf('CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s',
+                    $this->quoteIdent($key),
+                    $this->quoteIdent($val['column']),
+                    $this->quoteIdent($val['ref_table']),
+                    $this->quoteIdent($val['ref_column']),
+                    $deleteAction,
+                    $updateAction
+                );
     }
 
     public function createTable($table)

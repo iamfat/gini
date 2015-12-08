@@ -7,8 +7,9 @@ class Object extends \Gini\ORM
     public $id = 'bigint,primary,serial';
     public $_extra = 'array';
 
-    protected static $db_name;   // database name
-    protected static $db_index; // database index,
+    protected static $db_name;      // database name
+    protected static $db_index;     // database index
+    protected static $db_relation;  // database relation
 
     private $those;    // add to support those API
 
