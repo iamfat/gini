@@ -96,11 +96,11 @@ class MySQL extends \PDO implements Driver
 
         $field_sql = [];
 
-        $fields = $schema['fields'];
+        $fields = (array) $schema['fields'];
 
         $curr_schema = $this->tableSchema($table);
         //检查所有Fields
-        $curr_fields = $curr_schema['fields'];
+        $curr_fields = (array) $curr_schema['fields'];
         $missing_fields = array_diff_key($fields, $curr_fields);
         foreach ($missing_fields as $key => $field) {
             $field_sql[] = 'ADD '.$this->_fieldSQL($key, $field);
@@ -142,8 +142,8 @@ class MySQL extends \PDO implements Driver
         }
 
         // ------ CHECK INDEXES
-        $indexes = $schema['indexes'];
-        $curr_indexes = $curr_schema['indexes'];
+        $indexes = (array) $schema['indexes'];
+        $curr_indexes = (array) $curr_schema['indexes'];
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
         foreach ($missing_indexes as $key => $val) {
@@ -165,8 +165,8 @@ class MySQL extends \PDO implements Driver
         }
 
         // ------ CHECK RELATIONS
-        $relations = $schema['relations'];
-        $curr_relations = $curr_schema['relations'];
+        $relations = (array) $schema['relations'];
+        $curr_relations = (array) $curr_schema['relations'];
         $missing_relations = array_diff_key($relations, $curr_relations);
 
         foreach ($missing_relations as $key => $val) {
