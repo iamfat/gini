@@ -635,14 +635,10 @@ abstract class ORM
         // 以下返回值为了保证原始数据不被修改, 因此先用$ret复制后再返回
 
         // if $name is  {}_name or {}_id, let us get
-        if (preg_match('/^(.+)_(name|id)$/', $name, $parts)) {
+        if (preg_match('/^(.+)_id$/', $name, $parts)) {
             $oname = $parts[1];
             if (isset($this->_objects[$oname])) {
-                if ($parts[2] == 'name') {
-                    return $ret = $this->_objects[$oname]->name();
-                } else {
-                    return $ret = $this->_objects[$oname]->{$parts[2]};
-                }
+                return $ret = $this->_objects[$oname]->id;
             }
         }
 
@@ -664,10 +660,10 @@ abstract class ORM
         } else {
             // if $name is  {}_name or {}_id, let's update oinfo firstly.
             $is_object = false;
-            if (preg_match('/^(.+)_(name|id)$/', $name, $parts)) {
+            if (preg_match('/^(.+)_id$/', $name, $parts)) {
                 $oname = $parts[1];
                 if (isset($this->_oinfo[$oname])) {
-                    $this->_oinfo[$oname]->{$parts[2]} = $value;
+                    $this->_oinfo[$oname]->id = $value;
                     $is_object = true;
                     unset($this->_objects[$oname]);
                 }
