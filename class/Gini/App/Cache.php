@@ -161,7 +161,7 @@ class Cache
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
             $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '']);
             $cache_func = "$class::cache";
-            if (is_callable($diag_func)) {
+            if (is_callable($cache_func)) {
                 echo "Setting up cache for Module[$name]...\n";
                 call_user_func($cache_func);
                 echo "   \e[32mdone.\e[0m\n\n";
