@@ -94,6 +94,7 @@ class MySQL extends \PDO implements Driver
             $this->createTable($table);
         }
 
+        $field_sql0 = []; // this is used for some drop operations 
         $field_sql = [];
 
         $fields = (array) $schema['fields'];
@@ -151,11 +152,11 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($curr_indexes as $key => $curr_val) {
-            $val = &$indexes[$key];
+            $val = $indexes[$key];
             if ($val) {
                 if ($val['type'] != $curr_val['type']
                     || array_diff($val, $curr_val)) {
-                    $field_sql[] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
+                    $field_sql0[] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
                     $field_sql[] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
                 }
             } else {
@@ -174,16 +175,23 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($curr_relations as $key => $curr_val) {
-            $val = &$relations[$key];
+            $val = $relations[$key];
             if ($val) {
                 if (array_diff($val, $curr_val)) {
-                    $field_sql[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
+                    $field_sql0[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
                     $field_sql[] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
                 }
             } else {
                 // remove other relations
                 $field_sql[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
             }
+        }
+
+        if (count($field_sql0) > 0) {
+            $SQL = sprintf('ALTER TABLE %s %s',
+                $this->quoteIdent($table), implode(', ', $field_sql0));
+            $this->query($SQL);
+            $this->tableSchema($table, true);
         }
 
         if (count($field_sql) > 0) {
@@ -234,7 +242,6 @@ class MySQL extends \PDO implements Driver
                     }
                 }
             }
-
             $this->_table_schema[$name]['indexes'] = $indexes;
         }
 
@@ -249,6 +256,7 @@ class MySQL extends \PDO implements Driver
                         'ref_table' => $row->REFERENCED_TABLE_NAME,
                         'ref_column' => $row->REFERENCED_COLUMN_NAME,
                     ];
+                    unset($this->_table_schema[$name]['indexes'][$row->CONSTRAINT_NAME]);
                 }
             }
             $this->_table_schema[$name]['relations'] = $relations;
