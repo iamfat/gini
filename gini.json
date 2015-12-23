@@ -3,7 +3,7 @@
     "name": "Gini Framework",
     "author": "Jia Huang",
     "email": "iamfat@gmail.com",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "build": {
         "copy": [
             "bin",
