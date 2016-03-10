@@ -216,7 +216,7 @@ class MySQL extends \PDO implements Driver
                         $field['default'] = $dr->Default;
                     }
 
-                    if ($dr->null != 'NO') {
+                    if ($dr->Null != 'NO') {
                         $field['null'] = true;
                     }
 
