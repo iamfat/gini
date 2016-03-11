@@ -79,7 +79,8 @@ abstract class CGI
             $response = call_user_func_array(array($this, $action), $params);
         }
 
-        return $this->__postAction($action, $params, $response) ?: $response;
+        $response = $this->__postAction($action, $params, $response) ?: $response;
+        return $response ?: new \Gini\CGI\Response\Nothing();
     }
 
     /**
