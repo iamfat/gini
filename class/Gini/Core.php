@@ -540,6 +540,7 @@ namespace {
     if (function_exists('H')) {
         die('H() was declared by other libraries, which may cause problems!');
     } else {
+        ini_set('mbstring.substitute_character', "none");
         function H()
         {
             $args = func_get_args();
@@ -549,7 +550,8 @@ namespace {
                 $str = $args[0];
             }
 
-            return htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8');
+            // iconv('UTF-8', 'UTF-8//TRANSLIT//IGNORE', $str)
+            return htmlentities(mb_convert_encoding($str, 'UTF-8', 'UTF-8'), ENT_QUOTES, 'UTF-8');
         }
     }
 
