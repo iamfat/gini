@@ -540,7 +540,7 @@ namespace {
     if (function_exists('H')) {
         die('H() was declared by other libraries, which may cause problems!');
     } else {
-        ini_set('mbstring.substitute_character', "none");
+        ini_set('mbstring.substitute_character', 'none');
         function H()
         {
             $args = func_get_args();
