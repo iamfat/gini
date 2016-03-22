@@ -422,4 +422,3 @@ class Database
         return $this->_driver->diagnose();
     }
 } // END class
-
