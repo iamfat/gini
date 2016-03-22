@@ -302,7 +302,7 @@ abstract class ORM
                     if (!$pv) {
                         $fields[$k.'_name'] = ['type' => 'varchar(120)'];
                     }
-                    $fields[$k.'_id'] = ['type' => 'bigint'];
+                    $fields[$k.'_id'] = ['type' => 'bigint', 'null' => true];
                 }
             }
 
@@ -428,15 +428,11 @@ abstract class ORM
                         $db_data[$k.'_name'] = $oname ?: $o->name;
                     }
                 }
-                $db_data[$k.'_id'] = $o->id ?: 0;
+                $db_data[$k.'_id'] = $o->id ?: null;
             } elseif (array_key_exists('array', $v)) {
-                $db_data[$k] = isset($this->$k)
-                    ? J($this->$k)
-                    : (array_key_exists('null', $v) ? 'null' : '{}');
+                $db_data[$k] = isset($this->$k) ? J($this->$k) : '{}';
             } elseif (array_key_exists('object_list', $v)) {
-                $db_data[$k] = isset($this->$k)
-                    ? J($this->$k->keys())
-                    : (array_key_exists('null', $v) ? 'null' : '[]');
+                $db_data[$k] = isset($this->$k) ? J($this->$k->keys()) : '[]';
             } else {
                 $db_data[$k] = $this->$k;
                 if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
