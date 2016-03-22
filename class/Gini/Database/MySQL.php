@@ -190,14 +190,18 @@ class MySQL extends \PDO implements Driver
         if (count($field_sql0) > 0) {
             $SQL = sprintf('ALTER TABLE %s %s',
                 $this->quoteIdent($table), implode(', ', $field_sql0));
-            $this->query($SQL);
+            if (false === $this->query($SQL)) {
+                throw new \Gini\Database\Exception($this->errorInfo()[2]);
+            }
             $this->tableSchema($table, true);
         }
 
         if (count($field_sql) > 0) {
             $SQL = sprintf('ALTER TABLE %s %s',
                 $this->quoteIdent($table), implode(', ', $field_sql));
-            $this->query($SQL);
+            if (false === $this->query($SQL)) {
+                throw new \Gini\Database\Exception($this->errorInfo()[2]);
+            }
             $this->tableSchema($table, true);
         }
     }
