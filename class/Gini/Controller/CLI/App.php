@@ -18,43 +18,11 @@ class App extends \Gini\Controller\CLI
         return str_pad($input, $pad_length + $diff, $pad_string, $pad_type);
     }
 
-    private function _iniPHPUnit()
-    {
-        $gini = \Gini\Core::moduleInfo('gini');
-
-        echo 'Generating PHPUnit files...';
-
-        $xml = APP_PATH.'/phpunit.xml';
-        if (!file_exists($xml)) {
-            copy($gini->path.'/raw/templates/phpunit/phpunit.xml', $xml);
-        }
-
-        $dir = APP_PATH.'/tests';
-        if (!file_exists($dir)) {
-            mkdir($dir);
-        }
-
-        $base = APP_PATH.'/tests/gini.php';
-        if (!file_exists($base)) {
-            copy($gini->path.'/raw/templates/phpunit/gini.php', $base);
-        }
-
-        echo "\e[1mDONE.\e[0m\n";
-    }
-
     /**
      * 初始化模块.
      **/
     public function actionInit($args)
     {
-        if (count($args) > 0) {
-            if (in_array('phpunit', $args)) {
-                return $this->_iniPHPUnit();
-            }
-
-            return;
-        }
-
         $path = $_SERVER['PWD'];
 
         $prompt = [
