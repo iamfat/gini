@@ -1,0 +1,6 @@
+#!/bin/sh
+
+sed -i "s/{{MAIL_HOST}}/$MAIL_HOST/g" /etc/msmtprc
+sed -i "s/{{MAIL_FROM}}/$MAIL_FROM/g" /etc/msmtprc
+
+/usr/bin/php-fpm --nodaemonize --fpm-config /etc/php/php-fpm.conf
