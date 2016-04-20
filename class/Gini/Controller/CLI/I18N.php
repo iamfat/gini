@@ -43,9 +43,9 @@ class I18N extends \Gini\Controller\CLI
         passthru($cmd);
 
         // extract msgid ""{context}\004{txt} to msgctxt and msgid
-        $cmd = sprintf("sed 's/msgid   \"\\(.*\\)'\004'/msgctxt \"\\1\"\\nmsgid \"/g' %s",
+        $cmd = sprintf("sed -i 's/msgid   \"\\(.*\\)'\004'/msgctxt \"\\1\"\\nmsgid \"/g' %s",
                 escapeshellarg($l10n_template));
-        file_put_contents($l10n_template, `$cmd`);
+        passthru($cmd);
 
         $locales = $argv;
         if (count($locales) == 0) {
