@@ -25,7 +25,7 @@ class Cron extends \Gini\Controller\CLI
 
     public function actionExport($args)
     {
-        $gini_bin = $_SERVER['_'];
+        $gini_bin = $_SERVER['_'] ?: $_SERVER['SCRIPT_FILENAME'];
         $opt = \Gini\Util::getOpt($args, 'hu:', ['help', 'user:', 'prefix:', 'suffix:']);
 
         if (isset($opt['h']) || isset($opt['help'])) {
