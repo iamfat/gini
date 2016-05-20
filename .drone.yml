@@ -7,12 +7,11 @@ script:
     done
   - composer install --no-interaction
   - bin/gini cache
-  - source /etc/profile.d/composer.sh
   - source /etc/profile.d/sonar-runner.sh
   - phpunit
   - >
-    sonar-runner -D sonar.host.url=http://172.17.42.1:9000 
-    -D sonar.jdbc.url="jdbc:mysql://172.17.42.1:9006/sonar?useUnicode=true&characterEncoding=utf8"
+    sonar-runner -D sonar.host.url=http://172.17.0.1:9000
+    -D sonar.jdbc.url="jdbc:mysql://172.17.0.1:9006/sonar?useUnicode=true&characterEncoding=utf8"
     -D sonar.jdbc.username=genee -D sonar.jdbc.password=83719730
 
 notify:
