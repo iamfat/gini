@@ -37,7 +37,7 @@ class ORM extends \Gini\Controller\CLI
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
-                if ($rc->isAbstract()) {
+                if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface()) {
                     return;
                 }
 
@@ -73,7 +73,7 @@ class ORM extends \Gini\Controller\CLI
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
-                if ($rc->isAbstract()) {
+                if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface()) {
                     return;
                 }
 
@@ -104,7 +104,8 @@ class ORM extends \Gini\Controller\CLI
         }
     }
 
-    public function actionUpgradeId() {
+    public function actionUpgradeId()
+    {
         // ORM required class map.
         if (!isset($GLOBALS['gini.class_map'])) {
             echo "\e[31mYou need to run \e[1m\"gini cache class\"\e[0;31m before upgrade ORM id.\e[0m\n";
@@ -137,7 +138,9 @@ class ORM extends \Gini\Controller\CLI
                 $o = \Gini\IoC::construct($class_name);
                 // some object might not have database backend
                 $db = $o->db();
-                if (!$db) return;
+                if (!$db) {
+                    return;
+                }
 
                 printf("   %s\n", $oname);
                 $structure = $o->structure();
@@ -146,7 +149,7 @@ class ORM extends \Gini\Controller\CLI
                     if (isset($option['object'])) {
                         $db->query('UPDATE :table SET :field=NULL WHERE :field=0', [
                             ':table' => $o->tableName(),
-                            ':field' => $field .'_id',
+                            ':field' => $field.'_id',
                         ]);
                     }
                 }
@@ -155,5 +158,4 @@ class ORM extends \Gini\Controller\CLI
 
         echo "   \e[32mdone.\e[0m\n";
     }
-
 }
