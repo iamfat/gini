@@ -20,15 +20,23 @@ class Composer extends \Gini\Controller\CLI
             'repositories' => [
                 ['type' => 'composer', 'url' => 'http://satis.genee.cn'],
             ],
+            'config' => [
+                'secure-http' => false,
+            ],
         ];
 
-        $opt = \Gini\Util::getOpt($args, 'n', ['no-packagist']);
-        if (isset($opt['n']) || isset($opt['--no-packagist'])) {
+        $opt = \Gini\Util::getOpt($args, 'nf', ['no-packagist', 'force']);
+        if (isset($opt['n']) || isset($opt['no-packagist'])) {
             $composer_json['repositories'][] = ['packagist' => false];
-            echo "Generating Composer configuration file without Packagist...\n";
-        } else {
-            echo "Generating Composer configuration file...\n";
         }
+
+        if (isset($opt['f']) || isset($opt['force'])) {
+            $force = true;
+        } else {
+            $force = false;
+        }
+
+        echo "Generating Composer configuration file...\n";
 
         $walked = [];
         $walk = function ($info) use (&$walk, &$walked, &$composer_json) {
@@ -48,11 +56,10 @@ class Composer extends \Gini\Controller\CLI
         $walk($app);
 
         if (isset($composer_json['require']) || isset($composer_json['require-dev'])) {
-            if (file_exists(APP_PATH.'/composer.json')) {
+            if (!$force && file_exists(APP_PATH.'/composer.json')) {
                 $confirm = strtolower(readline('File exists. Overwrite? [Y/n] '));
                 if ($confirm && $confirm != 'y') {
                     echo "   \e[33mcanceled.\e[0m\n";
-
                     return;
                 }
             }
