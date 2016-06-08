@@ -7,6 +7,7 @@
  *
  * @author Jia Huang
  **/
+
 namespace Gini\Controller\CLI;
 
 class App extends \Gini\Controller\CLI
@@ -294,5 +295,31 @@ class App extends \Gini\Controller\CLI
 
         $controller = \Gini\IoC::construct('\Gini\Controller\CLI\Index');
         $controller->actionInstall($argv);
+    }
+
+    /**
+     * sh -lc
+     *
+     * @param string $argv
+     */
+    public function actionSh($argv)
+    {
+        if (count($argv) == 0) {
+            $command = '/bin/sh -l';
+        } else {
+            $command
+                = sprintf('/bin/sh -lc \'%s\'', escapeshellcmd(implode(' ', $argv)));
+        }
+
+        $descriptors = [
+            ['file', '/dev/tty', 'r'],
+            ['file', '/dev/tty', 'w'],
+            ['file', '/dev/tty', 'w'],
+                ];
+
+        $proc = proc_open($command, $descriptors, $pipes);
+        if (is_resource($proc)) {
+            proc_close($proc);
+        }
     }
 }
