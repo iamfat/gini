@@ -304,22 +304,19 @@ class App extends \Gini\Controller\CLI
      */
     public function actionSh($argv)
     {
-        if (count($argv) == 0) {
-            $command = '/bin/sh -l';
-        } else {
-            $command
-                = sprintf('/bin/sh -lc \'%s\'', escapeshellcmd(implode(' ', $argv)));
-        }
-
-        $descriptors = [
-            ['file', '/dev/tty', 'r'],
-            ['file', '/dev/tty', 'w'],
-            ['file', '/dev/tty', 'w'],
-                ];
-
-        $proc = proc_open($command, $descriptors, $pipes);
-        if (is_resource($proc)) {
-            proc_close($proc);
+        $command = implode(' ', $argv);
+        if (file_exists('/dev/tty')) {
+            $descriptors = [
+                ['file', '/dev/tty', 'r'],
+                ['file', '/dev/tty', 'w'],
+                ['file', '/dev/tty', 'w'],
+            ];
+            $proc = proc_open($command ?: '/bin/sh -l', $descriptors, $pipes);
+            if (is_resource($proc)) {
+                proc_close($proc);
+            }
+        } elseif ($command) {
+            passthru($command);
         }
     }
 }
