@@ -181,15 +181,8 @@ class Web extends \Gini\Controller\CLI
 
         $addr = $args[0] ?: 'localhost:3000';
         $command
-            = sprintf('php -S %s -c %s -t %s 2>&1', $addr, APP_PATH.'/raw/cli-server.ini', APP_PATH.'/web');
-
-        $descriptors = [
-            ['file', '/dev/tty', 'r'],
-            ['file', '/dev/tty', 'w'],
-            ['file', '/dev/tty', 'w'],
-                ];
-
-        $proc = proc_open($command, $descriptors, $pipes);
+            = sprintf('php -S %s -c %s -t %s', $addr, APP_PATH.'/raw/cli-server.ini', APP_PATH.'/web');
+        $proc = proc_open($command, [ STDIN, STDOUT, STDERR ], $pipes);
         if (is_resource($proc)) {
             proc_close($proc);
         }
