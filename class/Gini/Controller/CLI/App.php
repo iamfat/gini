@@ -27,7 +27,6 @@ class App extends \Gini\Controller\CLI
         $path = $_SERVER['PWD'];
 
         $prompt = [
-            'id' => 'Id',
             'name' => 'Name',
             'description' => 'Description',
             'version' => 'Version',
@@ -36,11 +35,10 @@ class App extends \Gini\Controller\CLI
 
         $default = [
             'name' => ucwords(str_replace('-', ' ', basename($path))),
-            'id' => strtolower(basename($path)),
             'path' => $path,
             'description' => 'App description...',
             'version' => '0.1.0',
-            'dependencies' => '[]',
+            'dependencies' => '{}',
         ];
 
         foreach ($prompt as $k => $v) {
@@ -50,7 +48,7 @@ class App extends \Gini\Controller\CLI
             }
         }
 
-        $data['dependencies'] = (array) @json_decode($data['dependencies']);
+        $data['dependencies'] = @json_decode($data['dependencies']) ?: (object)[];
 
         $gini_json = J($data, JSON_PRETTY_PRINT);
         file_put_contents($path.'/gini.json', $gini_json);
