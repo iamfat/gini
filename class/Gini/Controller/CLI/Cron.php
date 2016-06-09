@@ -18,7 +18,14 @@ class Cron extends \Gini\Controller\CLI
 
     public function actionList($args)
     {
-        echo yaml_emit(\Gini\Config::get('cron'), YAML_UTF8_ENCODING);
+        $cron = (array) \Gini\Config::get('cron');
+        foreach ($cron as &$job) {
+            if (!isset($job['schedule']) && $job['interval']) {
+                $job['schedule'] = $job['interval'];
+                unset($job['interval']);
+            }
+        }
+        echo yaml_emit($cron, YAML_UTF8_ENCODING);
     }
 
     public function actionRun($args) {
@@ -49,7 +56,7 @@ class Cron extends \Gini\Controller\CLI
             if ($cron['comment']) {
                 printf("# %s\n", $cron['comment']);
             }
-            printf("%s%s\t%s%s @%s %s%s\n\n", $cron['interval'], $user ? "\t$user" : '', $prefix, $gini_bin, APP_ID, $cron['command'], $suffix);
+            printf("%s%s\t%s%s @%s %s%s\n\n", $cron['schedule'] ?: $cron['interval'], $user ? "\t$user" : '', $prefix, $gini_bin, APP_ID, $cron['command'], $suffix);
         }
     }
 }

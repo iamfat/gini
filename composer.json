@@ -1,5 +1,5 @@
 {
-    "name": "iamfat/gini",
+    "name": "gini",
     "description": "",
     "license": "proprietary",
     "type": "library",
@@ -17,8 +17,6 @@
         "doctrine/inflector": "@stable"
     },
     "require-dev": {
-        "linkorb/jsmin-php": "1.*",
-        "natxet/CssMin": "3.*",
         "henrikbjorn/lurker": "1.*"
     },
     "repositories": [
@@ -26,5 +24,8 @@
             "type": "composer",
             "url": "http://satis.genee.cn"
         }
-    ]
+    ],
+    "config": {
+        "secure-http": false
+    }
 }

@@ -5,7 +5,14 @@ namespace Gini\Controller\API\Gini;
 class Cron extends \Gini\Controller\API
 {
     public function actionList() {
-        return \Gini\Config::get('cron');
+        $cron = (array) \Gini\Config::get('cron');
+        foreach ($cron as &$job) {
+            if (!isset($job['schedule']) && $job['interval']) {
+                $job['schedule'] = $job['interval'];
+                unset($job['interval']);
+            }
+        }
+        return $cron;
     }
 
     public function actionRun($name=null) {

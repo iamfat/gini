@@ -33,10 +33,7 @@
             "doctrine/inflector": "@stable"
         },
         "require-dev": {
-            "linkorb/jsmin-php": "1.*",
-            "natxet/CssMin": "3.*",
             "henrikbjorn/lurker": "1.*"
         }
-    },
-    "dependencies": []
+    }
 }
