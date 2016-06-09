@@ -110,6 +110,9 @@ class Config
                     $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\}/', function ($matches) {
                         return $_SERVER[$matches[1]] ?: $matches[0];
                     }, $content);
+                    $content = preg_replace_callback('/\{\{([A-Z0-9_]+?)\}\}/', function ($matches) {
+                        return $_SERVER[$matches[1]] ?: $matches[0];
+                    }, $content);
                     $content = trim($content);
                     if ($content) {
                         $config = (array) yaml_parse($content);
