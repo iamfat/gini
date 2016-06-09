@@ -18,8 +18,15 @@ class Cron extends \Gini\Controller\CLI
 
     public function actionList($args)
     {
-        foreach ((array) \Gini\Config::get('cron') as $cron) {
-            printf("gini @%s %s\n", APP_ID, $cron['command']);
+        echo yaml_emit(\Gini\Config::get('cron'), YAML_UTF8_ENCODING);
+    }
+
+    public function actionRun($args) {
+        foreach ($args as $name) {
+            $job = \Gini\Config::get('cron')[$name];
+            if (!$job) continue;
+            $command_args = \Gini\Util::parseArgs($job['command']);
+            \Gini\CLI::dispatch($command_args);
         }
     }
 
