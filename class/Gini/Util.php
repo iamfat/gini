@@ -84,6 +84,11 @@ class Util
         return $candidates;
     }
 
+    public static function parseArgs($str) {
+        //TODO: should parse more complex string
+        return explode(' ', $str);
+    }
+
     private static function _convertShortOpts($opts)
     {
         // parse shortopts: e.g.   vo:h => ['v', 'o:', 'h']

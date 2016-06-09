@@ -159,7 +159,7 @@ class Cache
 
         // check gini dependencies
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '']);
+            $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
             $cache_func = "$class::cache";
             if (is_callable($cache_func)) {
                 echo "Setting up cache for Module[$name]...\n";
