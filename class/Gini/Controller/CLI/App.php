@@ -62,7 +62,6 @@ class App extends \Gini\Controller\CLI
         echo "gini modules\n";
         echo "gini cache [clean]\n";
         echo "gini version <version>\n";
-        echo "gini build\n";
         echo "gini install [module [version]]\n";
     }
 
@@ -134,75 +133,6 @@ class App extends \Gini\Controller\CLI
             \Gini\App\Cache::setup($env);
         } elseif (in_array('clean', $args)) {
             \Gini\App\Cache::clean();
-        }
-    }
-
-    private function _build($build_base, $info)
-    {
-        echo "Building \e[4m$info->name\e[0m ($info->id-$info->version)...\n";
-
-        if (!isset($info->build)) {
-            $info->build = (object) [];
-        }
-        $build = (object) $info->build;
-        if (!isset($build->copy)) {
-            $build->copy = ['raw'];
-        }
-        if (!isset($build->pack)) {
-            $build->pack = ['class', 'view'];
-        }
-
-        $app_dir = $info->path;
-        $build_dir = $build_base.'/'.$info->id;
-
-        if (!is_dir($build_dir)) {
-            @mkdir($build_dir, 0755, true);
-        }
-
-        require_once SYS_PATH.'/lib/packer.php';
-        foreach ($build->pack as $dir) {
-            if (!is_dir("$app_dir/$dir")) {
-                continue;
-            }
-
-            echo "  Packing $dir...\n";
-            $packer = \Gini\IoC::construct('\Gini\Dev\Packer', "$build_dir/$dir");
-            $packer->import("$app_dir/$dir");
-            $packer->finish();
-            echo "\n";
-        }
-
-        foreach ($build->copy as $dir) {
-            $dir = preg_replace('/^[\/.]/', '', $dir);
-            if (!file_exists("$app_dir/$dir")) {
-                continue;
-            }
-
-            if (is_dir("$build_dir/$dir")) {
-                passthru("rm -r $build_dir/$dir");
-            }
-            echo "  copy $dir...\n";
-            passthru("cp -r $app_dir/$dir $build_dir");
-        }
-
-        echo "  copy gini.json...\n";
-        passthru("cp $app_dir/gini.json $build_dir/gini.json");
-        echo "\n";
-    }
-
-    public function actionBuild($args)
-    {
-        $info = \Gini\Core::moduleInfo(APP_ID);
-        $build_base = $info->path.'/build';
-
-        if (is_dir($build_base)) {
-            passthru("rm -rf $build_base");
-        }
-
-        @mkdir($build_base, 0755, true);
-
-        foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            $this->_build($build_base, $info);
         }
     }
 
