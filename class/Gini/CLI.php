@@ -37,7 +37,7 @@ class CLI
             foreach ($argv as $arg) {
                 $eargv[] = escapeshellcmd($arg);
             }
-            proc_close(proc_open(implode(' ', $eargv), array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER));
+            proc_close(proc_open(implode(' ', $eargv), [ STDIN, STDOUT, STDERR ], $pipes, null, $_SERVER));
 
             return;
         }

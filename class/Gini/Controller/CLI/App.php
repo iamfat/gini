@@ -71,7 +71,7 @@ class App extends \Gini\Controller\CLI
         if ($info) {
             $info = (array) $info;
             unset($info['path']);
-            echo yaml_emit($info);
+            echo yaml_emit($info, YAML_UTF8_ENCODING);
         }
     }
 
@@ -121,16 +121,15 @@ class App extends \Gini\Controller\CLI
         }
 
         $env = $opt['e'] ?: $opt['env'] ?: null;
-
-        if (count($args) == 0) {
+        if ($opt['_'][0] == 'clean') {
+            \Gini\App\Cache::clean();
+        } else {
             $errors = \Gini\App\Doctor::diagnose(['dependencies', 'composer']);
             if ($errors) {
                 return;
             }
 
             \Gini\App\Cache::setup($env);
-        } elseif (in_array('clean', $args)) {
-            \Gini\App\Cache::clean();
         }
     }
 

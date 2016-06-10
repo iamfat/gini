@@ -125,6 +125,15 @@ class Cache
 
         printf("%s\n", 'Updating config cache...');
 
+        if (file_exists($env)) {
+            $rows = file($env);
+            foreach($rows as &$row) {
+                $row = trim($row, "\r\t\n ");
+                if (!$row || $row[0] == '#') continue;
+                putenv($row);
+            }
+        }
+
         $config_items = \Gini\Config::fetch();
 
         // update orm plurals

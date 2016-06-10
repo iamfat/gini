@@ -107,14 +107,18 @@ class Config
                 case 'yml':
                 case 'yaml':
                     $content = file_get_contents($file);
-                    $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\}/', function ($matches) {
-                        return $_SERVER[$matches[1]] ?: $matches[0];
-                    }, $content);
                     $content = preg_replace_callback('/\{\{([A-Z0-9_]+?)\}\}/', function ($matches) {
-                        return $_SERVER[$matches[1]] ?: $matches[0];
+                        return getenv($matches[1]) ?: $matches[0];
+                    }, $content);
+                    $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\}/', function ($matches) {
+                        return getenv($matches[1]) ?: $matches[0];
                     }, $content);
                     $content = trim($content);
                     if ($content) {
+                        set_error_handler(function() use($file, $content){
+                            var_dump($file);
+                            echo $content;
+                        }, E_ALL & ~E_NOTICE);
                         $config = (array) yaml_parse($content);
                         $items[$category] = \Gini\Util::arrayMergeDeep(
                             $items[$category], $config);
@@ -126,7 +130,7 @@ class Config
         }
     }
 
-    public static function fetch($env = null)
+    public static function fetch()
     {
         $items = [];
 
@@ -135,7 +139,7 @@ class Config
             self::_load_config_dir($path, $items);
         }
 
-        $env = $env ?: $_SERVER['GINI_ENV'] ?: '';
+        $env = $_SERVER['GINI_ENV'];
         if ($env) {
             $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$env);
             foreach ($paths as $path) {

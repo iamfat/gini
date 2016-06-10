@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 /**
@@ -422,3 +423,4 @@ class Database
         return $this->_driver->diagnose();
     }
 } // END class
+
