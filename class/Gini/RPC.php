@@ -67,6 +67,16 @@ class RPC
 
     public function setHeader(array $header)
     {
+        // if format is ['xx: xx'], convert it to ['xx' => 'xx']
+        $kh = [];
+        foreach ($header as $k => $h) {
+            if (is_numeric($k)) {
+                list($k, $v) = explode(':', $h, 2);
+                $kh[trim($k)]=trim($v);
+            } else {
+                $kh[$k] = $h;
+            }
+        }
         $this->_header = array_merge($this->_header, $header);
     }
 
@@ -76,8 +86,11 @@ class RPC
 
         $ch = curl_init();
 
-        $header = $this->_header;
-        $header['Content-Type'] = 'application/json';
+        $this->_header['Content-Type'] = 'application/json';
+        // convert to Key: Value format
+        $header = array_map(function($k, $v) {
+            return "$k: $v";
+        }, array_keys($this->_header), $this->_header);
 
         curl_setopt_array($ch, [
             CURLOPT_COOKIEJAR => $cookie_file,
