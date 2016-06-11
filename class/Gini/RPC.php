@@ -77,7 +77,7 @@ class RPC
                 $kh[$k] = $h;
             }
         }
-        $this->_header = array_merge($this->_header, $header);
+        $this->_header = array_merge($this->_header, $kh);
     }
 
     public function post($post_data, $timeout = 5)
