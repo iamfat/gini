@@ -28,8 +28,10 @@ class Session
             } else {
                 // save_handler = Database
                 $class = '\Gini\Session\\'.$handler_name;
-                self::$_handler = \Gini\IoC::construct($class);
-                session_set_save_handler(self::$_handler, false);
+                if (class_exists($class)) {
+                    self::$_handler = \Gini\IoC::construct($class);
+                    session_set_save_handler(self::$_handler, false);
+                }
             }
         }
 
