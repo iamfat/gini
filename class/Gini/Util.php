@@ -74,7 +74,7 @@ class Util
             } else {
                 $arg = str_replace('-', '_', array_shift($argv));
             }
-            if (!preg_match('|^[a-z][a-z0-9]+$|i', $arg)) {
+            if (!preg_match('|^[a-z][a-z0-9_]+$|i', $arg)) {
                 break;
             }
             $path .= '/'.$arg;
