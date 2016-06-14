@@ -69,12 +69,11 @@ class Util
         $candidates = [];
 
         while (count($argv) > 0) {
+            $arg = array_shift($argv);
             if ($guessCase) {
-                $arg = implode('', array_map('ucwords', explode('_', str_replace('-', '_', array_shift($argv)))));
-            } else {
-                $arg = str_replace('-', '_', array_shift($argv));
+                $arg = implode('', array_map('ucwords', explode('_', strtr($arg, [ '-' => '_' ]))));
             }
-            if (!preg_match('|^[a-z][a-z0-9]+$|i', $arg)) {
+            if (!preg_match('|^[a-z][a-z0-9-_]+$|i', $arg)) {
                 break;
             }
             $path .= '/'.$arg;

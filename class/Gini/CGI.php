@@ -48,7 +48,7 @@ class CGI
         $args = array_map('rawurldecode', explode('/', $route));
 
         $path = '';
-        $candidates = array('/index' => $args) + Util::pathAndArgs($args);
+        $candidates = [ '/index' => $args ] + Util::pathAndArgs($args);
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
             $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
