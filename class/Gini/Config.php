@@ -115,10 +115,6 @@ class Config
                     }, $content);
                     $content = trim($content);
                     if ($content) {
-                        set_error_handler(function() use($file, $content){
-                            var_dump($file);
-                            echo $content;
-                        }, E_ALL & ~E_NOTICE);
                         $config = (array) yaml_parse($content);
                         $items[$category] = \Gini\Util::arrayMergeDeep(
                             $items[$category], $config);
