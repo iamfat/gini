@@ -11,7 +11,7 @@ class RPC
     private $_uniqid = 1;
 
     private static $_RPCs = [];
-    public function of($name, $cookie = null, $header = []) {
+    public static function of($name, $cookie = null, $header = []) {
         if (!self::$_RPCs[$name]) {
             $conf = \Gini\Config::get('app.rpc');
             $rpc = IoC::construct('\Gini\RPC', $conf[$name]['url'], null, $cookie, $header);
