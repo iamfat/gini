@@ -128,7 +128,7 @@ class RPC
             $message = curl_error($ch);
             curl_close($ch);
 
-            \Gini\Logger::of('core')->error('RPC cURL error: {message}', ['message' => $message]);
+            \Gini\Logger::of('core')->error('RPC cURL error: {url}: {message}', ['url' => $this->_url, 'message' => $message]);
             throw IoC::construct('\Gini\RPC\Exception', "transport error: $message", -32300);
         }
 
