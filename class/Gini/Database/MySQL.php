@@ -166,7 +166,12 @@ class MySQL extends \PDO implements Driver
         }
 
         // ------ CHECK RELATIONS
+        // key is globalwise, so add database name dbname__relation_relation
         $relations = (array) $schema['relations'];
+        $relations = array_combine(array_map(function($k){
+            return $this->_dbname.'__'.$k;
+        }, array_keys($relations)), array_values($relations));
+
         $curr_relations = (array) $curr_schema['relations'];
         $missing_relations = array_diff_key($relations, $curr_relations);
 
