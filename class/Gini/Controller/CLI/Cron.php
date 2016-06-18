@@ -58,6 +58,8 @@ class Cron extends \Gini\Controller\CLI
                     if ($next <= $now) {
                         // we have to run it
                         $cache['last_run_at'] = $now->format('c');
+                        \Gini\Logger::of('cron')->info('cron run {command}', [
+                            'command' => $job->command]);
                         $pid = pcntl_fork();
                         if ($pid == -1) {
                             continue;
