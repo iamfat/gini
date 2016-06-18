@@ -123,7 +123,9 @@ class Util
                 $v = array_shift($argv);
                 if ($v[0] != '-') {
                     $opt['_'][] = $v;
+                    continue;
                 }
+ 
                 if ($v[1] == '-') {
                     list($okey, $oval) = explode('=', substr($v, 2), 2);
                     if (isset($longopts[$okey])) {
@@ -149,7 +151,7 @@ class Util
                             if ($o == ':' || $o == '::') {
                                 $oval = array_shift($argv);
                                 if (!$oval) {
-                                    throw new \Exception('missing arguments');
+                                    throw new \Exception('missing arguments for -'.$v[1]);
                                 }
                                 $opt[$okey] = $oval;
                             } else {
@@ -165,6 +167,7 @@ class Util
                 }
             }
         } catch (\Exception $e) {
+            error_log('\Gini\Util::getOpt error: '.$e->getMessage());
         }
 
         return $opt;
