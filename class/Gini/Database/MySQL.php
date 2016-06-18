@@ -154,8 +154,9 @@ class MySQL extends \PDO implements Driver
         foreach ($curr_indexes as $key => $curr_val) {
             $val = $indexes[$key];
             if ($val) {
-                if ($val['type'] != $curr_val['type']
-                    || array_diff($val, $curr_val)) {
+                ksort($val);
+                ksort($curr_val);
+                if ($val != $curr_val) {
                     $field_sql0[] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
                     $field_sql[] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
                 }
@@ -216,10 +217,10 @@ class MySQL extends \PDO implements Driver
         if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
             $ds = $this->query(sprintf('SHOW FIELDS FROM "%s"', $name));
 
-            $fields = array();
+            $fields = [];
             if ($ds) {
                 while ($dr = $ds->fetchObject()) {
-                    $field = array('type' => $this->_normalizeType($dr->Type));
+                    $field = ['type' => $this->_normalizeType($dr->Type)];
 
                     if ($dr->Default !== null) {
                         $field['default'] = $dr->Default;
@@ -248,6 +249,8 @@ class MySQL extends \PDO implements Driver
                     $indexes[$row->Key_name]['fields'][] = $row->Column_name;
                     if (!$row->Non_unique) {
                         $indexes[$row->Key_name]['type'] = $row->Key_name == 'PRIMARY' ? 'primary' : 'unique';
+                    } elseif ($row->Index_type == 'FULLTEXT') {
+                        $indexes[$row->Key_name]['type'] = 'fulltext';
                     }
                 }
             }
