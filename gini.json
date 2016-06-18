@@ -30,7 +30,8 @@
         ],
         "require": {
             "sabre/dav": "2.*",
-            "doctrine/inflector": "@stable"
+            "doctrine/inflector": "@stable",
+            "mtdowling/cron-expression": "@stable"
         },
         "require-dev": {
             "henrikbjorn/lurker": "1.*"
