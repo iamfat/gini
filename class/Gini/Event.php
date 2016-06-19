@@ -182,7 +182,7 @@ class Event
                 $e->_trigger($params);
                 $return = $e->_return;
                 $e->_return = null;
-                if ($e->_return) {
+                if ($e->_abort) {
                     break;
                 }
             }
