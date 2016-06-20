@@ -147,13 +147,13 @@ namespace Gini {
 
         private static function _rurl_mod($url, $type)
         {
-            $info = \Gini\Core::moduleInfo(APP_ID);
+            // $info = \Gini\Core::moduleInfo(APP_ID);
             $config = (array) \Gini\Config::get('system.rurl_mod');
             if ($type) {
                 $query = $config[$type]['query'];
                 $query = $query ? strtr($query, [
                     '$(TIMESTAMP)' => time(),
-                    '$(VERSION)' => $info->version,
+                    '$(VERSION)' => APP_HASH,
                 ]) : null;
             }
 
