@@ -42,42 +42,43 @@ class Cron extends \Gini\Controller\CLI
         $cron_cache_file = sys_get_temp_dir().'/cron_cache_'.sha1(APP_PATH);
         $fh = fopen($cron_cache_file, 'c+');
         if ($fh) {
-            flock($fh, LOCK_EX);
-            $cron_cache = @json_decode(fread($fh), true) ?: [];
+            if (flock($fh, LOCK_EX | LOCK_NB)) {
+                $cron_cache = @json_decode(fread($fh), true) ?: [];
 
-            $cron_cache = file_exists($cron_cache_file) ?
-                json_decode(file_get_contents($cron_cache_file), true) : [];
-            $cron_config = (array) \Gini\Config::get('cron');
-            foreach ($cron_config as $name => $job) {
-                $schedule = $job['schedule'] ?: $job['interval'];
-                $cron = \Cron\CronExpression::factory($schedule);
-                $cache = &$cron_cache[$name];
-                if (isset($cache)) {
-                    $next = date_create($cache['next']);
-                    $now = date_create('now');
-                    if ($next <= $now) {
-                        // we have to run it
-                        $cache['last_run_at'] = $now->format('c');
-                        \Gini\Logger::of('cron')->info('cron run {command}', [
-                            'command' => $job['command']]);
-                        $pid = pcntl_fork();
-                        if ($pid == -1) {
-                            continue;
-                        } elseif ($pid == 0) {
-                            $command_args = \Gini\Util::parseArgs($job['command']);
-                            \Gini\CLI::dispatch($command_args);
-                            exit;
+                $cron_cache = file_exists($cron_cache_file) ?
+                    json_decode(file_get_contents($cron_cache_file), true) : [];
+                $cron_config = (array) \Gini\Config::get('cron');
+                foreach ($cron_config as $name => $job) {
+                    $schedule = $job['schedule'] ?: $job['interval'];
+                    $cron = \Cron\CronExpression::factory($schedule);
+                    $cache = &$cron_cache[$name];
+                    if (isset($cache)) {
+                        $next = date_create($cache['next']);
+                        $now = date_create('now');
+                        if ($next <= $now) {
+                            // we have to run it
+                            $cache['last_run_at'] = $now->format('c');
+                            \Gini\Logger::of('cron')->info('cron run {command}', [
+                                'command' => $job['command']]);
+                            $pid = pcntl_fork();
+                            if ($pid == -1) {
+                                continue;
+                            } elseif ($pid == 0) {
+                                $command_args = \Gini\Util::parseArgs($job['command']);
+                                \Gini\CLI::dispatch($command_args);
+                                exit;
+                            }
                         }
                     }
+                    $cache['next'] = $cron->getNextRunDate()->format('c');
                 }
-                $cache['next'] = $cron->getNextRunDate()->format('c');
+
+                while (pcntl_wait($status)>0);
+                ftruncate($fh, 0);
+                fwrite($fh, J($cron_cache));
+
+                flock($fh, LOCK_UN);
             }
-
-            while (pcntl_wait($status)>0);
-            ftruncate($fh, 0);
-            fwrite($fh, J($cron_cache));
-
-            flock($fh, LOCK_UN);
             fclose($fh);
         }
 
