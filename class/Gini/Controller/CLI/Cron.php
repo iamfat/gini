@@ -44,9 +44,6 @@ class Cron extends \Gini\Controller\CLI
         if ($fh) {
             if (flock($fh, LOCK_EX | LOCK_NB)) {
                 $cron_cache = @json_decode(fread($fh), true) ?: [];
-
-                $cron_cache = file_exists($cron_cache_file) ?
-                    json_decode(file_get_contents($cron_cache_file), true) : [];
                 $cron_config = (array) \Gini\Config::get('cron');
                 foreach ($cron_config as $name => $job) {
                     $schedule = $job['schedule'] ?: $job['interval'];
