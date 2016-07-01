@@ -5,6 +5,7 @@ namespace Gini;
 class Session
 {
     private static $_handler;
+    private static $_rawData;
 
     private static function _idPath()
     {
@@ -64,9 +65,11 @@ class Session
         session_start();
         restore_error_handler();
 
+        self::$_rawData = session_encode();
+
         if (!ini_get('session.use_cookies')) {
             // close session immediately to avoid deadlock
-            session_write_close();
+            self::writeClose();
         }
 
         $now = time();
@@ -104,7 +107,7 @@ class Session
         }
 
         // 记录session_id
-        session_write_close();
+        self::writeClose();
 
         if (!ini_get('session.use_cookies')) {
             // TODO: find a better way to write down session id
@@ -150,6 +153,13 @@ class Session
     {
         if (PHP_SAPI != 'cli-server') {
             session_regenerate_id();
+        }
+    }
+
+    private static function writeClose()
+    {
+        if (self::$_rawData!==session_encode()) {
+            session_write_close();
         }
     }
 }
