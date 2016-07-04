@@ -22,7 +22,6 @@ class MySQL extends \PDO implements Driver
                 $SQL = sprintf('SHOW TABLE STATUS FROM %s',
                         $this->quoteIdent($this->_dbname));
             }
-
             $rs = $this->query($SQL);
             while ($r = $rs->fetchObject()) {
                 $this->_table_status[$r->Name] = (object) [
@@ -94,7 +93,7 @@ class MySQL extends \PDO implements Driver
             $this->createTable($table);
         }
 
-        $field_sql0 = []; // this is used for some drop operations 
+        $field_sql0 = []; // this is used for some drop operations
         $field_sql = [];
 
         $fields = (array) $schema['fields'];
@@ -258,7 +257,7 @@ class MySQL extends \PDO implements Driver
         }
 
         if ($refresh || !isset($this->_table_schema[$name]['relations'])) {
-            $ds = $this->query(sprintf('SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = %s AND REFERENCED_TABLE_NAME IS NOT NULL', $this->quote($name)));
+            $ds = $this->query(sprintf('SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_SCHEMA = %s AND TABLE_NAME = %s AND REFERENCED_TABLE_NAME IS NOT NULL', $this->quote($this->_dbname) , $this->quote($name)));
             $relations = [];
             if ($ds) {
                 while ($row = $ds->fetchObject()) {
@@ -468,3 +467,4 @@ class MySQL extends \PDO implements Driver
         }
     }
 }
+
