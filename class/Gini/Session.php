@@ -160,6 +160,8 @@ class Session
     {
         if (self::$_rawData!==session_encode()) {
             session_write_close();
+            return;
         }
+        session_abort();
     }
 }
