@@ -158,7 +158,7 @@ class Session
     private static function close()
     {
         if (self::$_rawData == session_encode()) {
-            function_exists('session_abort') && session_abort();
+            function_exists('session_abort') and session_abort();
         } else {
             session_commit();
         }
