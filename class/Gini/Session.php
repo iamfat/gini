@@ -9,7 +9,8 @@ class Session
 
     private static function _idPath()
     {
-        return sys_get_temp_dir().'/gini-session/'.posix_getpwuid(posix_getuid())['name'].'/'.posix_getsid(0);
+        return sys_get_temp_dir().'/gini-session/'
+            .posix_getpwuid(posix_getuid())['name'].'/'.posix_getsid(0);
     }
 
     public static function setup()
@@ -41,12 +42,15 @@ class Session
         }
 
         if (PHP_SAPI == 'cli') {
-            ini_set('session.use_cookies', 0);
             // TODO: find a better way to save and load session id
             $idPath = self::_idPath();
             if (file_exists($idPath)) {
                 session_id(file_get_contents($idPath));
             }
+        } elseif (isset($_POST['gini-session'])) {
+            session_id($_POST['gini-session']);
+        } elseif (isset($_SERVER['HTTP_X_GINI_SESSION'])) {
+            session_id($_SERVER['HTTP_X_GINI_SESSION']);
         }
 
         session_set_cookie_params(
@@ -55,21 +59,15 @@ class Session
             $cookie_params['domain']
         );
 
-        if (isset($_POST['gini-session'])) {
-            session_id($_POST['gini-session']);
-        } elseif (isset($_SERVER['HTTP_X_GINI_SESSION'])) {
-            session_id($_SERVER['HTTP_X_GINI_SESSION']);
-        }
-
         set_error_handler(function () {}, E_ALL ^ E_NOTICE);
         session_start();
         restore_error_handler();
 
         self::$_rawData = session_encode();
 
-        if (!ini_get('session.use_cookies')) {
+        if (PHP_SAPI == 'cli') {
             // close session immediately to avoid deadlock
-            self::writeClose();
+            self::close();
         }
 
         $now = time();
@@ -90,30 +88,31 @@ class Session
             }
         }
 
-        if (!ini_get('session.use_cookies')) {
-            $tmp = (array) $_SESSION;
+        if (PHP_SAPI == 'cli') {
+            if (\Gini\Config::get('system')['session']['cli_enabled']) {
+                $tmp = (array) $_SESSION;
 
-            set_error_handler(function () {}, E_ALL ^ E_NOTICE);
-            session_start();
-            restore_error_handler();
+                set_error_handler(function () {}, E_ALL ^ E_NOTICE);
+                session_start();
+                restore_error_handler();
 
-            foreach (array_keys($_SESSION) as $k) {
-                unset($_SESSION[$k]);
+                foreach (array_keys($_SESSION) as $k) {
+                    unset($_SESSION[$k]);
+                }
+
+                foreach (array_keys($tmp) as $k) {
+                    $_SESSION[$k] = $tmp[$k];
+                }
+
+                self::close();
+
+                // TODO: find a better way to write down session id
+                $idPath = self::_idPath();
+                File::ensureDir(dirname($idPath), 0775);
+                file_put_contents($idPath, session_id());
             }
-
-            foreach (array_keys($tmp) as $k) {
-                $_SESSION[$k] = $tmp[$k];
-            }
-        }
-
-        // 记录session_id
-        self::writeClose();
-
-        if (!ini_get('session.use_cookies')) {
-            // TODO: find a better way to write down session id
-            $idPath = self::_idPath();
-            File::ensureDir(dirname($idPath), 0775);
-            file_put_contents($idPath, session_id());
+        } else {
+            self::close();
         }
     }
 
@@ -156,12 +155,12 @@ class Session
         }
     }
 
-    private static function writeClose()
+    private static function close()
     {
-        if (self::$_rawData!==session_encode()) {
-            session_write_close();
-            return;
+        if (self::$_rawData == session_encode()) {
+            function_exists('session_abort') && session_abort();
+        } else {
+            session_commit();
         }
-        session_abort();
     }
 }
