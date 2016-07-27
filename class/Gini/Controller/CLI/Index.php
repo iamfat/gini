@@ -371,6 +371,9 @@ class Index extends \Gini\Controller\CLI
                         $modulePath = "$targetDir/modules/$module";
                     }
 
+                    if (is_dir($modulePath) && file_exists($modulePath)) {
+                        \Gini\File::removeDir($modulePath);
+                    }
                     \Gini\File::ensureDir($modulePath);
                     echo "Extracting {$module}...\n";
                     $ph = popen('tar -zx -C '.escapeshellcmd($modulePath), 'w');
