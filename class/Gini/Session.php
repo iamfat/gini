@@ -5,13 +5,7 @@ namespace Gini;
 class Session
 {
     private static $_handler;
-    private static $_rawData;
-
-    private static function _idPath()
-    {
-        return sys_get_temp_dir().'/gini-session/'
-            .posix_getpwuid(posix_getuid())['name'].'/'.posix_getsid(0);
-    }
+    private static $_lock;
 
     public static function setup()
     {
@@ -63,24 +57,7 @@ class Session
             ini_set('session.gc_maxlifetime', $session_conf['gc_maxlifetime']);
         }
 
-        set_error_handler(function () {}, E_ALL ^ E_NOTICE);
-        session_start();
-        restore_error_handler();
-
-        self::$_rawData = session_encode();
-
-        if (PHP_SAPI == 'cli') {
-            // close session immediately to avoid deadlock
-            self::close();
-        }
-
-        $now = time();
-        foreach ((array) $_SESSION['@TIMEOUT'] as $token => $timeout) {
-            if ($now > $timeout) {
-                unset($_SESSION[$token]);
-                unset($_SESSION['@TIMEOUT'][$token]);
-            }
-        }
+        self::open();
     }
 
     public static function shutdown()
@@ -92,32 +69,7 @@ class Session
             }
         }
 
-        if (PHP_SAPI == 'cli') {
-            if (\Gini\Config::get('system')['session']['cli_enabled']) {
-                $tmp = (array) $_SESSION;
-
-                set_error_handler(function () {}, E_ALL ^ E_NOTICE);
-                session_start();
-                restore_error_handler();
-
-                foreach (array_keys($_SESSION) as $k) {
-                    unset($_SESSION[$k]);
-                }
-
-                foreach (array_keys($tmp) as $k) {
-                    $_SESSION[$k] = $tmp[$k];
-                }
-
-                self::close();
-
-                // TODO: find a better way to write down session id
-                $idPath = self::_idPath();
-                File::ensureDir(dirname($idPath), 0775);
-                file_put_contents($idPath, session_id());
-            }
-        } else {
-            self::close();
-        }
+        self::close();
     }
 
     public static function makeTimeout($token, $timeout = 0)
@@ -161,10 +113,30 @@ class Session
 
     private static function close()
     {
-        if (self::$_rawData == session_encode()) {
-            function_exists('session_abort') and session_abort();
-        } else {
-            session_commit();
+        if (PHP_SAPI == 'cli') return;
+        session_commit();
+        self::$_lock and self::$_lock->unlock();
+    }
+
+    public static function open() {
+        if (PHP_SAPI == 'cli') return;
+
+        if ($this->_handlerName == 'internal/redis') {
+            self::$_lock = new \Gini\Lock\Redis(ini_get('session.save_path'), session_id());
+            self::$_lock->lock(5000);
+        }
+
+        set_error_handler(function () {}, E_ALL ^ E_NOTICE);
+        session_start();
+        restore_error_handler();
+
+        $now = time();
+        foreach ((array) $_SESSION['@TIMEOUT'] as $token => $timeout) {
+            if ($now > $timeout) {
+                unset($_SESSION[$token]);
+                unset($_SESSION['@TIMEOUT'][$token]);
+            }
         }
     }
+
 }
