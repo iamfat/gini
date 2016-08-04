@@ -59,6 +59,10 @@ class Session
             $cookie_params['domain']
         );
 
+        if ($session_conf['gc_maxlifetime']) {
+            ini_set('session.gc_maxlifetime', $session_conf['gc_maxlifetime']);
+        }
+
         set_error_handler(function () {}, E_ALL ^ E_NOTICE);
         session_start();
         restore_error_handler();
