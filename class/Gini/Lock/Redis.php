@@ -9,7 +9,8 @@ class Redis implements Driver {
     private $_quorum;
 
     const CLOCK_DRIFT_FACTOR = 0.01;
-    const MAX_RETRY = 3;
+    const RETRY_MAX = 3;
+    const RETRY_DELAY = 200;
 
     public function __construct($path, $resource) {
         $urls = array_map('trim', explode(',', $path));
@@ -47,7 +48,7 @@ class Redis implements Driver {
     }
 
     public function lock($ttl=5000) {
-        $retry = self::MAX_RETRY;
+        $retry = self::RETRY_MAX;
         while ($retry--) {
             $n = 0;
             $startTime = microtime(true) * 1000;
@@ -74,7 +75,7 @@ class Redis implements Driver {
             }
 
             // Wait a random delay before to retry
-            $delay = mt_rand(floor($this->retryDelay / 2), $this->retryDelay);
+            $delay = mt_rand(floor(self::RETRY_DELAY / 2), self::RETRY_DELAY);
             usleep($delay * 1000);
         }
 
