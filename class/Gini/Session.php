@@ -117,6 +117,7 @@ class Session
 
 
     private static function lock() {
+        if (!\Gini\Config::get('session.lock')) return;
         if (self::$_handlerName == 'internal/redis') {
             self::$_lock = new \Gini\Lock\Redis(ini_get('session.save_path'), session_id());
             self::$_lock->lock(2000); // 2s at the most
