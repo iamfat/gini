@@ -100,6 +100,22 @@ class Session
         self::lock();
     }
 
+    public static function open() {
+        if (PHP_SAPI == 'cli' || session_status() == PHP_SESSION_DISABLED) return;
+
+        set_error_handler(function () {}, E_ALL ^ E_NOTICE);
+        session_start();
+        restore_error_handler();
+
+        $now = time();
+        foreach ((array) $_SESSION['@TIMEOUT'] as $token => $timeout) {
+            if ($now > $timeout) {
+                unset($_SESSION[$token]);
+                unset($_SESSION['@TIMEOUT'][$token]);
+            }
+        }
+    }
+
     public static function close()
     {
         if (PHP_SAPI == 'cli' || session_status() == PHP_SESSION_DISABLED) return;
@@ -112,38 +128,31 @@ class Session
         }
 
         session_commit();
-        self::unlock();
     }
 
+    public static function sync()
+    {
+        session_commit();
+        session_start();
+    }
 
-    private static function lock() {
-        if (!\Gini\Config::get('session.lock')) return;
+    public static function lock() {
+        $sid = session_id();
+        session_commit();
         if (self::$_handlerName == 'internal/redis') {
-            self::$_lock = new \Gini\Lock\Redis(ini_get('session.save_path'), session_id());
+            self::$_lock = new \Gini\Lock\Redis(ini_get('session.save_path'), $sid);
             self::$_lock->lock(2000); // 2s at the most
         }
-    }
-
-    private static function unlock() {
-        self::$_lock and self::$_lock->unlock();
-    }
-
-    public static function open() {
-        if (PHP_SAPI == 'cli' || session_status() == PHP_SESSION_DISABLED) return;
-
-        set_error_handler(function () {}, E_ALL ^ E_NOTICE);
         session_start();
-        restore_error_handler();
+    }
 
-        self::lock();
-
-        $now = time();
-        foreach ((array) $_SESSION['@TIMEOUT'] as $token => $timeout) {
-            if ($now > $timeout) {
-                unset($_SESSION[$token]);
-                unset($_SESSION['@TIMEOUT'][$token]);
-            }
+    public static function unlock() {
+        session_commit();
+        if (self::$_lock) {
+            self::$_lock->unlock();
+            self::$_lock = null;
         }
+        session_start();
     }
 
 }
