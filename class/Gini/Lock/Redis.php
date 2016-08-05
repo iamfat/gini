@@ -21,7 +21,7 @@ class Redis implements Driver {
                 $q = parse_str($u['query']);
             }
             $redis = new \Redis();
-            $redis->connect($u['host'], $u['port']?:6379);
+            $redis->connect($u['host'], $u['port']?:6379, 0.01);
             $q['auth'] and $redis->auth($q['auth']);
             $this->_instances[$url] = $redis;
         }
@@ -47,7 +47,7 @@ class Redis implements Driver {
         return $instance->eval($script, [$this->_resource, $this->_token], 1);
     }
 
-    public function lock($ttl=5000) {
+    public function lock($ttl=2000) {
         $retry = self::RETRY_MAX;
         while ($retry--) {
             $n = 0;
