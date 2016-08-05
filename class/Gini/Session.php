@@ -4,6 +4,7 @@ namespace Gini;
 
 class Session
 {
+    private static $_handlerName;
     private static $_handler;
     private static $_lock;
 
@@ -17,13 +18,13 @@ class Session
         ini_set('session.name', $session_name.'_'.$host_hash);
 
         if ($session_conf['save_handler']) {
-            $handler_name = $session_conf['save_handler'];
+            self::$_handlerName = $session_conf['save_handler'];
             // save_handler = internal/files
-            if (0 == strncmp($handler_name, 'internal/', 9)) {
-                ini_set('session.save_handler', substr($handler_name, 9));
+            if (0 == strncmp(self::$_handlerName, 'internal/', 9)) {
+                ini_set('session.save_handler', substr(self::$_handlerName, 9));
             } else {
                 // save_handler = Database
-                $class = '\Gini\Session\\'.$handler_name;
+                $class = '\Gini\Session\\'.self::$_handlerName;
                 if (class_exists($class)) {
                     self::$_handler = \Gini\IoC::construct($class);
                     session_set_save_handler(self::$_handler, false);
@@ -35,13 +36,11 @@ class Session
             session_save_path($session_conf['save_path']);
         }
 
-        if (PHP_SAPI == 'cli') {
-            // TODO: find a better way to save and load session id
-            $idPath = self::_idPath();
-            if (file_exists($idPath)) {
-                session_id(file_get_contents($idPath));
-            }
-        } elseif (isset($_POST['gini-session'])) {
+        if ($session_conf['gc_maxlifetime']) {
+            ini_set('session.gc_maxlifetime', $session_conf['gc_maxlifetime']);
+        }
+
+        if (isset($_POST['gini-session'])) {
             session_id($_POST['gini-session']);
         } elseif (isset($_SERVER['HTTP_X_GINI_SESSION'])) {
             session_id($_SERVER['HTTP_X_GINI_SESSION']);
@@ -53,22 +52,11 @@ class Session
             $cookie_params['domain']
         );
 
-        if ($session_conf['gc_maxlifetime']) {
-            ini_set('session.gc_maxlifetime', $session_conf['gc_maxlifetime']);
-        }
-
         self::open();
     }
 
     public static function shutdown()
     {
-        foreach ((array) $_SESSION['@ONETIME'] as $token => $remove) {
-            if ($remove) {
-                unset($_SESSION['@ONETIME'][$token]);
-                unset($_SESSION[$token]);
-            }
-        }
-
         self::close();
     }
 
@@ -106,29 +94,47 @@ class Session
 
     public static function regenerateId()
     {
-        if (PHP_SAPI != 'cli-server') {
-            session_regenerate_id();
+        if (PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server' || session_status() == PHP_SESSION_DISABLED) return;
+        self::unlock();
+        session_regenerate_id();
+        self::lock();
+    }
+
+    public static function close()
+    {
+        if (PHP_SAPI == 'cli' || session_status() == PHP_SESSION_DISABLED) return;
+ 
+        foreach ((array) $_SESSION['@ONETIME'] as $token => $remove) {
+            if ($remove) {
+                unset($_SESSION['@ONETIME'][$token]);
+                unset($_SESSION[$token]);
+            }
+        }
+
+        session_commit();
+        self::unlock();
+    }
+
+
+    private static function lock() {
+        if (self::$_handlerName == 'internal/redis') {
+            self::$_lock = new \Gini\Lock\Redis(ini_get('session.save_path'), session_id());
+            self::$_lock->lock(2000); // 2s at the most
         }
     }
 
-    private static function close()
-    {
-        if (PHP_SAPI == 'cli') return;
-        session_commit();
+    private static function unlock() {
         self::$_lock and self::$_lock->unlock();
     }
 
     public static function open() {
-        if (PHP_SAPI == 'cli') return;
-
-        if ($this->_handlerName == 'internal/redis') {
-            self::$_lock = new \Gini\Lock\Redis(ini_get('session.save_path'), session_id());
-            self::$_lock->lock(5000);
-        }
+        if (PHP_SAPI == 'cli' || session_status() == PHP_SESSION_DISABLED) return;
 
         set_error_handler(function () {}, E_ALL ^ E_NOTICE);
         session_start();
         restore_error_handler();
+
+        self::lock();
 
         $now = time();
         foreach ((array) $_SESSION['@TIMEOUT'] as $token => $timeout) {

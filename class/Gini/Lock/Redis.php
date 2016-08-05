@@ -35,7 +35,7 @@ class Redis implements Driver {
         return $instance->set($this->_resource, $this->_token, ['NX', 'PX' => $ttl]);
     }
 
-    private function unlockInstance($instance, $resource, $token)
+    private function unlockInstance($instance)
     {
         $script = '
             if redis.call("GET", KEYS[1]) == ARGV[1] then
