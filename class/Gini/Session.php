@@ -51,6 +51,8 @@ class Session
             $cookie_params['path'],
             $cookie_params['domain']
         );
+
+        self::open();
     }
 
     public static function shutdown()

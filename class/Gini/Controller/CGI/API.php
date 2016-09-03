@@ -6,8 +6,6 @@ final class API extends \Gini\Controller\CGI
 {
     public function execute()
     {
-        \Gini\Config::get('session.api_autostart') === false or \Gini\Session::open();
-
         $request = @json_decode(\Gini\CGI::content(), true);
         if ($request === null) {
             $response = [
