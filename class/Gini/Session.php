@@ -51,8 +51,6 @@ class Session
             $cookie_params['path'],
             $cookie_params['domain']
         );
-
-        self::open();
     }
 
     public static function shutdown()
@@ -101,7 +99,9 @@ class Session
     }
 
     public static function open() {
-        if (PHP_SAPI == 'cli' || session_status() == PHP_SESSION_DISABLED) return;
+        if (PHP_SAPI == 'cli' 
+            || session_status() === PHP_SESSION_DISABLED
+            || session_status() === PHP_SESSION_ACTIVE) return;
 
         set_error_handler(function () {}, E_ALL ^ E_NOTICE);
         session_start();
@@ -118,7 +118,7 @@ class Session
 
     public static function close()
     {
-        if (PHP_SAPI == 'cli' || session_status() == PHP_SESSION_DISABLED) return;
+        if (PHP_SAPI == 'cli' || session_status() !== PHP_SESSION_ACTIVE) return;
  
         foreach ((array) $_SESSION['@ONETIME'] as $token => $remove) {
             if ($remove) {

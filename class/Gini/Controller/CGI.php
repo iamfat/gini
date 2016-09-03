@@ -72,6 +72,8 @@ abstract class CGI
      */
     public function execute()
     {
+        \Gini\Config::get('session.autostart') === false or \Gini\Session::open();
+
         $action = $this->action ?: '__index';
         $params = (array) $this->params;
 
