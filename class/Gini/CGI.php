@@ -37,7 +37,7 @@ class CGI
             home/page.php        Controller\Page::index('edit', 1)
         */
 
-        $response = self::request(self::$route, ['get' => $_GET, 'post' => $_POST, 'files' => $_FILES, 'route' => self::$route])->execute();
+        $response = static::request(static::$route, ['get' => $_GET, 'post' => $_POST, 'files' => $_FILES, 'route' => static::$route])->execute();
         if ($response) {
             $response->output();
         }
@@ -85,7 +85,7 @@ class CGI
         }
 
         if (!$class || !class_exists($class, false)) {
-            self::redirect('error/404');
+            static::redirect('error/404');
         }
 
         \Gini\Config::set('runtime.controller_path', $path);
@@ -99,7 +99,7 @@ class CGI
         } elseif (method_exists($controller, '__index')) {
             $action = '__index';
         } else {
-            self::redirect('error/404');
+            static::redirect('error/404');
         }
 
         $controller->action = $action;
@@ -154,9 +154,9 @@ class CGI
     public static function route($route = null)
     {
         if (is_null($route)) {
-            return self::$route;
+            return static::$route;
         }
-        self::$route = $route;
+        static::$route = $route;
     }
 
     public static function redirect($url = '', $query = null)
@@ -169,7 +169,7 @@ class CGI
     public static function setup()
     {
         URI::setup();
-        self::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
+        static::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
         Session::setup();
     }
 

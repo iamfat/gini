@@ -4,6 +4,8 @@ namespace Gini\Controller\CGI;
 
 final class API extends \Gini\Controller\CGI
 {
+    public function __index() {}
+
     public function execute()
     {
         $request = @json_decode(\Gini\CGI::content(), true);
