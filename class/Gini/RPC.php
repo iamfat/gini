@@ -103,6 +103,8 @@ class RPC
         }, array_keys($this->_header), $this->_header);
 
         curl_setopt_array($ch, [
+            CURLOPT_DNS_USE_GLOBAL_CACHE => false,
+            CURLOPT_DNS_CACHE_TIMEOUT => 0,
             CURLOPT_COOKIEJAR => $cookie_file,
             CURLOPT_COOKIEFILE => $cookie_file,
             CURLOPT_SSL_VERIFYPEER => false,
