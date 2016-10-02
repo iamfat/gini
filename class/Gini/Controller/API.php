@@ -16,6 +16,6 @@
 
 namespace Gini\Controller;
 
-class API
+abstract class API
 {
 }

@@ -24,7 +24,7 @@ class RPC
     {
         $this->_url = $url;
         $this->_path = $path;
-        $this->_cookie = $cookie ?: IoC::construct('\Gini\RPC\Cookie');
+        $this->_cookie = $cookie ?: IoC::construct('\Gini\HTTP\Cookie');
         $this->_header = (array) $header;
     }
 

@@ -9,37 +9,41 @@ class HTTP
 
     public function header($name, $value)
     {
-        $this->_header[$name] = $value;
+        $this->_header[strtolower($name)] = $value;
 
         return $this;
     }
 
     public function get($url, $query = null, $timeout = 5)
     {
-        $qpos = strpos($url, '?');
-        $url .= ($qpos === false) ? '?' : '&';
-        $url .= is_string($query) ? $query : http_build_query($query);
-
-        return $this->request($url, $timeout);
+        return $this->request('GET', $url, $query, $timeout);
     }
 
     public function post($url, $query, $timeout = 5)
     {
-        $this->_post = $query;
+        return $this->request('POST', $url, $query, $timeout);
+    }
 
-        return $this->request($url, $timeout);
+    public function delete($url, $query, $timeout = 5)
+    {
+        return $this->request('DELETE', $url, $query, $timeout);
+    }
+
+    public function put($url, $query, $timeout = 5)
+    {
+        return $this->request('PUT', $url, $query, $timeout);
     }
 
     public function clean()
     {
         $this->_header = [];
-        $this->_post = [];
     }
 
     public function cookie()
     {
-        $cookie = array();
-        $file = $this->_cookie_file;
+        if (!$this->_cookie) return [];
+        $cookie = [];
+        $file = $this->_cookie->file;
         if (file_exists($file)) {
             $rows = file($file);
             foreach ($rows as $row) {
@@ -57,11 +61,14 @@ class HTTP
         return $cookie;
     }
 
-    private $_cookie_file;
-    public function cookieFile($file = null)
-    {
-        $this->_cookie_file = $file;
+    private $_cookie;
+    public function enableCookie() {
+        $this->_cookie = IoC::construct('\Gini\HTTP\Cookie');
+        return $this;
+    }
 
+    public function disableCookie() {
+        $this->_cookie = null;
         return $this;
     }
 
@@ -75,12 +82,13 @@ class HTTP
         return $this;
     }
 
-    public function request($url, $timeout = 5)
+    public function request($method, $url, $query, $timeout = 5)
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
+            CURLOPT_DNS_USE_GLOBAL_CACHE => false,
+            CURLOPT_DNS_CACHE_TIMEOUT => 0,
             CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_URL => $url,
             CURLOPT_HEADER => true,
             CURLOPT_AUTOREFERER => true,
             CURLOPT_FOLLOWLOCATION => true,
@@ -93,44 +101,63 @@ class HTTP
             CURLOPT_REFERER => 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
         ));
 
-        if ($this->_cookie_file) {
-            curl_setopt_array($ch, array(
-                CURLOPT_COOKIEFILE => $this->_cookie_file,
-                CURLOPT_COOKIEJAR => $this->_cookie_file,
-            ));
+        if (!isset($this->_header['Expect'])) {
+            $this->_header['Expect']='';
+        }
+        $curl_header = [];
+        foreach ($this->_header as $k => $v) {
+            $curl_header[] = $k.': '.$v;
+        }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $curl_header);
+
+        if (!is_scalar($query)) {
+            if (!array_filter($query, function($v){ return $v instanceof \CURLFile; })) {
+                if ($this->_header['content-type']=='application/json') {
+                    $query = json_encode((object)$query, JSON_UNESCAPED_UNICODE);
+                } else {
+                    $query = http_build_query($query);
+                }
+            }
+        }
+
+        if ($this->_cookie) {
+            curl_setopt_array($ch, [
+                CURLOPT_COOKIEFILE => $this->_cookie->file,
+                CURLOPT_COOKIEJAR => $this->_cookie->file,
+            ]);
         }
 
         if ($this->_proxy) {
-            curl_setopt_array($ch, array(
+            curl_setopt_array($ch, [
                 CURLOPT_HTTPPROXYTUNNEL => true,
                 CURLOPT_PROXY => $this->_proxy,
                 CURLOPT_PROXYTYPE => $this->_proxy_type,
-            ));
+            ]);
         }
 
-        if ($this->_header) {
-            $curl_header = array();
-            foreach ($this->_header as $k => $v) {
-                $curl_header[] = $k.': '.$v;
+        if ($method == 'GET') {
+            if ($query) {
+                $qpos = strpos($url, '?');
+                $url .= ($qpos === false) ? '?' : '&';
+                $url .= strval($query);
             }
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $curl_header);
-        }
-
-        if ($this->_post) {
+        } elseif ($method == 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, is_array($this->_post) ? http_build_query($this->_post) : $this->_post);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+        } else {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
         }
 
+        // curl_setopt($ch, CURLOPT_VERBOSE, true);
+        curl_setopt($ch, CURLOPT_URL, $url);
         $data = curl_exec($ch);
-
-        $this->clean();
 
         $errno = curl_errno($ch);
         if ($errno || !$data) {
             $err = curl_error($ch);
             Logger::of('core')->error("CURL ERROR($errno $err): $url ");
             curl_close($ch);
-
             return;
         }
 

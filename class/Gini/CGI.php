@@ -37,7 +37,11 @@ class CGI
             home/page.php        Controller\Page::index('edit', 1)
         */
 
-        $response = static::request(static::$route, ['get' => $_GET, 'post' => $_POST, 'files' => $_FILES, 'route' => static::$route])->execute();
+        $response = static::request(static::$route, [
+            'get' => $_GET, 'post' => $_POST,
+            'files' => $_FILES, 'route' => static::$route,
+            'method' => $_SERVER['REQUEST_METHOD']
+            ])->execute();
         if ($response) {
             $response->output();
         }
@@ -93,13 +97,17 @@ class CGI
         $controller = \Gini\IoC::construct($class);
 
         $action = strtr($params[0], ['-' => '', '_' => '']);
-        if ($action && $action[0] != '_' && method_exists($controller, 'action'.$action)) {
-            $action = 'action'.$action;
-            array_shift($params);
-        } elseif (method_exists($controller, '__index')) {
-            $action = '__index';
+        if ($controller instanceof \Gini\Controller\REST) {
+            // DO NOTHING
         } else {
-            static::redirect('error/404');
+            if ($action && $action[0] != '_'
+                && method_exists($controller, 'action'.$action)) {
+                array_shift($params);
+            } elseif (method_exists($controller, '__index')) {
+                $action = null;
+            } else {
+                static::redirect('error/404');
+            }
         }
 
         $controller->action = $action;

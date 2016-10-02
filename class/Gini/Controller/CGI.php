@@ -72,7 +72,7 @@ abstract class CGI
      */
     public function execute()
     {
-        $action = $this->action ?: '__index';
+        $action = $this->action ? 'action'.$this->action : '__index';
         $params = (array) $this->params;
 
         $response = $this->__preAction($action, $params);
