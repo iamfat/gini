@@ -14,6 +14,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 abstract class ORM
@@ -389,7 +390,7 @@ abstract class ORM
         return ['fields' => $fields, 'indexes' => $indexes, 'relations' => $relations];
     }
 
-    public function delete()
+    public function forceDelete()
     {
         if (!$this->id) {
             return true;
@@ -398,9 +399,23 @@ abstract class ORM
         $db = $this->db();
         $tbl_name = $this->tableName();
 
-        $SQL = 'DELETE FROM '.$db->quoteIdent($tbl_name).' WHERE '.$db->quoteIdent('id').'='.$db->quote($this->id);
+        $SQL = 'DELETE FROM '.$db->quoteIdent($tbl_name)
+            .' WHERE "id"='.$db->quote($this->id);
 
         return (bool) $db->query($SQL);
+    }
+
+    public function delete()
+    {
+        if (!$this->id) {
+            return true;
+        }
+
+        if (is_callable($this, '_delete')) {
+            return $this->_delete();
+        }
+
+        return $this->forceDelete();
     }
 
     public function save()
