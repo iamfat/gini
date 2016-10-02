@@ -40,7 +40,7 @@ class CGI
         $response = static::request(static::$route, [
             'get' => $_GET, 'post' => $_POST,
             'files' => $_FILES, 'route' => static::$route,
-            'method' => $_SERVER['REQUEST_METHOD']
+            'method' => $_SERVER['REQUEST_METHOD'],
             ])->execute();
         if ($response) {
             $response->output();
@@ -52,7 +52,7 @@ class CGI
         $args = array_map('rawurldecode', explode('/', $route));
 
         $path = '';
-        $candidates = [ '/index' => $args ] + Util::pathAndArgs($args);
+        $candidates = ['/index' => $args] + Util::pathAndArgs($args);
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
             $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);

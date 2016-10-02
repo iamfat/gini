@@ -2,7 +2,8 @@
 
 namespace Gini\Lock;
 
-interface Driver {
+interface Driver
+{
     public function lock();
     public function unlock();
 }

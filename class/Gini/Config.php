@@ -126,13 +126,15 @@ class Config
         }
     }
 
-    public static function fetch($env=null)
+    public static function fetch($env = null)
     {
-        $env = $env ?: APP_PATH . '/.env';
+        $env = $env ?: APP_PATH.'/.env';
         if (file_exists($env)) {
-            $rows = file($env, FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES);
-            foreach($rows as &$row) {
-                if (!$row || $row[0] == '#') continue;
+            $rows = file($env, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($rows as &$row) {
+                if (!$row || $row[0] == '#') {
+                    continue;
+                }
                 putenv($row);
             }
         }

@@ -71,7 +71,7 @@ class Util
         while (count($argv) > 0) {
             $arg = array_shift($argv);
             if ($guessCase) {
-                $arg = implode('', array_map('ucwords', explode('_', strtr($arg, [ '-' => '_' ]))));
+                $arg = implode('', array_map('ucwords', explode('_', strtr($arg, ['-' => '_']))));
             }
             if (!preg_match('|^[a-z][a-z0-9-_]+$|i', $arg)) {
                 break;
@@ -83,7 +83,8 @@ class Util
         return $candidates;
     }
 
-    public static function parseArgs($str) {
+    public static function parseArgs($str)
+    {
         //TODO: should parse more complex string
         return explode(' ', $str);
     }
@@ -125,7 +126,7 @@ class Util
                     $opt['_'][] = $v;
                     continue;
                 }
- 
+
                 if ($v[1] == '-') {
                     list($okey, $oval) = explode('=', substr($v, 2), 2);
                     if (isset($longopts[$okey])) {

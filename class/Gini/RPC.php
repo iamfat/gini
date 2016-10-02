@@ -11,12 +11,14 @@ class RPC
     private $_uniqid = 1;
 
     private static $_RPCs = [];
-    public static function of($name, $cookie = null, $header = []) {
+    public static function of($name, $cookie = null, $header = [])
+    {
         if (!self::$_RPCs[$name]) {
             $conf = \Gini\Config::get('app.rpc');
             $rpc = IoC::construct('\Gini\RPC', $conf[$name]['url'], null, $cookie, $header);
             self::$_RPCs[$name] = $rpc;
         }
+
         return self::$_RPCs[$name];
     }
 
@@ -82,7 +84,7 @@ class RPC
         foreach ($header as $k => $h) {
             if (is_numeric($k)) {
                 list($k, $v) = explode(':', $h, 2);
-                $kh[trim($k)]=trim($v);
+                $kh[trim($k)] = trim($v);
             } else {
                 $kh[$k] = $h;
             }
@@ -98,7 +100,7 @@ class RPC
 
         $this->_header['Content-Type'] = 'application/json';
         // convert to Key: Value format
-        $header = array_map(function($k, $v) {
+        $header = array_map(function ($k, $v) {
             return "$k: $v";
         }, array_keys($this->_header), $this->_header);
 

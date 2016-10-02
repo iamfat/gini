@@ -2,8 +2,8 @@
 
 namespace Gini\Lock;
 
-class Redis implements Driver {
-
+class Redis implements Driver
+{
     private $_instances = [];
     private $_resource;
     private $_quorum;
@@ -12,21 +12,24 @@ class Redis implements Driver {
     const RETRY_MAX = 3;
     const RETRY_DELAY = 200;
 
-    public function __construct($path, $resource) {
+    public function __construct($path, $resource)
+    {
         $urls = array_map('trim', explode(',', $path));
         foreach ($urls as $url) {
             $u = parse_url($url);
-            if (!$u['host']) continue;
+            if (!$u['host']) {
+                continue;
+            }
             if ($u['query']) {
                 $q = parse_str($u['query']);
             }
             $redis = new \Redis();
-            $redis->connect($u['host'], $u['port']?:6379, 0.01);
+            $redis->connect($u['host'], $u['port'] ?: 6379, 0.01);
             $q['auth'] and $redis->auth($q['auth']);
             $this->_instances[$url] = $redis;
         }
-        $this->_quorum  = min(count($this->_instances), (count($this->_instances) / 2 + 1));
-        $this->_resource = $resource . '-lock';
+        $this->_quorum = min(count($this->_instances), (count($this->_instances) / 2 + 1));
+        $this->_resource = $resource.'-lock';
         $this->_token = uniqid();
     }
 
@@ -44,17 +47,19 @@ class Redis implements Driver {
                 return 0
             end
         ';
+
         return $instance->eval($script, [$this->_resource, $this->_token], 1);
     }
 
-    public function lock($ttl=2000) {
+    public function lock($ttl = 2000)
+    {
         $retry = self::RETRY_MAX;
         while ($retry--) {
             $n = 0;
             $startTime = microtime(true) * 1000;
             foreach ($this->_instances as $instance) {
                 if ($this->lockInstance($instance, $ttl)) {
-                    $n++;
+                    ++$n;
                 }
             }
             # Add 2 milliseconds to the drift to account for Redis expires
@@ -66,7 +71,7 @@ class Redis implements Driver {
                 return [
                     'validity' => $validityTime,
                     'resource' => $this->_resource,
-                    'token'    => $this->_token,
+                    'token' => $this->_token,
                 ];
             } else {
                 foreach ($this->_instances as $instance) {
@@ -82,7 +87,8 @@ class Redis implements Driver {
         return false;
     }
 
-    public function unlock() {
+    public function unlock()
+    {
         foreach ($this->_instances as $instance) {
             $this->unlockInstance($instance);
         }

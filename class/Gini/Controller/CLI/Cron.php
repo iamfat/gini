@@ -28,16 +28,20 @@ class Cron extends \Gini\Controller\CLI
         echo yaml_emit($cron, YAML_UTF8_ENCODING);
     }
 
-    public function actionRun($args) {
+    public function actionRun($args)
+    {
         foreach ($args as $name) {
             $job = \Gini\Config::get('cron')[$name];
-            if (!$job) continue;
+            if (!$job) {
+                continue;
+            }
             $command_args = \Gini\Util::parseArgs($job['command']);
             \Gini\CLI::dispatch($command_args);
         }
     }
 
-    public function actionSchedule() {
+    public function actionSchedule()
+    {
         // read cron cache
         $cron_cache_file = sys_get_temp_dir().'/cron_cache_'.sha1(APP_PATH);
         $fh = fopen($cron_cache_file, 'c+');
@@ -56,7 +60,7 @@ class Cron extends \Gini\Controller\CLI
                             // we have to run it
                             $cache['last_run_at'] = $now->format('c');
                             \Gini\Logger::of('cron')->info('cron run {command}', [
-                                'command' => $job['command']]);
+                                'command' => $job['command'], ]);
                             $pid = pcntl_fork();
                             if ($pid == -1) {
                                 continue;
@@ -70,7 +74,7 @@ class Cron extends \Gini\Controller\CLI
                     $cache['next'] = $cron->getNextRunDate()->format('c');
                 }
 
-                while (pcntl_wait($status)>0);
+                while (pcntl_wait($status) > 0);
                 ftruncate($fh, 0);
                 fwrite($fh, J($cron_cache));
 
@@ -78,7 +82,6 @@ class Cron extends \Gini\Controller\CLI
             }
             fclose($fh);
         }
-
     }
 
     public function actionExport($args)

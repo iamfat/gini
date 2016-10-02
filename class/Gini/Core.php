@@ -459,8 +459,8 @@ namespace Gini {
             !method_exists('\Gini\Application', 'setup') or \Gini\Application::setup();
 
             // 生成一个 APP_HASH 用于做版本唯一说明
-            define('APP_HASH', sha1(array_reduce(self::$MODULE_INFO, 
-            function($str, $info){
+            define('APP_HASH', sha1(array_reduce(self::$MODULE_INFO,
+            function ($str, $info) {
                 return $str.':'.$info->id.'/'.$info->version;
             }, '')));
 

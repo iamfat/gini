@@ -48,7 +48,7 @@ class App extends \Gini\Controller\CLI
             }
         }
 
-        $data['dependencies'] = @json_decode($data['dependencies']) ?: (object)[];
+        $data['dependencies'] = @json_decode($data['dependencies']) ?: (object) [];
 
         $gini_json = J($data, JSON_PRETTY_PRINT);
         file_put_contents($path.'/gini.json', $gini_json);
@@ -225,14 +225,14 @@ class App extends \Gini\Controller\CLI
     }
 
     /**
-     * sh -lc
+     * sh -lc.
      *
      * @param string $argv
      */
     public function actionSh($argv)
     {
         $command = implode(' ', $argv);
-        $proc = proc_open($command ?: '/bin/sh -l', [ STDIN, STDOUT, STDERR ], $pipes);
+        $proc = proc_open($command ?: '/bin/sh -l', [STDIN, STDOUT, STDERR], $pipes);
         if (is_resource($proc)) {
             proc_close($proc);
         }

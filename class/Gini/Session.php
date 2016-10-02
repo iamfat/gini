@@ -94,16 +94,21 @@ class Session
 
     public static function regenerateId()
     {
-        if (PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server' || session_status() == PHP_SESSION_DISABLED) return;
+        if (PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server' || session_status() == PHP_SESSION_DISABLED) {
+            return;
+        }
         self::unlock();
         session_regenerate_id();
         self::lock();
     }
 
-    public static function open() {
-        if (PHP_SAPI == 'cli' 
+    public static function open()
+    {
+        if (PHP_SAPI == 'cli'
             || session_status() === PHP_SESSION_DISABLED
-            || session_status() === PHP_SESSION_ACTIVE) return;
+            || session_status() === PHP_SESSION_ACTIVE) {
+            return;
+        }
 
         set_error_handler(function () {}, E_ALL ^ E_NOTICE);
         session_start();
@@ -120,8 +125,10 @@ class Session
 
     public static function close()
     {
-        if (PHP_SAPI == 'cli' || session_status() !== PHP_SESSION_ACTIVE) return;
- 
+        if (PHP_SAPI == 'cli' || session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+
         foreach ((array) $_SESSION['@ONETIME'] as $token => $remove) {
             if ($remove) {
                 unset($_SESSION['@ONETIME'][$token]);
@@ -138,7 +145,8 @@ class Session
         session_start();
     }
 
-    public static function lock() {
+    public static function lock()
+    {
         $sid = session_id();
         session_commit();
         if (self::$_handlerName == 'internal/redis') {
@@ -148,7 +156,8 @@ class Session
         session_start();
     }
 
-    public static function unlock() {
+    public static function unlock()
+    {
         session_commit();
         if (self::$_lock) {
             self::$_lock->unlock();
@@ -156,5 +165,4 @@ class Session
         }
         session_start();
     }
-
 }

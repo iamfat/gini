@@ -41,7 +41,9 @@ class HTTP
 
     public function cookie()
     {
-        if (!$this->_cookie) return [];
+        if (!$this->_cookie) {
+            return [];
+        }
         $cookie = [];
         $file = $this->_cookie->file;
         if (file_exists($file)) {
@@ -62,13 +64,17 @@ class HTTP
     }
 
     private $_cookie;
-    public function enableCookie() {
+    public function enableCookie()
+    {
         $this->_cookie = IoC::construct('\Gini\HTTP\Cookie');
+
         return $this;
     }
 
-    public function disableCookie() {
+    public function disableCookie()
+    {
         $this->_cookie = null;
+
         return $this;
     }
 
@@ -102,7 +108,7 @@ class HTTP
         ));
 
         if (!isset($this->_header['Expect'])) {
-            $this->_header['Expect']='';
+            $this->_header['Expect'] = '';
         }
         $curl_header = [];
         foreach ($this->_header as $k => $v) {
@@ -111,9 +117,9 @@ class HTTP
         curl_setopt($ch, CURLOPT_HTTPHEADER, $curl_header);
 
         if (!is_scalar($query)) {
-            if (!array_filter($query, function($v){ return $v instanceof \CURLFile; })) {
-                if ($this->_header['content-type']=='application/json') {
-                    $query = json_encode((object)$query, JSON_UNESCAPED_UNICODE);
+            if (!array_filter($query, function ($v) { return $v instanceof \CURLFile; })) {
+                if ($this->_header['content-type'] == 'application/json') {
+                    $query = json_encode((object) $query, JSON_UNESCAPED_UNICODE);
                 } else {
                     $query = http_build_query($query);
                 }
@@ -158,6 +164,7 @@ class HTTP
             $err = curl_error($ch);
             Logger::of('core')->error("CURL ERROR($errno $err): $url ");
             curl_close($ch);
+
             return;
         }
 

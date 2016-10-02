@@ -60,6 +60,7 @@ class Composer extends \Gini\Controller\CLI
                 $confirm = strtolower(readline('File exists. Overwrite? [Y/n] '));
                 if ($confirm && $confirm != 'y') {
                     echo "   \e[33mcanceled.\e[0m\n";
+
                     return;
                 }
             }
