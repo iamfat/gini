@@ -28,11 +28,13 @@ class Those extends \Gini\PHPUnit\CLI
                 '_extra' => 'array',
                 'name' => 'string:50',
                 'money' => 'double,default:0',
+                'father' => 'object:user',
                 'description' => 'string:*,null',
             ]));
 
             return $user;
         });
+
     }
 
     public function tearDown()
@@ -97,18 +99,41 @@ class Those extends \Gini\PHPUnit\CLI
         $this->assertAttributeEquals('SELECT DISTINCT "t0"."id" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'%COOL\'', 'SQL', $those);
     }
 
-	public function testPlurals()
-	{
+    public function testPlurals()
+    {
         $plurals = \Gini\Config::get('orm.plurals');
         $plurals['users'] = 'user';
         \Gini\Config::set('orm.plurals', $plurals);
         
-		// e.g. those('users')
-		\Gini\Those::reset();
-		$those = those('users')->whose('name')->beginsWith('COOL');
+        // e.g. those('users')
+        \Gini\Those::reset();
+        $those = those('users')->whose('name')->beginsWith('COOL');
         $those->makeSQL();
         $this->assertAttributeEquals('SELECT DISTINCT "t0"."id" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'COOL%\'', 'SQL', $those);
 
-	}
+    }
+
+    public function testInObjects() 
+    {
+        // e.g. those('users')
+        \Gini\Those::reset();
+        $those = those('users')->whose('gender')->is(1)
+            ->andWhose('father')->isIn(those('users')->whose('name')->is('A'));
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id" FROM "user" AS "t0" INNER JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id" WHERE "t0"."gender"=1 AND "t1"."name"=\'A\'', 'SQL', $those);
+
+        \Gini\Those::reset();
+        $those = those('users')->whose('gender')->is(1)
+            ->orWhose('father')->isIn(those('users')->whose('name')->is('A'));
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id" FROM "user" AS "t0" INNER JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id" WHERE "t0"."gender"=1 OR "t1"."name"=\'A\'', 'SQL', $those);
+
+        \Gini\Those::reset();
+        $those = those('users')->whose('gender')->is(1)
+            ->andWhose('father')->isNotIn(those('users')->whose('name')->is('A'));
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id" FROM "user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id" WHERE "t0"."gender"=1 AND "t1"."name"=\'A\' AND "t0"."father_id" IS NOT NULL', 'SQL', $those);
+
+    }
 
 }

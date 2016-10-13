@@ -127,7 +127,7 @@ namespace Gini {
         private function _packWhere($where, $op = 'AND')
         {
             if (!is_array($where)) {
-                $where = array($where);
+                $where = [$where];
             }
             if (count($where) <= 1) {
                 return $where[0];
@@ -168,7 +168,9 @@ namespace Gini {
         public function orWhose($field)
         {
             $this->resetFetch();
-            $this->_where[] = 'OR';
+            if ($this->_where) {
+                $this->_where[] = 'OR';
+            }
             $this->_field = $field;
 
             return $this;
@@ -240,9 +242,17 @@ namespace Gini {
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
+
+                $op = 'AND';
+                if (is_array($this->_where)) {
+                    while(in_array(end($this->_where), ['AND', 'OR'])) {
+                        $op = array_pop($this->_where);
+                    }
+                }
+
                 if ($v->_where) {
                     if ($this->_where) {
-                        $this->_where = array_merge($this->_where, ['AND'], $v->_where);
+                        $this->_where = array_merge($this->_where, [$op], $v->_where);
                     } else {
                         $this->_where = $v->_where;
                     }
@@ -273,9 +283,17 @@ namespace Gini {
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
+
+                $op = 'AND';
+                if (is_array($this->_where)) {
+                    while(in_array(end($this->_where), ['AND', 'OR'])) {
+                        $op = array_pop($this->_where);
+                    }
+                }
+
                 if ($v->_where) {
                     if ($this->_where) {
-                        $this->_where = array_merge($this->_where, ['AND'], $v->_where);
+                        $this->_where = array_merge($this->_where, [$op], $v->_where);
                     } else {
                         $this->_where = $v->_where;
                     }
