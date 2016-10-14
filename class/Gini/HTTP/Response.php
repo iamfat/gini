@@ -37,6 +37,6 @@ class Response
             'version' => $parts[1],
             'code' => $parts[2],
             'text' => $parts[3],
-        ]
+        ];
     }
 }
