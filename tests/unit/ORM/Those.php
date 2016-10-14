@@ -132,7 +132,7 @@ class Those extends \Gini\PHPUnit\CLI
         $those = those('users')->whose('gender')->is(1)
             ->andWhose('father')->isNotIn(those('users')->whose('name')->is('A'));
         $those->makeSQL();
-        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id" FROM "user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id" WHERE "t0"."gender"=1 AND "t1"."name"=\'A\' AND "t0"."father_id" IS NOT NULL', 'SQL', $those);
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id" FROM "user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id" WHERE "t0"."gender"=1 AND "t0"."father_id" IS NOT NULL AND "t1"."name"=\'A\'', 'SQL', $those);
 
     }
 
