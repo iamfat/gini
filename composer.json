@@ -14,18 +14,10 @@
     ],
     "require": {
         "sabre/dav": "2.*",
-        "doctrine/inflector": "@stable"
+        "doctrine/inflector": "@stable",
+        "mtdowling/cron-expression": "@stable"
     },
     "require-dev": {
         "henrikbjorn/lurker": "1.*"
-    },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "http://satis.genee.cn"
-        }
-    ],
-    "config": {
-        "secure-http": false
     }
 }

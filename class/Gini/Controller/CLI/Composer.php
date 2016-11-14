@@ -16,19 +16,10 @@ class Composer extends \Gini\Controller\CLI
         $composer_json = [
             'name' => $app->id,
             'description' => $app->description ?: '',
-            'license' => 'proprietary',
-            'repositories' => [
-                ['type' => 'composer', 'url' => 'http://satis.genee.cn'],
-            ],
-            'config' => [
-                'secure-http' => false,
-            ],
+            'license' => 'proprietary'
         ];
 
-        $opt = \Gini\Util::getOpt($args, 'nf', ['no-packagist', 'force']);
-        if (isset($opt['n']) || isset($opt['no-packagist'])) {
-            $composer_json['repositories'][] = ['packagist' => false];
-        }
+        $opt = \Gini\Util::getOpt($args, 'f', ['force']);
 
         if (isset($opt['f']) || isset($opt['force'])) {
             $force = true;
