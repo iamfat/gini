@@ -2,4 +2,7 @@
 default:
   SysLog:
     level: warning
+cron:
+  SysLog:
+    level: info
 ...

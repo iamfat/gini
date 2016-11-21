@@ -30,4 +30,13 @@ class Response
     {
         return $this->body;
     }
+
+    public function status() {
+        preg_match('|HTTP/(\d\.\d)\s+(\d+)\s+(.*)|', $this->status, $parts);
+        return (object)[
+            'version' => $parts[1],
+            'code' => $parts[2],
+            'text' => $parts[3],
+        ];
+    }
 }

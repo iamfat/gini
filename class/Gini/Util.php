@@ -69,12 +69,11 @@ class Util
         $candidates = [];
 
         while (count($argv) > 0) {
+            $arg = array_shift($argv);
             if ($guessCase) {
-                $arg = implode('', array_map('ucwords', explode('_', str_replace('-', '_', array_shift($argv)))));
-            } else {
-                $arg = str_replace('-', '_', array_shift($argv));
+                $arg = implode('', array_map('ucwords', explode('_', strtr($arg, ['-' => '_']))));
             }
-            if (!preg_match('|^[a-z][a-z0-9]+$|i', $arg)) {
+            if (!preg_match('|^[a-z][a-z0-9-_]+$|i', $arg)) {
                 break;
             }
             $path .= '/'.$arg;
@@ -82,6 +81,12 @@ class Util
         }
 
         return $candidates;
+    }
+
+    public static function parseArgs($str)
+    {
+        //TODO: should parse more complex string
+        return explode(' ', $str);
     }
 
     private static function _convertShortOpts($opts)
@@ -119,7 +124,9 @@ class Util
                 $v = array_shift($argv);
                 if ($v[0] != '-') {
                     $opt['_'][] = $v;
+                    continue;
                 }
+
                 if ($v[1] == '-') {
                     list($okey, $oval) = explode('=', substr($v, 2), 2);
                     if (isset($longopts[$okey])) {
@@ -145,7 +152,7 @@ class Util
                             if ($o == ':' || $o == '::') {
                                 $oval = array_shift($argv);
                                 if (!$oval) {
-                                    throw new \Exception('missing arguments');
+                                    throw new \Exception('missing arguments for -'.$v[1]);
                                 }
                                 $opt[$okey] = $oval;
                             } else {
@@ -161,6 +168,7 @@ class Util
                 }
             }
         } catch (\Exception $e) {
+            error_log('\Gini\Util::getOpt error: '.$e->getMessage());
         }
 
         return $opt;

@@ -14,6 +14,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 abstract class ORM
@@ -302,7 +303,7 @@ abstract class ORM
                     if (!$pv) {
                         $fields[$k.'_name'] = ['type' => 'varchar(120)'];
                     }
-                    $fields[$k.'_id'] = ['type' => 'bigint'];
+                    $fields[$k.'_id'] = ['type' => 'bigint', 'null' => true];
                 }
             }
 
@@ -389,7 +390,7 @@ abstract class ORM
         return ['fields' => $fields, 'indexes' => $indexes, 'relations' => $relations];
     }
 
-    public function delete()
+    public function forceDelete()
     {
         if (!$this->id) {
             return true;
@@ -398,9 +399,23 @@ abstract class ORM
         $db = $this->db();
         $tbl_name = $this->tableName();
 
-        $SQL = 'DELETE FROM '.$db->quoteIdent($tbl_name).' WHERE '.$db->quoteIdent('id').'='.$db->quote($this->id);
+        $SQL = 'DELETE FROM '.$db->quoteIdent($tbl_name)
+            .' WHERE "id"='.$db->quote($this->id);
 
         return (bool) $db->query($SQL);
+    }
+
+    public function delete()
+    {
+        if (!$this->id) {
+            return true;
+        }
+
+        if (is_callable($this, '_delete')) {
+            return $this->_delete();
+        }
+
+        return $this->forceDelete();
     }
 
     public function save()
@@ -428,15 +443,11 @@ abstract class ORM
                         $db_data[$k.'_name'] = $oname ?: $o->name;
                     }
                 }
-                $db_data[$k.'_id'] = $o->id ?: 0;
+                $db_data[$k.'_id'] = $o->id ?: null;
             } elseif (array_key_exists('array', $v)) {
-                $db_data[$k] = isset($this->$k)
-                    ? J($this->$k)
-                    : (array_key_exists('null', $v) ? 'null' : '{}');
+                $db_data[$k] = isset($this->$k) ? J($this->$k) : '{}';
             } elseif (array_key_exists('object_list', $v)) {
-                $db_data[$k] = isset($this->$k)
-                    ? J($this->$k->keys())
-                    : (array_key_exists('null', $v) ? 'null' : '[]');
+                $db_data[$k] = isset($this->$k) ? J($this->$k->keys()) : '[]';
             } else {
                 $db_data[$k] = $this->$k;
                 if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {

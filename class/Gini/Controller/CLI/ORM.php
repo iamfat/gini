@@ -37,7 +37,7 @@ class ORM extends \Gini\Controller\CLI
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
-                if ($rc->isAbstract()) {
+                if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface()) {
                     return;
                 }
 
@@ -73,7 +73,7 @@ class ORM extends \Gini\Controller\CLI
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
-                if ($rc->isAbstract()) {
+                if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface()) {
                     return;
                 }
 
@@ -102,5 +102,60 @@ class ORM extends \Gini\Controller\CLI
                 }, array_keys($v), $v)));
             });
         }
+    }
+
+    public function actionUpgradeId()
+    {
+        // ORM required class map.
+        if (!isset($GLOBALS['gini.class_map'])) {
+            echo "\e[31mYou need to run \e[1m\"gini cache class\"\e[0;31m before upgrade ORM id.\e[0m\n";
+
+            return;
+        }
+        // enumerate orms
+        echo "Updating database structures according ORM definition...\n";
+
+        $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
+        foreach ($orm_dirs as $orm_dir) {
+            if (!is_dir($orm_dir)) {
+                continue;
+            }
+
+            \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
+                $oname = preg_replace('|.php$|', '', $file);
+                if ($oname == 'Object') {
+                    return;
+                }
+
+                $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
+
+                // Check if it is abstract class
+                $rc = new \ReflectionClass($class_name);
+                if ($rc->isAbstract()) {
+                    return;
+                }
+
+                $o = \Gini\IoC::construct($class_name);
+                // some object might not have database backend
+                $db = $o->db();
+                if (!$db) {
+                    return;
+                }
+
+                printf("   %s\n", $oname);
+                $structure = $o->structure();
+
+                foreach ($structure as $field => $option) {
+                    if (isset($option['object'])) {
+                        $db->query('UPDATE :table SET :field=NULL WHERE :field=0', [
+                            ':table' => $o->tableName(),
+                            ':field' => $field.'_id',
+                        ]);
+                    }
+                }
+            });
+        }
+
+        echo "   \e[32mdone.\e[0m\n";
     }
 }

@@ -29,6 +29,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 /**

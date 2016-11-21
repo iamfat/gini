@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\RPC;
+namespace Gini\HTTP;
 
 class Cookie
 {
@@ -8,10 +8,11 @@ class Cookie
 
     public function __construct()
     {
-        $this->file = tempnam(sys_get_temp_dir(), 'rpc.cookie.');
+        $this->file = tempnam(sys_get_temp_dir(), 'http.cookie.');
+        register_shutdown_function([$this, 'destruct']);
     }
 
-    public function __destruct()
+    public function destruct()
     {
         if ($this->file && file_exists($this->file)) {
             unlink($this->file);

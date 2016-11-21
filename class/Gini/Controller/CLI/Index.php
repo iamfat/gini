@@ -38,7 +38,7 @@ class Index extends \Gini\Controller\CLI
     private static function _davOptionsAndHeaders($userLogin = false)
     {
         $uri = self::_serverUri();
-        $options = ['baseUri' => $uri];
+        $options = ['baseUri' => rtrim($uri, '/').'/'];
         $headers = [];
 
         if ($userLogin) {
@@ -104,7 +104,7 @@ class Index extends \Gini\Controller\CLI
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
             $config['token'] = $rpc->createToken($username, $password);
             if (isset($config['token'])) {
-                yaml_emit_file(self::_configFile(), $config);
+                yaml_emit_file(self::_configFile(), $config, YAML_UTF8_ENCODING);
                 echo "You've successfully logged in as $username.\n";
             } else {
                 echo "Access denied!\n";
@@ -371,6 +371,9 @@ class Index extends \Gini\Controller\CLI
                         $modulePath = "$targetDir/modules/$module";
                     }
 
+                    if (is_dir($modulePath) && file_exists($modulePath)) {
+                        \Gini\File::removeDir($modulePath);
+                    }
                     \Gini\File::ensureDir($modulePath);
                     echo "Extracting {$module}...\n";
                     $ph = popen('tar -zx -C '.escapeshellcmd($modulePath), 'w');

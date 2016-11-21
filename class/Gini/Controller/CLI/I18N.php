@@ -12,10 +12,6 @@ class I18N extends \Gini\Controller\CLI
 
     public function actionScan($argv)
     {
-        if (count($argv) < 1) {
-            exit("usage: \e[1;34mgini i18n scan\e[0m [<locales>]\n");
-        }
-
         $info = \Gini\Core::moduleInfo(APP_ID);
         if (!isset($info->id)) {
             echo "\e[1;34mgini i18n scan\e[0m: Invalid app path!\n";
@@ -47,15 +43,16 @@ class I18N extends \Gini\Controller\CLI
         passthru($cmd);
 
         // extract msgid ""{context}\004{txt} to msgctxt and msgid
-        $cmd = sprintf("sed 's/msgid   \"\\(.*\\)'\004'/msgctxt \"\\1\"\\nmsgid \"/g' %s",
+        $cmd = sprintf("sed -i 's/msgid   \"\\(.*\\)'\004'/msgctxt \"\\1\"\\nmsgid \"/g' %s",
                 escapeshellarg($l10n_template));
-        // echo $cmd . "\n"; die;
-        file_put_contents($l10n_template, `$cmd`);
+        passthru($cmd);
 
         $locales = $argv;
-        foreach (glob($l10n_path.'/*.po') as $fname) {
-            $locale = basename($fname, '.po');
-            $locales[] = $locale;
+        if (count($locales) == 0) {
+            foreach (glob($l10n_path.'/*.po') as $fname) {
+                $locale = basename($fname, '.po');
+                $locales[] = $locale;
+            }
         }
 
         foreach (array_unique($locales) as $locale) {

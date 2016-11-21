@@ -23,7 +23,7 @@ class CGI extends \Gini\Controller\CLI
         if (is_string($content)) {
             echo $content;
         } else {
-            echo yaml_emit($content);
+            echo yaml_emit($content, YAML_UTF8_ENCODING);
         }
     }
 }

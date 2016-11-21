@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 class File
@@ -62,7 +63,7 @@ class File
             $dh = opendir($path);
             if ($dh) {
                 while ($n = readdir($dh)) {
-                    if ($n[0] == '.') {
+                    if ($n == '.' || $n == '..') {
                         continue;
                     }
                     self::removeDir($path.'/'.$n);

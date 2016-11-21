@@ -13,7 +13,7 @@ class HTML implements \Gini\CGI\Response
 
     public function output()
     {
-        header('Content-Type: text/html');
+        header('Content-Type: text/html; charset:utf-8');
         file_put_contents('php://output', (string) $this->_content);
     }
 

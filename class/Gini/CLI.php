@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 class CLI
@@ -36,7 +37,7 @@ class CLI
             foreach ($argv as $arg) {
                 $eargv[] = escapeshellcmd($arg);
             }
-            proc_close(proc_open(implode(' ', $eargv), array(STDIN, STDOUT, STDERR), $pipes, null, $_SERVER));
+            proc_close(proc_open(implode(' ', $eargv), [STDIN, STDOUT, STDERR], $pipes, null, $_SERVER));
 
             return;
         }
@@ -201,7 +202,7 @@ class CLI
     public static function dispatch(array $argv)
     {
         if (!isset($GLOBALS['gini.class_map'])) {
-            echo "\e[33mNOTICE: You are currently executing commands without cache!\e[0m\n\n";
+            fputs(STDERR, "\e[33mNOTICE: You are currently executing commands without cache!\e[0m\n\n");
         }
 
         $candidates = Util::pathAndArgs($argv, true);

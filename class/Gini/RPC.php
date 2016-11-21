@@ -10,11 +10,23 @@ class RPC
     private $_header = [];
     private $_uniqid = 1;
 
+    private static $_RPCs = [];
+    public static function of($name, $cookie = null, $header = [])
+    {
+        if (!self::$_RPCs[$name]) {
+            $conf = \Gini\Config::get('app.rpc');
+            $rpc = IoC::construct('\Gini\RPC', $conf[$name]['url'], null, $cookie, $header);
+            self::$_RPCs[$name] = $rpc;
+        }
+
+        return self::$_RPCs[$name];
+    }
+
     public function __construct($url, $path = null, $cookie = null, $header = [])
     {
         $this->_url = $url;
         $this->_path = $path;
-        $this->_cookie = $cookie ?: IoC::construct('\Gini\RPC\Cookie');
+        $this->_cookie = $cookie ?: IoC::construct('\Gini\HTTP\Cookie');
         $this->_header = (array) $header;
     }
 
@@ -67,7 +79,17 @@ class RPC
 
     public function setHeader(array $header)
     {
-        $this->_header = array_merge($this->_header, $header);
+        // if format is ['xx: xx'], convert it to ['xx' => 'xx']
+        $kh = [];
+        foreach ($header as $k => $h) {
+            if (is_numeric($k)) {
+                list($k, $v) = explode(':', $h, 2);
+                $kh[trim($k)] = trim($v);
+            } else {
+                $kh[$k] = $h;
+            }
+        }
+        $this->_header = array_merge($this->_header, $kh);
     }
 
     public function post($post_data, $timeout = 5)
@@ -76,10 +98,15 @@ class RPC
 
         $ch = curl_init();
 
-        $header = $this->_header;
-        $header['Content-Type'] = 'application/json';
+        $this->_header['Content-Type'] = 'application/json';
+        // convert to Key: Value format
+        $header = array_map(function ($k, $v) {
+            return "$k: $v";
+        }, array_keys($this->_header), $this->_header);
 
         curl_setopt_array($ch, [
+            CURLOPT_DNS_USE_GLOBAL_CACHE => false,
+            CURLOPT_DNS_CACHE_TIMEOUT => 0,
             CURLOPT_COOKIEJAR => $cookie_file,
             CURLOPT_COOKIEFILE => $cookie_file,
             CURLOPT_SSL_VERIFYPEER => false,
@@ -105,7 +132,7 @@ class RPC
             $message = curl_error($ch);
             curl_close($ch);
 
-            \Gini\Logger::of('core')->error('RPC cURL error: {message}', ['message' => $message]);
+            \Gini\Logger::of('core')->error('RPC cURL error: {url}: {message}', ['url' => $this->_url, 'message' => $message]);
             throw IoC::construct('\Gini\RPC\Exception', "transport error: $message", -32300);
         }
 

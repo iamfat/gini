@@ -55,6 +55,8 @@ namespace Gini {
         private $_join;
         private $_alias;
 
+        private $_withTrashed = false;
+
         private static $_uniqid = 0;
         public function uniqid()
         {
@@ -74,6 +76,20 @@ namespace Gini {
         {
             parent::__construct($name);
             $this->_table = 't'.$this->uniqid();
+        }
+
+        public function withTrashed()
+        {
+            $this->_withTrashed = true;
+
+            return $this;
+        }
+
+        public function onlyTrashed()
+        {
+            $this->_withTrashed = true;
+
+            return $this->whose('delete_at')->is('0000-00-00 00:00:00');
         }
 
         protected function fetch($scope = 'fetch')
@@ -111,7 +127,7 @@ namespace Gini {
         private function _packWhere($where, $op = 'AND')
         {
             if (!is_array($where)) {
-                $where = array($where);
+                $where = [$where];
             }
             if (count($where) <= 1) {
                 return $where[0];
@@ -152,7 +168,9 @@ namespace Gini {
         public function orWhose($field)
         {
             $this->resetFetch();
-            $this->_where[] = 'OR';
+            if ($this->_where) {
+                $this->_where[] = 'OR';
+            }
             $this->_field = $field;
 
             return $this;
@@ -224,8 +242,20 @@ namespace Gini {
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
+
+                $op = 'AND';
+                if (is_array($this->_where)) {
+                    while(in_array(end($this->_where), ['AND', 'OR'])) {
+                        $op = array_pop($this->_where);
+                    }
+                }
+
                 if ($v->_where) {
-                    $this->_where = array_merge((array) $this->_where, $v->_where);
+                    if ($this->_where) {
+                        $this->_where = array_merge($this->_where, [$op], $v->_where);
+                    } else {
+                        $this->_where = $v->_where;
+                    }
                 }
             } else {
                 foreach ($values as $v) {
@@ -247,16 +277,29 @@ namespace Gini {
             $v = reset($values);
             if ($v instanceof self) {
                 $field_name = $db->ident($this->_table, $this->_field.'_id');
-                $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
+                $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name)
+                    .' AS '.$db->quoteIdent($v->_table)
                     .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
                 if ($v->_join) {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
-                if ($v->_where) {
-                    $this->_where = array_merge((array) $this->_where, $v->_where);
+
+                $op = 'AND';
+                if (is_array($this->_where)) {
+                    while(in_array(end($this->_where), ['AND', 'OR'])) {
+                        $op = array_pop($this->_where);
+                    }
+                }
+
+                if ($this->_where) {
                     $this->_where[] = 'AND';
                 }
                 $this->_where[] = $field_name.' IS NOT NULL';
+
+                if ($v->_where) {
+                    $this->_where = array_merge($this->_where, [$op], $v->_where);
+                }
+
             } else {
                 foreach ($values as $v) {
                     $qv[] = $db->quote($v);
@@ -409,6 +452,13 @@ namespace Gini {
         {
             $db = $this->db;
             $table = $this->_table;
+
+            if (!$this->_withTrashed) {
+                $properties = a($this->name)->properties();
+                if (isset($properties['delete_at'])) {
+                    $this->andWhose('delete_at')->isNot('0000-00-00 00:00:00');
+                }
+            }
 
             $from_SQL = 'FROM '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
 

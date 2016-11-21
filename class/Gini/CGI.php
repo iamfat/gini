@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini;
 
 class CGI
@@ -36,7 +37,11 @@ class CGI
             home/page.php        Controller\Page::index('edit', 1)
         */
 
-        $response = self::request(self::$route, ['get' => $_GET, 'post' => $_POST, 'files' => $_FILES, 'route' => self::$route])->execute();
+        $response = static::request(static::$route, [
+            'get' => $_GET, 'post' => $_POST,
+            'files' => $_FILES, 'route' => static::$route,
+            'method' => $_SERVER['REQUEST_METHOD'],
+            ])->execute();
         if ($response) {
             $response->output();
         }
@@ -47,7 +52,7 @@ class CGI
         $args = array_map('rawurldecode', explode('/', $route));
 
         $path = '';
-        $candidates = array('/index' => $args) + Util::pathAndArgs($args);
+        $candidates = ['/index' => $args] + Util::pathAndArgs($args);
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
             $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
@@ -84,7 +89,7 @@ class CGI
         }
 
         if (!$class || !class_exists($class, false)) {
-            self::redirect('error/404');
+            static::redirect('error/404');
         }
 
         \Gini\Config::set('runtime.controller_path', $path);
@@ -92,13 +97,17 @@ class CGI
         $controller = \Gini\IoC::construct($class);
 
         $action = strtr($params[0], ['-' => '', '_' => '']);
-        if ($action && $action[0] != '_' && method_exists($controller, 'action'.$action)) {
-            $action = 'action'.$action;
-            array_shift($params);
-        } elseif (method_exists($controller, '__index')) {
-            $action = '__index';
+        if ($controller instanceof \Gini\Controller\REST) {
+            // DO NOTHING
         } else {
-            self::redirect('error/404');
+            if ($action && $action[0] != '_'
+                && method_exists($controller, 'action'.$action)) {
+                array_shift($params);
+            } elseif (method_exists($controller, '__index')) {
+                $action = null;
+            } else {
+                static::redirect('error/404');
+            }
         }
 
         $controller->action = $action;
@@ -153,9 +162,9 @@ class CGI
     public static function route($route = null)
     {
         if (is_null($route)) {
-            return self::$route;
+            return static::$route;
         }
-        self::$route = $route;
+        static::$route = $route;
     }
 
     public static function redirect($url = '', $query = null)
@@ -168,7 +177,7 @@ class CGI
     public static function setup()
     {
         URI::setup();
-        self::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
+        static::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
         Session::setup();
     }
 

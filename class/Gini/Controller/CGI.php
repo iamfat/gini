@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini\Controller;
 
 abstract class CGI
@@ -71,7 +72,7 @@ abstract class CGI
      */
     public function execute()
     {
-        $action = $this->action ?: '__index';
+        $action = $this->action ? 'action'.$this->action : '__index';
         $params = (array) $this->params;
 
         $response = $this->__preAction($action, $params);
@@ -79,7 +80,9 @@ abstract class CGI
             $response = call_user_func_array(array($this, $action), $params);
         }
 
-        return $this->__postAction($action, $params, $response) ?: $response;
+        $response = $this->__postAction($action, $params, $response) ?: $response;
+
+        return $response ?: new \Gini\CGI\Response\Nothing();
     }
 
     /**

@@ -22,7 +22,6 @@ class MySQL extends \PDO implements Driver
                 $SQL = sprintf('SHOW TABLE STATUS FROM %s',
                         $this->quoteIdent($this->_dbname));
             }
-
             $rs = $this->query($SQL);
             while ($r = $rs->fetchObject()) {
                 $this->_table_status[$r->Name] = (object) [
@@ -94,6 +93,7 @@ class MySQL extends \PDO implements Driver
             $this->createTable($table);
         }
 
+        $field_sql0 = []; // this is used for some drop operations
         $field_sql = [];
 
         $fields = (array) $schema['fields'];
@@ -151,11 +151,12 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($curr_indexes as $key => $curr_val) {
-            $val = &$indexes[$key];
+            $val = $indexes[$key];
             if ($val) {
-                if ($val['type'] != $curr_val['type']
-                    || array_diff($val, $curr_val)) {
-                    $field_sql[] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
+                ksort($val);
+                ksort($curr_val);
+                if ($val != $curr_val) {
+                    $field_sql0[] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
                     $field_sql[] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
                 }
             } else {
@@ -166,6 +167,7 @@ class MySQL extends \PDO implements Driver
 
         // ------ CHECK RELATIONS
         $relations = (array) $schema['relations'];
+
         $curr_relations = (array) $curr_schema['relations'];
         $missing_relations = array_diff_key($relations, $curr_relations);
 
@@ -174,10 +176,10 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($curr_relations as $key => $curr_val) {
-            $val = &$relations[$key];
+            $val = $relations[$key];
             if ($val) {
                 if (array_diff($val, $curr_val)) {
-                    $field_sql[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
+                    $field_sql0[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
                     $field_sql[] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
                 }
             } else {
@@ -186,10 +188,21 @@ class MySQL extends \PDO implements Driver
             }
         }
 
+        if (count($field_sql0) > 0) {
+            $SQL = sprintf('ALTER TABLE %s %s',
+                $this->quoteIdent($table), implode(', ', $field_sql0));
+            if (false === $this->query($SQL)) {
+                throw new \Gini\Database\Exception($this->errorInfo()[2]);
+            }
+            $this->tableSchema($table, true);
+        }
+
         if (count($field_sql) > 0) {
             $SQL = sprintf('ALTER TABLE %s %s',
                 $this->quoteIdent($table), implode(', ', $field_sql));
-            $this->query($SQL);
+            if (false === $this->query($SQL)) {
+                throw new \Gini\Database\Exception($this->errorInfo()[2]);
+            }
             $this->tableSchema($table, true);
         }
     }
@@ -199,16 +212,16 @@ class MySQL extends \PDO implements Driver
         if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
             $ds = $this->query(sprintf('SHOW FIELDS FROM "%s"', $name));
 
-            $fields = array();
+            $fields = [];
             if ($ds) {
                 while ($dr = $ds->fetchObject()) {
-                    $field = array('type' => $this->_normalizeType($dr->Type));
+                    $field = ['type' => $this->_normalizeType($dr->Type)];
 
                     if ($dr->Default !== null) {
                         $field['default'] = $dr->Default;
                     }
 
-                    if ($dr->null != 'NO') {
+                    if ($dr->Null != 'NO') {
                         $field['null'] = true;
                     }
 
@@ -231,15 +244,16 @@ class MySQL extends \PDO implements Driver
                     $indexes[$row->Key_name]['fields'][] = $row->Column_name;
                     if (!$row->Non_unique) {
                         $indexes[$row->Key_name]['type'] = $row->Key_name == 'PRIMARY' ? 'primary' : 'unique';
+                    } elseif ($row->Index_type == 'FULLTEXT') {
+                        $indexes[$row->Key_name]['type'] = 'fulltext';
                     }
                 }
             }
-
             $this->_table_schema[$name]['indexes'] = $indexes;
         }
 
         if ($refresh || !isset($this->_table_schema[$name]['relations'])) {
-            $ds = $this->query(sprintf('SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = %s AND REFERENCED_TABLE_NAME IS NOT NULL', $this->quote($name)));
+            $ds = $this->query(sprintf('SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_SCHEMA = %s AND TABLE_NAME = %s AND REFERENCED_TABLE_NAME IS NOT NULL', $this->quote($this->_dbname), $this->quote($name)));
             $relations = [];
             if ($ds) {
                 while ($row = $ds->fetchObject()) {
@@ -249,6 +263,7 @@ class MySQL extends \PDO implements Driver
                         'ref_table' => $row->REFERENCED_TABLE_NAME,
                         'ref_column' => $row->REFERENCED_COLUMN_NAME,
                     ];
+                    unset($this->_table_schema[$name]['indexes'][$row->CONSTRAINT_NAME]);
                 }
             }
             $this->_table_schema[$name]['relations'] = $relations;

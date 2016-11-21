@@ -7,6 +7,7 @@
  *
  * @author Jia Huang
  **/
+
 namespace Gini\Controller\CLI;
 
 class App extends \Gini\Controller\CLI
@@ -18,47 +19,14 @@ class App extends \Gini\Controller\CLI
         return str_pad($input, $pad_length + $diff, $pad_string, $pad_type);
     }
 
-    private function _iniPHPUnit()
-    {
-        $gini = \Gini\Core::moduleInfo('gini');
-
-        echo 'Generating PHPUnit files...';
-
-        $xml = APP_PATH.'/phpunit.xml';
-        if (!file_exists($xml)) {
-            copy($gini->path.'/raw/templates/phpunit/phpunit.xml', $xml);
-        }
-
-        $dir = APP_PATH.'/tests';
-        if (!file_exists($dir)) {
-            mkdir($dir);
-        }
-
-        $base = APP_PATH.'/tests/gini.php';
-        if (!file_exists($base)) {
-            copy($gini->path.'/raw/templates/phpunit/gini.php', $base);
-        }
-
-        echo "\e[1mDONE.\e[0m\n";
-    }
-
     /**
      * 初始化模块.
      **/
     public function actionInit($args)
     {
-        if (count($args) > 0) {
-            if (in_array('phpunit', $args)) {
-                return $this->_iniPHPUnit();
-            }
-
-            return;
-        }
-
         $path = $_SERVER['PWD'];
 
         $prompt = [
-            'id' => 'Id',
             'name' => 'Name',
             'description' => 'Description',
             'version' => 'Version',
@@ -67,11 +35,10 @@ class App extends \Gini\Controller\CLI
 
         $default = [
             'name' => ucwords(str_replace('-', ' ', basename($path))),
-            'id' => strtolower(basename($path)),
             'path' => $path,
             'description' => 'App description...',
             'version' => '0.1.0',
-            'dependencies' => '[]',
+            'dependencies' => '{}',
         ];
 
         foreach ($prompt as $k => $v) {
@@ -81,7 +48,7 @@ class App extends \Gini\Controller\CLI
             }
         }
 
-        $data['dependencies'] = (array) @json_decode($data['dependencies']);
+        $data['dependencies'] = @json_decode($data['dependencies']) ?: (object) [];
 
         $gini_json = J($data, JSON_PRETTY_PRINT);
         file_put_contents($path.'/gini.json', $gini_json);
@@ -93,7 +60,6 @@ class App extends \Gini\Controller\CLI
         echo "gini modules\n";
         echo "gini cache [clean]\n";
         echo "gini version <version>\n";
-        echo "gini build\n";
         echo "gini install [module [version]]\n";
     }
 
@@ -105,7 +71,7 @@ class App extends \Gini\Controller\CLI
         if ($info) {
             $info = (array) $info;
             unset($info['path']);
-            echo yaml_emit($info);
+            echo yaml_emit($info, YAML_UTF8_ENCODING);
         }
     }
 
@@ -155,85 +121,15 @@ class App extends \Gini\Controller\CLI
         }
 
         $env = $opt['e'] ?: $opt['env'] ?: null;
-
-        if (count($args) == 0) {
+        if ($opt['_'][0] == 'clean') {
+            \Gini\App\Cache::clean();
+        } else {
             $errors = \Gini\App\Doctor::diagnose(['dependencies', 'composer']);
             if ($errors) {
                 return;
             }
 
             \Gini\App\Cache::setup($env);
-        } elseif (in_array('clean', $args)) {
-            \Gini\App\Cache::clean();
-        }
-    }
-
-    private function _build($build_base, $info)
-    {
-        echo "Building \e[4m$info->name\e[0m ($info->id-$info->version)...\n";
-
-        if (!isset($info->build)) {
-            $info->build = (object) [];
-        }
-        $build = (object) $info->build;
-        if (!isset($build->copy)) {
-            $build->copy = ['raw'];
-        }
-        if (!isset($build->pack)) {
-            $build->pack = ['class', 'view'];
-        }
-
-        $app_dir = $info->path;
-        $build_dir = $build_base.'/'.$info->id;
-
-        if (!is_dir($build_dir)) {
-            @mkdir($build_dir, 0755, true);
-        }
-
-        require_once SYS_PATH.'/lib/packer.php';
-        foreach ($build->pack as $dir) {
-            if (!is_dir("$app_dir/$dir")) {
-                continue;
-            }
-
-            echo "  Packing $dir...\n";
-            $packer = \Gini\IoC::construct('\Gini\Dev\Packer', "$build_dir/$dir");
-            $packer->import("$app_dir/$dir");
-            $packer->finish();
-            echo "\n";
-        }
-
-        foreach ($build->copy as $dir) {
-            $dir = preg_replace('/^[\/.]/', '', $dir);
-            if (!file_exists("$app_dir/$dir")) {
-                continue;
-            }
-
-            if (is_dir("$build_dir/$dir")) {
-                passthru("rm -r $build_dir/$dir");
-            }
-            echo "  copy $dir...\n";
-            passthru("cp -r $app_dir/$dir $build_dir");
-        }
-
-        echo "  copy gini.json...\n";
-        passthru("cp $app_dir/gini.json $build_dir/gini.json");
-        echo "\n";
-    }
-
-    public function actionBuild($args)
-    {
-        $info = \Gini\Core::moduleInfo(APP_ID);
-        $build_base = $info->path.'/build';
-
-        if (is_dir($build_base)) {
-            passthru("rm -rf $build_base");
-        }
-
-        @mkdir($build_base, 0755, true);
-
-        foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            $this->_build($build_base, $info);
         }
     }
 
@@ -326,5 +222,19 @@ class App extends \Gini\Controller\CLI
 
         $controller = \Gini\IoC::construct('\Gini\Controller\CLI\Index');
         $controller->actionInstall($argv);
+    }
+
+    /**
+     * sh -lc.
+     *
+     * @param string $argv
+     */
+    public function actionSh($argv)
+    {
+        $command = implode(' ', $argv);
+        $proc = proc_open($command ?: '/bin/sh -l', [STDIN, STDOUT, STDERR], $pipes);
+        if (is_resource($proc)) {
+            proc_close($proc);
+        }
     }
 }

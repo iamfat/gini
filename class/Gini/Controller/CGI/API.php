@@ -6,6 +6,10 @@ final class API extends \Gini\Controller\CGI
 {
     public function __index()
     {
+    }
+
+    public function execute()
+    {
         $request = @json_decode(\Gini\CGI::content(), true);
         if ($request === null) {
             $response = [

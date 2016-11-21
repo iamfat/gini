@@ -65,7 +65,7 @@ class Web extends \Gini\Controller\CLI
         echo "   \e[32mdone.\e[0m\n";
     }
 
-    private function _process_js($force = false)
+    private function _process_js($force = false, $debug = false)
     {
         printf("%s\n", 'Processing JS...');
 
@@ -78,7 +78,7 @@ class Web extends \Gini\Controller\CLI
             foreach ([
                 $p->path.'/'.RAW_DIR.'/js',
                 $p->path.'/'.RAW_DIR.'/assets/js', ] as $js_dir) {
-                \Gini\File::eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir, $force, &$filemtime) {
+                \Gini\File::eachFilesIn($js_dir, function ($file) use ($js_dir, $ugly_js_dir, $force, &$filemtime, $debug) {
                     $src_path = $js_dir.'/'.$file;
                     $dst_path = $ugly_js_dir.'/'.$file;
 
@@ -87,12 +87,17 @@ class Web extends \Gini\Controller\CLI
                     }
 
                     if ($force || filemtime($src_path) > $filemtime[$dst_path]) {
-                        // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
-                        \Gini\File::ensureDir(dirname($dst_path));
                         printf("   %s\n", $file);
-                        $command = sprintf('uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s',
-                            escapeshellarg($src_path), time(), escapeshellarg($dst_path));
-                        exec($command);
+                        \Gini\File::ensureDir(dirname($dst_path));
+                        if ($debug) {
+                            $command = sprintf("sed -e 's/TIMESTAMP/%s/g' %s > %s", time(), escapeshellarg($src_path), escapeshellarg($dst_path));
+                            exec($command);
+                        } else {
+                            // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
+                            $command = sprintf('uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s',
+                                escapeshellarg($src_path), time(), escapeshellarg($dst_path));
+                            exec($command);
+                        }
                     }
                 });
             }
@@ -149,8 +154,9 @@ class Web extends \Gini\Controller\CLI
             return;
         }
 
-        $opt = \Gini\Util::getOpt($args, 'f', ['force']);
+        $opt = \Gini\Util::getOpt($args, 'fd', ['force', 'debug']);
         $force = isset($opt['f']) || isset($opt['force']);
+        $debug = isset($opt['d']) || isset($opt['debug']);
 
         $web_dir = APP_PATH.'/web';
         \Gini\File::ensureDir($web_dir);
@@ -161,9 +167,9 @@ class Web extends \Gini\Controller\CLI
         }
         file_put_contents($index_path, "<?php require \"$cgi_path\";\n");
 
-        $this->_merge_assets($force);
-        $this->_process_css($force);
-        $this->_process_js($force);
+        $this->_merge_assets($force, $debug);
+        $this->_process_css($force, $debug);
+        $this->_process_js($force, $debug);
     }
 
     public function actionPreview($args)
@@ -175,15 +181,8 @@ class Web extends \Gini\Controller\CLI
 
         $addr = $args[0] ?: 'localhost:3000';
         $command
-            = sprintf('php -S %s -c %s -t %s 2>&1', $addr, APP_PATH.'/raw/cli-server.ini', APP_PATH.'/web');
-
-        $descriptors = [
-            ['file', '/dev/tty', 'r'],
-            ['file', '/dev/tty', 'w'],
-            ['file', '/dev/tty', 'w'],
-                ];
-
-        $proc = proc_open($command, $descriptors, $pipes);
+            = sprintf('php -S %s -c %s -t %s', $addr, APP_PATH.'/raw/cli-server.ini', APP_PATH.'/web');
+        $proc = proc_open($command, [STDIN, STDOUT, STDERR], $pipes);
         if (is_resource($proc)) {
             proc_close($proc);
         }

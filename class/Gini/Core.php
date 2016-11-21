@@ -13,6 +13,7 @@
 /**
  * Define DocBlock.
  **/
+
 namespace Gini {
 
     /**
@@ -78,7 +79,7 @@ namespace Gini {
             }
 
             if (!$info->id) {
-                $info->id = basename($path);
+                $info->id = \Gini\File::relativePath($path, $_SERVER['GINI_MODULE_BASE_PATH']);
             }
 
             if ($info->id != 'gini' && !isset($info->dependencies['gini'])) {
@@ -380,7 +381,7 @@ namespace Gini {
         {
             if (isset($GLOBALS['gini.class_map'])) {
                 foreach (array_reverse((array) self::$MODULE_INFO) as $name => $info) {
-                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '']);
+                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
                     !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
                 }
             }
@@ -457,10 +458,16 @@ namespace Gini {
 
             !method_exists('\Gini\Application', 'setup') or \Gini\Application::setup();
 
+            // 生成一个 APP_HASH 用于做版本唯一说明
+            define('APP_HASH', sha1(array_reduce(self::$MODULE_INFO,
+            function ($str, $info) {
+                return $str.':'.$info->id.'/'.$info->version;
+            }, '')));
+
             // module setup won't be run before CLASS cache
             if (isset($GLOBALS['gini.class_map'])) {
                 foreach (self::$MODULE_INFO as $name => $info) {
-                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '']);
+                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
                     if (!$info->error && method_exists($class, 'setup')) {
                         call_user_func($class.'::setup');
                     }
@@ -478,7 +485,7 @@ namespace Gini {
         {
             if (isset($GLOBALS['gini.class_map'])) {
                 foreach (array_reverse(self::$MODULE_INFO) as $name => $info) {
-                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '']);
+                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
                     if (!$info->error && method_exists($class, 'shutdown')) {
                         call_user_func($class.'::shutdown');
                     }
@@ -540,6 +547,7 @@ namespace {
     if (function_exists('H')) {
         die('H() was declared by other libraries, which may cause problems!');
     } else {
+        ini_set('mbstring.substitute_character', 'none');
         function H()
         {
             $args = func_get_args();
@@ -549,7 +557,8 @@ namespace {
                 $str = $args[0];
             }
 
-            return htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8');
+            // iconv('UTF-8', 'UTF-8//TRANSLIT//IGNORE', $str)
+            return htmlentities(mb_convert_encoding($str, 'UTF-8', 'UTF-8'), ENT_QUOTES, 'UTF-8');
         }
     }
 

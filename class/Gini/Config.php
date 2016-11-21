@@ -107,11 +107,18 @@ class Config
                 case 'yml':
                 case 'yaml':
                     $content = file_get_contents($file);
-                    $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\}/', function ($matches) {
-                        return $_SERVER[$matches[1]] ?: $matches[0];
+                    $content = preg_replace_callback('/\{\{([A-Z0-9_]+?)\}\}/', function ($matches) {
+                        return getenv($matches[1]) ?: $matches[0];
                     }, $content);
-                    $config = (array) yaml_parse($content);
-                    $items[$category] = \Gini\Util::arrayMergeDeep($items[$category], $config);
+                    $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\}/', function ($matches) {
+                        return getenv($matches[1]) ?: $matches[0];
+                    }, $content);
+                    $content = trim($content);
+                    if ($content) {
+                        $config = (array) yaml_parse($content);
+                        $items[$category] = \Gini\Util::arrayMergeDeep(
+                            $items[$category], $config);
+                    }
                     break;
                 }
             }
@@ -121,6 +128,17 @@ class Config
 
     public static function fetch($env = null)
     {
+        $env = $env ?: APP_PATH.'/.env';
+        if (file_exists($env)) {
+            $rows = file($env, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($rows as &$row) {
+                if (!$row || $row[0] == '#') {
+                    continue;
+                }
+                putenv($row);
+            }
+        }
+
         $items = [];
 
         $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
@@ -128,7 +146,7 @@ class Config
             self::_load_config_dir($path, $items);
         }
 
-        $env = $env ?: $_SERVER['GINI_ENV'] ?: '';
+        $env = $_SERVER['GINI_ENV'];
         if ($env) {
             $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$env);
             foreach ($paths as $path) {
