@@ -98,7 +98,7 @@ class CGI
 
         $action = strtr($params[0], ['-' => '', '_' => '']);
         if ($controller instanceof \Gini\Controller\REST) {
-            // DO NOTHING
+            $action = null;
         } else {
             if ($action && $action[0] != '_'
                 && method_exists($controller, 'action'.$action)) {
