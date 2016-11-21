@@ -72,8 +72,17 @@ abstract class CGI
      */
     public function execute()
     {
-        $action = $this->action ? 'action'.$this->action : '__index';
         $params = (array) $this->params;
+        $action = strtr($params[0], ['-' => '', '_' => '']);
+        if ($action && $action[0] != '_'
+            && method_exists($this, 'action'.$action)) {
+            array_shift($params);
+        } elseif (method_exists($this, '__index')) {
+            $action = '__index';
+        } else {
+            $this->redirect('error/404');
+        }
+        $this->action = $action;
 
         $response = $this->__preAction($action, $params);
         if ($response !== false) {

@@ -24,8 +24,16 @@ abstract class REST extends CGI
     public function execute()
     {
         $method = $this->env['method'];
-        $action = $this->action ?: 'default';
         $params = (array) $this->params;
+
+        $action = strtr($params[0], ['-' => '', '_' => '']);
+        if ($action && $action[0] != '_'
+            && method_exists($this, $method.$action)) {
+            array_shift($params);
+        } else {
+            $action = 'default';
+        }
+        $this->action = $action;
 
         $response = $this->__preAction($action, $params);
         if ($response !== false) {
@@ -35,7 +43,6 @@ abstract class REST extends CGI
         }
 
         $response = $this->__postAction($action, $params, $response) ?: $response;
-
         return $response ?: new \Gini\CGI\Response\Nothing();
     }
 }

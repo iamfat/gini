@@ -96,21 +96,6 @@ class CGI
         \Gini\Config::set('runtime.controller_class', $class);
         $controller = \Gini\IoC::construct($class);
 
-        $action = strtr($params[0], ['-' => '', '_' => '']);
-        if ($controller instanceof \Gini\Controller\REST) {
-            // DO NOTHING
-        } else {
-            if ($action && $action[0] != '_'
-                && method_exists($controller, 'action'.$action)) {
-                array_shift($params);
-            } elseif (method_exists($controller, '__index')) {
-                $action = null;
-            } else {
-                static::redirect('error/404');
-            }
-        }
-
-        $controller->action = $action;
         $controller->params = $params;
         $controller->env = $env;
 
