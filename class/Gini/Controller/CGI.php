@@ -78,7 +78,7 @@ abstract class CGI
             && method_exists($this, 'action'.$action)) {
             array_shift($params);
         } elseif (method_exists($this, '__index')) {
-            $action = '__index';
+            $action = null;
         } else {
             $this->redirect('error/404');
         }
@@ -86,7 +86,7 @@ abstract class CGI
 
         $response = $this->__preAction($action, $params);
         if ($response !== false) {
-            $response = call_user_func_array(array($this, $action), $params);
+            $response = call_user_func_array(array($this, $action ? 'action'.$action : '__index'), $params);
         }
 
         $response = $this->__postAction($action, $params, $response) ?: $response;
