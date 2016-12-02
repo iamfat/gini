@@ -50,7 +50,7 @@ class RPC
         $rpcTimeout = Config::get('rpc.timeout');
         $timeout = $rpcTimeout[$method] ?: $rpcTimeout['default'];
 
-        $this->_header['X-Gini-RPC-Session'] = $_SERVER['HTTP_X_GINI_RPC_SESSION'] ?: $this->_url.'/'.$method;
+        $this->_header['X-Gini-RPC-Session'] = $_SERVER['HTTP_X_GINI_RPC_SESSION'] ?: gethostname().'/'.md5(uniqid('', true));
 
         $raw_data = $this->post(J([
             'jsonrpc' => '2.0',
