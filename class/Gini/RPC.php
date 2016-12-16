@@ -108,15 +108,16 @@ class RPC
         }, array_keys($this->_header), $this->_header);
 
         curl_setopt_array($ch, [
-            CURLOPT_DNS_USE_GLOBAL_CACHE => false,
-            CURLOPT_DNS_CACHE_TIMEOUT => 0,
+            // CURLOPT_DNS_USE_GLOBAL_CACHE => false,
+            // CURLOPT_DNS_CACHE_TIMEOUT => 0,
             CURLOPT_COOKIEJAR => $cookie_file,
             CURLOPT_COOKIEFILE => $cookie_file,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_URL => $this->_url,
             CURLOPT_AUTOREFERER => false,
             CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_CONNECTTIMEOUT => $timeout,
+            CURLOPT_NOSIGNAL => true,
+            CURLOPT_CONNECTTIMEOUT_MS => 1000,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_RETURNTRANSFER => true,
             // CURLOPT_FRESH_CONNECT => false,
