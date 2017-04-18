@@ -351,9 +351,9 @@ class MySQL extends \PDO implements Driver
 
         return sprintf('CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s',
                     $this->quoteIdent($key),
-                    $this->quoteIdent($val['column']),
-                    $this->quoteIdent($val['ref_table']),
-                    $this->quoteIdent($val['ref_column']),
+                    $this->quoteIdent(explode(',',$val['column'])),
+                    $this->quoteIdent(explode(',',$val['ref_table'])),
+                    $this->quoteIdent(explode(',',$val['ref_column'])),
                     $deleteAction,
                     $updateAction
                 );
