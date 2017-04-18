@@ -29,7 +29,7 @@
             "bin/gini"
         ],
         "require": {
-            "sabre/dav": "2.*",
+            "sabre/dav": "@stable",
             "doctrine/inflector": "@stable",
             "mtdowling/cron-expression": "@stable"
         },
