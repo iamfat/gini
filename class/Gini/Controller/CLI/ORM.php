@@ -27,28 +27,51 @@ class ORM extends \Gini\Controller\CLI
                 continue;
             }
 
-            \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
+            $orms = [];
+            \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir, &$orms) {
                 $oname = preg_replace('|.php$|', '', $file);
                 if ($oname == 'Object') {
                     return;
                 }
 
-                $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
+                $className = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
-                $rc = new \ReflectionClass($class_name);
+                $rc = new \ReflectionClass($className);
                 if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface()) {
                     return;
                 }
 
+                $oname = strtolower($oname);
+                $orms[$oname] = \Gini\IoC::construct($className);
+            });
+
+            // sort ORM objects according relation dependencies.
+            $adjusted = [];
+            $push = function ($oname) use (&$orms, &$adjusted, &$push) {
+                if (isset($adjusted[$oname])) return;
+                $o = $orms[$oname];
+                $relations = $o->relations();
+                $structure = $o->structure();
+                if ($relations) {
+                    foreach ($relations as $k => $r) {
+                        if (array_key_exists('object', (array) $structure[$k])) {
+                            $push($structure[$k]['object']);
+                        } elseif ($r['ref']) {
+                            $ref = explode('.', $r['ref'], 2);
+                            $push($ref[0]);
+                        }
+                    }
+                }
                 printf("   %s\n", $oname);
-                $o = \Gini\IoC::construct($class_name);
-                // some object might not have database backend
+                $adjusted[$oname] = true;
                 $db = $o->db();
                 if ($db) {
                     $db->adjustTable($o->tableName(), $o->schema());
                 }
-            });
+            };
+
+            array_map($push, array_keys($orms));
         }
 
         echo "   \e[32mdone.\e[0m\n";

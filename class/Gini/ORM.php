@@ -240,6 +240,26 @@ abstract class ORM
         return $this->_criteria;
     }
 
+    public function relations() {
+        static $relations = null;
+        if ($relations == null) {
+            $relations = [];
+            $db_relation = static::$db_relation;
+            if (count($db_relation) > 0) {
+                foreach ($db_relation as $k => $v) {
+                    $params = explode(',', strtolower($v));
+                    $vv = [];
+                    foreach ($params as $p) {
+                        list($p, $pv) = explode(':', trim($p), 2);
+                        $vv[$p] = $pv;
+                    }
+                    $relations[$k] = $vv;
+                }
+            }
+        }
+        return $relations;
+    }
+
     public function schema()
     {
         $structure = $this->structure();
@@ -312,39 +332,29 @@ abstract class ORM
             }
         }
 
-        $db_relation = static::$db_relation;
-        if (count($db_relation) > 0) {
-            foreach ($db_relation as $k => $v) {
-                $params = explode(',', strtolower($v));
-                $vv = [];
-                foreach ($params as $p) {
-                    list($p, $pv) = explode(':', trim($p), 2);
-                    $vv[$p] = $pv;
-                }
+        foreach ($this->relations() as $k => $vv) {
+            $vvv = [];
+            $vvv['delete'] = $vv['delete'];
+            $vvv['update'] = $vv['update'];
 
-                $vvv = [];
-                $vvv['delete'] = $vv['delete'];
-                $vvv['update'] = $vv['update'];
-
-                // correct object name
-                if (array_key_exists('object', (array) $structure[$k])) {
-                    if (!$structure[$k]['object']) {
-                        continue;
-                    }
-                    $vvv['column'] = $k.'_id';
-                    $vvv['ref_table'] = a($structure[$k]['object'])->tableName();
-                    $vvv['ref_column'] = 'id';
-                } elseif ($vv['ref']) {
-                    $ref = explode('.', $vv['ref'], 2);
-                    $vvv['ref_table'] = a($ref[0])->tableName();
-                    $vvv['ref_column'] = $ref[1];
-                } else {
-                    // no ref? ignore this...
+            // correct object name
+            if (array_key_exists('object', (array) $structure[$k])) {
+                if (!$structure[$k]['object']) {
                     continue;
                 }
-
-                $relations[$this->tableName().'_'.$k] = $vvv;
+                $vvv['column'] = $k.'_id';
+                $vvv['ref_table'] = a($structure[$k]['object'])->tableName();
+                $vvv['ref_column'] = 'id';
+            } elseif ($vv['ref']) {
+                $ref = explode('.', $vv['ref'], 2);
+                $vvv['ref_table'] = a($ref[0])->tableName();
+                $vvv['ref_column'] = $ref[1];
+            } else {
+                // no ref? ignore this...
+                continue;
             }
+
+            $relations[$this->tableName().'_'.$k] = $vvv;
         }
 
         $db_index = static::$db_index;
