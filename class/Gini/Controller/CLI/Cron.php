@@ -77,6 +77,7 @@ class Cron extends \Gini\Controller\CLI
 
                 while (pcntl_wait($status) > 0);
                 ftruncate($fh, 0);
+                rewind($fh);
                 fwrite($fh, J($cron_cache));
 
                 flock($fh, LOCK_UN);
