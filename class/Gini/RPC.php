@@ -10,6 +10,8 @@ class RPC
     private $_header = [];
     private $_uniqid = 1;
 
+    public $connectTimeout = 1000;
+
     private static $_RPCs = [];
     public static function of($name, $cookie = null, $header = [])
     {
@@ -117,7 +119,7 @@ class RPC
             CURLOPT_AUTOREFERER => false,
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_NOSIGNAL => true,
-            CURLOPT_CONNECTTIMEOUT_MS => 1000,
+            CURLOPT_CONNECTTIMEOUT_MS => $this->connectTimeout,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_RETURNTRANSFER => true,
             // CURLOPT_FRESH_CONNECT => false,
