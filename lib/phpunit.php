@@ -10,7 +10,9 @@ namespace Gini {
 
 namespace Gini\PHPUnit {
 
-    abstract class CGI extends \PHPUnit_Framework_TestCase
+    use \PHPUnit\Framework\TestCase;
+    
+    abstract class CGI extends TestCase
     {
         public static function setUpBeforeClass()
         {
@@ -23,7 +25,7 @@ namespace Gini\PHPUnit {
         }
     }
 
-    abstract class CLI extends \PHPUnit_Framework_TestCase
+    abstract class CLI extends TestCase
     {
         public static function setUpBeforeClass()
         {

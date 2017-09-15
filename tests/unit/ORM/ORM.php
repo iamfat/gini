@@ -105,13 +105,14 @@ class ORM extends \Gini\PHPUnit\CLI
         $o2 = a('utsample');
 
         $o2->id = 10;
+        
         $o1->object = $o2;
         $o1->db()
             ->expects($this->any())
             ->method('query')
             ->will($this->returnCallback(function ($SQL) {
                 $this->assertEquals($SQL,
-                    'INSERT INTO "utsample" ("_extra","object_name","object_id","sample_id") VALUES(\'{}\',\'utsample\',10,0)');
+                    'INSERT INTO "utsample" ("_extra","object_name","object_id") VALUES(\'{}\',\'utsample\',10)');
             }));
 
         $o1->save();
