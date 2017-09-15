@@ -10,10 +10,11 @@ class Those extends \Gini\PHPUnit\CLI
     {
         parent::setUp();
 
-        $db = $this->getMockBuilder('\Gini\Database')
-             ->setMethods(['query', 'quote', 'quoteIdent'])
-             ->disableOriginalConstructor()
-             ->getMock();
+        $db = self::getMockBuilder('\Gini\Database')
+            ->setMockClassName('MOBJ_'.uniqid())
+            ->setMethods(['query', 'quote', 'quoteIdent'])
+            ->disableOriginalConstructor()
+            ->getMock();
 
         $db->expects($this->any())
             ->method('quoteIdent')
@@ -51,6 +52,7 @@ class Those extends \Gini\PHPUnit\CLI
 
         \Gini\IoC::bind('\Gini\ORM\User', function () use ($db) {
             $o = $this->getMockBuilder('\Gini\ORM\Object')
+                ->setMockClassName('MOBJ_'.uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
                 ->getMock();

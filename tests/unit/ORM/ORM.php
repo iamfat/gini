@@ -13,9 +13,10 @@ class ORM extends \Gini\PHPUnit\CLI
         class_exists('\Gini\Those');
 
         $db = $this->getMockBuilder('\Gini\Database')
-             ->setMethods(['query', 'quote', 'quoteIdent'])
-             ->disableOriginalConstructor()
-             ->getMock();
+            ->setMockClassName('MOBJ_'.uniqid())
+            ->setMethods(['query', 'quote', 'quoteIdent'])
+            ->disableOriginalConstructor()
+            ->getMock();
 
         $db->expects($this->any())
             ->method('quoteIdent')
@@ -54,9 +55,10 @@ class ORM extends \Gini\PHPUnit\CLI
         \Gini\IoC::bind('\Gini\ORM\UTSample', function ($criteria = null) use ($db) {
 
             $o = $this->getMockBuilder('\Gini\ORM\Object')
-                 ->setMethods(['db', 'properties', 'name', 'tableName'])
-                 ->disableOriginalConstructor()
-                 ->getMock();
+                ->setMockClassName('MOBJ_'.uniqid())
+                ->setMethods(['db', 'properties', 'name', 'tableName'])
+                ->disableOriginalConstructor()
+                ->getMock();
 
             $o->expects($this->any())
                 ->method('db')
@@ -98,7 +100,6 @@ class ORM extends \Gini\PHPUnit\CLI
         parent::tearDown();
     }
 
-    // @disabled
     public function testSaveObject()
     {
         $o1 = a('utsample');
