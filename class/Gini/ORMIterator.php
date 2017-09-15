@@ -86,6 +86,16 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         }
     }
 
+    private static $_FIELDS = [];
+    protected function fields() {
+        if (!isset(self::$_FIELDS[$this->name])) {
+            $schema = a($this->name)->schema();
+            $fields = array_keys($schema['fields']);
+            self::$_FIELDS[$this->name] = array_combine($fields, $fields);
+        }
+        return self::$_FIELDS[$this->name];
+    }
+
     protected function fetch($scope = 'data')
     {
         if ($this->isFetchFlagged($scope)) {
@@ -110,11 +120,25 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             if ($this->SQL) {
                 $result = $this->db->query($this->SQL, $this->SQL_idents, $this->SQL_params);
 
-                $objects = array();
+                $objects = [];
 
                 if ($result) {
+                    $fields = $this->fields();
+                    $loaded = false; // flag to show if all fields were loaded
+                    $loaded_checked = false; // flag to show if we've already checked once
                     while ($row = $result->row(\PDO::FETCH_ASSOC)) {
-                        $objects[$row['id']] = true;
+                        if (!$loaded_checked) {
+                            $loaded = empty(array_diff_key($fields, $row));
+                            $loaded_checked = true;
+                        }
+                        if ($loaded) {
+                            // if all fields were loaded, just setData to improve performance
+                            $o = a($this->name);
+                            $o->setData((array) $row);
+                            $objects[$row['id']] = $o;
+                        } else {
+                            $objects[$row['id']] = true;
+                        }
                     }
                 }
 

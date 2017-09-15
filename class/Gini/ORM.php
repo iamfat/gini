@@ -431,7 +431,6 @@ abstract class ORM
     public function save()
     {
         $schema = (array) $this->schema();
-
         $db = $this->db();
 
         $success = false;
@@ -502,7 +501,7 @@ abstract class ORM
             $quoted_vals = array_map(function ($v) use ($db) {
                 return ($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v);
             }, $vals);
-            $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.implode(', ', $quoted_vals).')';
+            $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.implode(',', $quoted_vals).')';
         }
 
         if ($SQL) {
@@ -586,8 +585,9 @@ abstract class ORM
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
                 $o = $data[$k];
-                if (isset($o) && $o instanceof \Gini\ORM\Object && isset($oname) && $o->name() == $oname) {
-                    $this->$k = $o;
+                if (isset($o) && $o instanceof \Gini\ORM\Object && (!isset($oname) || $o->name() == $oname)) {
+                    $this->_objects[$k] = $o;
+                    $this->_oinfo[$k] = (object) ['name' => $o->name(), 'id' => $o->id];
                 } else {
                     //object need to be bind later to avoid deadlock.
                     unset($this->$k);
@@ -674,7 +674,7 @@ abstract class ORM
         $this->fetch();
 
         $structure = $this->structure();
-        if (isset($this->_oinfo[$name])) {
+        if (array_key_exists('object', $structure[$name])) {
             $this->_objects[$name] = $value;
         } elseif (isset($structure[$name])) {
             $this->$name = $value;
@@ -682,14 +682,14 @@ abstract class ORM
             // if $name is  {}_name or {}_id, let's update oinfo firstly.
             $is_object = false;
             if (preg_match('/^(.+)_id$/', $name, $parts)) {
-                $oname = $parts[1];
-                if (isset($this->_oinfo[$oname])) {
-                    $this->_oinfo[$oname]->id = $value;
+                $rname = $parts[1];
+                if (array_key_exists('object', $structure[$rname])) {
                     $is_object = true;
-                    unset($this->_objects[$oname]);
+                    $oname = $structure[$rname]['object'] ?: $rname;
+                    $this->_oinfo[$rname] = (object) ['name' => $oname, 'id' => (int) $value];
+                    unset($this->_objects[$rname]);
                 }
             }
-
             if ($is_object == false) {
                 // 奇怪 如果之前没有强制类型转换 数组赋值会不成功
                 $this->_extra = (array) $this->_extra;
