@@ -674,16 +674,18 @@ abstract class ORM
         $this->fetch();
 
         $structure = $this->structure();
-        if (array_key_exists('object', $structure[$name])) {
-            $this->_objects[$name] = $value;
-        } elseif (isset($structure[$name])) {
-            $this->$name = $value;
+        if (isset($structure[$name])) {
+            if (array_key_exists('object', $structure[$name])) {
+                $this->_objects[$name] = $value;
+            } else {
+                $this->$name = $value;
+            }
         } else {
             // if $name is  {}_name or {}_id, let's update oinfo firstly.
             $is_object = false;
             if (preg_match('/^(.+)_id$/', $name, $parts)) {
                 $rname = $parts[1];
-                if (array_key_exists('object', $structure[$rname])) {
+                if (isset($structure[$rname]) && array_key_exists('object', $structure[$rname])) {
                     $is_object = true;
                     $oname = $structure[$rname]['object'] ?: $rname;
                     $this->_oinfo[$rname] = (object) ['name' => $oname, 'id' => (int) $value];
