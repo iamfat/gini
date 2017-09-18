@@ -1,9 +1,12 @@
 ._*
 *.*~
 .DS_Store
+/cache/
 /vendor/
-/report/
+/reports/
 /build/
 /node_modules/
 composer.lock
 raw/l10n/template.pot
+composer.json
+/raw/config/@*
