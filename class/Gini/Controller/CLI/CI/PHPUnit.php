@@ -51,6 +51,7 @@ foreach ($gini_dirs as $dir) {
     $file = $dir.'/phpunit.php';
     if (file_exists($file)) {
         require_once $file;
+
         return;
     }
 }
@@ -92,7 +93,8 @@ require_once __DIR__ . '/../gini.php';
 
 class {$name} extends \Gini\PHPUnit\CLI {
 
-    public function testHello() {
+    public function testHello()
+    {
         \$this->assertTrue(false, "PLEASE IMPLEMENT THIS!");
     }
 

@@ -43,6 +43,7 @@ abstract class REST extends CGI
         }
 
         $response = $this->__postAction($action, $params, $response) ?: $response;
+
         return $response ?: new \Gini\CGI\Response\Nothing();
     }
 }

@@ -502,7 +502,7 @@ namespace {
     /*
      * Shortcut for global variables in Gini
      *
-     * @param  string $key Name of global variable
+     * @param string $key Name of global variable
      * @param string[optional] string given when setting
      * @return mixed
      **/

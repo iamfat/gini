@@ -10,7 +10,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     protected $table_name;
 
     protected $current_id;
-    protected $objects = array();
+    protected $objects = [];
 
     protected $total_count;    //符合selector的数据总数
     protected $count;    //实际获得数据数
@@ -19,6 +19,8 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     protected $SQL_idents;
     protected $SQL_params;
     protected $count_SQL;
+
+    private $_forUpdate = false;
 
     public function totalCount()
     {
@@ -87,12 +89,14 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     }
 
     private static $_FIELDS = [];
-    protected function fields() {
+    protected function fields()
+    {
         if (!isset(self::$_FIELDS[$this->name])) {
             $schema = a($this->name)->schema();
             $fields = array_keys($schema['fields']);
             self::$_FIELDS[$this->name] = array_combine($fields, $fields);
         }
+
         return self::$_FIELDS[$this->name];
     }
 
@@ -118,6 +122,10 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             break;
         default:
             if ($this->SQL) {
+                $SQL = $this->SQL;
+                if ($this->_forUpdate) {
+                    $SQL .= ' FOR UPDATE';
+                }
                 $result = $this->db->query($this->SQL, $this->SQL_idents, $this->SQL_params);
 
                 $objects = [];
@@ -307,5 +315,12 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->fetch();
 
         return array_keys($this->objects);
+    }
+
+    public function forUpdate($forUpdate=true)
+    {
+        $this->_forUpdate = !!$forUpdate;
+
+        return $this;
     }
 }

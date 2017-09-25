@@ -25,6 +25,7 @@ abstract class ORM
     private $_name;
     private $_tableName;
     private $_oinfo;
+    protected $_forUpdate = false;
 
     protected $_db_data;
     protected $_db_time;    //上次数据库同步的时间
@@ -177,6 +178,8 @@ abstract class ORM
                     .' FROM '.$db->quoteIdent($this->tableName())
                     .' WHERE '.implode(' AND ', $where).' LIMIT 1';
 
+                if（$this->_forUpdate) $SQL .= ' FOR UPDATE';
+
                 $result = $db->query($SQL);
                 //只取第一条记录
                 if ($result) {
@@ -240,7 +243,8 @@ abstract class ORM
         return $this->_criteria;
     }
 
-    public function relations() {
+    public function relations()
+    {
         static $relations = null;
         if ($relations == null) {
             $relations = [];
@@ -257,6 +261,7 @@ abstract class ORM
                 }
             }
         }
+
         return $relations;
     }
 
@@ -720,5 +725,12 @@ abstract class ORM
         }
 
         return $this->$name;
+    }
+
+    public function forUpdate($forUpdate=true)
+    {
+        $this->_forUpdate = !!$forUpdate;
+
+        return $this;
     }
 }

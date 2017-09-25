@@ -245,7 +245,7 @@ namespace Gini {
 
                 $op = 'AND';
                 if (is_array($this->_where)) {
-                    while(in_array(end($this->_where), ['AND', 'OR'])) {
+                    while (in_array(end($this->_where), ['AND', 'OR'])) {
                         $op = array_pop($this->_where);
                     }
                 }
@@ -286,7 +286,7 @@ namespace Gini {
 
                 $op = 'AND';
                 if (is_array($this->_where)) {
-                    while(in_array(end($this->_where), ['AND', 'OR'])) {
+                    while (in_array(end($this->_where), ['AND', 'OR'])) {
                         $op = array_pop($this->_where);
                     }
                 }
@@ -483,7 +483,7 @@ namespace Gini {
             $fields = $this->fields();
             unset($fields['id']);
 
-            $quoted_fields = array_map(function ($field) use($db, $table) {
+            $quoted_fields = array_map(function ($field) use ($db, $table) {
                 return $db->ident($table, $field);
             }, array_keys($fields));
 
