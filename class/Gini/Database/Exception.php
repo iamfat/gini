@@ -10,4 +10,3 @@ namespace Gini\Database;
 class Exception extends \ErrorException
 {
 } // END class
-
