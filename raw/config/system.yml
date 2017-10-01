@@ -8,6 +8,8 @@ session:
     lifetime: 0
     path: /
     domain: ~
+    secure: false
+    httponly: false
   autostart: true
   api_autostart: true
 timezone: Asia/Shanghai

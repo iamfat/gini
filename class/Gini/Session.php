@@ -49,7 +49,9 @@ class Session
         session_set_cookie_params(
             $cookie_params['lifetime'],
             $cookie_params['path'],
-            $cookie_params['domain']
+            $cookie_params['domain'],
+            $cookie_params['secure'] ?: false,
+            $cookie_params['httponly'] ?: false
         );
 
         self::open();
