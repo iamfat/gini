@@ -528,13 +528,14 @@ abstract class ORM
     }
 
     /**
-     * Inject structure declaration to current class.
+     * Inject structure declarations to current class.
      *
-     * @param array $injection
+     * @param array|string $injections
      */
-    public static function inject(array $injection)
+    public static function inject($injections)
     {
-        self::$_injections[] = $injection;
+        if (!is_array($injections)) $injections = [$injections];
+        self::$_injections = array_unique((array) self::$_injections + $injections);
         // clear structure cache
         unset(self::$_structures[get_called_class()]);
     }
