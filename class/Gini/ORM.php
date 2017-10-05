@@ -30,6 +30,10 @@ abstract class ORM
     protected $_db_data;
     protected $_db_time;    //上次数据库同步的时间
 
+    private static $_STRUCTURES;
+    private static $_RELATIONS;
+    private static $_INDEXES;
+
     /**
      * Magic method to use Event('orm[$name].call[$method]') to extend ORM object.
      *
@@ -104,7 +108,7 @@ abstract class ORM
         return $inheritance;
     }
 
-    public function properties()
+    public function ownProperties()
     {
         $rc = new \ReflectionClass($this);
         $defaults = $rc->getDefaultProperties();
@@ -117,27 +121,24 @@ abstract class ORM
             }
         }
 
+        return $properties;
+    }
+
+    public function properties()
+    {
+        $properties = $this->ownProperties();
         //check all injections
         foreach ((array) self::$_injections as $injection) {
-            $rc = new \ReflectionClass($injection);
-            $defaults = $rc->getDefaultProperties();
-
-            foreach ($rc->getProperties() as $p) {
-                if (!$p->isStatic() && $p->isPublic()) {
-                    $k = $p->getName();
-                    $properties[$k] = $defaults[$k];
-                }
-            }
+            $properties = array_merge($properties, (array) $injection['properties']);
         }
 
         return $properties;
     }
 
-    private static $_structures;
     public function structure()
     {
         $class_name = get_class($this);
-        if (!isset(self::$_structures[$class_name])) {
+        if (!isset(self::$_STRUCTURES[$class_name])) {
             $properties = $this->properties();
             $structure = [];
             foreach ($properties as $k => $v) {
@@ -150,10 +151,10 @@ abstract class ORM
 
                 $structure[$k] = $v;
             }
-            self::$_structures[$class_name] = $structure;
+            self::$_STRUCTURES[$class_name] = $structure;
         }
 
-        return self::$_structures[$class_name];
+        return self::$_STRUCTURES[$class_name];
     }
 
     public function fetch($force = false)
@@ -178,7 +179,9 @@ abstract class ORM
                     .' FROM '.$db->quoteIdent($this->tableName())
                     .' WHERE '.implode(' AND ', $where).' LIMIT 1';
 
-                if ($this->_forUpdate) $SQL .= ' FOR UPDATE';
+                if ($this->_forUpdate) {
+                    $SQL .= ' FOR UPDATE';
+                }
 
                 $result = $db->query($SQL);
                 //只取第一条记录
@@ -245,24 +248,44 @@ abstract class ORM
 
     public function relations()
     {
-        static $relations = null;
-        if ($relations == null) {
-            $relations = [];
-            $db_relation = static::$db_relation;
-            if (count($db_relation) > 0) {
-                foreach ($db_relation as $k => $v) {
-                    $params = explode(',', strtolower($v));
-                    $vv = [];
-                    foreach ($params as $p) {
-                        list($p, $pv) = explode(':', trim($p), 2);
-                        $vv[$p] = $pv;
-                    }
-                    $relations[$k] = $vv;
-                }
+        $class_name = get_class($this);
+        if (!isset(self::$_RELATIONS[$class_name])) {
+            $db_relation = (array) static::$db_relation;
+            //check all injections
+            foreach ((array) self::$_injections as $injection) {
+                $db_relation = array_merge($db_relation, (array) $injection['relations']);
             }
+
+            $relations = [];
+            foreach ($db_relation as $k => $v) {
+                $params = explode(',', strtolower($v));
+                $vv = [];
+                foreach ($params as $p) {
+                    list($p, $pv) = explode(':', trim($p), 2);
+                    $vv[$p] = $pv;
+                }
+                $relations[$k] = $vv;
+            }
+            self::$_RELATIONS[$class_name] = $relations;
         }
 
-        return $relations;
+        return self::$_RELATIONS[$class_name];
+    }
+
+    // 'a', 'unique:b,c', 'd,e,f'
+    public function indexes()
+    {
+        $class_name = get_class($this);
+        if (!isset(self::$_INDEXES[$class_name])) {
+            $indexes = (array) static::$db_index;
+            //check all injections
+            foreach ((array) self::$_injections as $injection) {
+                $indexes = array_merge($indexes, (array) $injection['indexes']);
+            }
+            self::$_INDEXES[$class_name] = $indexes;
+        }
+
+        return self::$_INDEXES[$class_name];
     }
 
     public function schema()
@@ -279,56 +302,56 @@ abstract class ORM
 
             foreach ($v as $p => $pv) {
                 switch ($p) {
-                case 'int':
-                case 'bigint':
-                case 'double':
-                    $field['type'] = $p;
-                    break;
-                case 'datetime':
-                    $field['type'] = $p;
-                    $field['default'] = '0000-00-00 00:00:00';
-                    break;
-                case 'timestamp':
-                    $field['type'] = $p;
-                    $field['default'] = 'CURRENT_TIMESTAMP';
-                    break;
-                case 'bool':
-                    $field['type'] = 'int';
-                    break;
-                case 'string':
-                    if ($pv == '*') {
+                    case 'int':
+                    case 'bigint':
+                    case 'double':
+                        $field['type'] = $p;
+                        break;
+                    case 'datetime':
+                        $field['type'] = $p;
+                        $field['default'] = '0000-00-00 00:00:00';
+                        break;
+                    case 'timestamp':
+                        $field['type'] = $p;
+                        $field['default'] = 'CURRENT_TIMESTAMP';
+                        break;
+                    case 'bool':
+                        $field['type'] = 'int';
+                        break;
+                    case 'string':
+                        if ($pv == '*') {
+                            $field['type'] = 'text';
+                        } else {
+                            $field['type'] = 'varchar('.($pv ?: 255).')';
+                        }
+                        break;
+                    case 'array':
+                    case 'object_list':
                         $field['type'] = 'text';
-                    } else {
-                        $field['type'] = 'varchar('.($pv ?: 255).')';
-                    }
-                    break;
-                case 'array':
-                case 'object_list':
-                    $field['type'] = 'text';
-                    break;
-                case 'null':
-                    $field['null'] = true;
-                    break;
-                case 'default':
-                    $field['default'] = $pv;
-                    break;
-                case 'primary':
-                    $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => [$k]];
-                    break;
-                case 'unique':
-                    $indexes['_IDX_'.$k] = ['type' => 'unique', 'fields' => [$k]];
-                    break;
-                case 'serial':
-                    $field['serial'] = true;
-                    break;
-                case 'index':
-                    $indexes['_IDX_'.$k] = ['fields' => [$k]];
-                case 'object':
-                    // 需要添加新的$field
-                    if (!$pv) {
-                        $fields[$k.'_name'] = ['type' => 'varchar(120)'];
-                    }
-                    $fields[$k.'_id'] = ['type' => 'bigint', 'null' => true];
+                        break;
+                    case 'null':
+                        $field['null'] = true;
+                        break;
+                    case 'default':
+                        $field['default'] = $pv;
+                        break;
+                    case 'primary':
+                        $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => [$k]];
+                        break;
+                    case 'unique':
+                        $indexes['_IDX_'.$k] = ['type' => 'unique', 'fields' => [$k]];
+                        break;
+                    case 'serial':
+                        $field['serial'] = true;
+                        break;
+                    case 'index':
+                        $indexes['_IDX_'.$k] = ['fields' => [$k]];
+                    case 'object':
+                        // 需要添加新的$field
+                        if (!$pv) {
+                            $fields[$k.'_name'] = ['type' => 'varchar(120)'];
+                        }
+                        $fields[$k.'_id'] = ['type' => 'bigint', 'null' => true];
                 }
             }
 
@@ -362,31 +385,29 @@ abstract class ORM
             $relations[$this->tableName().'_'.$k] = $vvv;
         }
 
-        $db_index = static::$db_index;
-        if (count($db_index) > 0) {
-            // 索引项
-            foreach ($db_index as $k => $v) {
-                list($vk, $vv) = explode(':', $v, 2);
-                $vk = trim($vk);
-                $vv = trim($vv);
-                if (!$vv) {
-                    $vv = trim($vk);
-                    $vk = null;
-                }
+        // 索引项
+        foreach ($this->indexes() as $k => $v) {
+            list($vk, $vv) = explode(':', $v, 2);
+            $vk = trim($vk);
+            $vv = trim($vv);
+            if (!$vv) {
+                $vv = trim($vk);
+                $vk = null;
+            }
 
-                $vv = explode(',', $vv);
-                foreach ($vv as &$vvv) {
-                    $vvv = trim($vvv);
-                    // correct object name
-                    if (array_key_exists('object', (array) $structure[$vvv])) {
-                        if (!$structure[$vvv]['object']) {
-                            $vv[] = $vvv.'_name';
-                        }
-                        $vvv = $vvv.'_id';
+            $vv = explode(',', $vv);
+            foreach ($vv as &$vvv) {
+                $vvv = trim($vvv);
+                // correct object name
+                if (array_key_exists('object', (array) $structure[$vvv])) {
+                    if (!$structure[$vvv]['object']) {
+                        $vv[] = $vvv.'_name';
                     }
+                    $vvv = $vvv.'_id';
                 }
+            }
 
-                switch ($vk) {
+            switch ($vk) {
                 case 'unique':
                     $indexes['_MIDX_'.$k] = ['type' => 'unique', 'fields' => $vv];
                     break;
@@ -398,7 +419,6 @@ abstract class ORM
                     break;
                 default:
                     $indexes['_MIDX_'.$k] = ['fields' => $vv];
-                }
             }
         }
 
@@ -500,7 +520,9 @@ abstract class ORM
                 $SQL = 'UPDATE '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quoteIdent('id').'='.$db->quote($id);
             }
         } else {
-            $db_data = array_filter($db_data, function ($v) { return isset($v); });
+            $db_data = array_filter($db_data, function ($v) {
+                return isset($v);
+            });
             $keys = array_keys($db_data);
             $vals = array_values($db_data);
             $quoted_vals = array_map(function ($v) use ($db) {
@@ -530,14 +552,35 @@ abstract class ORM
     /**
      * Inject structure declarations to current class.
      *
-     * @param array|string $injections
+     * @param array|object|string $injection
      */
-    public static function inject($injections)
+    public static function inject($injection)
     {
-        if (!is_array($injections)) $injections = [$injections];
-        self::$_injections = array_unique((array) self::$_injections + $injections);
-        // clear structure cache
-        unset(self::$_structures[get_called_class()]);
+        //check all injections
+        if (is_string($injection) || is_object($injection)) {
+            $rc = new \ReflectionClass($injection);
+            $defaults = $rc->getDefaultProperties();
+
+            $injection = [];
+            foreach ($rc->getProperties() as $p) {
+                if (!$p->isStatic() && $p->isPublic()) {
+                    $k = $p->getName();
+                    $injection['properties'][$k] = $defaults[$k];
+                }
+            }
+
+            $sProps = $rc->getStaticProperties();
+            $sProps['db_index'] and $injection['indexes'] = $sProps['db_index'];
+            $sProps['db_relation'] and $injection['relations'] = $sProps['db_relation'];
+        }
+
+        self::$_injections[] = $injection;
+
+        // clear cache
+        $called_class = get_called_class();
+        unset(self::$_STRUCTURES[$called_class]);
+        unset(self::$_INDEXES[$called_class]);
+        unset(self::$_RELATIONS[$called_class]);
     }
 
     private function _prepareName()
@@ -728,7 +771,7 @@ abstract class ORM
         return $this->$name;
     }
 
-    public function forUpdate($forUpdate=true)
+    public function forUpdate($forUpdate = true)
     {
         $this->_forUpdate = !!$forUpdate;
 

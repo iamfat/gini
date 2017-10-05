@@ -214,7 +214,7 @@ class SQLHelper
     public function isRelatedTo($value)
     {
         assert($this->_field);
-        
+
         $db = $this->db;
         $field_name = $db->ident($this->_table, $this->_field);
         $this->_where[] = 'MATCH(' . $field_name.') AGAINST (' . $db->quote($value).')';
