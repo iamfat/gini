@@ -19,7 +19,6 @@ namespace Gini;
 
 abstract class ORM
 {
-    private static $_injections;
     private $_criteria;
     private $_objects;
     private $_name;
@@ -33,6 +32,7 @@ abstract class ORM
     private static $_STRUCTURES;
     private static $_RELATIONS;
     private static $_INDEXES;
+    private static $_INJECTIONS;
 
     /**
      * Magic method to use Event('orm[$name].call[$method]') to extend ORM object.
@@ -128,7 +128,8 @@ abstract class ORM
     {
         $properties = $this->ownProperties();
         //check all injections
-        foreach ((array) self::$_injections as $injection) {
+        $class_name = get_class($this);
+        foreach ((array) self::$_INJECTIONS[$class_name] as $injection) {
             $properties = array_merge($properties, (array) $injection['properties']);
         }
 
@@ -252,7 +253,7 @@ abstract class ORM
         if (!isset(self::$_RELATIONS[$class_name])) {
             $db_relation = (array) static::$db_relation;
             //check all injections
-            foreach ((array) self::$_injections as $injection) {
+            foreach ((array) self::$_INJECTIONS[$class_name] as $injection) {
                 $db_relation = array_merge($db_relation, (array) $injection['relations']);
             }
 
@@ -279,7 +280,7 @@ abstract class ORM
         if (!isset(self::$_INDEXES[$class_name])) {
             $indexes = (array) static::$db_index;
             //check all injections
-            foreach ((array) self::$_injections as $injection) {
+            foreach ((array) self::$_INJECTIONS[$class_name] as $injection) {
                 $indexes = array_merge($indexes, (array) $injection['indexes']);
             }
             self::$_INDEXES[$class_name] = $indexes;
@@ -574,13 +575,13 @@ abstract class ORM
             $sProps['db_relation'] and $injection['relations'] = $sProps['db_relation'];
         }
 
-        self::$_injections[] = $injection;
+        $class_name = get_called_class();
+        self::$_INJECTIONS[$class_name][] = $injection;
 
         // clear cache
-        $called_class = get_called_class();
-        unset(self::$_STRUCTURES[$called_class]);
-        unset(self::$_INDEXES[$called_class]);
-        unset(self::$_RELATIONS[$called_class]);
+        unset(self::$_STRUCTURES[$class_name]);
+        unset(self::$_INDEXES[$class_name]);
+        unset(self::$_RELATIONS[$class_name]);
     }
 
     private function _prepareName()
