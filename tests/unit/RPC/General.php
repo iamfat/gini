@@ -6,17 +6,7 @@ namespace Gini\PHPUnit\RPC {
 
     class General extends \Gini\PHPUnit\CLI
     {
-        private function _rpcCall($method, $params)
-        {
-            return [
-                    'jsonrpc' => '2.0',
-                    'method' => $method,
-                    'params' => $params,
-                    'id' => uniqid(),
-                ];
-        }
-
-        private function _testCall($method, $params)
+       private function _testCall($method, $params)
         {
             $apiData =  [
                     'jsonrpc' => '2.0',
@@ -25,17 +15,32 @@ namespace Gini\PHPUnit\RPC {
                     'id' => uniqid(),
                 ];
 
-            $response = \Gini\API::dispatch($apiData);
-            $this->assertSame($params[0], $response['result'], 'call '.$method);
+            return \Gini\API::dispatch($apiData);
         }
 
         public function testApiName()
         {
             $var = uniqid();
 
-            $this->_testCall('RPCTest.camelCaseMethod', [$var]);
+            $response = $this->_testCall('RPCTest.camelCaseMethod', [$var]);
+            $this->assertSame($var, $response['result'], 'call RPCTest.camelCaseMethod');
+
             $this->_testCall('rpctest.camelcasemethod', [$var]);
+            $this->assertSame($var, $response['result'], 'call rpctest.camelcasemethod');
+
             $this->_testCall('rpctest/camelCaseMethod', [$var]);
+            $this->assertSame($var, $response['result'], 'rpctest/camelCaseMethod');
+        }
+
+        public function testNamedParameters()
+        {
+            $var = uniqid();
+
+            $response = $this->_testCall('RPCTest.echo', ['a' => 1, 'b' => 2, 'c' => 3]);
+            $this->assertSame($response['result'], ['a' => 1, 'b' => 2, 'c' => 3]);
+
+            $response = $this->_testCall('RPCTest.echo', ['b' => 2, 'a' => 1, 'c'=> 3]);
+            $this->assertSame($response['result'], ['a' => 1, 'b' => 2, 'c' => 3]);
         }
     }
 
@@ -48,6 +53,10 @@ namespace Gini\Controller\API {
         public function actionCamelCaseMethod($s)
         {
             return $s;
+        }
+
+        public function actionEcho($a, $b, $c) {
+            return ['a' => $a, 'b' => $b, 'c' => $c];
         }
     }
 

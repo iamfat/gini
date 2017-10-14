@@ -37,12 +37,15 @@ class RPC
         return IoC::construct('\Gini\RPC', $this->_url, $this->_path ? $this->_path.'/'.$name : $name, $this->_cookie, $this->_header);
     }
 
-    public function __call($method, $params)
+    /**
+     * RPC call with named parameters
+     *
+     * @param [string] $method
+     * @param [array] $params
+     * @return [mixed]
+     */
+    public function call($method, $params)
     {
-        if ($method === __FUNCTION__) {
-            return;
-        }
-
         if ($this->_path) {
             $method = $this->_path.'/'.$method;
         }
@@ -79,6 +82,15 @@ class RPC
         }
 
         return $data['result'];
+    }
+
+    public function __call($method, $params)
+    {
+        if ($method === __FUNCTION__) {
+            return;
+        }
+
+        return $this->call($method, $params);
     }
 
     public function setHeader(array $header)
