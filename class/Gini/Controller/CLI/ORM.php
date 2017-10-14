@@ -65,10 +65,7 @@ class ORM extends \Gini\Controller\CLI
                 }
                 printf("   %s\n", $oname);
                 $adjusted[$oname] = true;
-                $db = $o->db();
-                if ($db) {
-                    $db->adjustTable($o->tableName(), $o->schema());
-                }
+                $o->adjustTable();
             };
 
             array_map($push, array_keys($orms));

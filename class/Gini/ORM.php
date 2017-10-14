@@ -778,4 +778,18 @@ abstract class ORM
 
         return $this;
     }
+
+    /**
+     * 根据ORM定义调整数据库表结构
+     *
+     * @return \Gini\ORM\Object
+     */
+    public function adjustTable()
+    {
+        $db = $this->db();
+        if ($db) {
+            $db->adjustTable($this->tableName(), $this->schema());
+        }
+        return $this;
+    }
 }
