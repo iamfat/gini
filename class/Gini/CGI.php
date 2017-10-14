@@ -37,68 +37,82 @@ class CGI
             home/page.php        Controller\Page::index('edit', 1)
         */
 
-        $response = static::request(static::$route, [
-            'get' => $_GET, 'post' => $_POST,
-            'files' => $_FILES, 'route' => static::$route,
-            'method' => $_SERVER['REQUEST_METHOD'],
-            ])->execute();
+        $response = static::request(static::route())->execute();
         if ($response) {
             $response->output();
         }
     }
 
-    public static function request($route, array $env = array())
+    public static function defaultEnv()
     {
-        $args = array_map('rawurldecode', explode('/', $route));
+        return [
+            'get' => $_GET, 'post' => $_POST,
+            'files' => $_FILES, 'route' => static::$route,
+            'method' => $_SERVER['REQUEST_METHOD'],
+        ];
+    }
 
-        $path = '';
-        $candidates = ['/index' => $args] + Util::pathAndArgs($args);
-        $class = null;
-        foreach (array_reverse($candidates) as $path => $params) {
-            $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
-            $basename = basename($path);
-            $dirname = dirname($path);
+    public static function request($route, $env = null)
+    {
+        if (is_null($env)) {
+            $env = static::defaultEnv();
+        }
 
-            $class_namespace = '\Gini\Controller\CGI\\';
-            if ($dirname != '.') {
-                $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
-            }
+        $router = static::router();
+        $controller = $router ? $router->dispatch($route, $env) : false;
+        if ($controller === false) {
+            // no matches found in router
+            $args = array_map('rawurldecode', explode('/', $route));
 
-            $class = $class_namespace.$basename.'\\Index';
-            if (class_exists($class)) {
-                break;
-            }
+            $path = '';
+            $candidates = ['/index' => $args] + Util::pathAndArgs($args);
+            $class = null;
 
-            $class = $class_namespace.$basename;
-            if (class_exists($class)) {
-                break;
-            }
+            foreach (array_reverse($candidates) as $path => $params) {
+                $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
+                $basename = basename($path);
+                $dirname = dirname($path);
 
-            $class = $class_namespace.'Controller'.$basename;
-            if (class_exists($class)) {
-                break;
-            }
+                $class_namespace = '\Gini\Controller\CGI\\';
+                if ($dirname != '.') {
+                    $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
+                }
 
-            if ($basename != 'index') {
-                $class = $class_namespace.'Index';
+                $class = $class_namespace.$basename.'\\Index';
                 if (class_exists($class)) {
-                    array_unshift($params, $basename);
                     break;
                 }
+
+                $class = $class_namespace.$basename;
+                if (class_exists($class)) {
+                    break;
+                }
+
+                $class = $class_namespace.'Controller'.$basename;
+                if (class_exists($class)) {
+                    break;
+                }
+
+                if ($basename != 'index') {
+                    $class = $class_namespace.'Index';
+                    if (class_exists($class)) {
+                        array_unshift($params, $basename);
+                        break;
+                    }
+                }
             }
+
+            if (!$class || !class_exists($class, false)) {
+                static::redirect('error/404');
+            }
+
+            \Gini\Config::set('runtime.controller_path', $path);
+            $controller = \Gini\IoC::construct($class);
+            $controller->params = $params;
         }
 
-        if (!$class || !class_exists($class, false)) {
-            static::redirect('error/404');
-        }
-
-        \Gini\Config::set('runtime.controller_path', $path);
-        \Gini\Config::set('runtime.controller_class', $class);
-        $controller = \Gini\IoC::construct($class);
-
-        $controller->params = $params;
+        \Gini\Config::set('runtime.controller_class', get_class($controller));
         $controller->env = $env;
-
         return $controller;
     }
 
@@ -124,18 +138,43 @@ class CGI
                         break;
                     }
                 }
-                error_log(sprintf('    %d) %s%s() in %s on line %d', $n + 1,
-                                $t['class'] ? $t['class'].'::' : '',
-                                $t['function'],
-                                $file,
-                                $t['line']));
+                error_log(sprintf(
+                    '    %d) %s%s() in %s on line %d',
+                    $n + 1,
+                    $t['class'] ? $t['class'].'::' : '',
+                    $t['function'],
+                    $file,
+                    $t['line']
+                ));
             }
         }
 
         if (PHP_SAPI != 'cli') {
-            while (@ob_end_clean());    //清空之前的所有显示
+            while (@ob_end_clean()) {
+                //清空之前的所有显示
+            }
             header('HTTP/1.1 500 Internal Server Error');
         }
+    }
+
+    public static function executeAction($action, $params, $form=null)
+    {
+        $rm = new \ReflectionMethod($action[0], $action[1]);
+        if (is_numeric(key($params))) {
+            // 使用array_pad确保不会因为变量没有默认设值而报错
+            $args = array_pad($params, $rm->getNumberOfParameters(), null);
+        } else {
+            // 如果是有字符串键值的, 尝试通过反射对应变量
+            $rps = $rm->getParameters();
+            $args = [];
+            // 可以把form数据合并进去
+            $params = array_merge((array)$params, (array)$form);
+            foreach ($rps as $rp) {
+                $args[] = $params[$rp->name] ?:
+                    ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
+            }
+        }
+        return call_user_func_array($action, $args);
     }
 
     public static function content()
@@ -157,6 +196,21 @@ class CGI
         // session_write_close();
         header('Location: '.URL($url, $query), true, 302);
         exit();
+    }
+
+    public static function router()
+    {
+        static $router;
+        if (!$router && class_exists('\Gini\CGI\Router')) {
+            $router = \Gini\IoC::construct('\Gini\CGI\Router');
+            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+                $moduleClass = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
+                if (!$info->error && method_exists($moduleClass, 'cgiRoute')) {
+                    call_user_func($class.'::cgiRoute', $router);
+                }
+            }
+        }
+        return $router;
     }
 
     public static function setup()

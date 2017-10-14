@@ -73,23 +73,27 @@ abstract class CGI
     public function execute()
     {
         $params = (array) $this->params;
-        $action = strtr($params[0], ['-' => '', '_' => '']);
-        if ($action && $action[0] != '_'
-            && method_exists($this, 'action'.$action)) {
-            array_shift($params);
-        } elseif (method_exists($this, '__index')) {
-            $action = null;
+        if ($this->action) {
+            $actionName = preg_replace('/^action/i', '', $this->action);
         } else {
-            $this->redirect('error/404');
+            $actionName = strtr($params[0], ['-' => '', '_' => '']);
+            if ($actionName && $actionName[0] != '_'
+                && method_exists($this, 'action'.$actionName)) {
+                array_shift($params);
+            } elseif (method_exists($this, '__index')) {
+                $actionName = null;
+            } else {
+                $this->redirect('error/404');
+            }
+            $this->action = $actionName ? 'action'.$actionName : '__index';
         }
-        $this->action = $action;
 
-        $response = $this->__preAction($action, $params);
+        $response = $this->__preAction($actionName, $params);
         if ($response !== false) {
-            $response = call_user_func_array(array($this, $action ? 'action'.$action : '__index'), $params);
+            $response = \Gini\CGI::executeAction([$this, $this->action], $params, $this->form());
         }
 
-        $response = $this->__postAction($action, $params, $response) ?: $response;
+        $response = $this->__postAction($actionName, $params, $response) ?: $response;
 
         return $response ?: new \Gini\CGI\Response\Nothing();
     }

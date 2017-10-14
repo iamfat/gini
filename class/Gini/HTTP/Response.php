@@ -8,7 +8,7 @@ class Response
     public $status = null;
     public $body = null;
 
-    public function __construct($data, $status)
+    public function __construct($data, $code=200)
     {
         list($header, $body) = explode("\n\n", str_replace("\r", '', $data), 2);
 

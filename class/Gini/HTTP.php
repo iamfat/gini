@@ -6,34 +6,26 @@ class HTTP
 {
     private $_header = [];
     private $_post = [];
+    private static $supportedMethods = ['get', 'post', 'delete', 'put', 'options'];
 
     public function header($name, $value)
     {
         $this->_header[strtolower($name)] = $value;
-
         return $this;
     }
 
-    public function get($url, $query = null, $timeout = 5)
+    public function __call($method, $params)
     {
-        return $this->request('GET', $url, $query, $timeout);
-    }
+        if ($method == __FUNCTION__) {
+            return;
+        }
 
-    public function post($url, $query, $timeout = 5)
-    {
-        return $this->request('POST', $url, $query, $timeout);
+        if (in_array($method, self::$supportedMethods)) {
+            array_unshift($params, $method);
+            return call_user_func_array([$this, 'request'], $params);
+        }
     }
-
-    public function delete($url, $query, $timeout = 5)
-    {
-        return $this->request('DELETE', $url, $query, $timeout);
-    }
-
-    public function put($url, $query, $timeout = 5)
-    {
-        return $this->request('PUT', $url, $query, $timeout);
-    }
-
+ 
     public function clean()
     {
         $this->_header = [];
@@ -67,14 +59,12 @@ class HTTP
     public function enableCookie()
     {
         $this->_cookie = IoC::construct('\Gini\HTTP\Cookie');
-
         return $this;
     }
 
     public function disableCookie()
     {
         $this->_cookie = null;
-
         return $this;
     }
 
@@ -116,6 +106,7 @@ class HTTP
         }
         curl_setopt($ch, CURLOPT_HTTPHEADER, $curl_header);
 
+        $method = strtoupper($method);
         if ($query && !is_scalar($query)) {
             if (!array_filter($query, function ($v) {
                 return $v instanceof \CURLFile;

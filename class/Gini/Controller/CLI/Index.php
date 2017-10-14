@@ -277,8 +277,7 @@ class Index extends \Gini\Controller\CLI
         $client = new \Sabre\DAV\Client($options);
 
         $installedModules = [];
-        $installModule = function ($module, $versionRange, $targetDir, $isApp = false) 
-            use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
+        $installModule = function ($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
             if (isset($installedModules[$module])) {
                 $info = $installedModules[$module];
                 $v = new \Gini\Version($info->version);

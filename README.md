@@ -30,3 +30,32 @@ $users = those('users')
         those('users')->whose('email')->contains('genee')
     );
 ```
+
+## 内建 JSON-RPC 和 REST 的 API 与远程调用支持
+以下是个示例:
+1. JSON-RPC
+```php
+// Client
+$rpc = new \Gini\RPC('http://gini/api');
+$sum = $rpc->hello->add(1, 2);
+
+//Server
+class Hello extends \Gini\Controller\API {
+    public function actionAdd($a, $b) {
+        return $a + $b;
+    }
+}
+```
+2. REST
+```php
+// Client
+$rest = new \Gini\REST('http://localhost/rest');
+$sum = $rest->post('add', ['a'=>1, 'b'=>2]);
+
+// Server
+class Hello extends \Gini\Controller\REST {
+    public function postAdd($a, $b) {
+        return $a + $b;
+    }
+}
+```
