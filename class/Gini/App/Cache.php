@@ -28,8 +28,10 @@ class Cache
         }
 
         \Gini\File::ensureDir(APP_PATH.'/cache');
-        file_put_contents(APP_PATH.'/cache/class_map.json',
-            J($class_map));
+        file_put_contents(
+            APP_PATH.'/cache/class_map.json',
+            J($class_map)
+        );
         echo "   \e[32mdone.\e[0m\n";
 
         // load class map
@@ -58,8 +60,10 @@ class Cache
         }
 
         \Gini\File::ensureDir(APP_PATH.'/cache');
-        file_put_contents(APP_PATH.'/cache/view_map.json',
-            J($view_map));
+        file_put_contents(
+            APP_PATH.'/cache/view_map.json',
+            J($view_map)
+        );
         echo "   \e[32mdone.\e[0m\n";
 
         // load view map
@@ -138,8 +142,10 @@ class Cache
         $config_file = APP_PATH.'/cache/config.json';
 
         \Gini\File::ensureDir(APP_PATH.'/cache');
-        file_put_contents($config_file,
-            J($config_items));
+        file_put_contents(
+            $config_file,
+            J($config_items)
+        );
 
         \Gini\Config::setup();
 

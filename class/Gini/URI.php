@@ -120,7 +120,8 @@ namespace Gini {
             return '<a href="mailto:'.$mail.'"'.$extra.'>'.$name.'</a>';
         }
 
-        protected static $_base, $_rurl;
+        protected static $_base;
+        protected static $_rurl;
         public static function setup()
         {
             $host = $_SERVER['HTTP_HOST'];

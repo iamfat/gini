@@ -49,7 +49,9 @@ class ORM extends \Gini\Controller\CLI
             // sort ORM objects according relation dependencies.
             $adjusted = [];
             $push = function ($oname) use (&$orms, &$adjusted, &$push) {
-                if (isset($adjusted[$oname])) return;
+                if (isset($adjusted[$oname])) {
+                    return;
+                }
                 $o = $orms[$oname];
                 $relations = $o->relations();
                 $structure = $o->structure();
@@ -106,7 +108,8 @@ class ORM extends \Gini\Controller\CLI
                 unset($structure['id']);
                 unset($structure['_extra']);
 
-                $i = 1; $max = count($structure);
+                $i = 1;
+                $max = count($structure);
                 foreach ($structure as $k => $v) {
                     if ($i == $max) {
                         break;

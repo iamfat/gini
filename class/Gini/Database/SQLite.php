@@ -139,18 +139,22 @@ class SQLite extends \PDO implements Driver
             }
 
             // 1. 建立新表
-            $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s (%s)',
-                        $this->quoteIdent('_new_'.$table),
-                        implode(', ', $field_sql)
-                        );
+            $SQL = sprintf(
+                'CREATE TABLE IF NOT EXISTS %s (%s)',
+                $this->quoteIdent('_new_'.$table),
+                implode(', ', $field_sql)
+            );
             $this->query($SQL);
 
             // 2. 移动数据
             if ($this->tableExists($table) && count($fields) > 0) {
-                $SQL = sprintf('INSERT INTO %s (%s) SELECT %s FROM %s',
+                $SQL = sprintf(
+                    'INSERT INTO %s (%s) SELECT %s FROM %s',
                     $this->quoteIdent('_new_'.$table),
-                    implode(',', $field_names), implode(',', $field_values), $this->quoteIdent($table)
-                    );
+                    implode(',', $field_names),
+                    implode(',', $field_values),
+                    $this->quoteIdent($table)
+                );
                 $this->query($SQL);
 
                 $SQL = sprintf('DROP TABLE IF EXISTS %s', $this->quoteIdent($table));
@@ -180,12 +184,13 @@ class SQLite extends \PDO implements Driver
 
         if ($index_modified) {
             foreach ($indexes as $key => $val) {
-                $SQL = sprintf('CREATE %sINDEX IF NOT EXISTS %s ON %s (%s)',
-                            $val['type'] ? 'UNIQUE ' : '',
-                            $this->quoteIdent($table.'__'.$key),
-                            $this->quoteIdent($table),
-                            $this->quoteIdent($val['fields'])
-                        );
+                $SQL = sprintf(
+                    'CREATE %sINDEX IF NOT EXISTS %s ON %s (%s)',
+                    $val['type'] ? 'UNIQUE ' : '',
+                    $this->quoteIdent($table.'__'.$key),
+                    $this->quoteIdent($table),
+                    $this->quoteIdent($val['fields'])
+                );
                 $this->query($SQL);
             }
         }
@@ -276,12 +281,19 @@ class SQLite extends \PDO implements Driver
     private function _fieldSQL($key, &$field)
     {
         if ($field['serial']) {
-            return sprintf('%s INTEGER PRIMARY KEY AUTOINCREMENT', $this->quoteIdent($key)
-                    );
+            return sprintf(
+                '%s INTEGER PRIMARY KEY AUTOINCREMENT',
+                $this->quoteIdent($key)
+            );
         }
 
-        return sprintf('%s %s%s%s', $this->quoteIdent($key), $this->_normalizeType($field['type']), $field['null'] ? '' : ' NOT NULL', isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : ''
-                );
+        return sprintf(
+            '%s %s%s%s',
+            $this->quoteIdent($key),
+            $this->_normalizeType($field['type']),
+            $field['null'] ? '' : ' NOT NULL',
+            isset($field['default']) ? ' DEFAULT '.$this->quote($field['default']) : ''
+        );
     }
 
     public function createTable($table, $engine = null)

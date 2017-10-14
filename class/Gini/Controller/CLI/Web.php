@@ -52,7 +52,11 @@ class Web extends \Gini\Controller\CLI
                         if ($force || filemtime($src_path) > $filemtime[$dst_path]) {
                             // lessc -x raw/less/$$LESS.less web/assets/css/$$LESS.css ; \
                             printf("   %s => %s\n", $name, $css);
-                            $command = sprintf('lessc %s %s %s', escapeshellarg($src_path), escapeshellarg($dst_path), '--clean-css="--s1 --advanced --compatibility=ie8"'
+                            $command = sprintf(
+                                'lessc %s %s %s',
+                                escapeshellarg($src_path),
+                                escapeshellarg($dst_path),
+                                '--clean-css="--s1 --advanced --compatibility=ie8"'
                                     );
                             exec($command);
                         }
@@ -94,8 +98,12 @@ class Web extends \Gini\Controller\CLI
                             exec($command);
                         } else {
                             // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
-                            $command = sprintf('uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s',
-                                escapeshellarg($src_path), time(), escapeshellarg($dst_path));
+                            $command = sprintf(
+                                'uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s',
+                                escapeshellarg($src_path),
+                                time(),
+                                escapeshellarg($dst_path)
+                            );
                             exec($command);
                         }
                     }
@@ -139,7 +147,6 @@ class Web extends \Gini\Controller\CLI
                     printf("   copy %s\n", $file);
                     copy($src_path, $dst_path);
                 }
-
             });
         }
 

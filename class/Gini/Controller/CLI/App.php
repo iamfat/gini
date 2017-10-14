@@ -91,7 +91,8 @@ class App extends \Gini\Controller\CLI
                 }
             }
 
-            printf("%s %s %s %s %s\e[0m\n",
+            printf(
+                "%s %s %s %s %s\e[0m\n",
                 $info->error ? "\e[31m" : '',
                 $this->_strPad($name, 30, ' '),
                 $this->_strPad($info->version, 15, ' '),

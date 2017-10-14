@@ -117,7 +117,9 @@ class HTTP
         curl_setopt($ch, CURLOPT_HTTPHEADER, $curl_header);
 
         if ($query && !is_scalar($query)) {
-            if (!array_filter($query, function ($v) { return $v instanceof \CURLFile; })) {
+            if (!array_filter($query, function ($v) {
+                return $v instanceof \CURLFile;
+            })) {
                 if ($method != 'GET' && $this->_header['content-type'] == 'application/json') {
                     $query = json_encode((object) $query, JSON_UNESCAPED_UNICODE);
                 } else {

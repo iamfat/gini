@@ -15,12 +15,17 @@ class MySQL extends \PDO implements Driver
         if ($table || !$this->_table_status) {
             if ($table && $table != '*') {
                 unset($this->_table_status[$table]);
-                $SQL = sprintf('SHOW TABLE STATUS FROM %s WHERE "Name"=%s',
-                        $this->quoteIdent($this->_dbname), $this->quote($table));
+                $SQL = sprintf(
+                    'SHOW TABLE STATUS FROM %s WHERE "Name"=%s',
+                        $this->quoteIdent($this->_dbname),
+                    $this->quote($table)
+                );
             } else {
                 $this->_table_status = null;
-                $SQL = sprintf('SHOW TABLE STATUS FROM %s',
-                        $this->quoteIdent($this->_dbname));
+                $SQL = sprintf(
+                    'SHOW TABLE STATUS FROM %s',
+                        $this->quoteIdent($this->_dbname)
+                );
             }
             $rs = $this->query($SQL);
             while ($r = $rs->fetchObject()) {
@@ -189,8 +194,11 @@ class MySQL extends \PDO implements Driver
         }
 
         if (count($field_sql0) > 0) {
-            $SQL = sprintf('ALTER TABLE %s %s',
-                $this->quoteIdent($table), implode(', ', $field_sql0));
+            $SQL = sprintf(
+                'ALTER TABLE %s %s',
+                $this->quoteIdent($table),
+                implode(', ', $field_sql0)
+            );
             if (false === $this->query($SQL)) {
                 throw new \Gini\Database\Exception($this->errorInfo()[2]);
             }
@@ -198,8 +206,11 @@ class MySQL extends \PDO implements Driver
         }
 
         if (count($field_sql) > 0) {
-            $SQL = sprintf('ALTER TABLE %s %s',
-                $this->quoteIdent($table), implode(', ', $field_sql));
+            $SQL = sprintf(
+                'ALTER TABLE %s %s',
+                $this->quoteIdent($table),
+                implode(', ', $field_sql)
+            );
             if (false === $this->query($SQL)) {
                 throw new \Gini\Database\Exception($this->errorInfo()[2]);
             }
@@ -221,7 +232,7 @@ class MySQL extends \PDO implements Driver
                         $field['default'] = $dr->Default;
                     }
 
-                    if ($dr->Null != 'NO') {
+                    if ($dr->null != 'NO') {
                         $field['null'] = true;
                     }
 
@@ -283,7 +294,13 @@ class MySQL extends \PDO implements Driver
             }
         }
 
-        return sprintf('%s %s%s%s%s', $this->quoteIdent($key), $field['type'], $field['null'] ? '' : ' NOT NULL', $default ? ' DEFAULT '.$default : '', $field['serial'] ? ' AUTO_INCREMENT' : ''
+        return sprintf(
+            '%s %s%s%s%s',
+            $this->quoteIdent($key),
+            $field['type'],
+            $field['null'] ? '' : ' NOT NULL',
+            $default ? ' DEFAULT '.$default : '',
+            $field['serial'] ? ' AUTO_INCREMENT' : ''
                 );
     }
 
@@ -349,7 +366,8 @@ class MySQL extends \PDO implements Driver
                 $updateAction = 'NO ACTION';
         }
 
-        return sprintf('CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s',
+        return sprintf(
+            'CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s',
                     $this->quoteIdent($key),
                     $this->quoteIdent($val['column']),
                     $this->quoteIdent($val['ref_table']),
@@ -369,7 +387,8 @@ class MySQL extends \PDO implements Driver
             $engine = 'innodb';  //innodb as default db
         }
 
-        $SQL = sprintf('CREATE TABLE IF NOT EXISTS %s (%s INT NOT NULL) ENGINE = %s DEFAULT CHARSET = utf8',
+        $SQL = sprintf(
+            'CREATE TABLE IF NOT EXISTS %s (%s INT NOT NULL) ENGINE = %s DEFAULT CHARSET = utf8',
                     $this->quoteIdent($table),
                     $this->quoteIdent('_FOO'),
                     $this->quote($engine)

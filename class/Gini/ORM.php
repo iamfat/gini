@@ -53,11 +53,13 @@ abstract class ORM
         $name = "call[$method]";
         if (!$this->event('isBinded', $name)) {
             $trace = debug_backtrace();
-            $message = sprintf('[E]: Call to undefined method %s::%s() in %s on line %d',
-                                $trace[1]['class'],
-                                $trace[1]['function'],
-                                $trace[1]['file'],
-                                $trace[1]['line']);
+            $message = sprintf(
+                '[E]: Call to undefined method %s::%s() in %s on line %d',
+                $trace[1]['class'],
+                $trace[1]['function'],
+                $trace[1]['file'],
+                $trace[1]['line']
+            );
             trigger_error($message, E_USER_ERROR);
 
             return;
@@ -347,6 +349,7 @@ abstract class ORM
                         break;
                     case 'index':
                         $indexes['_IDX_'.$k] = ['fields' => [$k]];
+                        // no break
                     case 'object':
                         // 需要添加新的$field
                         if (!$pv) {

@@ -94,8 +94,10 @@ class CLI
         $commands = [];
         $class = null;
         foreach (array_reverse($candidates) as $path => $params) {
-            $paths = \Gini\Core::pharFilePaths(CLASS_DIR,
-                rtrim('Gini/Controller/CLI/'.ltrim($path, '/'), '/'));
+            $paths = \Gini\Core::pharFilePaths(
+                CLASS_DIR,
+                rtrim('Gini/Controller/CLI/'.ltrim($path, '/'), '/')
+            );
             foreach ($paths as $p) {
                 if (!is_dir($p)) {
                     continue;
@@ -180,7 +182,7 @@ class CLI
             }
         }
         $line = $e->getLine();
-        printf("\e[31m[E] \e[1m%s\e[0m\n", $message);
+        printf("\e[31m[E] \e[1m%s (%s:%d)\e[0m\n", $message, $file, $line);
         error_log(sprintf('[E] %s (%s:%d)', $message, $file, $line));
         $trace = array_slice($e->getTrace(), 1, 3);
         foreach ($trace as $n => $t) {
@@ -191,11 +193,14 @@ class CLI
                     break;
                 }
             }
-            error_log(sprintf('%3d. %s%s() in (%s:%d)', $n + 1,
-                            $t['class'] ? $t['class'].'::' : '',
-                            $t['function'],
-                            $file,
-                            $t['line']));
+            error_log(sprintf(
+                '%3d. %s%s() in (%s:%d)',
+                $n + 1,
+                $t['class'] ? $t['class'].'::' : '',
+                $t['function'],
+                $file,
+                $t['line']
+            ));
         }
     }
 

@@ -55,7 +55,7 @@ class Util
             $actChar = substr($validchars[$level], rand(0, $max_length), 1);
             // All character must be different
             //if (!strstr($password, $actChar)) {
-                $password .= $actChar;
+            $password .= $actChar;
             ++$counter;
             //}
         }

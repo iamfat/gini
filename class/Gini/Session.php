@@ -112,7 +112,8 @@ class Session
             return;
         }
 
-        set_error_handler(function () {}, E_ALL ^ E_NOTICE);
+        set_error_handler(function () {
+        }, E_ALL ^ E_NOTICE);
         session_start();
         restore_error_handler();
 

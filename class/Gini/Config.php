@@ -117,7 +117,9 @@ class Config
                     if ($content) {
                         $config = (array) yaml_parse($content);
                         $items[$category] = \Gini\Util::arrayMergeDeep(
-                            $items[$category], $config);
+                            $items[$category],
+                            $config
+                        );
                     }
                     break;
                 }

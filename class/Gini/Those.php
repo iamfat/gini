@@ -299,7 +299,6 @@ namespace Gini {
                 if ($v->_where) {
                     $this->_where = array_merge($this->_where, [$op], $v->_where);
                 }
-
             } else {
                 foreach ($values as $v) {
                     $qv[] = $db->quote($v);

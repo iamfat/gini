@@ -277,8 +277,8 @@ class Index extends \Gini\Controller\CLI
         $client = new \Sabre\DAV\Client($options);
 
         $installedModules = [];
-        $installModule = function ($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
-
+        $installModule = function ($module, $versionRange, $targetDir, $isApp = false) 
+            use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
             if (isset($installedModules[$module])) {
                 $info = $installedModules[$module];
                 $v = new \Gini\Version($info->version);
@@ -398,7 +398,6 @@ class Index extends \Gini\Controller\CLI
                     $installModule($m, $r, $targetDir, false);
                 }
             }
-
         };
 
         if (count($argv) > 0) {
@@ -440,7 +439,8 @@ class Index extends \Gini\Controller\CLI
             $modules = $rpc->search($argv[0]);
 
             foreach ((array) $modules as $m) {
-                printf("%s %s %s\e[0m\n",
+                printf(
+                    "%s %s %s\e[0m\n",
                     $this->_strPad($m['id'], 20, ' '),
                     $this->_strPad($m['version'], 15, ' '),
                     $this->_strPad($m['name'], 30, ' ')
