@@ -297,24 +297,10 @@ class Index extends \Gini\Controller\CLI
 
                 // fetch index.json
                 echo "Fetching catalog of {$module}...\n";
-                while (true) {
-                    $response = $client->request('GET', $module.'/index.json', null, $headers);
-                    if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-                        // Authentication required
-                        // prompt user/password and try again
-                        if (!isset($options['userName'])) {
-                            list($options, $headers) = self::_davOptionsAndHeaders(true);
-                            $client = new \Sabre\DAV\Client($options);
-                            continue;
-                        }
-                        $matched or die("Access denied for fetch catalog of {$module} .\n");
-                        $response = null;
-                    } elseif ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                        $matched or die('Error: '.$response['statusCode']."\n");
-                        $response = null;
-                    }
-
-                    break;
+                $response = $client->request('GET', $module.'/index.json', null, $headers);
+                if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                    $matched or die('Error: '.$response['statusCode']."\n");
+                    $response = null;
                 }
 
                 if ($response) {
@@ -343,24 +329,9 @@ class Index extends \Gini\Controller\CLI
 
                     $tarPath = "{$module}/{$version}.tgz";
                     echo "Downloading {$module} from {$tarPath}...\n";
-                    while (true) {
-                        $response = $client->request('GET', $tarPath, null, $headers);
-                        if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-                            // Authentication required
-                            // prompt user/password and try again
-                            if (!isset($options['userName'])) {
-                                list($options, $headers) = self::_davOptionsAndHeaders(true);
-                                $client = new \Sabre\DAV\Client($options);
-                                continue;
-                            }
-                            die("Access denied for fetch catalog of {$module}.\n");
-                        }
-
-                        if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                            die('Error: '.$response['statusCode']."\n");
-                        }
-
-                        break;
+                    $response = $client->request('GET', $tarPath, null, $headers);
+                    if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+                        die('Error: '.$response['statusCode']."\n");
                     }
 
                     if ($isApp) {
