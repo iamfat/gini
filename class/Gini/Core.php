@@ -28,14 +28,14 @@ namespace Gini {
          *
          * @var array
          **/
-        public static $GLOBALS;
+        public static $GLOBALS = [];
 
         /**
          * The array contains all loaded module info.
          *
          * @var array
          **/
-        public static $MODULE_INFO;
+        public static $MODULE_INFO = [];
 
         /**
          * Fetch module info from provided path.
@@ -86,6 +86,7 @@ namespace Gini {
                 $info->dependencies['gini'] = '*';
             }
 
+            $info->moduleClass = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
             $info->path = $path;
 
             return $info;
@@ -182,7 +183,8 @@ namespace Gini {
             }
 
             $inserted = false;
-            foreach ((array) self::$MODULE_INFO as $b_id => $b_info) {
+            $module_info = [];
+            foreach (self::$MODULE_INFO as $b_id => $b_info) {
                 if (!$inserted &&
                     (isset($b_info->dependencies[$info->id]) || $b_id == APP_ID)
                 ) {
@@ -271,7 +273,7 @@ namespace Gini {
         public static function locatePharFile($phar, $file, $scope = null)
         {
             if (is_null($scope)) {
-                foreach (array_reverse(array_keys((array) self::$MODULE_INFO)) as $scope) {
+                foreach (array_reverse(array_keys(self::$MODULE_INFO)) as $scope) {
                     $file_path = self::locatePharFile($phar, $file, $scope);
                     if ($file_path) {
                         return $file_path;
@@ -304,7 +306,7 @@ namespace Gini {
         public static function locateFile($file, $scope = null)
         {
             if (is_null($scope)) {
-                foreach (array_reverse(array_keys((array) self::$MODULE_INFO)) as $scope) {
+                foreach (array_reverse(array_keys(self::$MODULE_INFO)) as $scope) {
                     $file_path = self::locateFile($file, $scope);
                     if ($file_path) {
                         return $file_path;
@@ -331,7 +333,7 @@ namespace Gini {
          **/
         public static function pharFilePaths($base, $file)
         {
-            foreach ((array) self::$MODULE_INFO as $info) {
+            foreach (self::$MODULE_INFO as $info) {
                 $file_path = 'phar://'.$info->path.'/'.$base.'.phar';
                 if ($file) {
                     $file_path .= '/'.$file;
@@ -364,7 +366,7 @@ namespace Gini {
          **/
         public static function filePaths($file)
         {
-            foreach ((array) self::$MODULE_INFO as $info) {
+            foreach (self::$MODULE_INFO as $info) {
                 $file_path = $info->path.'/'.$file;
                 if (file_exists($file_path)) {
                     $file_paths[] = $file_path;
@@ -380,12 +382,11 @@ namespace Gini {
         public static function exception($e)
         {
             if (isset($GLOBALS['gini.class_map'])) {
-                foreach (array_reverse((array) self::$MODULE_INFO) as $name => $info) {
-                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
-                    !method_exists($class, 'exception') or call_user_func($class.'::exception', $e);
-                }
+                array_walk(array_reverse(self::$MODULE_INFO), function($info, $name) use ($e) {
+                    method_exists($info->moduleClass, 'exception') and call_user_func([$info->moduleClass, 'exception'], $e);
+                });
             }
-            !method_exists('\Gini\Application', 'exception') or \Gini\Application::exception($e);
+            method_exists('\Gini\Application', 'exception') and \Gini\Application::exception($e);
             exit(1);
         }
 
@@ -456,7 +457,7 @@ namespace Gini {
             Config::setup();
             Event::setup();
 
-            !method_exists('\Gini\Application', 'setup') or \Gini\Application::setup();
+            method_exists('\Gini\Application', 'setup') and \Gini\Application::setup();
 
             // 生成一个 APP_HASH 用于做版本唯一说明
             define('APP_HASH', sha1(array_reduce(
@@ -469,16 +470,15 @@ namespace Gini {
 
             // module setup won't be run before CLASS cache
             if (isset($GLOBALS['gini.class_map'])) {
-                foreach (self::$MODULE_INFO as $name => $info) {
+                array_walk(self::$MODULE_INFO, function($info, $name) {
                     $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
-                    if (!$info->error && method_exists($class, 'setup')) {
-                        call_user_func($class.'::setup');
-                    }
-                }
+                    !$info->error and method_exists($info->moduleClass, 'setup')
+                        and call_user_func([$info->moduleClass, 'setup']);
+                });
             }
 
             global $argv;
-            !method_exists('\Gini\Application', 'main') or \Gini\Application::main($argv);
+            method_exists('\Gini\Application', 'main') and \Gini\Application::main($argv);
         }
 
         /**
@@ -487,14 +487,12 @@ namespace Gini {
         public static function shutdown()
         {
             if (isset($GLOBALS['gini.class_map'])) {
-                foreach (array_reverse(self::$MODULE_INFO) as $name => $info) {
-                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
-                    if (!$info->error && method_exists($class, 'shutdown')) {
-                        call_user_func($class.'::shutdown');
-                    }
-                }
+                array_walk(array_reverse(self::$MODULE_INFO), function ($info, $name) {
+                    !$info->error and method_exists($info->moduleClass, 'shutdown')
+                        and call_user_func([$info->moduleClass, 'shutdown']);
+                });
             }
-            !method_exists('\Gini\Application', 'shutdown') or \Gini\Application::shutdown();
+            method_exists('\Gini\Application', 'shutdown') and \Gini\Application::shutdown();
         }
     } // END class
 

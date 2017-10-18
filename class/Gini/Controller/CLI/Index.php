@@ -136,10 +136,9 @@ class Index extends \Gini\Controller\CLI
 
     public function actionPublish($argv)
     {
-        count($argv) > 0 or die("Usage: gini index publish <version>\n\n");
-
         $appId = APP_ID;
-        $version = $argv[0];
+        $version = $argv[0] ?: \Gini\Core::moduleInfo($appId)->version;
+
         $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
         $command = "git --git-dir=$GIT_DIR archive $version --format tgz 2> /dev/null";
 
@@ -236,7 +235,7 @@ class Index extends \Gini\Controller\CLI
             }
 
             if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                die("Failed to find $path\n");
+                die("Failed to find $path with code {$response['statusCode']}\n");
             }
 
             break;
