@@ -382,7 +382,8 @@ namespace Gini {
         public static function exception($e)
         {
             if (isset($GLOBALS['gini.class_map'])) {
-                array_walk(array_reverse(self::$MODULE_INFO), function($info, $name) use ($e) {
+                $moduleInfo = array_reverse(self::$MODULE_INFO);
+                array_walk($moduleInfo, function($info, $name) use ($e) {
                     method_exists($info->moduleClass, 'exception') and call_user_func([$info->moduleClass, 'exception'], $e);
                 });
             }
@@ -487,7 +488,8 @@ namespace Gini {
         public static function shutdown()
         {
             if (isset($GLOBALS['gini.class_map'])) {
-                array_walk(array_reverse(self::$MODULE_INFO), function ($info, $name) {
+                $moduleInfo = array_reverse(self::$MODULE_INFO);
+                array_walk($moduleInfo, function ($info, $name) {
                     !$info->error and method_exists($info->moduleClass, 'shutdown')
                         and call_user_func([$info->moduleClass, 'shutdown']);
                 });
