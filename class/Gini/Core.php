@@ -86,7 +86,7 @@ namespace Gini {
                 $info->dependencies['gini'] = '*';
             }
 
-            $info->moduleClass = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
+            $info->moduleClass = '\Gini\Module\\'.strtr($info->id, ['-' => '', '_' => '', '/' => '']);
             $info->path = $path;
 
             return $info;
