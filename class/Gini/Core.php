@@ -383,7 +383,7 @@ namespace Gini {
         {
             if (isset($GLOBALS['gini.class_map'])) {
                 $moduleInfo = array_reverse(self::$MODULE_INFO);
-                array_walk($moduleInfo, function($info, $name) use ($e) {
+                array_walk($moduleInfo, function ($info, $name) use ($e) {
                     method_exists($info->moduleClass, 'exception') and call_user_func([$info->moduleClass, 'exception'], $e);
                 });
             }
@@ -438,6 +438,7 @@ namespace Gini {
             define('CACHE_DIR', 'cache');
 
             $info = self::import(SYS_PATH);
+            define('SYS_VERSION', $info->version);
 
             if (isset($_SERVER['GINI_APP_PATH'])) {
                 $app_path = $_SERVER['GINI_APP_PATH'];
@@ -471,7 +472,7 @@ namespace Gini {
 
             // module setup won't be run before CLASS cache
             if (isset($GLOBALS['gini.class_map'])) {
-                array_walk(self::$MODULE_INFO, function($info, $name) {
+                array_walk(self::$MODULE_INFO, function ($info, $name) {
                     $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
                     !$info->error and method_exists($info->moduleClass, 'setup')
                         and call_user_func([$info->moduleClass, 'setup']);

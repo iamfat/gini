@@ -218,6 +218,10 @@ class CGI
         URI::setup();
         static::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
         Session::setup();
+
+        if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
+            $_POST = @json_decode(self::content(), true);
+        }
     }
 
     public static function shutdown()

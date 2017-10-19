@@ -99,7 +99,7 @@ abstract class CGI
     }
 
     /**
-     * Return POST/GET/FILES in array.
+     * Return POST/GET/FILES or JSON content in array.
      *
      * @param string $mode 'get': $_GET, 'post': $_POST, 'files': $_FILES, default: $_POST + $_GET
      *

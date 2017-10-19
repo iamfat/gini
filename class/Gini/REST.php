@@ -5,7 +5,8 @@ namespace Gini;
 /*
 $rest = new \Gini\REST('http://localhost:3000/rest');
 $response = $rest->get('hello/article/1');
-$response = $rest->post('hello/article', ['author'=>'libai', 'title'=>'jiangjinjiu', 'body'=>'balabala']);
+$response = $rest->json()->post('hello/article', ['author'=>'libai']);
+$response = $rest->form()->post('hello/article', ['author'=>'libai']);
 */
 
 class REST
@@ -13,14 +14,13 @@ class REST
     private $_url;
     public $timeout = 5;
 
-    private static $supportedMethods = ['get', 'post', 'delete', 'put', 'options'];
+    private static $supportedMethods = ['get', 'post', 'delete', 'put'];
 
-    public function __construct($url, $cookie = null, $headers = [])
+    public function __construct($url)
     {
         $this->_url = rtrim($url, '/');
-        $this->_cookie = $cookie ?: IoC::construct('\Gini\HTTP\Cookie');
-        $this->_headers = (array) $headers;
         $this->_http = IoC::construct('\Gini\HTTP');
+        $this->json();
     }
 
     public function __call($method, $params)
@@ -39,7 +39,7 @@ class REST
             $timeout or $timeout = $this->timeout;
 
             $url = $this->_url . '/' . ltrim($path, '/');
-            $response = $this->_http->$method($url, $query, $this->timeout);
+            $response = $this->_http->request($method, $url, $query, $this->timeout);
             $status = $response->status();
 
             $raw_data = (string) $response;
@@ -57,6 +57,18 @@ class REST
     public function header($name, $value)
     {
         $this->_http->header($name, $value);
+        return $this;
+    }
+
+    public function json()
+    {
+        $this->_http->header('Content-Type', 'application/json');
+        return $this;
+    }
+
+    public function form()
+    {
+        $this->_http->header('Content-Type', 'application/x-www-form-urlencoded');
         return $this;
     }
 }

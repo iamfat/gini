@@ -93,7 +93,7 @@ class HTTP
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FRESH_CONNECT => true,
-            CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?: 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)',
+            CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?: 'Gini/'.SYS_VERSION,
             CURLOPT_REFERER => 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
         ));
 

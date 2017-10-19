@@ -10,8 +10,8 @@ final class API extends \Gini\Controller\CGI
 
     public function execute()
     {
-        $request = @json_decode(\Gini\CGI::content(), true);
-        if ($request === null) {
+        $post = $this->form('post');
+        if ($post === null) {
             $response = [
                 'jsonrpc' => '2.0',
                 'error' => [
@@ -21,7 +21,7 @@ final class API extends \Gini\Controller\CGI
                 'id' => $id,
             ];
         } else {
-            $response = \Gini\API::dispatch((array) $request);
+            $response = \Gini\API::dispatch((array)$post);
         }
 
         return \Gini\IoC::construct('\Gini\CGI\Response\JSON', $response);
