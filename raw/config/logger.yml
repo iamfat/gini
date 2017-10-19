@@ -1,8 +1,8 @@
 ---
 default:
   SysLog:
-    level: warning
+    level: ${DEFAULT_SYSLOG_LEVEL:="warning"}
 cron:
   SysLog:
-    level: info
+    level: ${CRON_SYSLOG_LEVEL:="info"}
 ...

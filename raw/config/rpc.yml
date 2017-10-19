@@ -1,4 +1,4 @@
 ---
 timeout:
-  default: 5
+  default: ${RPC_DEFAULT_TIMEOUT:=5}
 ...

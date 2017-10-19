@@ -107,12 +107,12 @@ class Config
                 case 'yml':
                 case 'yaml':
                     $content = file_get_contents($file);
-                    $content = preg_replace_callback('/\{\{([A-Z0-9_]+?)\}\}/', function ($matches) {
-                        return getenv($matches[1]) ?: $matches[0];
-                    }, $content);
-                    $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\}/', function ($matches) {
-                        return getenv($matches[1]) ?: $matches[0];
-                    }, $content);
+                    $replaceCallback = function ($matches) {
+                        $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
+                        return getenv($matches[1]) ?: $defaultValue;
+                    };
+                    $content = preg_replace_callback('/\{\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+))?\s*\}\}/', $replaceCallback, $content);
+                    $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+))?\s*\}/', $replaceCallback, $content);
                     $content = trim($content);
                     if ($content) {
                         $config = (array) yaml_parse($content);
