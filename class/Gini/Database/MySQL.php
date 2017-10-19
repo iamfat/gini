@@ -227,22 +227,22 @@ class MySQL extends \PDO implements Driver
 
             $fields = [];
             if ($ds) {
-                while ($dr = $ds->fetchObject()) {
-                    $field = ['type' => $this->_normalizeType($dr->Type)];
+                while ($dr = $ds->fetch(\PDO::FETCH_ASSOC)) {
+                    $field = ['type' => $this->_normalizeType($dr['Type'])];
 
-                    if ($dr->Default !== null) {
-                        $field['default'] = $dr->Default;
+                    if ($dr['Default'] !== null) {
+                        $field['default'] = $dr['Default'];
                     }
 
-                    if ($dr->Null != 'NO') {
+                    if ($dr['Null'] != 'NO') {
                         $field['null'] = true;
                     }
 
-                    if (false !== strpos($dr->Extra, 'auto_increment')) {
+                    if (false !== strpos($dr['Extra'], 'auto_increment')) {
                         $field['serial'] = true;
                     }
 
-                    $fields[$dr->Field] = $field;
+                    $fields[$dr['Field']] = $field;
                 }
             }
 
