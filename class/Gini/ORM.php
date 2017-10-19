@@ -174,7 +174,7 @@ abstract class ORM
                         (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
                 }
 
-                $schema = $this->schema();
+                $schema = $this->ormSchema();
 
                 $fields = array_map([$db, 'quoteIdent'], array_keys($schema['fields']));
 
@@ -249,7 +249,7 @@ abstract class ORM
         return $this->_criteria;
     }
 
-    public function relations()
+    public function ormRelations()
     {
         $class_name = get_class($this);
         if (!isset(self::$_RELATIONS[$class_name])) {
@@ -276,7 +276,7 @@ abstract class ORM
     }
 
     // 'a', 'unique:b,c', 'd,e,f'
-    public function indexes()
+    public function ormIndexes()
     {
         $class_name = get_class($this);
         if (!isset(self::$_INDEXES[$class_name])) {
@@ -291,7 +291,11 @@ abstract class ORM
         return self::$_INDEXES[$class_name];
     }
 
-    public function schema()
+    public function schema() {
+        return $this->ormSchema();
+    }
+
+    public function ormSchema()
     {
         $structure = $this->structure();
 
@@ -364,7 +368,7 @@ abstract class ORM
             }
         }
 
-        foreach ($this->relations() as $k => $vv) {
+        foreach ($this->ormRelations() as $k => $vv) {
             $vvv = [];
             $vvv['delete'] = $vv['delete'];
             $vvv['update'] = $vv['update'];
@@ -390,7 +394,7 @@ abstract class ORM
         }
 
         // 索引项
-        foreach ($this->indexes() as $k => $v) {
+        foreach ($this->ormIndexes() as $k => $v) {
             list($vk, $vv) = explode(':', $v, 2);
             $vk = trim($vk);
             $vv = trim($vv);
@@ -459,7 +463,7 @@ abstract class ORM
 
     public function save()
     {
-        $schema = (array) $this->schema();
+        $schema = (array) $this->ormSchema();
         $db = $this->db();
 
         $success = false;
@@ -791,7 +795,7 @@ abstract class ORM
     {
         $db = $this->db();
         if ($db) {
-            $db->adjustTable($this->tableName(), $this->schema());
+            $db->adjustTable($this->tableName(), $this->ormSchema());
         }
         return $this;
     }

@@ -158,8 +158,8 @@ namespace Gini\PHPUnit\ORM {
             $props = $o1->properties();
             $this->assertEquals($props['inject_prop1'], 'string:*');
             $this->assertEquals($props['inject_prop2'], 'int');
-            $this->assertEquals($o1->indexes(), ['inject_prop1', 'unique:inject_prop2']);
-            $this->assertEquals($o1->relations(), ['sample' => ['update' => 'cascade', 'delete' => 'cascade']]);
+            $this->assertEquals($o1->ormIndexes(), ['inject_prop1', 'unique:inject_prop2']);
+            $this->assertEquals($o1->ormRelations(), ['sample' => ['update' => 'cascade', 'delete' => 'cascade']]);
         }
     }
     

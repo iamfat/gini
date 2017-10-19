@@ -92,7 +92,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     protected function fields()
     {
         if (!isset(self::$_FIELDS[$this->name])) {
-            $schema = a($this->name)->schema();
+            $schema = a($this->name)->ormSchema();
             $fields = array_keys($schema['fields']);
             self::$_FIELDS[$this->name] = array_combine($fields, $fields);
         }

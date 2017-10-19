@@ -53,7 +53,7 @@ class ORM extends \Gini\Controller\CLI
                     return;
                 }
                 $o = $orms[$oname];
-                $relations = $o->relations();
+                $relations = $o->ormRelations();
                 $structure = $o->structure();
                 if ($relations) {
                     foreach ($relations as $k => $r) {
