@@ -121,6 +121,8 @@ class MySQL extends \PDO implements Driver
                     || $field['default'] != $curr_field['default']
                     || $field['serial'] != $curr_field['serial']) {
                     $field_sql[] = sprintf('CHANGE %s %s', $this->quoteIdent($key), $this->_fieldSQL($key, $field));
+                    // echo "Current Fields:\n".yaml_emit($curr_field)."\n";
+                    // echo "Expected Fields:\n".yaml_emit($field)."\n";
                 }
             }
             /*
@@ -232,7 +234,7 @@ class MySQL extends \PDO implements Driver
                         $field['default'] = $dr->Default;
                     }
 
-                    if ($dr->null != 'NO') {
+                    if ($dr->Null != 'NO') {
                         $field['null'] = true;
                     }
 
