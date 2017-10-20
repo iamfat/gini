@@ -3,7 +3,7 @@
     "name": "Gini Framework",
     "author": "Jia Huang",
     "email": "iamfat@gmail.com",
-    "version": "1.10.1",
+    "version": "1.10.2",
     "build": {
         "copy": [
             "bin",
@@ -37,5 +37,6 @@
             "henrikbjorn/lurker": "1.*"
         }
     },
-    "dependencies": []
+    "dependencies": [],
+    "moduleClass": "\\Gini\\Module\\gini"
 }
