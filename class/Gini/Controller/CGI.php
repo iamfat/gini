@@ -16,6 +16,8 @@
 
 namespace Gini\Controller;
 
+use \Gini\CGI\Response;
+
 abstract class CGI
 {
     /**
@@ -88,14 +90,21 @@ abstract class CGI
             $this->action = $actionName ? 'action'.$actionName : '__index';
         }
 
-        $response = $this->__preAction($actionName, $params);
-        if ($response !== false) {
-            $response = \Gini\CGI::executeAction([$this, $this->action], $params, $this->form());
+        try {
+            $response = $this->__preAction($actionName, $params);
+            if ($response !== false) {
+                $response = \Gini\CGI::executeAction([$this, $this->action], $params, $this->form());
+            }
+            $response = $this->__postAction($actionName, $params, $response) ?: $response;
+        } catch (Response\Exception $e) {
+            $code = $e->getCode();
+            $response = new Response\HTML(V('error/http', [
+                'code' => $code,
+                'message' => $e->getMessage()
+            ]), $code);
         }
 
-        $response = $this->__postAction($actionName, $params, $response) ?: $response;
-
-        return $response ?: new \Gini\CGI\Response\Nothing();
+        return $response ?: new Response\Nothing();
     }
 
     /**

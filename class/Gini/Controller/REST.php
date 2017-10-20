@@ -16,6 +16,8 @@
 
 namespace Gini\Controller;
 
+use \Gini\CGI\Response;
+
 abstract class REST extends CGI
 {
     /**
@@ -39,23 +41,19 @@ abstract class REST extends CGI
             $this->action = $method . $actionName;
         }
 
-        $response = $this->__preAction($actionName, $params);
-        if ($response !== false) {
-            set_error_handler(function () {
-            }, E_ALL ^ E_NOTICE);
-            try {
+        try {
+            $response = $this->__preAction($actionName, $params);
+            if ($response !== false) {
                 $response = \Gini\CGI::executeAction([$this, $this->action], $params, $this->form());
-            } catch (\Gini\REST\Exception $e) {
-                $response = new \Gini\CGI\Response\JSON(['error'=>[
-                    'code' => $e->getCode(),
-                    'message' => $e->getMessage()
-                ]], $e->getCode());
             }
-            restore_error_handler();
+            $response = $this->__postAction($actionName, $params, $response) ?: $response;
+        } catch (Response\Exception $e) {
+            $response = new Response\JSON(['error'=>[
+                'code' => $e->getCode(),
+                'message' => $e->getMessage()
+            ]], $e->getCode());
         }
 
-        $response = $this->__postAction($actionName, $params, $response) ?: $response;
-
-        return $response ?: new \Gini\CGI\Response\Nothing();
+        return $response ?: new Response\Nothing();
     }
 }
