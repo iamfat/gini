@@ -291,7 +291,8 @@ abstract class ORM
         return self::$_INDEXES[$class_name];
     }
 
-    public function schema() {
+    public function schema()
+    {
         return $this->ormSchema();
     }
 

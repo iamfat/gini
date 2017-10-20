@@ -43,7 +43,14 @@ abstract class REST extends CGI
         if ($response !== false) {
             set_error_handler(function () {
             }, E_ALL ^ E_NOTICE);
-            $response = \Gini\CGI::executeAction([$this, $this->action], $params, $this->form());
+            try {
+                $response = \Gini\CGI::executeAction([$this, $this->action], $params, $this->form());
+            } catch (\Gini\REST\Exception $e) {
+                $response = new \Gini\CGI\Response\JSON(['error'=>[
+                    'code' => $e->getCode(),
+                    'message' => $e->getMessage()
+                ]], $e->getCode());
+            }
             restore_error_handler();
         }
 
