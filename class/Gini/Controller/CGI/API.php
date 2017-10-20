@@ -11,6 +11,11 @@ final class API extends \Gini\Controller\CGI
     public function execute()
     {
         $post = $this->form('post');
+        // try to parse from php://input for backward compatibility
+        if (!isset($post['jsonrpc'])) {
+            $post = @json_decode(\Gini\CGI::content(), true);
+        }
+
         if ($post === null) {
             $response = [
                 'jsonrpc' => '2.0',
