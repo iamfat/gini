@@ -159,14 +159,18 @@ class CGI
 
     public static function executeAction($action, $params, $form=null)
     {
-        $rm = new \ReflectionMethod($action[0], $action[1]);
+        $args = [];
+        $r = new \ReflectionMethod($action[0], $action[1]);
+        $rps = $r->getParameters();
         if (is_numeric(key($params))) {
             // 使用array_pad确保不会因为变量没有默认设值而报错
-            $args = array_pad($params, $rm->getNumberOfParameters(), null);
+            // 但是需要考虑默认
+            foreach ($rps as $idx => $rp) {
+                $args[] = $params[$idx] ?:
+                    ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
+            }
         } else {
             // 如果是有字符串键值的, 尝试通过反射对应变量
-            $rps = $rm->getParameters();
-            $args = [];
             // 可以把form数据合并进去
             $params = array_merge((array)$params, (array)$form);
             foreach ($rps as $rp) {

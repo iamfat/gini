@@ -67,13 +67,18 @@ class API
             } else {
                 $r = new \ReflectionMethod($callback[0], $callback[1]);
             }
+
+            $args = [];
+            $rps = $r->getParameters();
             if (is_numeric(key($params))) {
                 // 使用array_pad确保不会因为变量没有默认设值而报错
-                $args = array_pad($params, $r->getNumberOfParameters(), null);
+                // 但是需要考虑默认
+                foreach ($rps as $idx => $rp) {
+                    $args[] = $params[$idx] ?:
+                        ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
+                }
             } else {
                 // 如果是有字符串键值的, 尝试通过反射对应变量
-                $rps = $r->getParameters();
-                $args = [];
                 // 可以把form数据合并进去
                 $params = array_merge((array)$params, (array)$form);
                 foreach ($rps as $rp) {
