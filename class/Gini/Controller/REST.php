@@ -25,7 +25,7 @@ abstract class REST extends CGI
      */
     public function execute()
     {
-        $method = $this->env['method'];
+        $method = $this->env['method'] ?: 'get';
         $params = (array) $this->params;
 
         if ($this->action) {

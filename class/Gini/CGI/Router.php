@@ -90,4 +90,9 @@ class Router
 
         return false;
     }
+
+    public function cleanUp()
+    {
+        $this->rules = [];
+    }
 }

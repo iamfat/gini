@@ -6,6 +6,12 @@ namespace Gini\PHPUnit\CGI {
 
     class General extends \Gini\PHPUnit\CLI
     {
+        public function testParameters()
+        {
+            $content = \Gini\CGI::request('hello/paramters/1')->execute()->content();
+            $this->assertSame($content, ['1', null, 2]);
+        }
+
         public function testRouter()
         {
             $router = \Gini\CGI::router();
@@ -27,6 +33,8 @@ namespace Gini\PHPUnit\CGI {
             $content = \Gini\CGI::request('hello/nested/world/1')->execute()->content();
             $this->assertEquals($content['id'], 1);
             $this->assertEquals($content['method'], 'GET');
+
+            $router->cleanUp();
         }
     }
 
@@ -46,5 +54,11 @@ namespace Gini\Controller\CGI {
         {
             return new Response\JSON(['method'=>'POST', 'id'=>$id]);
         }
+
+        public function getParamters($a, $b, $c=2)
+        {
+            return new Response\JSON([$a, $b, $c]);
+        }
+
     }    
 }

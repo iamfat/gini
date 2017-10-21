@@ -42,6 +42,14 @@ namespace Gini\PHPUnit\RPC {
             $response = $this->_testCall('RPCTest.echo', ['b' => 2, 'a' => 1, 'c'=> 3]);
             $this->assertSame($response['result'], ['a' => 1, 'b' => 2, 'c' => 3]);
         }
+
+        public function testUnnamedParameters()
+        {
+            $var = uniqid();
+
+            $response = $this->_testCall('RPCTest.echo', [1]);
+            $this->assertSame($response['result'], ['a' => 1, 'b' => null, 'c' => 2]);
+        }
     }
 
 }
@@ -55,7 +63,7 @@ namespace Gini\Controller\API {
             return $s;
         }
 
-        public function actionEcho($a, $b, $c) {
+        public function actionEcho($a, $b, $c=2) {
             return ['a' => $a, 'b' => $b, 'c' => $c];
         }
     }
