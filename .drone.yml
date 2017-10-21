@@ -10,10 +10,6 @@ pipeline:
       - composer install --no-interaction --no-dev
       - bin/gini cache
       - phpunit
-      - >
-        /usr/local/share/sonar-scanner/bin/sonar-scanner -D sonar.host.url=http://172.17.0.1:9000
-        -D sonar.jdbc.url="jdbc:mysql://172.17.0.1:9006/sonar?useUnicode=true&characterEncoding=utf8"
-        -D sonar.jdbc.username=genee -D sonar.jdbc.password=83719730
   slack:
     image: plugins/slack
     channel: '#general'
