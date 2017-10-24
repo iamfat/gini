@@ -25,23 +25,26 @@ abstract class REST extends CGI
      */
     public function execute()
     {
-        $method = $this->env['method'] ?: 'get';
+        $method = strtolower($this->env['method'] ?: 'get');
         $params = (array) $this->params;
 
-        if ($this->action) {
-            $actionName = preg_replace('/^(get|post|put|delete|options)/i', '', $this->action);
-        } else {
-            $actionName = strtr($params[0], ['-' => '', '_' => '']);
-            if ($actionName && $actionName[0] != '_'
-                && method_exists($this, $method.$actionName)) {
-                array_shift($params);
-            } else {
-                $actionName = 'default';
-            }
-            $this->action = $method . $actionName;
-        }
-
         try {
+            if ($this->action) {
+                $actionName = preg_replace('/^(get|post|put|delete|options)/i', '', $this->action);
+            } else {
+                $actionName = strtr($params[0], ['-' => '', '_' => '']);
+                if ($actionName && $actionName[0] != '_'
+                    && method_exists($this, $method.$actionName)) {
+                    array_shift($params);
+                } else {
+                    $actionName = 'default';
+                    if (!method_exists($this, $method.$actionName)) {
+                        throw new Response\Exception(null, 404);
+                    }
+                }
+                $this->action = $method . $actionName;
+            }
+
             $response = $this->__preAction($actionName, $params);
             if ($response !== false) {
                 $response = \Gini\CGI::executeAction([$this, $this->action], $params, $this->form());

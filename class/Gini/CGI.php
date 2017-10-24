@@ -210,7 +210,7 @@ class CGI
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
                 $moduleClass = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
                 if (!$info->error && method_exists($moduleClass, 'cgiRoute')) {
-                    call_user_func($class.'::cgiRoute', $router);
+                    call_user_func([$moduleClass, 'cgiRoute'], $router);
                 }
             }
         }
