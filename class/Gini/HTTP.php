@@ -6,11 +6,16 @@ class HTTP
 {
     private $_header = [];
     private $_post = [];
-    private static $supportedMethods = ['get', 'post', 'delete', 'put', 'options'];
+    private static $supportedMethods = ['get', 'post', 'delete', 'put'];
 
     public function header($name, $value)
     {
-        $this->_header[strtolower($name)] = $value;
+        $name = strtolower($name);
+        if ($value === null) {
+            unset($this->_header[$name]);
+        } else {
+            $this->_header[$name] = $value;
+        }
         return $this;
     }
 
@@ -97,21 +102,30 @@ class HTTP
             CURLOPT_REFERER => 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
         ));
 
-        if (!isset($this->_header['Expect'])) {
-            $this->_header['Expect'] = '';
+        $header = $this->_header;
+        $contentType = trim(explode(';', $header['content-type'])[0]);
+        if (!isset($header['Expect'])) {
+            $header['Expect'] = '';
         }
+
+        $method = strtoupper($method);
+        $fallbacks = (array) Config::get('system.http_method_fallbacks');
+        if (isset($fallbacks[$method])) {
+            $header['Gini-HTTP-Method'] = $method;
+            $method = $fallbacks[$method];
+        }
+
         $curl_header = [];
-        foreach ($this->_header as $k => $v) {
+        foreach ($header as $k => $v) {
             $curl_header[] = $k.': '.$v;
         }
         curl_setopt($ch, CURLOPT_HTTPHEADER, $curl_header);
 
-        $method = strtoupper($method);
         if ($query && !is_scalar($query)) {
             if (!array_filter($query, function ($v) {
                 return $v instanceof \CURLFile;
             })) {
-                if ($method != 'GET' && $this->_header['content-type'] == 'application/json') {
+                if ($method != 'GET' && $contentType == 'application/json') {
                     $query = json_encode((object) $query, JSON_UNESCAPED_UNICODE);
                 } else {
                     $query = http_build_query($query);

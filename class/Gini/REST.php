@@ -29,10 +29,6 @@ class REST
             return;
         }
 
-        if ($this->_path) {
-            $method = $this->_path.'/'.$method;
-        }
-
         if (in_array($method, self::$supportedMethods)) {
             list($path, $query, $timeout) = $params;
             $query or $query = [];
