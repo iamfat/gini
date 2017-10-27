@@ -19,8 +19,6 @@ class Version
 
     public function __construct($version)
     {
-        $this->fullVersion = $version;
-
         if (!isset(self::$versionCache[$version])) {
             $this->valid = preg_match('`^(\d+)(?:\.(\d+|[*x]))?(?:\.(\d+|[*x]))?(?:-([^+]+))?(?:\+(.+))?$`', $version, $parts);
             $this->majorVersion = $parts[1];
@@ -45,6 +43,8 @@ class Version
             $this->preReleaseVersion = $c['pre-release'];
             $this->buildVersion = $c['build'];
         }
+
+        $this->_refreshFullVersion();
     }
 
     protected function satisfiesUnit($versionUnit)
@@ -305,6 +305,43 @@ class Version
         }
 
         return 0;
+    }
+
+    public function bump($part, $num = 1)
+    {
+        if (!$this->isValid()) {
+            return false;
+        }
+        $part = strtolower($part);
+        switch ($part) {
+            case 'major':
+                $this->majorVersion += $num;
+                break;
+            case 'minor':
+                $this->minorVersion += $num;
+                break;
+            default:
+                $this->patchVersion += $num;
+        }
+
+        $this->_refreshFullVersion();
+        return true;
+    }
+
+    private function _refreshFullVersion() {
+        $fullVersion = implode('.', [(int) $this->majorVersion, (int) $this->minorVersion, (int) $this->patchVersion]);
+        if ($this->preReleaseVersion) {
+            $fullVersion .= '-' . $this->preReleaseVersion;
+        }
+        if ($this->buildVersion) {
+            $fullVersion .= '+' . $this->buildVersion;
+        }
+        $this->fullVersion = $fullVersion;
+    }
+
+    public function __toString()
+    {
+        return $this->fullVersion;
     }
 }
 

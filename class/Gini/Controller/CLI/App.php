@@ -184,25 +184,56 @@ class App extends \Gini\Controller\CLI
         $watcher->start();
     }
 
+    /**
+     * View or update current module version
+     *
+     * @param array $argv
+     * @return void
+     */
     public function actionVersion($argv)
     {
         $info = \Gini\Core::moduleInfo(APP_ID);
+        $opt = \Gini\Util::getOpt($argv, 'f', ['force']);
+        
+        if (isset($opt['f']) || isset($opt['force'])) {
+            $force = true;
+        } else {
+            $force = false;
+        }
 
-        $version = $argv[0];
+        $version = $opt['_'][0];
         if ($version) {
+            $WORK_TREE = escapeshellarg(APP_PATH);
+            $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
+            if (is_dir(APP_PATH.'/.git') && !$force) {
+                $content = `git --git-dir=$GIT_DIR --work-tree=$WORK_TREE status --short --untracked-files=no`;
+                if ($content) {
+                    echo "$content\n";
+                    die("Please commit uncommited changes before bump the version! Or you have to specify -f parameter.\n");
+                }
+            }
+                // major.minor.patch
+            // e.g. gini version minor+1
             // set current version
-            $v = new \Gini\Version($version);
-            $v->compare($info->version) > 0 or die("A newer version (>{$info->version}) is required!\n");
+            if (preg_match('/^(major|minor|patch)?\+(\d+)$/', $version, $matches)) {
+                $v = new \Gini\Version($info->version);
+                $v->bump($matches[1] ?: 'patch', (int) $matches[2]);
+            } else {
+                $v = new \Gini\Version($version);
+                if ($v->isValid()) {
+                    $v->compare($info->version) > 0 or die("A newer version (>{$info->version}) is required! But we only got {$version}.\n");
+                } else {
+                    die("Invalid version {$version} was specified.\n");
+                }
+            }
 
-            $info->version = $version;
+            $info->version = $v->fullVersion;
             \Gini\Core::saveModuleInfo($info);
 
             // commit it if it is a git repo
             if (is_dir(APP_PATH.'/.git')) {
-                $WORK_TREE = escapeshellarg(APP_PATH);
-                $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
-                $GIT_MSG = escapeshellarg("Bumped version to $version");
-                $command = "git --git-dir=$GIT_DIR --work-tree=$WORK_TREE commit -m $GIT_MSG gini.json && git --git-dir=$GIT_DIR tag $version";
+                $GIT_MSG = escapeshellarg("Bumped version to {$info->version}");
+                $command = "git --git-dir=$GIT_DIR --work-tree=$WORK_TREE commit -m $GIT_MSG gini.json && git --git-dir=$GIT_DIR tag {$info->version}";
                 passthru($command);
 
                 return;
