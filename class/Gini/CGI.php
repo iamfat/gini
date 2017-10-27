@@ -45,8 +45,8 @@ class CGI
 
     public static function defaultEnv()
     {
-        // use Gini-HTTP-Method in POST action to simulate DELETE/PUT methods with POST
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_SERVER['HTTP_X_GINI_HTTP_METHOD']) {
+        // use Gini-HTTP-Method to replace uncommon methods like DELETE/PUT to get through firewall
+        if ($_SERVER['HTTP_X_GINI_HTTP_METHOD']) {
             $_SERVER['REQUEST_METHOD'] = $_SERVER['HTTP_X_GINI_HTTP_METHOD'];
         }
         return [
