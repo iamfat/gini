@@ -113,6 +113,7 @@ class CGI
             \Gini\Config::set('runtime.controller_path', $path);
             $controller = \Gini\IoC::construct($class);
             $controller->params = $params;
+            $controller->app = \Gini\Core::app();
         }
 
         \Gini\Config::set('runtime.controller_class', get_class($controller));

@@ -38,7 +38,9 @@ class API
 
             if (class_exists($class) && method_exists($class, '__invoke')) {
                 // might not be necessary, since __invoke is the magic method since PHP 5.3
-                $callback = array($class, '__invoke');
+                $o = \Gini\IoC::construct($class);
+                $o->app = \Gini\Core::app();
+                $callback = [$o, '__invoke'];
             } else {
                 $method = array_pop($path_arr);
                 if (count($path_arr) > 0) {
@@ -50,6 +52,7 @@ class API
                 if (class_exists($class) && $method[0] != '_') {
                     $method = 'action'.$method;
                     $o = \Gini\IoC::construct($class);
+                    $o->app = \Gini\Core::app();
                     if (method_exists($o, $method)) {
                         $callback = [$o, $method];
                     } elseif (function_exists($class.'\\'.$method)) {

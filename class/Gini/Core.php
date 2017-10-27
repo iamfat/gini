@@ -38,6 +38,13 @@ namespace Gini {
         public static $MODULE_INFO = [];
 
         /**
+         * The array contains all module instances
+         *
+         * @var array
+         */
+        protected static $MODULE_INSTANCES = [];
+
+        /**
          * Fetch module info from provided path.
          *
          * (object) info
@@ -200,6 +207,11 @@ namespace Gini {
             }
 
             self::$MODULE_INFO = $module_info;
+
+            if (!isset(self::$MODULE_INSTANCES[$info->id])) {
+                $moduleClass = class_exists($info->moduleClass) ? $info->moduleClass : '\Gini\Module\Prototype';
+                self::$MODULE_INSTANCES[$info->id] = IoC::construct($moduleClass);
+            }
 
             return $info;
         }
@@ -496,6 +508,16 @@ namespace Gini {
                 });
             }
             method_exists('\Gini\Application', 'shutdown') and \Gini\Application::shutdown();
+        }
+
+        public static function module($moduleName)
+        {
+            return self::$MODULE_INSTANCES[$moduleName];
+        }
+
+        public static function app()
+        {
+            return self::module(APP_ID);
         }
     } // END class
 

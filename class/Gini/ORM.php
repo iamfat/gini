@@ -801,3 +801,11 @@ abstract class ORM
         return $this;
     }
 }
+
+$app = Core::app();
+if ($app instanceof \Gini\Module\Prototype) {
+    $app->register('orm', function ($name) {
+        $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $name);
+        return \Gini\IoC::construct($class_name, $criteria);
+    });
+}

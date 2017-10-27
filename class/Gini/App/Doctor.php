@@ -122,19 +122,20 @@ class Doctor
         ) {
             // check gini dependencies
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-                $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
-                $diag_func = "$class::diagnose";
-                if (is_callable($diag_func)) {
-                    echo "Checking Module[$name]...\n";
-                    $module_errors = call_user_func($diag_func);
-                    if ($module_errors) {
-                        static::_outputErrors($module_errors);
-                        $errors['dependencies'][] = "Module[$name] found some error";
-                    } else {
-                        echo "   \e[32mdone.\e[0m\n";
-                    }
-                    echo "\n";
+                $diag_func = [$info->moduleClass, 'diagnose'];
+                echo "Checking Module[$name]...\n";
+                $module_errors = is_callable($diag_func) ? call_user_func($diag_func) : null;
+                $module = \Gini\Core::module($name);
+                if (!($module instanceof \Gini\Module\Prototype)) {
+                    $module_errors[] = "Please upgrade module class to extends from \Gini\Module\Prototype!";
                 }
+                if ($module_errors) {
+                    static::_outputErrors($module_errors);
+                    $errors['dependencies'][] = "Module[$name] found some errors";
+                } else {
+                    echo "   \e[32mdone.\e[0m\n";
+                }
+                echo "\n";
             }
         }
 
