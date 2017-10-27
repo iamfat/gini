@@ -157,27 +157,48 @@ class CGI
         }
     }
 
-    public static function executeAction($action, $params, $form=null)
+    public static function functionArguments($action, $params, $form = [])
     {
         $args = [];
-        $r = new \ReflectionMethod($action[0], $action[1]);
+        $r = is_string($action) ?
+            new \ReflectionFunction($action) :
+            new \ReflectionMethod($action[0], $action[1]);
         $rps = $r->getParameters();
-        if (is_numeric(key($params))) {
-            // 使用array_pad确保不会因为变量没有默认设值而报错
-            // 但是需要考虑默认
-            foreach ($rps as $idx => $rp) {
-                $args[] = $params[$idx] ?:
-                    ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
+        if (count($params) == 0 || is_numeric(key($params))) {
+            // 需要考虑默认值以及无参数传入后使用func_get_args获取变量的情况
+            $max = max(count($params), count($rps));
+            for ($idx = 0; $idx < $max; $idx ++) {
+                $param = $params[$idx];
+                $rp = $rps[$idx];
+                $args[] = $param ?: (
+                        $rp ? (
+                            $rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null
+                        ) : null
+                    );
             }
-        } else {
+        } elseif (count($rps) > 0) {
             // 如果是有字符串键值的, 尝试通过反射对应变量
             // 可以把form数据合并进去
             $params = array_merge((array)$params, (array)$form);
+            // 修正变量名以配合驼峰式命名
+            // user_id, user-id, userId
+            $newParams = [];
+            foreach ($params as $k => $v) {
+                $key = strtolower(strtr($k, ['-' => '', '_' => '']));
+                $newParams[$key] = $v;
+            }
             foreach ($rps as $rp) {
-                $args[] = $params[$rp->name] ?:
+                $key = strtolower(strtr($rp->name, ['-' => '', '_' => '']));
+                $args[] = $newParams[$key] ?:
                     ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
             }
         }
+        return $args;
+    }
+
+    public static function executeAction($action, $params, $form = [])
+    {
+        $args = static::functionArguments($action, $params, $form);
         return call_user_func_array($action, $args);
     }
 

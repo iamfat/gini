@@ -8,7 +8,7 @@ namespace Gini\PHPUnit\CGI {
     {
         public function testParameters()
         {
-            $content = \Gini\CGI::request('hello/paramters/1')->execute()->content();
+            $content = \Gini\CGI::request('hello/parameters/1')->execute()->content();
             $this->assertSame($content, ['1', null, 2]);
         }
 
@@ -36,6 +36,13 @@ namespace Gini\PHPUnit\CGI {
 
             $router->cleanUp();
         }
+
+        public function testArguments()
+        {
+            $content = \Gini\CGI::request('hello/arguments/1/2/3')->execute()->content();
+            $this->assertSame($content, ['1', '2', '3']);
+        }
+
     }
 
 }
@@ -55,9 +62,14 @@ namespace Gini\Controller\CGI {
             return new Response\JSON(['method'=>'POST', 'id'=>$id]);
         }
 
-        public function getParamters($a, $b, $c=2)
+        public function getParameters($a, $b, $c=2)
         {
             return new Response\JSON([$a, $b, $c]);
+        }
+
+        public function getArguments()
+        {
+            return new Response\JSON(func_get_args());
         }
 
     }    

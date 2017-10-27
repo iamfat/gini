@@ -50,6 +50,18 @@ namespace Gini\PHPUnit\RPC {
             $response = $this->_testCall('RPCTest.echo', [1]);
             $this->assertSame($response['result'], ['a' => 1, 'b' => null, 'c' => 2]);
         }
+
+        public function testCamelCasedParameters()
+        {
+            $var = uniqid();
+
+            $response = $this->_testCall('RPCTest.camelCaseParams', ['a-id' => 1, 'bid' => 2]);
+            $this->assertSame($response['result'], ['aId' => 1, 'bId' => 2]);
+
+            $response = $this->_testCall('RPCTest.camelCaseParams', ['a_id' => 1, 'Bid' => 2]);
+            $this->assertSame($response['result'], ['aId' => 1, 'bId' => 2]);
+        }
+
     }
 
 }
@@ -65,6 +77,10 @@ namespace Gini\Controller\API {
 
         public function actionEcho($a, $b, $c=2) {
             return ['a' => $a, 'b' => $b, 'c' => $c];
+        }
+
+        public function actionCamelCaseParams($a_id, $bId) {
+            return ['aId' => $a_id, 'bId' => $bId];
         }
     }
 

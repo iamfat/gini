@@ -62,31 +62,7 @@ class API
                 throw new API\Exception('Method not found', -32601);
             }
 
-            if (is_string($callback)) {
-                $r = new \ReflectionFunction($callback);
-            } else {
-                $r = new \ReflectionMethod($callback[0], $callback[1]);
-            }
-
-            $args = [];
-            $rps = $r->getParameters();
-            if (is_numeric(key($params))) {
-                // 使用array_pad确保不会因为变量没有默认设值而报错
-                // 但是需要考虑默认
-                foreach ($rps as $idx => $rp) {
-                    $args[] = $params[$idx] ?:
-                        ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
-                }
-            } else {
-                // 如果是有字符串键值的, 尝试通过反射对应变量
-                // 可以把form数据合并进去
-                $params = array_merge((array)$params, (array)$form);
-                foreach ($rps as $rp) {
-                    $args[] = $params[$rp->name] ?:
-                        ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
-                }
-            }
-    
+            $args = \Gini\CGI::functionArguments($callback, $params);
             $result = call_user_func_array($callback, $args);
 
             if ($id !== null) {
