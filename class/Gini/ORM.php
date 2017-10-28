@@ -803,7 +803,7 @@ abstract class ORM
 }
 
 $app = Core::app();
-if ($app instanceof \Gini\Module\Prototype) {
+if (is_subclass_of($app, '\Gini\Module\Prototype')) {
     $app->register('orm', function ($name) {
         $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $name);
         return \Gini\IoC::construct($class_name, $criteria);

@@ -209,7 +209,10 @@ namespace Gini {
             self::$MODULE_INFO = $module_info;
 
             if (!isset(self::$MODULE_INSTANCES[$info->id])) {
-                $moduleClass = class_exists($info->moduleClass) ? $info->moduleClass : '\Gini\Module\Prototype';
+                $moduleClass = class_exists($info->moduleClass) ? 
+                    $info->moduleClass : (
+                        class_exists('\Gini\Module\Prototype') ? '\Gini\Module\Prototype' : '\stdClass'
+                    );
                 self::$MODULE_INSTANCES[$info->id] = IoC::construct($moduleClass);
             }
 

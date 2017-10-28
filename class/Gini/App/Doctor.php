@@ -126,7 +126,7 @@ class Doctor
                 echo "Checking Module[$name]...\n";
                 $module_errors = is_callable($diag_func) ? call_user_func($diag_func) : null;
                 $module = \Gini\Core::module($name);
-                if (!($module instanceof \Gini\Module\Prototype)) {
+                if (!is_subclass_of($module, '\Gini\Module\Prototype')) {
                     $module_errors[] = "Please upgrade module class to extends from \Gini\Module\Prototype!";
                 }
                 if ($module_errors) {
