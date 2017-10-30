@@ -17,8 +17,11 @@ class Cron extends \Gini\Controller\API
         return $cron;
     }
 
-    public function actionRun($name = null)
+    public function actionRun($name, $nohup=false)
     {
+        if ($nohup) {
+            fastcgi_finish_request();
+        }
         $job = \Gini\Config::get('cron')[$name];
         if (!$job) {
             return false;
@@ -31,4 +34,5 @@ class Cron extends \Gini\Controller\API
 
         return $output;
     }
+
 }
