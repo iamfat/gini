@@ -212,7 +212,7 @@ class App extends \Gini\Controller\CLI
                     die("Please commit uncommited changes before bump the version! Or you have to specify -f parameter.\n");
                 }
             }
-                // major.minor.patch
+            // major.minor.patch
             // e.g. gini version minor+1
             // set current version
             if (preg_match('/^(major|minor|patch)?\+(\d+)$/', $version, $matches)) {

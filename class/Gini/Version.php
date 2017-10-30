@@ -328,7 +328,8 @@ class Version
         return true;
     }
 
-    private function _refreshFullVersion() {
+    private function _refreshFullVersion()
+    {
         $fullVersion = implode('.', [(int) $this->majorVersion, (int) $this->minorVersion, (int) $this->patchVersion]);
         if ($this->preReleaseVersion) {
             $fullVersion .= '-' . $this->preReleaseVersion;
