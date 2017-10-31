@@ -14,7 +14,7 @@ class REST
     private $_url;
     public $timeout = 5;
 
-    private static $supportedMethods = ['get', 'post', 'delete', 'put'];
+    private static $supportedMethods = ['get', 'post', 'delete', 'put', 'patch'];
 
     public function __construct($url)
     {

@@ -6,7 +6,7 @@ class HTTP
 {
     private $_header = [];
     private $_post = [];
-    private static $supportedMethods = ['get', 'post', 'delete', 'put'];
+    private static $supportedMethods = ['get', 'post', 'delete', 'put', 'patch'];
 
     public function header($name, $value)
     {
