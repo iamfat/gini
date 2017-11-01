@@ -34,7 +34,10 @@ class RPC
 
     public function __get($name)
     {
-        return IoC::construct('\Gini\RPC', $this->_url, $this->_path ? $this->_path.'/'.$name : $name, $this->_cookie, $this->_header);
+        $rpc = IoC::construct('\Gini\RPC', $this->_url, $this->_path ? $this->_path.'/'.$name : $name, $this->_cookie, $this->_header);
+        // copy properties from parent
+        $rpc->connectTimeout = $this->connectTimeout;
+        return $rpc;
     }
 
     /**
