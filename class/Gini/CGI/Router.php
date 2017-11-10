@@ -37,9 +37,15 @@ class Router
 
     public function use($middleware)
     {
+        if (is_string($middleware)) {
+            $middleware = Middleware::of($middleware);
+        }
+
         if (is_subclass_of($middleware, '\\Gini\\CGI\\Middleware\\Prototype')) {
             $this->middlewares[] = $middleware;
         }
+
+        return $this;
     }
 
     public function match($methods, $route, $dest)
