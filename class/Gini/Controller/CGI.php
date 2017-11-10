@@ -117,6 +117,9 @@ abstract class CGI
             // 1. pass through all middlewares
             if (is_array($this->middlewares)) {
                 foreach ($this->middlewares as $middleware) {
+                    if (is_string($middleware)) {
+                        $middleware = \Gini\CGI\Middleware::of($middleware);
+                    }
                     $middleware->process($this, $actionName, $params);
                 }
             }

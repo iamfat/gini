@@ -9,7 +9,7 @@ class Router
     private $middlewares = [];
     private static $METHODS = ['get', 'post', 'put', 'delete', 'options'];
 
-    public function __construct($route='')
+    public function __construct($route = '')
     {
         $this->baseRoute = trim($route, '/');
     }
@@ -37,14 +37,7 @@ class Router
 
     public function use($middleware)
     {
-        if (is_string($middleware)) {
-            $middleware = Middleware::of($middleware);
-        }
-
-        if (is_subclass_of($middleware, '\\Gini\\CGI\\Middleware\\Prototype')) {
-            $this->middlewares[] = $middleware;
-        }
-
+        $this->middlewares[] = $middleware;
         return $this;
     }
 
@@ -74,7 +67,7 @@ class Router
         return $this;
     }
 
-    public function dispatch($route, $env, $middlewares=null)
+    public function dispatch($route, $env, $middlewares = null)
     {
         // go through rules
         $currentMethod = strtolower($env['method'] ?: 'get');
@@ -105,7 +98,11 @@ class Router
             $controller = \Gini\IoC::construct($controllerName);
             $controller->action = $action;
             $controller->params = $params;
-            $controller->middlewares = array_merge((array) $middlewares, (array) $this->middlewares);
+            $controller->middlewares = array_merge(
+                (array) $middlewares,
+                (array) $this->middlewares,
+                (array) $controller->middlewares
+            );
             return $controller;
         }
 
