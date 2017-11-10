@@ -49,6 +49,13 @@ abstract class CGI
     public $route;
 
     /**
+     * contains all middlware instances for current controller
+     *
+     * @var array
+     */
+    public $middlewares;
+
+    /**
      * Function called right before action is being executed.
      *
      * @param string $action
@@ -69,14 +76,12 @@ abstract class CGI
     {
     }
 
-    /**
-     * Execute current action with parameters.
-     */
-    public function execute()
+    protected function normalizeActionParams()
     {
         $params = (array) $this->params;
-        if ($this->action) {
-            $actionName = preg_replace('/^action/i', '', $this->action);
+        $methodName = $this->action;
+        if ($methodName) {
+            $actionName = preg_replace('/^action/i', '', $methodName);
         } else {
             $actionName = strtr($params[0], ['-' => '', '_' => '']);
             if ($actionName && $actionName[0] != '_'
@@ -85,23 +90,45 @@ abstract class CGI
             } elseif (method_exists($this, '__index')) {
                 $actionName = null;
             } else {
-                $this->redirect('error/404');
+                throw new Response\Exception(null, 404);
             }
-            $this->action = $actionName ? 'action'.$actionName : '__index';
+            $methodName = $actionName ? 'action'.$actionName : '__index';
         }
 
+        return [$actionName, $methodName, $params];
+    }
+
+    public function errorResponse($e)
+    {
+        return new Response\HTML(V('error/http', [
+            'code' => $e->getCode(),
+            'message' => $e->getMessage()
+        ]), $code);
+    }
+
+    /**
+     * Execute current action with parameters.
+     */
+    public function execute()
+    {
         try {
+            list($actionName, $methodName, $params) = $this->normalizeActionParams();
+
+            // 1. pass through all middlewares
+            if (is_array($this->middlewares)) {
+                foreach ($this->middlewares as $middleware) {
+                    $middleware->process($this, $actionName, $params);
+                }
+            }
+
+            // 2. preAction/action/postAction
             $response = $this->__preAction($actionName, $params);
             if ($response !== false) {
-                $response = \Gini\CGI::executeAction([$this, $this->action], $params, $this->form());
+                $response = \Gini\CGI::executeAction([$this, $methodName], $params, $this->form());
             }
             $response = $this->__postAction($actionName, $params, $response) ?: $response;
         } catch (Response\Exception $e) {
-            $code = $e->getCode();
-            $response = new Response\HTML(V('error/http', [
-                'code' => $code,
-                'message' => $e->getMessage()
-            ]), $code);
+            $response = $this->errorResponse($e);
         }
 
         return $response ?: new Response\Nothing();
@@ -117,14 +144,14 @@ abstract class CGI
     public function form($mode = '*')
     {
         switch ($mode) {
-        case 'get':
-            return $this->env['get'] ?: [];
-        case 'post':
-            return $this->env['post'] ?: [];
-        case 'files':
-            return $this->env['files'] ?: [];
-        default:
-            return array_merge((array) $this->env['get'], (array) $this->env['post']);
+            case 'get':
+                return $this->env['get'] ?: [];
+            case 'post':
+                return $this->env['post'] ?: [];
+            case 'files':
+                return $this->env['files'] ?: [];
+            default:
+                return array_merge((array) $this->env['get'], (array) $this->env['post']);
         }
     }
 

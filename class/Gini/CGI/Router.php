@@ -6,11 +6,17 @@ class Router
 {
     private $baseRoute;
     private $rules = [];
+    private $middlewares = [];
     private static $METHODS = ['get', 'post', 'put', 'delete', 'options'];
 
     public function __construct($route='')
     {
         $this->baseRoute = trim($route, '/');
+    }
+
+    public function __sleep()
+    {
+        return ['baseRoute', 'rules', 'middlewares'];
     }
 
     public function __call($method, $params)
@@ -26,6 +32,13 @@ class Router
         } elseif (in_array($m, self::$METHODS)) {
             array_unshift($params, $m);
             return call_user_func_array([$this, 'match'], $params);
+        }
+    }
+
+    public function use($middleware)
+    {
+        if (is_subclass_of($middleware, '\\Gini\\CGI\\Middleware\\Prototype')) {
+            $this->middlewares[] = $middleware;
         }
     }
 
@@ -57,6 +70,7 @@ class Router
 
     public function dispatch($route, $env)
     {
+        // go through rules
         $currentMethod = strtolower($env['method'] ?: 'get');
         foreach ($this->rules as $key => $rule) {
             list($requestMethod, $regex) = explode(':', $key, 2);
@@ -85,6 +99,9 @@ class Router
             $controller = \Gini\IoC::construct($controllerName);
             $controller->action = $action;
             $controller->params = $params;
+            if (count($this->middlewares) > 0) {
+                $controller->middlewares = $this->middlewares;
+            }
             return $controller;
         }
 

@@ -43,6 +43,11 @@ class CGI
         }
     }
 
+    /**
+     * Get default environment variables: $_GET, $_POST, $_FILES, $_SERVER, $_COOKIE, method, route
+     *
+     * @return void
+     */
     public static function defaultEnv()
     {
         // use Gini-HTTP-Method to replace uncommon methods like DELETE/PUT to get through firewall
@@ -51,8 +56,8 @@ class CGI
         }
         return [
             'get' => $_GET, 'post' => $_POST,
-            'files' => $_FILES, 'route' => static::$route,
-            'method' => $_SERVER['REQUEST_METHOD'],
+            'files' => $_FILES, 'server' => $_SERVER, 'cookie' => $_COOKIE,
+            'route' => static::$route, 'method' => $_SERVER['REQUEST_METHOD'],
         ];
     }
 
