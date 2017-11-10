@@ -68,7 +68,7 @@ class Router
         return $this;
     }
 
-    public function dispatch($route, $env)
+    public function dispatch($route, $env, $middlewares=null)
     {
         // go through rules
         $currentMethod = strtolower($env['method'] ?: 'get');
@@ -83,7 +83,7 @@ class Router
             }
 
             if ($rule['dest'] instanceof self) {
-                return $rule['dest']->dispatch($route, $env);
+                return $rule['dest']->dispatch($route, $env, $this->middlewares);
             }
 
             array_shift($matches);
@@ -99,9 +99,7 @@ class Router
             $controller = \Gini\IoC::construct($controllerName);
             $controller->action = $action;
             $controller->params = $params;
-            if (count($this->middlewares) > 0) {
-                $controller->middlewares = $this->middlewares;
-            }
+            $controller->middlewares = array_merge((array) $middlewares, (array) $this->middlewares);
             return $controller;
         }
 
