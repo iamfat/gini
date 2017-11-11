@@ -52,8 +52,12 @@ class ORM extends \Gini\Controller\CLI
                 if (isset($adjusted[$oname])) {
                     return;
                 }
-                $adjusted[$oname] = true;
                 $o = $orms[$oname];
+                if (!isset($o)) {
+                    printf("   \e[31m%s MISSING!\e[0m\n", $oname);
+                    return;
+                }
+                $adjusted[$oname] = true;
                 $relations = $o->ormRelations();
                 $structure = $o->structure();
                 if ($relations) {
