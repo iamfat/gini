@@ -107,53 +107,53 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         }
 
         switch ($scope) {
-        case 'count':
-            if (!isset($this->count_SQL) && $this->SQL) {
-                // guess count_SQL via SQL
-                $count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
-                $count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
-                $count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
-                $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 COUNT($2) AS "count" $3', $count_SQL);
-                $count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1."id")', $count_SQL);
+            case 'count':
+                if (!isset($this->count_SQL) && $this->SQL) {
+                    // guess count_SQL via SQL
+                    $count_SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
+                    $count_SQL = preg_replace('/\sORDER BY.+$/', '', $count_SQL);
+                    $count_SQL = preg_replace('/\sLIMIT.+$/', '', $count_SQL);
+                    $count_SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 COUNT($2) AS "count" $3', $count_SQL);
+                    $count_SQL = preg_replace('/\bCOUNT\((.+?)\.\*\)\b/', 'COUNT($1."id")', $count_SQL);
 
-                $this->count_SQL = $count_SQL;
-            }
-            $this->total_count = $this->count_SQL ? $this->db->value($this->count_SQL, $this->SQL_idents, $this->SQL_params) : 0;
-            break;
-        default:
-            if ($this->SQL) {
-                $SQL = $this->SQL;
-                if ($this->_forUpdate) {
-                    $SQL .= ' FOR UPDATE';
+                    $this->count_SQL = $count_SQL;
                 }
-                $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
+                $this->total_count = $this->count_SQL ? $this->db->value($this->count_SQL, $this->SQL_idents, $this->SQL_params) : 0;
+                break;
+            default:
+                if ($this->SQL) {
+                    $SQL = $this->SQL;
+                    if ($this->_forUpdate) {
+                        $SQL .= ' FOR UPDATE';
+                    }
+                    $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
 
-                $objects = [];
+                    $objects = [];
 
-                if ($result) {
-                    $fields = $this->fields();
-                    $loaded = false; // flag to show if all fields were loaded
-                    $loaded_checked = false; // flag to show if we've already checked once
-                    while ($row = $result->row(\PDO::FETCH_ASSOC)) {
-                        if (!$loaded_checked) {
-                            $loaded = empty(array_diff_key($fields, $row));
-                            $loaded_checked = true;
-                        }
-                        if ($loaded) {
-                            // if all fields were loaded, just setData to improve performance
-                            $o = a($this->name);
-                            $o->setData((array) $row);
-                            $objects[$row['id']] = $o;
-                        } else {
-                            $objects[$row['id']] = true;
+                    if ($result) {
+                        $fields = $this->fields();
+                        $loaded = false; // flag to show if all fields were loaded
+                        $loaded_checked = false; // flag to show if we've already checked once
+                        while ($row = $result->row(\PDO::FETCH_ASSOC)) {
+                            if (!$loaded_checked) {
+                                $loaded = empty(array_diff_key($fields, $row));
+                                $loaded_checked = true;
+                            }
+                            if ($loaded) {
+                                // if all fields were loaded, just setData to improve performance
+                                $o = a($this->name);
+                                $o->setData((array) $row);
+                                $objects[$row['id']] = $o;
+                            } else {
+                                $objects[$row['id']] = true;
+                            }
                         }
                     }
-                }
 
-                $this->objects = $objects;
-                $this->count = count($objects);
-                $this->current_id = key($objects);
-            }
+                    $this->objects = $objects;
+                    $this->count = count($objects);
+                    $this->current_id = key($objects);
+                }
         }
 
         $this->setFetchFlag($scope, true);
@@ -298,7 +298,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         if ($val === null) {
             foreach (array_keys($this->objects) as $k) {
                 $o = $this->object($k);
-                $arr[] = $o->$key;
+                $arr[$o->id] = $o->$key;
             }
         } else {
             foreach (array_keys($this->objects) as $k) {
@@ -313,14 +313,12 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     public function keys()
     {
         $this->fetch();
-
         return array_keys($this->objects);
     }
 
-    public function forUpdate($forUpdate=true)
+    public function forUpdate($forUpdate = true)
     {
         $this->_forUpdate = !!$forUpdate;
-
         return $this;
     }
 }

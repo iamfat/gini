@@ -34,5 +34,4 @@ class Cron extends \Gini\Controller\API
 
         return $output;
     }
-
 }

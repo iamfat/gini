@@ -492,12 +492,11 @@ namespace Gini {
 
             $fields = $this->fields();
             unset($fields['id']);
-
             $quoted_fields = array_map(function ($field) use ($db, $table) {
                 return $db->ident($table, $field);
             }, array_keys($fields));
-
             $id_col = $db->ident($table, 'id');
+
             $this->SQL = trim("SELECT DISTINCT $id_col" . ($quoted_fields ? ',' . implode(',', $quoted_fields) : '')
                 . " $from_SQL $order_SQL $limit_SQL");
             $this->count_SQL = trim("SELECT COUNT(DISTINCT $id_col) AS \"count\" $from_SQL");

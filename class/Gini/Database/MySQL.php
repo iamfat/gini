@@ -195,7 +195,9 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($alter_sqls as $sqls) {
-            if (count(sqls) == 0) continue;
+            if (count(sqls) == 0) {
+                continue;
+            }
             $SQL = sprintf(
                 'ALTER TABLE %s %s',
                 $this->quoteIdent($table),

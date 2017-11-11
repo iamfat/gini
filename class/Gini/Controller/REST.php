@@ -52,5 +52,4 @@ abstract class REST extends CGI
             'message' => $e->getMessage()
         ]], $e->getCode());
     }
-
 }

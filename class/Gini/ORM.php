@@ -175,7 +175,6 @@ abstract class ORM
                 }
 
                 $schema = $this->ormSchema();
-
                 $fields = array_map([$db, 'quoteIdent'], array_keys($schema['fields']));
 
                 $SQL = 'SELECT '.implode(', ', $fields)
