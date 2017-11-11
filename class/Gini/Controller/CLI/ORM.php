@@ -52,21 +52,24 @@ class ORM extends \Gini\Controller\CLI
                 if (isset($adjusted[$oname])) {
                     return;
                 }
+                $adjusted[$oname] = true;
                 $o = $orms[$oname];
                 $relations = $o->ormRelations();
                 $structure = $o->structure();
                 if ($relations) {
                     foreach ($relations as $k => $r) {
                         if (array_key_exists('object', (array) $structure[$k])) {
-                            $push($structure[$k]['object']);
+                            $dep_oname = $structure[$k]['object'];
                         } elseif ($r['ref']) {
                             $ref = explode('.', $r['ref'], 2);
-                            $push($ref[0]);
+                            $dep_oname = $ref[0];
+                        } else {
+                            continue;
                         }
+                        $push($dep_oname);
                     }
                 }
                 printf("   %s\n", $oname);
-                $adjusted[$oname] = true;
                 $o->adjustTable();
             };
 
