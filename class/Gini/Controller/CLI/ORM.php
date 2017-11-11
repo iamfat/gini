@@ -22,12 +22,12 @@ class ORM extends \Gini\Controller\CLI
         echo "Updating database structures according ORM definition...\n";
 
         $orm_dirs = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
+        $orms = [];
         foreach ($orm_dirs as $orm_dir) {
             if (!is_dir($orm_dir)) {
                 continue;
             }
 
-            $orms = [];
             \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir, &$orms) {
                 $oname = preg_replace('|.php$|', '', $file);
                 if ($oname == 'Object') {
@@ -45,40 +45,40 @@ class ORM extends \Gini\Controller\CLI
                 $oname = strtolower($oname);
                 $orms[$oname] = \Gini\IoC::construct($className);
             });
-
-            // sort ORM objects according relation dependencies.
-            $adjusted = [];
-            $push = function ($oname) use (&$orms, &$adjusted, &$push) {
-                if (isset($adjusted[$oname])) {
-                    return;
-                }
-                $o = $orms[$oname];
-                if (!isset($o)) {
-                    printf("   \e[31m%s MISSING!\e[0m\n", $oname);
-                    return;
-                }
-                $adjusted[$oname] = true;
-                $relations = $o->ormRelations();
-                $structure = $o->structure();
-                if ($relations) {
-                    foreach ($relations as $k => $r) {
-                        if (array_key_exists('object', (array) $structure[$k])) {
-                            $dep_oname = $structure[$k]['object'];
-                        } elseif ($r['ref']) {
-                            $ref = explode('.', $r['ref'], 2);
-                            $dep_oname = $ref[0];
-                        } else {
-                            continue;
-                        }
-                        $push($dep_oname);
-                    }
-                }
-                printf("   %s\n", $oname);
-                $o->adjustTable();
-            };
-
-            array_map($push, array_keys($orms));
         }
+
+        // sort ORM objects according relation dependencies.
+        $adjusted = [];
+        $push = function ($oname) use (&$orms, &$adjusted, &$push) {
+            if (isset($adjusted[$oname])) {
+                return;
+            }
+            $o = $orms[$oname];
+            if (!isset($o)) {
+                printf("   \e[31m%s MISSING!\e[0m\n", $oname);
+                return;
+            }
+            $adjusted[$oname] = true;
+            $relations = $o->ormRelations();
+            $structure = $o->structure();
+            if ($relations) {
+                foreach ($relations as $k => $r) {
+                    if (array_key_exists('object', (array) $structure[$k])) {
+                        $dep_oname = $structure[$k]['object'];
+                    } elseif ($r['ref']) {
+                        $ref = explode('.', $r['ref'], 2);
+                        $dep_oname = $ref[0];
+                    } else {
+                        continue;
+                    }
+                    $push($dep_oname);
+                }
+            }
+            printf("   %s\n", $oname);
+            $o->adjustTable();
+        };
+
+        array_map($push, array_keys($orms));
 
         echo "   \e[32mdone.\e[0m\n";
     }
