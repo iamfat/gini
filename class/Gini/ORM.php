@@ -802,6 +802,8 @@ abstract class ORM
     }
 }
 
+class_exists('\Gini\Those');
+
 $app = Core::app();
 if (is_subclass_of($app, '\Gini\Module\Prototype')) {
     $app->register('orm', function ($name) {
