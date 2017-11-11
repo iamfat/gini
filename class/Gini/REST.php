@@ -3,7 +3,7 @@
 namespace Gini;
 
 /*
-$rest = new \Gini\REST('http://localhost:3000/rest');
+$rest = \Gini\REST::of('http://localhost:3000/rest');
 $response = $rest->get('hello/article/1');
 $response = $rest->json()->post('hello/article', ['author'=>'libai']);
 $response = $rest->form()->post('hello/article', ['author'=>'libai']);
@@ -21,6 +21,11 @@ class REST
         $this->_url = rtrim($url, '/');
         $this->_http = IoC::construct('\Gini\HTTP');
         $this->json();
+    }
+
+    public static function of($url)
+    {
+        return IoC::construct($url);
     }
 
     public function __call($method, $params)
