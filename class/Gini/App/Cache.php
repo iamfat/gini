@@ -102,7 +102,7 @@ class Cache
             return [];
         }
 
-        printf("%s\n", 'Generating ORM plurals cache...');
+        // printf("%s\n", 'Generating ORM plurals cache...');
 
         if (!class_exists('\Doctrine\Common\Inflector\Inflector')) {
             echo "    \e[31m*\e[0m doctrine/inflector is missing! Perhaps you did't update your composer packages yet.\n\n";
@@ -114,22 +114,21 @@ class Cache
         $onames = array_unique($onames);
         foreach ($onames as $oname) {
             $plural = \Doctrine\Common\Inflector\Inflector::pluralize($oname);
-            printf("   %s => %s\n", $plural, $oname);
+            // printf("   %s => %s\n", $plural, $oname);
             $plurals[$plural] = $oname;
         }
 
-        echo "\n";
+        // echo "   \e[32mdone.\e[0m\n";
 
         return $plurals;
     }
 
     private static function _cacheConfig($env)
     {
-        $plurals = self::_getORMPlurals();
-
         printf("%s\n", 'Updating config cache...');
 
         $config_items = \Gini\Config::fetch($env);
+        $plurals = self::_getORMPlurals();
 
         // update orm plurals
         $c = (array) $config_items['orm']['plurals'];
