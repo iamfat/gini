@@ -25,7 +25,7 @@ class REST
 
     public static function of($url)
     {
-        return IoC::construct($url);
+        return IoC::construct('\Gini\REST', $url);
     }
 
     public function __call($method, $params)
