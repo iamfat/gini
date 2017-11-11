@@ -98,8 +98,7 @@ class MySQL extends \PDO implements Driver
             $this->createTable($table);
         }
 
-        $field_sql0 = []; // this is used for some drop operations
-        $field_sql = [];
+        $alter_sqls = [];
 
         $fields = (array) $schema['fields'];
 
@@ -108,7 +107,7 @@ class MySQL extends \PDO implements Driver
         $curr_fields = (array) $curr_schema['fields'];
         $missing_fields = array_diff_key($fields, $curr_fields);
         foreach ($missing_fields as $key => $field) {
-            $field_sql[] = 'ADD '.$this->_fieldSQL($key, $field);
+            $alter_sqls[1][] = 'ADD '.$this->_fieldSQL($key, $field);
         }
 
         foreach ($curr_fields as $key => $curr_field) {
@@ -120,14 +119,14 @@ class MySQL extends \PDO implements Driver
                     || $field['null'] != $curr_field['null']
                     || $field['default'] != $curr_field['default']
                     || $field['serial'] != $curr_field['serial']) {
-                    $field_sql[] = sprintf('CHANGE %s %s', $this->quoteIdent($key), $this->_fieldSQL($key, $field));
+                    $alter_sqls[1][] = sprintf('CHANGE %s %s', $this->quoteIdent($key), $this->_fieldSQL($key, $field));
                     // echo "Current Fields:\n".yaml_emit($curr_field)."\n";
                     // echo "Expected Fields:\n".yaml_emit($field)."\n";
                 }
             }
             /*
             elseif ($remove_nonexistent) {
-                $field_sql[] = sprintf('DROP %s', $this->quoteIdent($key) );
+                $field_sql[0][] = sprintf('DROP %s', $this->quoteIdent($key) );
             }
             */
             /*
@@ -145,7 +144,7 @@ class MySQL extends \PDO implements Driver
         }
 
         if (count($fields) > 0 && isset($curr_fields['_FOO'])) {
-            $field_sql[] = sprintf('DROP %s', $this->quoteIdent('_FOO'));
+            $alter_sqls[1][] = sprintf('DROP %s', $this->quoteIdent('_FOO'));
         }
 
         // ------ CHECK INDEXES
@@ -154,7 +153,7 @@ class MySQL extends \PDO implements Driver
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
         foreach ($missing_indexes as $key => $val) {
-            $field_sql[] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
+            $alter_sqls[1][] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
         }
 
         foreach ($curr_indexes as $key => $curr_val) {
@@ -163,12 +162,12 @@ class MySQL extends \PDO implements Driver
                 ksort($val);
                 ksort($curr_val);
                 if ($val != $curr_val) {
-                    $field_sql0[] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
-                    $field_sql[] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
+                    $alter_sqls[1][] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
+                    $alter_sqls[1][] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
                 }
             } else {
                 // remove other indexes
-                $field_sql[] = sprintf('DROP INDEX %s', $this->quoteIdent($key));
+                $alter_sqls[0][] = sprintf('DROP INDEX %s', $this->quoteIdent($key));
             }
         }
 
@@ -179,39 +178,28 @@ class MySQL extends \PDO implements Driver
         $missing_relations = array_diff_key($relations, $curr_relations);
 
         foreach ($missing_relations as $key => $val) {
-            $field_sql[] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
+            $alter_sqls[2][] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
         }
 
         foreach ($curr_relations as $key => $curr_val) {
             $val = $relations[$key];
             if ($val) {
                 if (array_diff($val, $curr_val)) {
-                    $field_sql0[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
-                    $field_sql[] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
+                    $alter_sqls[0][] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
+                    $alter_sqls[1][] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
                 }
             } else {
                 // remove other relations
-                $field_sql[] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
+                $alter_sqls[1][] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
             }
         }
 
-        if (count($field_sql0) > 0) {
+        foreach ($alter_sqls as $sqls) {
+            if (count(sqls) == 0) continue;
             $SQL = sprintf(
                 'ALTER TABLE %s %s',
                 $this->quoteIdent($table),
-                implode(', ', $field_sql0)
-            );
-            if (false === $this->query($SQL)) {
-                throw new \Gini\Database\Exception($this->errorInfo()[2]);
-            }
-            $this->tableSchema($table, true);
-        }
-
-        if (count($field_sql) > 0) {
-            $SQL = sprintf(
-                'ALTER TABLE %s %s',
-                $this->quoteIdent($table),
-                implode(', ', $field_sql)
+                implode(', ', $sqls)
             );
             if (false === $this->query($SQL)) {
                 throw new \Gini\Database\Exception($this->errorInfo()[2]);
