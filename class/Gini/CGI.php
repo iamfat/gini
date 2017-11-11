@@ -174,7 +174,7 @@ class CGI
             new \ReflectionFunction($action) :
             new \ReflectionMethod($action[0], $action[1]);
         $rps = $r->getParameters();
-        if (count($params) == 0 || is_numeric(key($params))) {
+        if (count($params) > 0 && is_numeric(key($params))) {
             // 需要考虑默认值以及无参数传入后使用func_get_args获取变量的情况
             $max = max(count($params), count($rps));
             for ($idx = 0; $idx < $max; $idx ++) {
