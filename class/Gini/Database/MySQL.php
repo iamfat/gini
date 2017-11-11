@@ -186,11 +186,11 @@ class MySQL extends \PDO implements Driver
             if ($val) {
                 if (array_diff($val, $curr_val)) {
                     $alter_sqls[0][] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
-                    $alter_sqls[1][] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
+                    $alter_sqls[2][] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
                 }
             } else {
                 // remove other relations
-                $alter_sqls[1][] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
+                $alter_sqls[2][] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
             }
         }
 
@@ -204,7 +204,7 @@ class MySQL extends \PDO implements Driver
                 implode(', ', $sqls)
             );
             if (false === $this->query($SQL)) {
-                throw new \Gini\Database\Exception($this->errorInfo()[2]);
+                throw new \Gini\Database\Exception($this->errorInfo()[2]."\tSQL: $SQL");
             }
             $this->tableSchema($table, true);
         }
