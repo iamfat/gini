@@ -35,7 +35,7 @@ class Router
         }
     }
 
-    public function use($middleware)
+    public function via($middleware)
     {
         $this->middlewares[] = $middleware;
         return $this;
