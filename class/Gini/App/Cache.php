@@ -90,7 +90,7 @@ class Cache
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
-                if ($rc->isAbstract()) {
+                if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface()) {
                     return;
                 }
 
