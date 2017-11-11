@@ -4,9 +4,11 @@ namespace Gini\CGI;
 
 use \Gini\IoC;
 
-class Middleware {
+class Middleware
+{
     private static $MIDDLEWARES = [];
-    static function of($name) {
+    public static function of($name)
+    {
         if (!isset(self::$MIDDLEWARES[$name])) {
             $className = '\\Gini\\CGI\\Middleware\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
             self::$MIDDLEWARES[$name] = IoC::construct($className);

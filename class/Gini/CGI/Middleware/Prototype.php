@@ -2,6 +2,7 @@
 
 namespace Gini\CGI\Middleware;
 
-interface Prototype {
-    function process($controller, $action, $params);
+interface Prototype
+{
+    public function process($controller, $action, $params);
 }
