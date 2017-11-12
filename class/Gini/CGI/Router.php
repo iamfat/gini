@@ -45,7 +45,7 @@ class Router
     {
         $route = ($this->baseRoute ? $this->baseRoute . '/' : '') . trim($route, '/');
         preg_match_all('/\{(\w+?\??)\}/', $route, $matches);
-        $regex = preg_replace('/\{(\w+?\??)\}/', '([^\/]+?)', $route);
+        $regex = preg_replace('/\{(\w+?\??)\}/', '([^\/]+)', $route);
         $params = $matches[1];
 
         if (is_callable($dest)) {
