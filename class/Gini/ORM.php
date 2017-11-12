@@ -487,7 +487,7 @@ abstract class ORM
                 }
                 $db_data[$k.'_id'] = $o->id ?: null;
             } elseif (array_key_exists('array', $v)) {
-                $db_data[$k] = isset($this->$k) ? J($this->$k) : '{}';
+                $db_data[$k] = count($this->$k)>0 ? J($this->$k) : '{}';
             } elseif (array_key_exists('object_list', $v)) {
                 $db_data[$k] = isset($this->$k) ? J($this->$k->keys()) : '[]';
             } else {
