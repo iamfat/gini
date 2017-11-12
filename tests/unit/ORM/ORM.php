@@ -113,7 +113,7 @@ namespace Gini\PHPUnit\ORM {
                 ->method('query')
                 ->will($this->returnCallback(function ($SQL) {
                     $this->assertEquals($SQL,
-                        'REPLACE INTO "utsample" SET "_extra"=\'{}\',"object_name"=\'utsample\',"object_id"=10,"sample_id"=NULL,"number"=NULL,"text"=NULL');
+                        'INSERT INTO "utsample" SET "_extra"=\'{}\',"object_name"=\'utsample\',"object_id"=10,"sample_id"=NULL,"number"=NULL,"text"=NULL');
                 }));
     
             $o1->save();

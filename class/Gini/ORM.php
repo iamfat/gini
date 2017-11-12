@@ -516,18 +516,29 @@ abstract class ORM
 
         $tbl_name = $this->tableName();
         $id = intval($db_data['id'] ?: $this->_db_data['id']);
-        if (!$id) {
-            unset($db_data['id']);
-        }
+        unset($db_data['id']);
 
         $pairs = [];
         foreach ($db_data as $k => $v) {
-            $pairs[] = $db->quoteIdent($k).'='.
+            $pairs[] = $db->quoteIdent($k) . '=' .
                (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
         }
 
         if (count($pairs) > 0) {
-            $SQL = 'REPLACE INTO '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pairs);
+            if ($id) {
+                if ($this->_db_data['id']
+                    || $db->value('SELECT "id" FROM '.$db->quoteIdent($tbl_name).' WHERE "id"=?', null, [$id])
+                ) {
+                    // if data exists, use update to avoid unexpected overwrite.
+                    $SQL = 'UPDATE ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs) .
+                        ' WHERE ' . $db->quoteIdent('id') . '=' . $db->quote($id);
+                } else {
+                    array_unshift($pairs, $db->quoteIdent('id').'='.$db->quote($id));
+                    $SQL = 'REPLACE INTO ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs);
+                }
+            } else {
+                $SQL = 'INSERT INTO ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs);
+            }
         }
 
         if ($SQL) {
