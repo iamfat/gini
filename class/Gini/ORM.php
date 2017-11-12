@@ -515,28 +515,19 @@ abstract class ORM
         $db_data = array_diff_assoc((array) $db_data, (array) $this->_db_data);
 
         $tbl_name = $this->tableName();
-        $id = (int) ($this->_db_data['id'] ?: $db_data['id']);
-        unset($db_data['id']);
+        $id = intval($db_data['id'] ?: $this->_db_data['id']);
+        if (!$id) {
+            unset($db_data['id']);
+        }
 
-        if ($id > 0) {
-            foreach ($db_data as $k => $v) {
-                $pair[] = $db->quoteIdent($k).'='.
-                   (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
-            }
+        $pairs = [];
+        foreach ($db_data as $k => $v) {
+            $pairs[] = $db->quoteIdent($k).'='.
+               (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
+        }
 
-            if ($pair) {
-                $SQL = 'UPDATE '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pair).' WHERE '.$db->quoteIdent('id').'='.$db->quote($id);
-            }
-        } else {
-            $db_data = array_filter($db_data, function ($v) {
-                return isset($v);
-            });
-            $keys = array_keys($db_data);
-            $vals = array_values($db_data);
-            $quoted_vals = array_map(function ($v) use ($db) {
-                return ($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v);
-            }, $vals);
-            $SQL = 'INSERT INTO '.$db->quoteIdent($tbl_name).' ('.$db->quoteIdent($keys).') VALUES('.implode(',', $quoted_vals).')';
+        if (count($pairs) > 0) {
+            $SQL = 'REPLACE INTO '.$db->quoteIdent($tbl_name).' SET '.implode(',', $pairs);
         }
 
         if ($SQL) {
@@ -546,12 +537,12 @@ abstract class ORM
         }
 
         if ($success) {
-            if (!$id) {
-                $id = $db->lastInsertId();
-            }
-
+            $id = $id ?: $db->lastInsertId();
             $this->criteria($id);
-            $this->fetch(true);
+            // clean $_db_time to trigger later fetch
+            $this->_db_time = 0;
+            $this->_objects = [];
+            $this->_oinfo = [];
         }
 
         return $success;

@@ -34,11 +34,9 @@ class Object extends \Gini\ORM
             if (!$this->those) {
                 $this->those = \Gini\IoC::construct('\Gini\Those', $this->name());
             }
-            call_user_func_array(array($this->those, $method), $params);
+            call_user_func_array([$this->those, $method], $params);
 
             return $this;
         }
-
-        return call_user_func_array(array($this->object, $method), $params);
     }
 }
