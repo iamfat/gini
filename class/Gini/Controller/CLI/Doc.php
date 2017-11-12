@@ -39,7 +39,7 @@ class Doc extends \Gini\Controller\CLI
     public function actionCGI($args)
     {
         $doc = \Gini\Document::of('Gini\\Controller\\CGI')->filterClasses(function ($rc) {
-            return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface();
+            return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface() && $rc->isSubClassOf('\\Gini\\Controller\\CGI');
         })->filterMethods(function ($rm) {
             return $rm->isPublic() && !$rm->isConstructor()
             && !$rm->isDestructor()
@@ -72,7 +72,7 @@ class Doc extends \Gini\Controller\CLI
     public function actionREST($args)
     {
         $doc = \Gini\Document::of('Gini\\Controller\\CGI')->filterClasses(function ($rc) {
-            return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface();
+            return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface() && $rc->isSubClassOf('\\Gini\\Controller\\REST');
         })->filterMethods(function ($rm) {
             return $rm->isPublic() && !$rm->isConstructor()
             && !$rm->isDestructor()
