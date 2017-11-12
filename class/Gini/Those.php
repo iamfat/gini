@@ -89,7 +89,7 @@ namespace Gini {
         {
             $this->_withTrashed = true;
 
-            return $this->whose('delete_at')->is('0000-00-00 00:00:00');
+            return $this->whose('deleted_at')->is(null);
         }
 
         protected function fetch($scope = 'fetch')
@@ -465,8 +465,8 @@ namespace Gini {
 
             if (!$this->_withTrashed) {
                 $properties = a($this->name)->properties();
-                if (isset($properties['delete_at'])) {
-                    $this->andWhose('delete_at')->isNot('0000-00-00 00:00:00');
+                if (isset($properties['deleted_at'])) {
+                    $this->andWhose('deleted_at')->isNot(null);
                 }
             }
 
