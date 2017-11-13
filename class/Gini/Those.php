@@ -466,7 +466,7 @@ namespace Gini {
             if (!$this->_withTrashed) {
                 $properties = a($this->name)->properties();
                 if (isset($properties['deleted_at'])) {
-                    $this->andWhose('deleted_at')->isNot(null);
+                    $this->andWhose('deleted_at')->is(null);
                 }
             }
 
