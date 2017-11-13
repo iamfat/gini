@@ -68,59 +68,7 @@ class CGI
         }
 
         $router = static::router();
-        $controller = $router ? $router->dispatch($route, $env) : false;
-        if ($controller === false) {
-            // no matches found in router
-            $args = array_map('rawurldecode', explode('/', $route));
-
-            $path = '';
-            $candidates = ['/index' => $args] + Util::pathAndArgs($args);
-            $class = null;
-
-            foreach (array_reverse($candidates) as $path => $params) {
-                $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
-                $basename = basename($path);
-                $dirname = dirname($path);
-
-                $class_namespace = '\Gini\Controller\CGI\\';
-                if ($dirname != '.') {
-                    $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
-                }
-
-                $class = $class_namespace.$basename.'\\Index';
-                if (class_exists($class)) {
-                    break;
-                }
-
-                $class = $class_namespace.$basename;
-                if (class_exists($class)) {
-                    break;
-                }
-
-                $class = $class_namespace.'Controller'.$basename;
-                if (class_exists($class)) {
-                    break;
-                }
-
-                if ($basename != 'index') {
-                    $class = $class_namespace.'Index';
-                    if (class_exists($class)) {
-                        array_unshift($params, $basename);
-                        break;
-                    }
-                }
-            }
-
-            if (!$class || !class_exists($class, false)) {
-                static::redirect('error/404');
-            }
-
-            \Gini\Config::set('runtime.controller_path', $path);
-            $controller = \Gini\IoC::construct($class);
-            $controller->params = $params;
-            $controller->app = \Gini\Core::app();
-        }
-
+        $controller = $router->dispatch($env['method'], $route);
         \Gini\Config::set('runtime.controller_class', get_class($controller));
         $controller->env = $env;
         return $controller;
