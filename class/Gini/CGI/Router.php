@@ -108,6 +108,10 @@ class Router
         }
 
         foreach ($this->rules as $key => $rule) {
+            if (!($rule['dest'] instanceof self)) {
+                continue;
+            }
+
             list($m, $regex) = explode(':', $key, 2);
             if ($m !== '*' && $method !== $m) {
                 continue;
@@ -117,9 +121,7 @@ class Router
                 continue;
             }
 
-            if ($rule['dest'] instanceof self) {
-                $middlewares = $rule['dest']->_getMiddlewares($method, $route, $middlewares);
-            }
+            $middlewares = $rule['dest']->_getMiddlewares($method, $route, $middlewares);
         }
 
         return $middlewares;
@@ -142,6 +144,8 @@ class Router
                 $controller = $rule['dest']->_getController($method, $route);
                 if ($controller) {
                     break;
+                } else {
+                    continue;
                 }
             }
 
@@ -172,6 +176,7 @@ class Router
 
     public function dispatch($method, $route)
     {
+        $method = strtolower($method ?: 'get');
         $controller = $this->_getController($method, $route);
         if (!$controller) {
             // no matches found in router
@@ -228,10 +233,10 @@ class Router
         // match middlewares
         $mergedMiddlewares = $this->_getMiddlewares($method, $route);
 
-        $controller->middlewares = array_merge(
+        $controller->middlewares = array_unique(array_merge(
             (array) $mergedMiddlewares,
             (array) $controller->middlewares
-        );
+        ));
 
         $controller->app = Core::app();
         return $controller;
