@@ -77,8 +77,8 @@ class Router
         list($route,$regex,$params) = $this->_parseRoute($route);
 
         if (is_callable($dest)) {
-            $router = new self($route);
-            call_user_func($dest, $router, $options);
+            $router = new self($route, $options);
+            call_user_func($dest, $router);
             $dest = $router;
         }
 
@@ -98,11 +98,11 @@ class Router
     private function _getMiddlewares($method, $route, $middlewares=[])
     {
         $middlewares = (array) $middlewares;
-        foreach ((array) $this->middlewares as $regex => $middlewares) {
+        foreach ((array) $this->middlewares as $regex => $matched_middlewares) {
             if ($regex === '*' || preg_match('`^'.$regex.'`i', trim($route, '/'), $matches)) {
-                $mergedMiddlewares = array_merge(
-                    (array) $mergedMiddlewares,
-                    (array) $middlewares
+                $middlewares = array_merge(
+                    (array) $middlewares,
+                    (array) $matched_middlewares
                 );
             }
         }
@@ -231,10 +231,10 @@ class Router
         }
 
         // match middlewares
-        $mergedMiddlewares = $this->_getMiddlewares($method, $route);
+        $middlewares = $this->_getMiddlewares($method, $route);
 
         $controller->middlewares = array_unique(array_merge(
-            (array) $mergedMiddlewares,
+            (array) $middlewares,
             (array) $controller->middlewares
         ));
 
