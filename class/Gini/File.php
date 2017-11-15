@@ -63,7 +63,7 @@ class File
             $dh = opendir($path);
             if ($dh) {
                 while (false !== ($n = readdir($dh))) {
-                    if ($n == '.' || $n == '..') {
+                    if ($n === '.' || $n === '..') {
                         continue;
                     }
                     self::removeDir($path.'/'.$n);
@@ -128,7 +128,7 @@ class File
             $dh = opendir($path);
             if ($dh) {
                 while (false !== ($file = readdir($dh))) {
-                    if ($file[0] == '.') {
+                    if ($file === '.' || $file === '..') {
                         continue;
                     }
                     self::traverse($path.$file, $callback);
@@ -249,7 +249,7 @@ class File
             $dh = opendir($dir);
             if ($dh) {
                 while (false !== ($name = readdir($dh))) {
-                    if ($name[0] == '.') {
+                    if ($name === '.' || $name === '..') {
                         continue;
                     }
 
