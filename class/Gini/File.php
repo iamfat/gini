@@ -62,7 +62,7 @@ class File
         if (is_dir($path) && !is_link($path)) {
             $dh = opendir($path);
             if ($dh) {
-                while ($n = readdir($dh)) {
+                while (false !== ($n = readdir($dh))) {
                     if ($n == '.' || $n == '..') {
                         continue;
                     }
@@ -100,7 +100,7 @@ class File
     {
         $dh = @opendir($source);
         if ($dh) {
-            while ($name = readdir($dh)) {
+            while (false !== ($name = readdir($dh))) {
                 if ($name == '.' || $name == '..') {
                     continue;
                 }
@@ -127,7 +127,7 @@ class File
             $path = preg_replace('/[^\/]$/', '$0/', $path);
             $dh = opendir($path);
             if ($dh) {
-                while ($file = readdir($dh)) {
+                while (false !== ($file = readdir($dh))) {
                     if ($file[0] == '.') {
                         continue;
                     }
