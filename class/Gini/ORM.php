@@ -495,11 +495,11 @@ abstract class ORM
                 if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
                     $default = $v['default'];
                     if (is_null($default)) {
-                        if (isset($v['string'])) {
+                        if (array_key_exists('string', $v)) {
                             $default = '';
-                        } elseif (isset($v['datetime']) || isset($v['timestamp'])) {
+                        } elseif (array_key_exists('datetime', $v) || array_key_exists('timestamp', $v)) {
                             $default = '0000-00-00 00:00:00';
-                        } elseif (isset($v['int']) || isset($v['bigint']) || isset($v['double'])) {
+                        } elseif (array_key_exists('int', $v) || array_key_exists('bigint', $v) || array_key_exists('double', $v)) {
                             $default = 0;
                         }
                     }
