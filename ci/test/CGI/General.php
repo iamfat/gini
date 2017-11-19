@@ -1,10 +1,8 @@
 <?php
 
-namespace Gini\PHPUnit\CGI {
-    
-    require_once __DIR__.'/../gini.php';
+namespace Gini\PHPUnit\TestCase\CGI {
 
-    class General extends \Gini\PHPUnit\CLI
+    class General extends \Gini\PHPUnit\TestCase\CLI
     {
         public function testParameters()
         {

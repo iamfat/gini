@@ -2,9 +2,7 @@
 
 namespace Gini\PHPUnit\Core;
 
-require_once __DIR__.'/../gini.php';
-
-class IoC extends \Gini\PHPUnit\CLI
+class IoC extends \Gini\PHPUnit\TestCase\CLI
 {
     public function testBind()
     {

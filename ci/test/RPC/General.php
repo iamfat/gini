@@ -2,9 +2,7 @@
 
 namespace Gini\PHPUnit\RPC {
 
-    require_once __DIR__.'/../gini.php';
-
-    class General extends \Gini\PHPUnit\CLI
+    class General extends \Gini\PHPUnit\TestCase\CLI
     {
        private function _testCall($method, $params)
         {

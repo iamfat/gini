@@ -2,9 +2,7 @@
 
 namespace Gini\PHPUnit\REST {
 
-    require_once __DIR__.'/../gini.php';
-
-    class Remote extends \Gini\PHPUnit\CLI
+    class Remote extends \Gini\PHPUnit\TestCase\CLI
     {
         public function testDefault()
         {

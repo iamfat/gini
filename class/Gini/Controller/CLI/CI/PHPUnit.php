@@ -7,19 +7,20 @@ class PHPUnit extends \Gini\Controller\CLI
     public function __index($args)
     {
         echo "gini ci phpunit init\n";
-        echo "gini ci phpunit create <Class\\For\\Test>\n";
+        echo "gini ci phpunit create <Class/For/Test>\n";
     }
 
     public function actionInit()
     {
         echo "Preparing PHPUnit environment...\n";
 
-        $phpunit_content = <<<'TEMPL'
+        $sysPath = SYS_PATH;
+        $phpunit_content = <<<TEMPL
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true">
+<phpunit colors="true" bootstrap="$sysPath/lib/bootstrap.php">
     <testsuites>
         <testsuite name="gini">
-            <directory suffix=".php">./tests/unit</directory>
+            <directory suffix=".php">./ci/test</directory>
             <exclude>gini.php</exclude>
         </testsuite>
     </testsuites>
@@ -38,43 +39,20 @@ TEMPL;
         file_exists(APP_PATH.'/phpunit.xml.dist')
             or file_put_contents(APP_PATH.'/phpunit.xml.dist', $phpunit_content);
 
-        $phpunit_gini = <<<'TEMPL'
-<?php
-
-$gini_dirs = [
-    isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] . '/lib' : __DIR__ . '/../../../gini/lib',
-    (getenv("COMPOSER_HOME") ?: getenv("HOME") . '/.composer') . '/vendor/iamfat/gini/lib',
-    '/usr/share/local/gini/lib',
-];
-
-foreach ($gini_dirs as $dir) {
-    $file = $dir.'/phpunit.php';
-    if (file_exists($file)) {
-        require_once $file;
-
-        return;
-    }
-}
-
-die("missing Gini PHPUnit Components!\n");
-TEMPL;
-
-        \Gini\File::ensureDir(APP_PATH.'/tests/unit');
-        file_exists(APP_PATH.'/tests/unit/gini.php')
-            or file_put_contents(APP_PATH.'/tests/unit/gini.php', $phpunit_gini);
-
         echo "   \e[32mdone.\e[0m\n";
     }
 
     public function actionCreate($args)
     {
-        count($args) > 0 or die("Usage: gini ci phpunit create <Class\\For\\Test>\n");
+        count($args) > 0 or die("Usage: gini ci phpunit create <Class/For/Test>\n");
 
         $class = $args[0];
-        preg_match('|^[\w\\\]+$|', $class) or die("Usage: gini ci phpunit create <Class\\For\\Test>\n");
+        preg_match('|^[\w\\\/]+$|', $class) or die("Usage: gini ci phpunit create <Class/For/Test>\n");
 
         echo "Creating $class\n";
 
+        // convert all '/' to '\\'
+        $class = strtr($class, [ '/' => '\\' ]);
         $pos = strrpos($class, '\\');
         if ($pos === false) {
             $namespace = '';
@@ -89,9 +67,7 @@ TEMPL;
 
 namespace Gini\PHPUnit{$namespace};
 
-require_once __DIR__ . '/../gini.php';
-
-class {$name} extends \Gini\PHPUnit\CLI {
+class {$name} extends \Gini\PHPUnit\TestCase\CLI {
 
     public function testHello()
     {
@@ -102,7 +78,7 @@ class {$name} extends \Gini\PHPUnit\CLI {
 
 TEMPL;
 
-        $dir = APP_PATH.'/tests/unit';
+        $dir = APP_PATH.'/ci/test';
         if ($namespace) {
             $dir .= strtr($namespace, '\\', '/');
         }

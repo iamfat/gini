@@ -1,5 +1,7 @@
 <?php
 
+namespace Gini;
+
 $_SERVER += $_ENV;
 
 $sys_path = realpath(isset($_SERVER['GINI_SYS_PATH']) ? $_SERVER['GINI_SYS_PATH'] : __DIR__.'/..');
@@ -55,4 +57,9 @@ if (file_exists($class_path.'.phar')) {
     require $class_path . '/Gini/Core.php';
 }
 
-\Gini\Core::start();
+// create empty application if not exists
+if (!class_exists('\\Gini\\Application', false)) {
+    class Application {}
+}
+
+Core::start();

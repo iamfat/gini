@@ -2,9 +2,7 @@
 
 namespace Gini\PHPUnit\Core;
 
-require_once __DIR__.'/../gini.php';
-
-class Core extends \Gini\PHPUnit\CLI
+class Core extends \Gini\PHPUnit\TestCase\CLI
 {
     public function testLocateFile()
     {

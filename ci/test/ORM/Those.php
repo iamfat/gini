@@ -2,9 +2,7 @@
 
 namespace Gini\PHPUnit\ORM;
 
-require_once __DIR__.'/../gini.php';
-
-class Those extends \Gini\PHPUnit\CLI
+class Those extends \Gini\PHPUnit\TestCase\CLI
 {
     public function setUp()
     {

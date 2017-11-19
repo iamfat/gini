@@ -1,10 +1,8 @@
 <?php
 
 namespace Gini\PHPUnit\ORM {
-
-    require_once __DIR__.'/../gini.php';
  
-    class ORM extends \Gini\PHPUnit\CLI
+    class ORM extends \Gini\PHPUnit\TestCase\CLI
     {
         public function setUp()
         {
