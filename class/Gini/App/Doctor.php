@@ -20,10 +20,9 @@ class Doctor
             echo "Checking module dependencies...\n";
             // check gini dependencies
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-                if (!$info->error) {
-                    continue;
+                if (isset($info->error)) {
+                    $errors['dependencies'][] = "$name: $info->error";
                 }
-                $errors['dependencies'][] = "$name: $info->error";
             }
             if ($errors['dependencies']) {
                 static::_outputErrors($errors['dependencies']);

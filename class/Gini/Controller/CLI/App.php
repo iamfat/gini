@@ -78,7 +78,7 @@ class App extends \Gini\Controller\CLI
     public function actionModules($args)
     {
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            if (!$info->error) {
+            if (!isset($info->error)) {
                 $rPath = \Gini\File::relativePath($info->path, APP_PATH);
                 if ($rPath[0] == '.') {
                     $rPath = \Gini\File::relativePath($info->path, dirname(SYS_PATH));

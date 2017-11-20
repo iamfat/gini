@@ -489,7 +489,7 @@ namespace Gini {
             if (isset($GLOBALS['gini.class_map'])) {
                 array_walk(self::$MODULE_INFO, function ($info, $name) {
                     $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
-                    !$info->error and method_exists($info->moduleClass, 'setup')
+                    !isset($info->error) and method_exists($info->moduleClass, 'setup')
                         and call_user_func([$info->moduleClass, 'setup']);
                 });
             }
@@ -506,7 +506,7 @@ namespace Gini {
             if (isset($GLOBALS['gini.class_map'])) {
                 $moduleInfo = array_reverse(self::$MODULE_INFO);
                 array_walk($moduleInfo, function ($info, $name) {
-                    !$info->error and method_exists($info->moduleClass, 'shutdown')
+                    !isset($info->error) and method_exists($info->moduleClass, 'shutdown')
                         and call_user_func([$info->moduleClass, 'shutdown']);
                 });
             }

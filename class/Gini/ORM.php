@@ -148,8 +148,8 @@ abstract class ORM
                 $params = explode(',', strtolower($v));
                 $v = [];
                 foreach ($params as $p) {
-                    list($p, $pv) = explode(':', trim($p), 2);
-                    $v[$p] = $pv;
+                    $pkv = array_map('trim', explode(':', $p));
+                    $v[$pkv[0]] = isset($pkv[1]) ? $pkv[1] : null;
                 }
 
                 $structure[$k] = $v;
