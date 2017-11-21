@@ -1,0 +1,2 @@
+code_generation: false
+bootstrap: /data/gini-modules/gini/lib/bootstrap.php

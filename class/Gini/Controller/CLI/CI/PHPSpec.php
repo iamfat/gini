@@ -23,8 +23,8 @@ code_generation: false
 bootstrap: $sysPath/lib/bootstrap.php
 TEMPL;
 
-        file_exists(APP_PATH.'/phpspec.yml.dist')
-            or file_put_contents(APP_PATH.'/phpspec.yml.dist', $phpspec_content);
+        file_exists(APP_PATH.'/phpspec.yml')
+            or file_put_contents(APP_PATH.'/phpspec.yml', $phpspec_content);
 
         echo "   \e[32mdone.\e[0m\n";
     }

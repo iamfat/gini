@@ -36,8 +36,8 @@ class PHPUnit extends \Gini\Controller\CLI
 </phpunit>
 TEMPL;
 
-        file_exists(APP_PATH.'/phpunit.xml.dist')
-            or file_put_contents(APP_PATH.'/phpunit.xml.dist', $phpunit_content);
+        file_exists(APP_PATH.'/phpunit.xml')
+            or file_put_contents(APP_PATH.'/phpunit.xml', $phpunit_content);
 
         echo "   \e[32mdone.\e[0m\n";
     }
