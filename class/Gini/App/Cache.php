@@ -81,11 +81,11 @@ class Cache
             }
 
             \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir, &$onames) {
-                if (!preg_match('`.php$`', $file, $matches)) {
+                if (!preg_match('/^(.+)\.php$/', $file, $parts)) {
                     return;
                 }
 
-                $oname = preg_replace('`.php$`', '', $file);
+                $oname = $parts[1];
                 if ($oname == 'Object') {
                     return;
                 }
