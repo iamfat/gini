@@ -2,7 +2,7 @@
 
 namespace Gini\ORM;
 
-class Object extends \Gini\ORM
+abstract class Object extends \Gini\ORM
 {
     public $id = 'bigint,primary,serial';
     public $_extra = 'array';

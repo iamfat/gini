@@ -65,7 +65,11 @@ class Document
 
         $files = array_unique($files);
         array_walk($files, function($file) use ($baseClass, &$formatFunc) {
-            $name = preg_replace('|.php$|', '', $file);
+            if (!preg_match('/^(.+)\.php$/', $file, $parts)) {
+                return;
+            }
+
+            $name = $parts[1];
             $className = '\\' . $baseClass . '\\' . str_replace('/', '\\', $name);
 
             // Check if it is abstract class

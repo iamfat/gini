@@ -29,11 +29,11 @@ class ORM extends \Gini\Controller\CLI
             }
 
             \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir, &$orms) {
-                $oname = preg_replace('|.php$|', '', $file);
-                if ($oname == 'Object') {
+                if (!preg_match('/^(.+)\.php$/', $file, $parts)) {
                     return;
                 }
 
+                $oname = $parts[1];
                 $className = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
@@ -94,10 +94,11 @@ class ORM extends \Gini\Controller\CLI
             }
 
             \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
-                $oname = strtolower(preg_replace('|.php$|', '', $file));
-                if ($oname == 'object') {
+                if (!preg_match('/^(.+)\.php$/', $file, $parts)) {
                     return;
                 }
+
+                $oname = $parts[1];
                 $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
@@ -152,16 +153,16 @@ class ORM extends \Gini\Controller\CLI
             }
 
             \Gini\File::eachFilesIn($orm_dir, function ($file) use ($orm_dir) {
-                $oname = preg_replace('|.php$|', '', $file);
-                if ($oname == 'Object') {
+                if (!preg_match('/^(.+)\.php$/', $file, $parts)) {
                     return;
                 }
 
+                $oname = $parts[1];
                 $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
-                if ($rc->isAbstract()) {
+                if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface()) {
                     return;
                 }
 
