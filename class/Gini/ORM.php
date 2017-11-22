@@ -554,6 +554,9 @@ abstract class ORM
             $this->_db_time = 0;
             $this->_objects = [];
             $this->_oinfo = [];
+            foreach ($structure as $k => $v) {
+                unset($this->$k);    //empty all public properties
+            }
         }
 
         return $success;
