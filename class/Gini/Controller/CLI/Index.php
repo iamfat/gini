@@ -102,6 +102,7 @@ class Index extends \Gini\Controller\CLI
         try {
             $uri = self::_serverUri();
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
+            $rpc->connectTimeout($_SERVER['GINI_INDEX_CONNECT_TIMEOUT']);
             $config['token'] = $rpc->createToken($username, $password);
             if (isset($config['token'])) {
                 yaml_emit_file(self::_configFile(), $config, YAML_UTF8_ENCODING);
@@ -405,6 +406,7 @@ class Index extends \Gini\Controller\CLI
         try {
             $uri = self::_serverUri();
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
+            $rpc->connectTimeout($_SERVER['GINI_INDEX_CONNECT_TIMEOUT']);
             $modules = $rpc->search($argv[0]);
 
             foreach ((array) $modules as $m) {

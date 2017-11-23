@@ -40,6 +40,11 @@ class RPC
         return $rpc;
     }
 
+    public function connectTimeout($timeout) {
+        $this->connectTimeout = $timeout;
+        return $this;
+    }
+
     /**
      * RPC call with named parameters
      *
