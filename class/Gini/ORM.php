@@ -463,6 +463,7 @@ abstract class ORM
 
     public function save()
     {
+        $this->fetch();
         $schema = (array) $this->ormSchema();
         $db = $this->db();
 
