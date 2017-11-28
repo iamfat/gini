@@ -104,7 +104,7 @@ class Index extends \Gini\Controller\CLI
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
             $rpc->connectTimeout($_SERVER['GINI_INDEX_CONNECT_TIMEOUT']);
             $config['token'] = $rpc->createToken($username, $password);
-            if (isset($config['token'])) {
+            if (isset($config['token']) && $config['token'] != false) {
                 yaml_emit_file(self::_configFile(), $config, YAML_UTF8_ENCODING);
                 echo "You've successfully logged in as $username.\n";
             } else {
