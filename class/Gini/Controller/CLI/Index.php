@@ -104,7 +104,7 @@ class Index extends \Gini\Controller\CLI
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
             $rpc->connectTimeout($_SERVER['GINI_INDEX_CONNECT_TIMEOUT']);
             $config['token'] = $rpc->createToken($username, $password);
-            if (isset($config['token'])) {
+            if (isset($config['token']) && $config['token']) {
                 yaml_emit_file(self::_configFile(), $config, YAML_UTF8_ENCODING);
                 echo "You've successfully logged in as $username.\n";
             } else {
@@ -286,7 +286,6 @@ class Index extends \Gini\Controller\CLI
                     die("Conflict detected on $module! Installed: {$v->fullVersion} Expecting: $versionRange\n");
                 }
             } else {
-
                 // try to see if we've already got it somewhere
                 if (isset(\Gini\Core::$MODULE_INFO[$module])) {
                     $info = \Gini\Core::$MODULE_INFO[$module];
