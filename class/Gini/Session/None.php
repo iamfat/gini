@@ -8,23 +8,23 @@ class None implements \SessionHandlerInterface
     {
         return true;
     }
-    public function destroy(string $session_id)
+    public function destroy($session_id)
     {
         return true;
     }
-    public function gc(int $maxlifetime)
+    public function gc($maxlifetime)
     {
         return true;
     }
-    public function open(string $save_path, string $session_name)
+    public function open($save_path, $session_name)
     {
         return true;
     }
-    public function read(string $session_id)
+    public function read($session_id)
     {
         return false;
     }
-    public function write(string $session_id, string $session_data)
+    public function write($session_id, $session_data)
     {
         return true;
     }
