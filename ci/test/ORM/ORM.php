@@ -51,7 +51,6 @@ namespace Gini\PHPUnit\ORM {
                 }));
     
             \Gini\IoC::bind('\Gini\ORM\UTSample', function ($criteria = null) use ($db) {
-    
                 $o = $this->getMockBuilder('\Gini\ORM\Object')
                     ->setMockClassName('MOBJ_'.uniqid())
                     ->setMethods(['db', 'ownProperties', 'name', 'tableName'])
@@ -78,6 +77,9 @@ namespace Gini\PHPUnit\ORM {
                     'object' => 'object',
                     'sample' => 'object:utsample',
                     'number' => 'int',
+                    'boolean' => 'bool',
+                    'datetime' => 'datetime',
+                    'timestamp' => 'timestamp',
                     'text' => 'string',
                     ]));
     
@@ -110,11 +112,29 @@ namespace Gini\PHPUnit\ORM {
                 ->expects($this->any())
                 ->method('query')
                 ->will($this->returnCallback(function ($SQL) {
-                    $this->assertEquals($SQL,
-                        'INSERT INTO "utsample" SET "_extra"=\'{}\',"object_name"=\'utsample\',"object_id"=10,"sample_id"=NULL,"number"=0,"text"=\'\'');
+                    $this->assertEquals(
+                        $SQL,
+                        'INSERT INTO "utsample" SET "_extra"=\'{}\',"object_name"=\'utsample\',"object_id"=10,"sample_id"=NULL,"number"=0,"boolean"=0,"datetime"=\'0000-00-00 00:00:00\',"timestamp"=NOW(),"text"=\'\''
+                    );
                 }));
     
             $o1->save();
+        }
+
+        public function testORMSchema()
+        {
+            $schema = a('utsample')->ormSchema();
+            $fields = $schema['fields'];
+            $this->assertEquals($fields['id'], ['type'=>'bigint','serial'=>true,'default'=>0]);
+            $this->assertEquals($fields['_extra'], ['type'=>'text','default'=>'{}']);
+            $this->assertEquals($fields['object_name'], ['type'=>'varchar(120)']);
+            $this->assertEquals($fields['object_id'], ['type'=>'bigint','null'=>true]);
+            $this->assertEquals($fields['sample_id'], ['type'=>'bigint','null'=>true]);
+            $this->assertEquals($fields['number'], ['type'=>'int','default'=>0]);
+            $this->assertEquals($fields['boolean'], ['type'=>'int','default'=>0]);
+            $this->assertEquals($fields['datetime'], ['type'=>'datetime','default'=>'0000-00-00 00:00:00']);
+            $this->assertEquals($fields['timestamp'], ['type'=>'timestamp','default'=>'CURRENT_TIMESTAMP']);
+            $this->assertEquals($fields['text'], ['type'=>'varchar(255)','default'=>'']);
         }
     
         public function testGet()

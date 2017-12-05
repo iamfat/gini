@@ -312,15 +312,14 @@ abstract class ORM
                     case 'int':
                     case 'bigint':
                     case 'double':
+                    case 'float':
                         $field['type'] = $p;
                         break;
                     case 'datetime':
                         $field['type'] = $p;
-                        $field['default'] = '0000-00-00 00:00:00';
                         break;
                     case 'timestamp':
                         $field['type'] = $p;
-                        $field['default'] = 'CURRENT_TIMESTAMP';
                         break;
                     case 'bool':
                         $field['type'] = 'int';
@@ -335,6 +334,7 @@ abstract class ORM
                     case 'array':
                     case 'object_list':
                         $field['type'] = 'text';
+                        $field['default'] = $field['default'] ?: '{}';
                         break;
                     case 'null':
                         $field['null'] = true;
@@ -364,6 +364,28 @@ abstract class ORM
             }
 
             if ($field) {
+                if (!isset($field['null']) && !isset($field['default'])) {
+                    switch ($field['type']) {
+                    case 'int':
+                    case 'bigint':
+                    case 'double':
+                    case 'float':
+                        $field['default'] = 0;
+                        break;
+                    case 'datetime':
+                        $field['default'] = '0000-00-00 00:00:00';
+                        break;
+                    case 'timestamp':
+                        $field['default'] = 'CURRENT_TIMESTAMP';
+                        break;
+                    default:
+                        if ($field['type'] == 'text'
+                        || 0 === strncmp('varchar(', $field['type'], 8)
+                        || 0 === strncmp('char(', $field['type'], 5)) {
+                            $field['default'] = '';
+                        }
+                    }
+                }
                 $fields[$k] = $field;
             }
         }
@@ -498,11 +520,13 @@ abstract class ORM
                     if (is_null($default)) {
                         if (array_key_exists('string', $v)) {
                             $default = '';
-                        } elseif (array_key_exists('datetime', $v) || array_key_exists('timestamp', $v)) {
-                            $default = '0000-00-00 00:00:00';
-                        } elseif (array_key_exists('int', $v) || array_key_exists('bigint', $v) || array_key_exists('double', $v)) {
+                        } elseif (array_key_exists('bool', $v) || array_key_exists('int', $v) || array_key_exists('bigint', $v) || array_key_exists('double', $v) || array_key_exists('float', $v)) {
                             $default = 0;
-                        }
+                        } elseif (array_key_exists('datetime', $v)) {
+                            $default = '0000-00-00 00:00:00';
+                        } elseif (array_key_exists('timestamp', $v)) {
+                            $default = SQL('NOW()');
+                        } 
                     }
 
                     if (!is_null($default)) {
