@@ -282,7 +282,7 @@ class MySQL extends \PDO implements Driver
                 && ($field['default'] == 'CURRENT_TIMESTAMP')) {
                 $default = $field['default'];
             } else {
-                $default = $this->quote($field['default']);
+                $default = $field['serial'] ? null : $this->quote($field['default']);
             }
         }
 
