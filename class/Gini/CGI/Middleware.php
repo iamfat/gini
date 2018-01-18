@@ -10,7 +10,7 @@ class Middleware
     public static function of($name)
     {
         if (!isset(self::$MIDDLEWARES[$name])) {
-            $className = '\\Gini\\CGI\\Middleware\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
+            $className = '\\Gini\\CGI\\Middleware\\'.strtr($name, ['-' => '', '_' => '', '/' => '\\']);
             self::$MIDDLEWARES[$name] = IoC::construct($className);
         }
         return self::$MIDDLEWARES[$name];
