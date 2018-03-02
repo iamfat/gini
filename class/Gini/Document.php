@@ -64,7 +64,7 @@ class Document
         }
 
         $files = array_unique($files);
-        array_walk($files, function($file) use ($baseClass, &$formatFunc) {
+        array_walk($files, function ($file) use ($baseClass, &$formatFunc) {
             if (!preg_match('/^(.+)\.php$/', $file, $parts)) {
                 return;
             }

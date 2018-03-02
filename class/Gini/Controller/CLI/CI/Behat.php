@@ -43,5 +43,4 @@ CODE;
         echo $hints;
         echo "   \e[32mdone.\e[0m\n";
     }
-
 }

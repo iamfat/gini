@@ -40,7 +40,8 @@ class RPC
         return $rpc;
     }
 
-    public function connectTimeout($timeout) {
+    public function connectTimeout($timeout)
+    {
         $this->connectTimeout = $timeout;
         return $this;
     }

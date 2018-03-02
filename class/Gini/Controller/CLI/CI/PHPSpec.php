@@ -28,5 +28,4 @@ TEMPL;
 
         echo "   \e[32mdone.\e[0m\n";
     }
-
 }

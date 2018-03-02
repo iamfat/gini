@@ -42,7 +42,8 @@ class Router
         }
     }
 
-    private function _parseRoute($route) {
+    private function _parseRoute($route)
+    {
         $route = ($this->baseRoute ? $this->baseRoute . '/' : '') . trim($route, '/');
 
         if (preg_match_all('/\{(\w+?\??)\}/', $route, $matches)) {
@@ -66,7 +67,7 @@ class Router
             $middleware = $route;
             $this->middlewares['*'][] = $middleware;
         } else {
-            list(,$regex) = $this->_parseRoute($route);
+            list(, $regex) = $this->_parseRoute($route);
             $this->middlewares[$regex][] = $middleware;
         }
         return $this;
@@ -74,7 +75,7 @@ class Router
 
     public function match($methods, $route, $dest, $options=[])
     {
-        list($route,$regex,$params) = $this->_parseRoute($route);
+        list($route, $regex, $params) = $this->_parseRoute($route);
 
         if (is_callable($dest)) {
             $router = new self($route, $options);
