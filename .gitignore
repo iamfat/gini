@@ -1,5 +1,6 @@
 ._*
 *.*~
+.*.cache
 .DS_Store
 /cache/
 /vendor/
