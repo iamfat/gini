@@ -87,10 +87,10 @@ class Router
             $methods = [$methods];
         }
         array_walk($methods, function ($method) use ($regex, $dest, $params) {
-            $this->rules[$method.':'.$regex] = [
+            $this->rules = [ $method.':'.$regex => [
                 'dest' => $dest,
                 'params' => $params
-            ];
+            ]] + $this->rules;
         });
 
         return $this;
@@ -137,8 +137,12 @@ class Router
                 continue;
             }
 
-            if ($regex !== '*' && !preg_match('`^'.$regex.'`i', trim($route, '/'), $matches)) {
+            if ($regex === '*') {
+                $matches = [];
+            } elseif (!preg_match('`^'.$regex.'`i', trim($route, '/'), $matches)) {
                 continue;
+            } else {
+                array_shift($matches);
             }
 
             if ($rule['dest'] instanceof self) {
@@ -150,7 +154,6 @@ class Router
                 }
             }
 
-            array_shift($matches);
             $params = array_combine($rule['params'], $matches);
 
             list($controllerName, $action) = explode('@', $rule['dest'], 2);
