@@ -22,7 +22,12 @@ class Javascript implements Engine
             foreach ($this->_vars as $k => $v) {
                 echo "var $k=".J($v).";\n";
             }
-            @include $this->_path;
+            try {
+                include $this->_path;
+            } catch (\Exception $e) {
+                echo $e->getMessage()."\n";
+                echo 'File: '.$e->getFile().' Line: '.$e->getLine()."\n";
+            }
             echo "\n})();";
 
             $output = ob_get_contents();

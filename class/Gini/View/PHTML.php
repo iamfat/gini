@@ -19,7 +19,12 @@ class PHTML implements Engine
             ob_start();
 
             extract($this->_vars);
-            include $this->_path;
+            try {
+                include $this->_path;
+            } catch (\Exception $e) {
+                echo $e->getMessage()."\n";
+                echo 'File: '.$e->getFile().' Line: '.$e->getLine()."\n";
+            }
 
             $output = ob_get_contents();
             ob_end_clean();
