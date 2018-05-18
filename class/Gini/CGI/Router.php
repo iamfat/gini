@@ -13,7 +13,7 @@ class Router
     private $options;
     private $rules = [];
     private $middlewares = [];
-    private static $METHODS = ['get', 'post', 'put', 'delete', 'options'];
+    private static $METHODS = ['get', 'post', 'put', 'patch', 'delete', 'options'];
 
     public function __construct($route = '', $options = [])
     {
