@@ -205,7 +205,7 @@ class CGI
         if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
             $_POST = (array) @json_decode(self::content(), true);
         } elseif (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
-            $_POST = (array) parse_str(self::content());
+            @parse_str(self::content(), $_POST);
         }
     }
 
