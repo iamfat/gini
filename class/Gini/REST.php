@@ -28,6 +28,18 @@ class REST
         return IoC::construct('\Gini\REST', $url);
     }
 
+    public function enableCookie()
+    {
+        $this->_http->enableCookie();
+        return $this;
+    }
+
+    public function disableCookie()
+    {
+        $this->_http->disableCookie();
+        return $this;
+    }
+
     public function __call($method, $params)
     {
         if ($method === __FUNCTION__) {
