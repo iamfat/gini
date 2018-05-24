@@ -138,7 +138,7 @@ namespace Gini {
         public static function base($base = null)
         {
             if ($base) {
-                self::$_base = $base;
+                self::$_base = rtrim($base, '/') . '/';
             } elseif (self::$_base === null) {
                 self::setup();
             }
@@ -163,16 +163,13 @@ namespace Gini {
 
         public static function rurl($path, $type)
         {
-            if (!self::$_base === null) {
-                self::setup();
+            $ui = parse_url($path);
+            if (!$ui['host']) {
+                $base = self::$_rurl[$type] ?: (self::$_rurl['*'].'/'.$type ?: '');
+                $path = self::base() . rtrim($base, '/') . '/' . $path;
             }
 
-            $base = self::$_rurl[$type] ?: (self::$_rurl['*'].'/'.$type ?: '');
-            if (substr($base, -1) != '/') {
-                $base .= '/';
-            }
-
-            return self::_rurl_mod($base.$path, $type);
+            return self::_rurl_mod($path, $type);
         }
     }
 
