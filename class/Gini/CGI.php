@@ -203,7 +203,9 @@ class CGI
         Session::setup();
 
         if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
-            $_POST = @json_decode(self::content(), true);
+            $_POST = (array) @json_decode(self::content(), true);
+        } elseif (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
+            $_POST = (array) parse_str(self::content());
         }
     }
 
