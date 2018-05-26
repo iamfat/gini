@@ -2,6 +2,10 @@
 
 namespace Gini\Controller\CLI;
 
+use \Gini\CGI\Response;
+
+class AuthorizationException extends \Exception {}
+
 class Index extends \Gini\Controller\CLI
 {
     private static function _loadGiniComposer()
@@ -35,13 +39,13 @@ class Index extends \Gini\Controller\CLI
         return $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
     }
 
-    private static function _davOptionsAndHeaders($userLogin = false)
+    private static function _davOptionsAndHeaders($forceLogin = false)
     {
         $uri = self::_serverUri();
         $options = ['baseUri' => rtrim($uri, '/').'/'];
         $headers = [];
 
-        if ($userLogin) {
+        if ($forceLogin) {
             echo "\n";
             // Use Username / Password
             $userName = readline('User: ');
@@ -70,6 +74,34 @@ class Index extends \Gini\Controller\CLI
         }
 
         return [$options, $headers];
+    }
+
+    private function _responseMustSucceed($response) {
+        if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
+            throw new AuthorizationException;
+        } elseif ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
+            throw new Response\Exception(null, $response['statusCode']);
+        }
+    }
+
+    private function _runWithAuthorization($func) {
+        $forceLogin = false;
+        for (;;) {
+            try {
+                list($options, $headers) = self::_davOptionsAndHeaders($forceLogin);
+                $client = new \Sabre\DAV\Client($options);
+                $func($client, $headers);
+                break;
+            } catch (AuthorizationException $e) {
+                if ($forceLogin) {
+                    die("\e[31m401: Access Denied.\e[0m\n");
+                } else {
+                    $forceLogin = true;
+                }
+            } catch ( Response\Exception $e) {
+                die("\e[31m".$e->getCode() . ': '. $e->getMessage() . "\e[0m\n");
+            }
+        }
     }
 
     public function __index($args)
@@ -143,7 +175,6 @@ class Index extends \Gini\Controller\CLI
         $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
         $command = "git --git-dir=$GIT_DIR archive $version --format tgz 2> /dev/null";
 
-        $path = "$appId/$version.tgz";
         $ph = popen($command, 'r');
         if (is_resource($ph)) {
             $content = '';
@@ -162,43 +193,16 @@ class Index extends \Gini\Controller\CLI
 
             echo "Publishing $appId/$version...\n";
 
-            list($options, $headers) = self::_davOptionsAndHeaders();
-            $client = new \Sabre\DAV\Client($options);
-
-            while (true) {
+            $this->_runWithAuthorization(function($client, $headers) use ($appId, $version, $content) {
                 $response = $client->request('MKCOL', $appId, null, $headers);
-                if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-                    // Authentication required
-                    // prompt user/password and try again
-                    if (!isset($options['userName'])) {
-                        list($options, $headers) = self::_davOptionsAndHeaders(true);
-                        $client = new \Sabre\DAV\Client($options);
-                        continue;
-                    }
-                    die("Access denied for publishing $appId/$version.\n");
+                if ($response['statusCode'] != 405) {
+                    $this->_responseMustSucceed($response);
                 }
-                break;
-            }
 
-            while (true) {
+                $path = "$appId/$version.tgz";
                 $response = $client->request('PUT', $path, $content, $headers);
-                if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-                    // Authentication required
-                    // prompt user/password and try again
-                    if (!isset($options['userName'])) {
-                        list($options, $headers) = self::_davOptionsAndHeaders(true);
-                        $client = new \Sabre\DAV\Client($options);
-                        continue;
-                    }
-                    die("Access denied for publishing $appId/$version.\n");
-                }
-
-                if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                    die('Error: '.$response['statusCode']."\n");
-                }
-
-                break;
-            }
+                $this->_responseMustSucceed($response);
+            });
 
             echo "$appId/$version was published successfully.\n";
             pclose($ph);
@@ -219,48 +223,12 @@ class Index extends \Gini\Controller\CLI
 
         echo "Unpublishing $appId/$version...\n";
 
-        list($options, $headers) = self::_davOptionsAndHeaders();
-        $client = new \Sabre\DAV\Client($options);
-
-        while (true) {
+        $this->_runWithAuthorization(function($client, $headers) use($path) {
             $response = $client->request('HEAD', $path, null, $headers);
-            if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-                // Authentication required
-                // prompt user/password and try again
-                if (!isset($options['userName'])) {
-                    list($options, $headers) = self::_davOptionsAndHeaders(true);
-                    $client = new \Sabre\DAV\Client($options);
-                    continue;
-                }
-                die("Access denied for unpublishing $appId/$version.\n");
-            }
-
-            if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                die("Failed to find $path with code {$response['statusCode']}\n");
-            }
-
-            break;
-        }
-
-        while (true) {
+            $this->_responseMustSucceed($response);
             $response = $client->request('DELETE', $path, null, $headers);
-            if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-                // Authentication required
-                // prompt user/password and try again
-                if (!isset($options['userName'])) {
-                    list($options, $headers) = self::_davOptionsAndHeaders(true);
-                    $client = new \Sabre\DAV\Client($options);
-                    continue;
-                }
-                die("Access denied for unpublishing $appId/$version.\n");
-            }
-
-            if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                die('Error: '.$response['statusCode']."\n");
-            }
-
-            break;
-        }
+            $this->_responseMustSucceed($response);
+        });
 
         echo "Done.\n";
     }
@@ -273,37 +241,31 @@ class Index extends \Gini\Controller\CLI
             self::_loadGiniComposer();
         }
 
-        list($options, $headers) = self::_davOptionsAndHeaders();
-        $client = new \Sabre\DAV\Client($options);
-
-        $installedModules = [];
-        $installModule = function ($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
-            if (isset($installedModules[$module])) {
-                $info = $installedModules[$module];
-                $v = new \Gini\Version($info->version);
-                // if installed version is incorrect, abort the operation.
-                if (!$v->satisfies($versionRange)) {
-                    die("Conflict detected on $module! Installed: {$v->fullVersion} Expecting: $versionRange\n");
-                }
-            } else {
-                // try to see if we've already got it somewhere
-                if (isset(\Gini\Core::$MODULE_INFO[$module])) {
-                    $info = \Gini\Core::$MODULE_INFO[$module];
+        $this->_runWithAuthorization(function($client, $headers) {
+            $installedModules = [];
+            $installModule = function($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
+                if (isset($installedModules[$module])) {
+                    $info = $installedModules[$module];
                     $v = new \Gini\Version($info->version);
-                    if ($v->satisfies($versionRange)) {
-                        $matched = $v;
+                    // if installed version is incorrect, abort the operation.
+                    if (!$v->satisfies($versionRange)) {
+                        die("Conflict detected on $module! Installed: {$v->fullVersion} Expecting: $versionRange\n");
                     }
-                }
+                } else {
+                    // try to see if we've already got it somewhere
+                    if (isset(\Gini\Core::$MODULE_INFO[$module])) {
+                        $info = \Gini\Core::$MODULE_INFO[$module];
+                        $v = new \Gini\Version($info->version);
+                        if ($v->satisfies($versionRange)) {
+                            $matched = $v;
+                        }
+                    }
+    
+                    // fetch index.json
+                    echo "Fetching catalog of {$module}...\n";
+                    $response = $client->request('GET', $module.'/index.json', null, $headers);
+                    $this->_responseMustSucceed($response);
 
-                // fetch index.json
-                echo "Fetching catalog of {$module}...\n";
-                $response = $client->request('GET', $module.'/index.json', null, $headers);
-                if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                    $matched or die('Error: '.$response['statusCode']."\n");
-                    $response = null;
-                }
-
-                if ($response) {
                     $indexInfo = (array) json_decode($response['body'], true);
                     // find latest match version
                     foreach ($indexInfo as $version => $foo) {
@@ -317,78 +279,77 @@ class Index extends \Gini\Controller\CLI
                             $matched = $v;
                         }
                     }
-                }
-
-                if (!$matched) {
-                    die("Failed to locate required version!\n");
-                }
-
-                if (!$info || $matched->fullVersion != $info->version) {
-                    $version = $matched->fullVersion;
-                    $info = (object) $indexInfo[$version];
-
-                    $tarPath = "{$module}/{$version}.tgz";
-                    echo "Downloading {$module} from {$tarPath}...\n";
-                    $response = $client->request('GET', $tarPath, null, $headers);
-                    if ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
-                        die('Error: '.$response['statusCode']."\n");
+    
+                    if (!$matched) {
+                        die("Failed to locate required version!\n");
                     }
-
-                    if ($isApp) {
-                        $modulePath = $targetDir;
+    
+                    if (!$info || $matched->fullVersion != $info->version) {
+                        $version = $matched->fullVersion;
+                        $info = (object) $indexInfo[$version];
+    
+                        $tarPath = "{$module}/{$version}.tgz";
+                        echo "Downloading {$module} from {$tarPath}...\n";
+                        $response = $client->request('GET', $tarPath, null, $headers);
+                        $this->_responseMustSucceed($response);
+    
+                        if ($isApp) {
+                            $modulePath = $targetDir;
+                        } else {
+                            $modulePath = "$targetDir/modules/$module";
+                        }
+    
+                        if (is_dir($modulePath) && file_exists($modulePath)) {
+                            \Gini\File::removeDir($modulePath);
+                        }
+                        \Gini\File::ensureDir($modulePath);
+                        echo "Extracting {$module}...\n";
+                        $ph = popen('tar -zx -C '.escapeshellcmd($modulePath), 'w');
+                        if (is_resource($ph)) {
+                            fwrite($ph, $response['body']);
+                            pclose($ph);
+                        }
                     } else {
-                        $modulePath = "$targetDir/modules/$module";
+                        $version = $info->version;
+                        echo "Found local copy of {$module}/{$version}.\n";
                     }
-
-                    if (is_dir($modulePath) && file_exists($modulePath)) {
-                        \Gini\File::removeDir($modulePath);
+    
+                    $installedModules[$module] = $info;
+                    echo "\n";
+                }
+    
+                if ($info) {
+                    foreach ((array) $info->dependencies as $m => $r) {
+                        if ($m == 'gini') {
+                            continue;
+                        }
+                        $installModule($m, $r, $targetDir, false);
                     }
-                    \Gini\File::ensureDir($modulePath);
-                    echo "Extracting {$module}...\n";
-                    $ph = popen('tar -zx -C '.escapeshellcmd($modulePath), 'w');
-                    if (is_resource($ph)) {
-                        fwrite($ph, $response['body']);
-                        pclose($ph);
-                    }
+                }
+            };
+    
+            if (count($argv) > 0) {
+                // e.g. gini install xxx
+                $module = $argv[0];
+    
+                if (count($argv) > 1) {
+                    $versionRange = $argv[1];
                 } else {
-                    $version = $info->version;
-                    echo "Found local copy of {$module}/{$version}.\n";
+                    $versionRange = readline('Please provide a version constraint for the '.$module.' requirement:');
                 }
-
-                $installedModules[$module] = $info;
-                echo "\n";
-            }
-
-            if ($info) {
-                foreach ((array) $info->dependencies as $m => $r) {
-                    if ($m == 'gini') {
-                        continue;
-                    }
-                    $installModule($m, $r, $targetDir, false);
-                }
-            }
-        };
-
-        if (count($argv) > 0) {
-            // e.g. gini install xxx
-            $module = $argv[0];
-
-            if (count($argv) > 1) {
-                $versionRange = $argv[1];
+    
+                $installModule($module, $versionRange, $_SERVER['PWD']."/$module", true);
             } else {
-                $versionRange = readline('Please provide a version constraint for the '.$module.' requirement:');
+                // run: gini install, then you should be in module directory
+                if (APP_ID != 'gini') {
+                    // try to install its dependencies
+                    $app = \Gini\Core::moduleInfo(APP_ID);
+                    $installedModules[APP_ID] = $app;
+                    $installModule(APP_ID, $app->version, APP_PATH, true);
+                }
             }
+        });
 
-            $installModule($module, $versionRange, $_SERVER['PWD']."/$module", true);
-        } else {
-            // run: gini install, then you should be in module directory
-            if (APP_ID != 'gini') {
-                // try to install its dependencies
-                $app = \Gini\Core::moduleInfo(APP_ID);
-                $installedModules[APP_ID] = $app;
-                $installModule(APP_ID, $app->version, APP_PATH, true);
-            }
-        }
     }
 
     protected function _strPad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
@@ -407,11 +368,11 @@ class Index extends \Gini\Controller\CLI
             $rpc = new \Gini\RPC(rtrim($uri, '/').'/api');
             $rpc->connectTimeout($_SERVER['GINI_INDEX_CONNECT_TIMEOUT']);
             $modules = $rpc->search($argv[0]);
-
             foreach ((array) $modules as $m) {
+                if (!isset($m['id'])) continue;
                 printf(
                     "%s %s %s\e[0m\n",
-                    $this->_strPad($m['id'], 20, ' '),
+                    $this->_strPad($m['id'], 30, ' '),
                     $this->_strPad($m['version'], 15, ' '),
                     $this->_strPad($m['name'], 30, ' ')
                 );
