@@ -4,7 +4,9 @@ namespace Gini\Controller\CLI;
 
 use \Gini\CGI\Response;
 
-class AuthorizationException extends \Exception {}
+class AuthorizationException extends \Exception
+{
+}
 
 class Index extends \Gini\Controller\CLI
 {
@@ -76,7 +78,8 @@ class Index extends \Gini\Controller\CLI
         return [$options, $headers];
     }
 
-    private function _responseMustSucceed($response) {
+    private function _responseMustSucceed($response)
+    {
         if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
             throw new AuthorizationException;
         } elseif ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
@@ -84,7 +87,8 @@ class Index extends \Gini\Controller\CLI
         }
     }
 
-    private function _runWithAuthorization($func) {
+    private function _runWithAuthorization($func)
+    {
         $forceLogin = false;
         for (;;) {
             try {
@@ -98,7 +102,7 @@ class Index extends \Gini\Controller\CLI
                 } else {
                     $forceLogin = true;
                 }
-            } catch ( Response\Exception $e) {
+            } catch (Response\Exception $e) {
                 die("\e[31m".$e->getCode() . ': '. $e->getMessage() . "\e[0m\n");
             }
         }
@@ -193,7 +197,7 @@ class Index extends \Gini\Controller\CLI
 
             echo "Publishing $appId/$version...\n";
 
-            $this->_runWithAuthorization(function($client, $headers) use ($appId, $version, $content) {
+            $this->_runWithAuthorization(function ($client, $headers) use ($appId, $version, $content) {
                 $response = $client->request('MKCOL', $appId, null, $headers);
                 if ($response['statusCode'] != 405) {
                     $this->_responseMustSucceed($response);
@@ -223,7 +227,7 @@ class Index extends \Gini\Controller\CLI
 
         echo "Unpublishing $appId/$version...\n";
 
-        $this->_runWithAuthorization(function($client, $headers) use($path) {
+        $this->_runWithAuthorization(function ($client, $headers) use ($path) {
             $response = $client->request('HEAD', $path, null, $headers);
             $this->_responseMustSucceed($response);
             $response = $client->request('DELETE', $path, null, $headers);
@@ -241,9 +245,9 @@ class Index extends \Gini\Controller\CLI
             self::_loadGiniComposer();
         }
 
-        $this->_runWithAuthorization(function($client, $headers) {
+        $this->_runWithAuthorization(function ($client, $headers) {
             $installedModules = [];
-            $installModule = function($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
+            $installModule = function ($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
                 if (isset($installedModules[$module])) {
                     $info = $installedModules[$module];
                     $v = new \Gini\Version($info->version);
@@ -349,7 +353,6 @@ class Index extends \Gini\Controller\CLI
                 }
             }
         });
-
     }
 
     protected function _strPad($input, $pad_length, $pad_string = ' ', $pad_type = STR_PAD_RIGHT)
@@ -369,7 +372,9 @@ class Index extends \Gini\Controller\CLI
             $rpc->connectTimeout($_SERVER['GINI_INDEX_CONNECT_TIMEOUT']);
             $modules = $rpc->search($argv[0]);
             foreach ((array) $modules as $m) {
-                if (!isset($m['id'])) continue;
+                if (!isset($m['id'])) {
+                    continue;
+                }
                 printf(
                     "%s %s %s\e[0m\n",
                     $this->_strPad($m['id'], 30, ' '),

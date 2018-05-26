@@ -87,7 +87,8 @@ class Doc extends \Gini\Controller\CLI
             if (preg_match('/^(get|post|delete|put|options)(.+)$/', $unit->method, $matches)) {
                 $method = strtoupper($matches[1]);
                 $pathUnits[] = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $matches[2]));
-                echo $method.' '.implode('/', $pathUnits);
+                $route = implode('/', $pathUnits);
+                echo str_pad($method, 5, ' ').' '.str_pad($route, 30, ' ');
                 if (count($unit->params) > 0) {
                     $docParams = [];
                     foreach ($unit->params as $param) {
@@ -102,5 +103,41 @@ class Doc extends \Gini\Controller\CLI
                 echo "\n";
             }
         });
+
+        $routerFunc = function ($router) use (&$routerFunc) {
+            foreach ($router->rules() as $key => $rule) {
+                if ($rule['dest'] instanceof \Gini\CGI\Router) {
+                    $routerFunc($rule['dest']);
+                } else {
+                    $method = strtoupper($rule['method']);
+                    $route = $rule['route'];
+
+                    list($controllerName, $action) = explode('@', $rule['dest'], 2);
+                    if (!$action) {
+                        $action = $method.'Default';
+                    }
+
+                    echo str_pad($method, 5, ' ') . ' ' . str_pad($route, 30, ' ');
+                    try {
+                        $rm = new \ReflectionMethod($controllerName, $action);
+                        $rps = $rm->getParameters();
+                        $docParams = array_map(function ($rp) {
+                            $docParam = $rp->name;
+                            $rp->isPassedByReference() and $docParam = '&'.$docParam;
+                            $rp->hasType() and $docParam = $rp->getType() . ' ' . $docParam;
+                            $rp->isDefaultValueAvailable() and $docParam .= ': ' . J($rp->getDefaultValue());
+                            return $docParam;
+                        }, $rps);
+                        if (count($docParams) > 0) {
+                            echo "\t{ ".implode(', ', $docParams)." }";
+                        }
+                    } catch (\ReflectionException $e) {
+                    }
+
+                    echo "\n";
+                }
+            }
+        };
+        $routerFunc(\Gini\CGI::router());
     }
 }

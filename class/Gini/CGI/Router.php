@@ -61,6 +61,11 @@ class Router
         return [ $route, $regex, $params ];
     }
 
+    public function rules()
+    {
+        return $this->rules;
+    }
+
     public function via($route, $middleware=null)
     {
         if (is_null($middleware)) {
@@ -76,18 +81,26 @@ class Router
     public function match($methods, $route, $dest, $options=[])
     {
         list($route, $regex, $params) = $this->_parseRoute($route);
+        $options += $this->options;
 
         if (is_callable($dest)) {
             $router = new self($route, $options);
             call_user_func($dest, $router);
             $dest = $router;
+        } else {
+            if ($dest[0] != '\\') {
+                $dest = ($options['classPrefix'] ?: '\\Gini\\Controller\\CGI\\') . $dest;
+            }
         }
 
         if (!is_array($methods)) {
             $methods = [$methods];
         }
-        array_walk($methods, function ($method) use ($regex, $dest, $params) {
+
+        array_walk($methods, function ($method) use ($route, $regex, $dest, $params) {
             $this->rules = [ $method.':'.$regex => [
+                'method' => $method,
+                'route' => $route,
                 'dest' => $dest,
                 'params' => $params
             ]] + $this->rules;
@@ -161,15 +174,7 @@ class Router
                 $action = $method.'Default';
             }
 
-            if ($controllerName[0] == '\\') {
-                $fullControllerName = $controllerName;
-            } else {
-                $options = $this->options;
-                $classPrefix = $options['classPrefix'] ?: '\\Gini\\Controller\\CGI\\';
-                $fullControllerName = $classPrefix . $controllerName;
-            }
-
-            $controller = \Gini\IoC::construct($fullControllerName);
+            $controller = \Gini\IoC::construct($controllerName);
             $controller->action = $action;
             $controller->params = $params;
             break;
