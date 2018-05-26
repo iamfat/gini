@@ -76,6 +76,9 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
                 'money' => 'double,default:0',
                 'father' => 'object:user',
                 'description' => 'string:*,null',
+                'friend' => 'object:user,many',
+                'relation' => 'object,many',
+                'prop' => 'bigint,many'
             ]));
 
             return $o;
@@ -182,4 +185,32 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
 
     }
 
+    public function testWithMany() 
+    {
+        $user = a('user');
+        \Gini\Those::reset();
+        $those = those('users')->whose('gender')->is(1)->andWhose('friend')->is($user);
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "_user_friend" AS "t1" ON "t1"."user_id"="t0"."id" WHERE "t0"."gender"=1 AND "t1"."friend_id"=0', 'SQL', $those);
+
+        \Gini\Those::reset();
+        $those = those('users')->whose('gender')->is(1)->andWhose('relation')->is($user);
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "_user_relation" AS "t1" ON "t1"."user_id"="t0"."id" WHERE "t0"."gender"=1 AND ("t1"."relation_name"=\'user\' AND "t1"."relation_id"=0)', 'SQL', $those);
+
+        \Gini\Those::reset();
+        $those = those('users')->whose('gender')->is(1)->andWhose('prop')->is(10);
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "_user_prop" AS "t1" ON "t1"."user_id"="t0"."id" WHERE "t0"."gender"=1 AND "t1"."prop"=10', 'SQL', $those);
+
+        \Gini\Those::reset();
+        $those = those('users')->whose('gender')->is(1)->andWhose('friend.gender')->is(0)->andWhose('friend.friend.money')->isGreaterThan(100);
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "_user_friend" AS "t1" ON "t1"."user_id"="t0"."id" INNER JOIN "user" AS "t2" ON "t1"."friend_id"="t2"."id" INNER JOIN "_user_friend" AS "t3" ON "t3"."user_id"="t2"."id" INNER JOIN "user" AS "t4" ON "t3"."friend_id"="t4"."id" WHERE "t0"."gender"=1 AND "t2"."gender"=0 AND "t4"."money">100', 'SQL', $those);
+
+        \Gini\Those::reset();
+        $those = those('users')->whose('gender')->is(1)->andWhose('friend.friend')->is($user);
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "_user_friend" AS "t1" ON "t1"."user_id"="t0"."id" INNER JOIN "user" AS "t2" ON "t1"."friend_id"="t2"."id" INNER JOIN "_user_friend" AS "t3" ON "t3"."user_id"="t2"."id" WHERE "t0"."gender"=1 AND "t3"."friend_id"=0', 'SQL', $those);
+    }
 }

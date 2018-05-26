@@ -81,8 +81,10 @@ namespace Gini\PHPUnit\ORM {
                     'datetime' => 'datetime',
                     'timestamp' => 'timestamp',
                     'text' => 'string',
+                    'apple' => 'object:utsample,many',
+                    'orange' => 'string:40,many',
                     ]));
-    
+
                 unset($o->id);
                 unset($o->_extra);
                 if (isset($criteria)) {
@@ -178,6 +180,68 @@ namespace Gini\PHPUnit\ORM {
             $this->assertEquals($props['inject_prop2'], 'int');
             $this->assertEquals($o1->ormIndexes(), ['inject_prop1', 'unique:inject_prop2']);
             $this->assertEquals($o1->ormRelations(), ['sample' => ['update' => 'cascade', 'delete' => 'cascade']]);
+        }
+
+        public function testORMAdditionalSchemas()
+        {
+            $o = a('utsample');
+            $this->assertEquals($o->ormAdditionalSchemas(), [
+                '_utsample_apple' => [
+                    'fields' => [
+                        'utsample_id' => [
+                            'type' => 'bigint',
+                            'null' => true,
+                        ],
+                        'apple_id' => [
+                            'type' => 'bigint',
+                            'null' => true
+                        ]
+                    ],
+                    'indexes' => [
+                        'PRIMARY' => [ 'type' => 'primary', fields => [ 'utsample_id', 'apple_id' ] ],
+                    ],
+                    'relations' => [
+                        '_utsample_apple_utsample' => [
+                            'delete' => 'cascade',
+                            'update' => 'cascade',
+                            'column' => 'utsample_id',
+                            'ref_table' => 'utsample',
+                            'ref_column' => 'id',
+                        ],
+                        '_utsample_apple_apple' => [
+                            'delete' => 'cascade',
+                            'update' => 'cascade',
+                            'column' => 'apple_id',
+                            'ref_table' => 'utsample',
+                            'ref_column' => 'id',
+                        ]
+                    ]
+                ],
+                '_utsample_orange' => [
+                    'fields' => [
+                        'utsample_id' => [
+                            'type' => 'bigint',
+                            'null' => true,
+                        ],
+                        'orange' => [
+                            'type' => 'varchar(40)',
+                            'default' => '',
+                        ]
+                    ],
+                    'indexes' => [
+                        'PRIMARY' => [ 'type' => 'primary', fields => [ 'utsample_id', 'orange' ] ],
+                    ],
+                    'relations' => [
+                        '_utsample_orange_utsample' => [
+                            'delete' => 'cascade',
+                            'update' => 'cascade',
+                            'column' => 'utsample_id',
+                            'ref_table' => 'utsample',
+                            'ref_column' => 'id',
+                        ]
+                    ]
+                ]
+            ]);
         }
     }
     

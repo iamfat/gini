@@ -59,8 +59,9 @@ class ORM extends \Gini\Controller\CLI
                 return;
             }
             $adjusted[$oname] = true;
-            $relations = $o->ormRelations();
             $structure = $o->structure();
+
+            $relations = $o->ormRelations();
             if ($relations) {
                 foreach ($relations as $k => $r) {
                     if (array_key_exists('object', (array) $structure[$k])) {
@@ -74,6 +75,16 @@ class ORM extends \Gini\Controller\CLI
                     $push($dep_oname);
                 }
             }
+
+            $manyStructure = $o->manyStructure();
+            if ($manyStructure) {
+                foreach ($manyStructure as $k => $v) {
+                    if (isset($v['object'])) {
+                        $push($v['object']);
+                    }
+                }
+            }
+
             printf("   %s\n", $oname);
             $o->adjustTable();
         };

@@ -43,6 +43,12 @@ $user = those('users')
         those('users')->whose('parent_name')->is('@father.name')
     );
 
+$sensors = those('sensors')->whose('subscriber.name')->is('ABC');
+$sensors = those('sensors')->whose('subscriber')->is($user);
+
+// sensor/subscriber [sensor] [subscriber]
+// subscriber [name]
+
 */
 
 namespace Gini {
@@ -53,6 +59,7 @@ namespace Gini {
         private $_field;
         private $_where;
         private $_join;
+        private $_joinedTables;
         private $_alias;
 
         private $_withTrashed = false;
@@ -320,12 +327,81 @@ namespace Gini {
             return $this;
         }
 
+        private function _fieldName($suffix=null)
+        {
+            $db = $this->db;
+            $name = $this->name();
+            // table1.table2.table3.field
+            $fields = explode('.', $this->_field);
+            $key = '';
+
+            for (;;) {
+                // chop field one by one
+                $field = array_shift($fields);
+                $fieldKey = $key ? $key.'.'.$field : $field;
+                $table = $key ? $this->_joinedTables[$key] : $this->_table;
+
+                $o = a($name);
+                $structure = $o->structure();
+                $manyStructure = $o->manyStructure();
+                if (isset($manyStructure[$field])) {
+                    // it is a many-field, a pivot table required
+                    $pivotName = $o->pivotTableName($field);
+                    $pivotKey = "$fieldKey@pivot";
+                    if (!isset($this->_join[$pivotKey])) {
+                        $this->_joinedTables[$pivotKey] = $pivotTable = 't'.$this->uniqid();
+                        $this->_join[$pivotKey] = 'INNER JOIN '.$db->ident($pivotName)
+                            .' AS '.$db->quoteIdent($pivotTable)
+                            .' ON '.$db->ident($pivotTable, $name.'_id').'='.$db->ident($table, 'id');
+                    }
+                } else {
+                    $pivotName = null;
+                }
+
+                if (count($fields) == 0
+                    || (isset($structure[$field]) && !isset($structure[$field]['object']))
+                    || (isset($manyStructure[$field]) && !isset($manyStructure[$field]['object']))
+                    ) {
+                    if ($pivotName) {
+                        $pivotKey = "$fieldKey@pivot";
+                        $pivotTable = $this->_joinedTables[$pivotKey];
+                        return $db->ident($pivotTable, $field.$suffix);
+                    } else {
+                        return $db->ident($table, $field.$suffix);
+                    }
+                } else {
+                    if ($pivotName) {
+                        $fieldName = $manyStructure[$field]['object'];
+                        if (!isset($this->_join[$fieldKey])) {
+                            $this->_joinedTables[$fieldKey] = $fieldTable = 't'.$this->uniqid();
+                            $pivotKey = "$fieldKey@pivot";
+                            $pivotTable = $this->_joinedTables[$pivotKey];
+                            $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($fieldName)
+                                .' AS '.$db->quoteIdent($fieldTable)
+                                .' ON '.$db->ident($pivotTable, $field.'_id').'='.$db->ident($fieldTable, 'id');
+                        }
+                    } else {
+                        $fieldName = $structure[$field]['object'];
+                        if (!isset($this->_join[$fieldKey])) {
+                            $this->_joinedTables[$fieldKey] = $fieldTable = 't'.$this->uniqid();
+                            $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($fieldName)
+                                .' AS '.$db->quoteIdent($fieldTable)
+                                .' ON '.$db->ident($table, $field.'_id').'='.$db->ident($fieldTable, 'id');
+                        }
+                    }
+
+                    $name = $fieldName;
+                    $key = $fieldKey;
+                }
+            }
+        }
+
         public function match($op, $v)
         {
             assert($this->_field);
 
             $db = $this->db;
-            $field_name = $db->ident($this->_table, $this->_field);
+            $field_name = $this->_fieldName();
 
             switch ($op) {
                 case '^=': {
@@ -348,20 +424,24 @@ namespace Gini {
                         $o = a($this->name);
                         $field = $this->_field;
                         $structure = $o->structure();
-                        if (array_key_exists('object', $structure[$field])) {
-                            if (!$structure[$field]['object']) {
-                                $obj_where[] = $db->ident($this->_table, $field.'_name').$op.$db->quote($v->name());
-                            }
-
-                            $obj_where[] = $db->ident($this->_table, $field.'_id').$op.intval($v->id);
-
-                            if ($op == '<>') {
-                                $this->_where[] = $this->_packWhere($obj_where, 'OR');
-                            } else {
-                                $this->_where[] = $this->_packWhere($obj_where, 'AND');
-                            }
-                            break;
+                        $manyStructure = $o->manyStructure();
+                        $obj_where = [];
+                        if ((isset($structure[$field])
+                                && \array_key_exists('object', $structure[$field])
+                                && !$structure[$field]['object'])
+                            || (isset($manyStructure[$field])
+                                && \array_key_exists('object', $manyStructure[$field])
+                                && !$manyStructure[$field]['object'])
+                            ) {
+                            $obj_where[] = $this->_fieldName('_name').$op.$db->quote($v->name());
                         }
+                        $obj_where[] = $this->_fieldName('_id').$op.intval($v->id);
+                        if ($op == '<>') {
+                            $this->_where[] = $this->_packWhere($obj_where, 'OR');
+                        } else {
+                            $this->_where[] = $this->_packWhere($obj_where, 'AND');
+                        }
+                        break;
                     } elseif (is_null($v)) {
                         if ($op == '<>') {
                             $this->_where[] = $field_name.' IS NOT NULL';

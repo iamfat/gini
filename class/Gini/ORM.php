@@ -30,8 +30,10 @@ abstract class ORM
     protected $_db_time;    //上次数据库同步的时间
 
     private static $_STRUCTURES;
+    private static $_MANY_STRUCTURES;
     private static $_RELATIONS;
     private static $_INDEXES;
+
     private static $_INJECTIONS;
 
     /**
@@ -138,26 +140,51 @@ abstract class ORM
         return $properties;
     }
 
-    public function structure()
+    private function _structureFromProperties($properties)
     {
-        $class_name = get_class($this);
-        if (!isset(self::$_STRUCTURES[$class_name])) {
-            $properties = $this->properties();
-            $structure = [];
-            foreach ($properties as $k => $v) {
-                $params = explode(',', strtolower($v));
-                $v = [];
-                foreach ($params as $p) {
-                    $pkv = array_map('trim', explode(':', $p));
-                    $v[$pkv[0]] = isset($pkv[1]) ? $pkv[1] : null;
-                }
+        $structure = [];
+        $manyStructure = [];
+        foreach ((array)$properties as $k => $v) {
+            $params = explode(',', strtolower($v));
+            $v = [];
+            foreach ($params as $p) {
+                $pkv = array_map('trim', explode(':', $p));
+                $v[$pkv[0]] = isset($pkv[1]) ? $pkv[1] : null;
+            }
 
+            if (array_key_exists('many', $v)) {
+                $manyStructure[$k] = $v;
+            } else {
                 $structure[$k] = $v;
             }
-            self::$_STRUCTURES[$class_name] = $structure;
         }
+        return [ $structure, $manyStructure ];
+    }
 
-        return self::$_STRUCTURES[$class_name];
+    private function _prepareStructures($className)
+    {
+        $properties = $this->properties();
+        list($structure, $manyStructure) = $this->_structureFromProperties($properties);
+        self::$_STRUCTURES[$className] = $structure;
+        self::$_MANY_STRUCTURES[$className] = $manyStructure;
+    }
+
+    public function structure()
+    {
+        $className = get_class($this);
+        if (!isset(self::$_STRUCTURES[$className])) {
+            $this->_prepareStructures($className);
+        }
+        return self::$_STRUCTURES[$className];
+    }
+
+    public function manyStructure()
+    {
+        $className = get_class($this);
+        if (!isset(self::$_MANY_STRUCTURES[$className])) {
+            $this->_prepareStructures($className);
+        }
+        return self::$_MANY_STRUCTURES[$className];
     }
 
     public function fetch($force = false)
@@ -295,9 +322,9 @@ abstract class ORM
         return $this->ormSchema();
     }
 
-    public function ormSchema()
+    public function ormSchema($structure = null, $ormIndexes = null, $ormRelations = null, $table = null)
     {
-        $structure = $this->structure();
+        $structure = $structure ?: $this->structure();
 
         $fields = [];
         $indexes = [];
@@ -390,7 +417,8 @@ abstract class ORM
             }
         }
 
-        foreach ($this->ormRelations() as $k => $vv) {
+        $ormRelations = $ormRelations ?: $this->ormRelations();
+        foreach ($ormRelations as $k => $vv) {
             $vvv = [];
             $vvv['delete'] = $vv['delete'];
             $vvv['update'] = $vv['update'];
@@ -412,11 +440,13 @@ abstract class ORM
                 continue;
             }
 
-            $relations[$this->tableName().'_'.$k] = $vvv;
+            $prefix = $table ?: $this->tableName();
+            $relations[$prefix.'_'.$k] = $vvv;
         }
 
         // 索引项
-        foreach ($this->ormIndexes() as $k => $v) {
+        $ormIndexes = $ormIndexes ?: $this->ormIndexes();
+        foreach ($ormIndexes as $k => $v) {
             list($vk, $vv) = explode(':', $v, 2);
             $vk = trim($vk);
             $vv = trim($vv);
@@ -453,6 +483,26 @@ abstract class ORM
         }
 
         return ['fields' => $fields, 'indexes' => $indexes, 'relations' => $relations];
+    }
+
+    public function ormAdditionalSchemas()
+    {
+        $schemas = [];
+        $name = $this->name();
+
+        foreach ((array) $this->manyStructure() as $k => $v) {
+            $table = $this->pivotTableName($k);
+            $schema = $this->ormSchema([
+                $name => [ 'object' => $name ],
+                $k => $v,
+            ], [ "primary:$name,$k" ], [
+                $name => [ 'update' => 'cascade', 'delete' => 'cascade' ],
+                $k => [ 'update' => 'cascade', 'delete' => 'cascade' ],
+            ], $table);
+            $schemas[$table] = $schema;
+        }
+
+        return $schemas;
     }
 
     public function forceDelete()
@@ -526,7 +576,7 @@ abstract class ORM
                             $default = '0000-00-00 00:00:00';
                         } elseif (array_key_exists('timestamp', $v)) {
                             $default = SQL('NOW()');
-                        } 
+                        }
                     }
 
                     if (!is_null($default)) {
@@ -653,6 +703,11 @@ abstract class ORM
         }
 
         return $this->_tableName;
+    }
+
+    public function pivotTableName($field)
+    {
+        return '_' . str_replace('/', '_', $this->name()) . '_' . strtolower($field);
     }
 
     /**
@@ -826,8 +881,133 @@ abstract class ORM
         $db = $this->db();
         if ($db) {
             $db->adjustTable($this->tableName(), $this->ormSchema());
+            foreach ((array) $this->ormAdditionalSchemas() as $table => $schema) {
+                $db->adjustTable($table, $schema);
+            }
         }
         return $this;
+    }
+
+    // $friends = $user->all('friends');
+    public function all($field)
+    {
+        if (!$this->id) {
+            return [];
+        }
+
+        class_exists('\Doctrine\Common\Inflector\Inflector')
+        and $field = \Doctrine\Common\Inflector\Inflector::singularize($field);
+
+        $manyStructure = $this->manyStructure();
+        if (!isset($manyStructure[$field])) {
+            return [ $this->$field ];
+        }
+
+        $db = $this->db();
+        if (array_key_exists('object', $manyStructure[$field])) {
+            $objects = [];
+            if (isset($manyStructure[$field]['object'])) {
+                $oname = $manyStructure[$field]['object'];
+                $st = $db->query('SELECT :oid AS oid FROM :table1 WHERE :name1=:id1', [
+                    ':table1' => $this->pivotTableName($field),
+                    ':name1' => $this->name().'_id',
+                    ':oid' => $field.'_id',
+                ], [
+                    ':id1' => $this->oid
+                ]);
+                $objects = new ORMIterator($oname);
+                if ($st) {
+                    while ($row = $st->rows()) {
+                        $objects[$row->id] = a($oname, $row->id);
+                    }
+                }
+                return $objects;
+            } else {
+                $st = $db->query('SELECT :oname AS oname, :oid AS oid FROM :table1 WHERE :name1=:id1', [
+                    ':table1' => $this->pivotTableName($field),
+                    ':name1' => $this->name().'_id',
+                    ':oname' => $field.'_name',
+                    ':oid' => $field.'_id',
+                ], [
+                    ':id1' => $this->id
+                ]);
+                $objects = [];
+                if ($st) {
+                    while ($row = $st->rows()) {
+                        $objects[] = a($row->oname, $row->oid);
+                    }
+                }
+                return $objects;
+            }
+        }
+
+        $st = $db->query('SELECT $name2 AS field FROM :table1 WHERE :name1=:id1', [
+            ':table1' => $this->pivotTableName($field),
+            ':name1' => $this->name().'_id',
+            ':name2' => $field,
+        ], [
+            ':id1' => $this->id
+        ]);
+        if ($st) {
+            $rows = $st->rows();
+            return array_map(function ($v) {
+                return $row->field;
+            }, $rows);
+        }
+
+        return [];
+    }
+
+    public function addOne($field, $value)
+    {
+        if (!$this->id) {
+            return false;
+        }
+
+        $db = $this->db();
+        $success = $db->query('INSERT INTO :table1 (:name1, :name2) VALUES(:id1, :value2)', [
+            ':table1' => $this->pivotTableName($field),
+            ':name1' => $this->name().'_id',
+            ':name2' => $field,
+        ], [
+            ':id1' => $this->id,
+            ':value2' => $value,
+        ]);
+        return !!$success;
+    }
+
+    public function removeOne($field, $value)
+    {
+        if (!$this->id) {
+            return false;
+        }
+
+        $db = $this->db();
+        $success = $db->query('DELETE FROM :table1 WHERE :name1=:id1 AND :name2=:value2', [
+            ':table1' => $this->pivotTableName($field),
+            ':name1' => $this->name().'_id',
+            ':name2' => $field,
+        ], [
+            ':id1' => $this->id,
+            ':value2' => $value,
+        ]);
+        return !!$success;
+    }
+
+    public function removeAll($field)
+    {
+        if (!$this->id) {
+            return false;
+        }
+
+        $db = $this->db();
+        $success = $db->query('DELETE FROM :table1 WHERE :name1=:id1', [
+            ':table1' => $this->pivotTableName($field),
+            ':name1' => $this->name().'_id',
+        ], [
+            ':id1' => $this->id,
+        ]);
+        return !!$success;
     }
 }
 
