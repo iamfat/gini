@@ -268,22 +268,23 @@ class Index extends \Gini\Controller\CLI
                     // fetch index.json
                     echo "Fetching catalog of {$module}...\n";
                     $response = $client->request('GET', $module.'/index.json', null, $headers);
-                    $this->_responseMustSucceed($response);
-
-                    $indexInfo = (array) json_decode($response['body'], true);
-                    // find latest match version
-                    foreach ($indexInfo as $version => $foo) {
-                        $v = new \Gini\Version($version);
-                        if ($v->satisfies($versionRange)) {
-                            if ($matched) {
-                                if ($matched->compare($v) > 0) {
-                                    continue;
+                    if ($response['statusCode'] != 404) {
+                        $this->_responseMustSucceed($response);
+                        $indexInfo = (array) json_decode($response['body'], true);
+                        // find latest match version
+                        foreach ($indexInfo as $version => $foo) {
+                            $v = new \Gini\Version($version);
+                            if ($v->satisfies($versionRange)) {
+                                if ($matched) {
+                                    if ($matched->compare($v) > 0) {
+                                        continue;
+                                    }
                                 }
+                                $matched = $v;
                             }
-                            $matched = $v;
                         }
                     }
-    
+
                     if (!$matched) {
                         die("Failed to locate required version!\n");
                     }
