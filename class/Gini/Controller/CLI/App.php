@@ -19,6 +19,18 @@ class App extends \Gini\Controller\CLI
         return str_pad($input, $pad_length + $diff, $pad_string, $pad_type);
     }
 
+    public static function giniBanner()
+    {
+        echo "\e[38;5;036m";
+        echo " ________.__       .__  __________  ___ _____________   \n";
+        echo " /  _____/|__| ____ |__| \______   \/   |   \______   \ \n";
+        echo "/   \  ___|  |/    \|  |  |     ___/    ~    \     ___/ \n";
+        echo "\    \_\  \  |   |  \  |  |    |   \    Y    /    |     \n";
+        echo " \______  /__|___|  /__|  |____|    \___|_  /|____|     \n";
+        echo "        \/        \/                      \/            \n";
+        echo "\n\e[0m";
+    }
+
     /**
      * 初始化模块.
      **/
@@ -71,12 +83,14 @@ class App extends \Gini\Controller\CLI
         if ($info) {
             $info = (array) $info;
             unset($info['path']);
-            echo yaml_emit($info, YAML_UTF8_ENCODING);
+            echo J($info, JSON_PRETTY_PRINT);
         }
+        echo "\n\n";
     }
 
     public function actionModules($args)
     {
+        self::giniBanner();
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
             if (!isset($info->error)) {
                 $rPath = \Gini\File::relativePath($info->path, APP_PATH);
@@ -100,10 +114,12 @@ class App extends \Gini\Controller\CLI
                 $info->error ?: $rPath
             );
         }
+        echo "\n";
     }
 
     public function actionDoctor()
     {
+        self::giniBanner();
         $errors = \Gini\App\Doctor::diagnose();
         if (!count($errors)) {
             echo "\e[32mYou are ready now! Let's roll!\e[0m\n\n";
@@ -114,6 +130,7 @@ class App extends \Gini\Controller\CLI
 
     public function actionCache($args)
     {
+        self::giniBanner();
         $opt = \Gini\Util::getOpt($args, 'he:', ['help', 'env:']);
         if (isset($opt['h']) || isset($opt['help'])) {
             echo "Usage: gini cache [-h|--help] [-e|--env=ENV] [clean]\n";
@@ -252,6 +269,7 @@ class App extends \Gini\Controller\CLI
     {
         (count($argv) > 0 || APP_ID != 'gini') or die("Usage: gini install <module> <version>\n\n");
 
+        self::giniBanner();
         $controller = \Gini\IoC::construct('\Gini\Controller\CLI\Index');
         $controller->actionInstall($argv);
     }
@@ -263,8 +281,9 @@ class App extends \Gini\Controller\CLI
      */
     public function actionSh($argv)
     {
+        self::giniBanner();
         $command = implode(' ', $argv);
-        $proc = proc_open($command ?: '/bin/sh -l', [STDIN, STDOUT, STDERR], $pipes);
+        $proc = proc_open($command ?: '/bin/bash -l', [STDIN, STDOUT, STDERR], $pipes);
         if (is_resource($proc)) {
             proc_close($proc);
         }
