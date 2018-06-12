@@ -841,6 +841,23 @@ abstract class ORM
             }
         }
     }
+    
+    /**
+     * 反序列化后会恢复对象的默认值
+     * 需要在此再次unset掉
+     */
+    public function __wakeup()
+    {
+        $structure = $this->structure();
+        $keys = array_unique(array_merge(array_keys($this->_objects), array_keys($this->_oinfo)));
+        // 获取_objects _oinfo中的所有key 筛选应该unset的属性
+        
+        foreach ($keys as $key) {
+            if (array_key_exists('object', $structure[$key])) {
+                unset($this->{$key});
+            }
+        }
+    }
 
     /**
      * Return localized string by property name.
