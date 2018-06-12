@@ -15,7 +15,7 @@ class HTML implements \Gini\CGI\Response
 
     public function output()
     {
-        $this->_code==200 or http_response_code($this->_code);
+        http_response_code($this->_code);
         header('Content-Type: text/html; charset:utf-8');
         file_put_contents('php://output', (string) $this->_content);
     }
