@@ -69,7 +69,7 @@ class Database
     public static function shutdown($name = null)
     {
         $name = $name ?: 'default';
-        if (!isset(static::$DB[$name])) {
+        if (isset(static::$DB[$name])) {
             unset(static::$DB[$name]);
         }
     }
