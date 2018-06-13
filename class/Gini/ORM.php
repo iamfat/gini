@@ -849,7 +849,7 @@ abstract class ORM
     public function __wakeup()
     {
         $structure = $this->structure();
-        $keys = array_unique(array_merge(array_keys($this->_objects), array_keys($this->_oinfo)));
+        $keys = array_keys($this->_oinfo);
         // 获取_objects _oinfo中的所有key 筛选应该unset的属性
         
         foreach ($keys as $key) {
