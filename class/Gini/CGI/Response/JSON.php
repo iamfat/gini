@@ -10,7 +10,7 @@ class JSON implements \Gini\CGI\Response
     public function __construct($content, $code=200)
     {
         $this->_content = $content;
-        $this->_code = $code;
+        $this->_code = $code ? : 200;
     }
 
     public function output()
