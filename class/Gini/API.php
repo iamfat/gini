@@ -49,7 +49,8 @@ class API
                     $class = '\Gini\Controller\API';
                 }
 
-                if (class_exists($class) && $method[0] != '_') {
+                $reflection = new ReflectionClass($class);
+                if (class_exists($class) && $method[0] != '_' && !$reflection->isAbstract()) {
                     $method = 'action'.$method;
                     $o = \Gini\IoC::construct($class);
                     $o->app = \Gini\Core::app();
