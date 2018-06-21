@@ -18,7 +18,7 @@ namespace Gini;
 
 class API
 {
-    public static function dispatch(array $data)
+    public static function dispatch(array $data, $env)
     {
         try {
             $id = $data['id'] ?: null;
@@ -40,20 +40,21 @@ class API
                 // might not be necessary, since __invoke is the magic method since PHP 5.3
                 $o = \Gini\IoC::construct($class);
                 $o->app = \Gini\Core::app();
+                $o->env = $env;
                 $callback = [$o, '__invoke'];
             } else {
                 $method = array_pop($path_arr);
                 if (count($path_arr) > 0) {
                     $class = '\Gini\Controller\API\\'.implode('\\', $path_arr);
                 } else {
-                    $class = '\Gini\Controller\API';
+                    $class = '\Gini\Controller\API\Index';
                 }
 
-                $reflection = new \ReflectionClass($class);
-                if (class_exists($class) && $method[0] != '_' && !$reflection->isAbstract()) {
+                if (class_exists($class) && $method[0] != '_') {
                     $method = 'action'.$method;
                     $o = \Gini\IoC::construct($class);
                     $o->app = \Gini\Core::app();
+                    $o->env = $env;
                     if (method_exists($o, $method)) {
                         $callback = [$o, $method];
                     } elseif (function_exists($class.'\\'.$method)) {
