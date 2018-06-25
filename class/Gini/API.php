@@ -18,10 +18,11 @@ namespace Gini;
 
 class API
 {
-    public static function dispatch(array $data, $env)
+    public static function dispatch(array $data, $env = null)
     {
         try {
             $id = $data['id'] ?: null;
+            $env = $env ?: \Gini\CGI::defaultEnv();
 
             if (!isset($data['method'])
                 || !isset($data['params']) || !isset($data['jsonrpc'])
