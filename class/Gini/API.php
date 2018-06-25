@@ -18,7 +18,7 @@ namespace Gini;
 
 class API
 {
-    public static function dispatch(array $data, $env = null)
+    public static function dispatch(array $data, $env = [])
     {
         try {
             $id = $data['id'] ?: null;
