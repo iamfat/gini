@@ -15,7 +15,7 @@ class JSON implements \Gini\CGI\Response
 
     public function output()
     {
-        $this->_code==200 or http_response_code($this->_code);
+        http_response_code($this->_code);
         header('Content-Type: application/json; charset=utf-8');
         if ($this->_content !== null) {
             file_put_contents(

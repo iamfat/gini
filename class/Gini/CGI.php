@@ -137,7 +137,7 @@ class CGI
         } elseif (count($rps) > 0) {
             // 如果是有字符串键值的, 尝试通过反射对应变量
             // 可以把form数据合并进去
-            $params = array_merge((array)$params, (array)$form);
+            $params = array_merge((array)$form, (array)$params);
             // 修正变量名以配合驼峰式命名
             // user_id, user-id, userId
             $newParams = [];
