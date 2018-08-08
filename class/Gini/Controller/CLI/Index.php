@@ -245,7 +245,7 @@ class Index extends \Gini\Controller\CLI
             self::_loadGiniComposer();
         }
 
-        $this->_runWithAuthorization(function ($client, $headers) {
+        $this->_runWithAuthorization(function ($client, $headers) use ($argv) {
             $installedModules = [];
             $installModule = function ($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
                 if (isset($installedModules[$module])) {
