@@ -354,7 +354,14 @@ abstract class ORM
                     case 'string':
                         if ($pv == '*') {
                             $field['type'] = 'text';
-                        } else {
+                        }
+                        elseif ($pv == '**') {
+                            $field['type'] = 'mediumtext';
+                        }
+                        elseif ($pv == '***') {
+                            $field['type'] = 'longtext';
+                        }
+                        else {
                             $field['type'] = 'varchar('.($pv ?: 255).')';
                         }
                         break;
@@ -1020,3 +1027,4 @@ if (is_subclass_of($app, '\Gini\Module\Prototype')) {
         return \Gini\IoC::construct($class_name, $criteria);
     });
 }
+
