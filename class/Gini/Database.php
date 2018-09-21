@@ -422,4 +422,13 @@ class Database
     {
         return $this->_driver->diagnose();
     }
+
+    // allow transparent calling
+    public function __call($method, $params)
+    {
+        if (!$this->_driver) {
+            throw new \BadMethodCallException('Method ' . $method . ' is not callable');
+        }
+        return call_user_func_array([$this->_driver, $method], $params);
+    }
 } // END class

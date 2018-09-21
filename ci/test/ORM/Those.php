@@ -185,6 +185,14 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
 
     }
 
+    public function testWithOne2OneRelationship() {
+        $user = a('user');
+        \Gini\Those::reset();
+        $those = those('users')->whose('father.name')->is('A');
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id" WHERE "t1"."name"=\'A\'', 'SQL', $those);
+    }
+
     public function testWithMany() 
     {
         $user = a('user');

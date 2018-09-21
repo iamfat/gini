@@ -354,6 +354,10 @@ abstract class ORM
                     case 'string':
                         if ($pv == '*') {
                             $field['type'] = 'text';
+                        } elseif ($pv == '**') {
+                            $field['type'] = 'mediumtext';
+                        } elseif ($pv == '***') {
+                            $field['type'] = 'longtext';
                         } else {
                             $field['type'] = 'varchar('.($pv ?: 255).')';
                         }
