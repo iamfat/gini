@@ -109,9 +109,7 @@ class Config
                     $content = file_get_contents($file);
                     $replaceCallback = function ($matches) {
                         $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
-                        $envValue = getenv($matches[1]);
-                        if ($envValue == '@DISABLE') return '';
-                        return getenv($envValue) ?: $defaultValue;
+                        return getenv($matches[1]) ?: $defaultValue;
                     };
                     $content = preg_replace_callback('/\{\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}\}/', $replaceCallback, $content);
                     $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/', $replaceCallback, $content);
