@@ -364,8 +364,14 @@ abstract class ORM
                         break;
                     case 'array':
                     case 'object_list':
-                        $field['type'] = 'text';
-                        $field['default'] = $field['default'] ?: '{}';
+                        if ($pv == '**') {
+                            $field['type'] = 'mediumtext';
+                        } elseif ($pv == '***') {
+                            $field['type'] = 'longtext';
+                        } else {
+                            $field['type'] = 'text';
+                            $field['default'] = $field['default'] ?: '{}';
+                        }
                         break;
                     case 'null':
                         $field['null'] = true;
