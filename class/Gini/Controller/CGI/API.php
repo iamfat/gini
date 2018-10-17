@@ -15,6 +15,9 @@ final class API extends \Gini\Controller\CGI
         if (!isset($post['jsonrpc'])) {
             $post = @json_decode(\Gini\CGI::content(), true);
         }
+        if (!isset($post['jsonrpc'])) {
+            $post = @json_decode($this->env['raw'], true);
+        }
 
         if ($post === null) {
             $response = [
