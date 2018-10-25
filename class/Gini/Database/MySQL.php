@@ -152,8 +152,8 @@ class MySQL extends \PDO implements Driver
         }
 
         // ------ CHECK INDEXES
-        $indexes = (array) $schema['indexes'];error_log(print_r($indexes,1));
-        $curr_indexes = (array) $curr_schema['indexes'];error_log(print_r($curr_indexes, 1));
+        $indexes = (array) $schema['indexes'];
+        $curr_indexes = (array) $curr_schema['indexes'];
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
         foreach ($missing_indexes as $key => $val) {
@@ -208,7 +208,7 @@ class MySQL extends \PDO implements Driver
                 'ALTER TABLE %s %s',
                 $this->quoteIdent($table),
                 implode(', ', $sqls)
-            );error_log($SQL);
+            );
             if (false === $this->query($SQL)) {
                 throw new \Gini\Database\Exception($this->errorInfo()[2]."\tSQL: $SQL");
             }
