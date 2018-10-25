@@ -340,6 +340,8 @@ class Database
         return $this->_driver->createTable($table);
     }
 
+    const ADJFLAG_REMOVE_NONEXISTENT = 0x01;
+
     /**
      * Adjust table structure according schema.
      *
@@ -348,9 +350,9 @@ class Database
      *
      * @return bool
      **/
-    public function adjustTable($table, $schema)
+    public function adjustTable($table, $schema, $flag = 0)
     {
-        return $this->_driver->adjustTable($table, $schema);
+        return $this->_driver->adjustTable($table, $schema, $flag);
     }
 
     /**

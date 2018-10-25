@@ -60,7 +60,7 @@ class SQLite extends \PDO implements Driver
         return $type;
     }
 
-    public function adjustTable($table, $schema)
+    public function adjustTable($table, $schema, $flag = 0)
     {
         // $remove_nonexistent = \Gini\Config::get('database.remove_nonexistent') ?: false;
         $this->_update_table_status($table);
