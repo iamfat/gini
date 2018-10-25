@@ -106,6 +106,10 @@ class MySQL extends \PDO implements Driver
         //检查所有Fields
         $curr_fields = (array) $curr_schema['fields'];
         $missing_fields = array_diff_key($fields, $curr_fields);
+        $drop_fields =  array_diff_key($curr_fields, $fields);
+        foreach ($drop_fields as $key => $field) {
+            $alter_sqls[0][] = 'DROP '.$this->quoteIdent($key);
+        }
         foreach ($missing_fields as $key => $field) {
             $alter_sqls[1][] = 'ADD '.$this->_fieldSQL($key, $field);
         }
@@ -148,8 +152,8 @@ class MySQL extends \PDO implements Driver
         }
 
         // ------ CHECK INDEXES
-        $indexes = (array) $schema['indexes'];
-        $curr_indexes = (array) $curr_schema['indexes'];
+        $indexes = (array) $schema['indexes'];error_log(print_r($indexes,1));
+        $curr_indexes = (array) $curr_schema['indexes'];error_log(print_r($curr_indexes, 1));
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
         foreach ($missing_indexes as $key => $val) {
@@ -162,7 +166,9 @@ class MySQL extends \PDO implements Driver
                 ksort($val);
                 ksort($curr_val);
                 if ($val != $curr_val) {
-                    $alter_sqls[1][] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
+                    if (!in_array($curr_val['fields'][0], array_keys($drop_fields))) {
+                        $alter_sqls[1][] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
+                    }
                     $alter_sqls[1][] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
                 }
             } else {
@@ -202,7 +208,7 @@ class MySQL extends \PDO implements Driver
                 'ALTER TABLE %s %s',
                 $this->quoteIdent($table),
                 implode(', ', $sqls)
-            );
+            );error_log($SQL);
             if (false === $this->query($SQL)) {
                 throw new \Gini\Database\Exception($this->errorInfo()[2]."\tSQL: $SQL");
             }
