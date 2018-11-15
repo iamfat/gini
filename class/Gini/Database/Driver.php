@@ -16,7 +16,7 @@ interface Driver
     public function tableSchema($name, $refresh);
 
     public function createTable($table);
-    public function adjustTable($table, $schema);
+    public function adjustTable($table, $schema, $flag = 0);
     public function dropTable($table);
 
     public function emptyDatabase();

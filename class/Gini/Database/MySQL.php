@@ -90,7 +90,7 @@ class MySQL extends \PDO implements Driver
         return $type;
     }
 
-    public function adjustTable($table, $schema)
+    public function adjustTable($table, $schema, $flag = 0)
     {
         // $remove_nonexistent = \Gini\Config::get('database.remove_nonexistent') ?: false;
 
@@ -127,12 +127,9 @@ class MySQL extends \PDO implements Driver
                     // echo "Current Fields:\n".yaml_emit($curr_field)."\n";
                     // echo "Expected Fields:\n".yaml_emit($field)."\n";
                 }
+            } elseif ($flag & \Gini\Database::ADJFLAG_REMOVE_NONEXISTENT) {
+                $field_sql[0][] = sprintf('DROP %s', $this->quoteIdent($key));
             }
-            /*
-            elseif ($remove_nonexistent) {
-                $field_sql[0][] = sprintf('DROP %s', $this->quoteIdent($key) );
-            }
-            */
             /*
             elseif ($key[0] != '@') {
                 $nkey = '@'.$key;
