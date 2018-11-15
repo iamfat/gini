@@ -108,6 +108,7 @@ class MySQL extends \PDO implements Driver
         $missing_fields = array_diff_key($fields, $curr_fields);
         $drop_fields =  array_diff_key($curr_fields, $fields);
         foreach ($drop_fields as $key => $field) {
+            if ($key === '_FOO') continue;
             $alter_sqls[0][] = 'DROP '.$this->quoteIdent($key);
         }
         foreach ($missing_fields as $key => $field) {
