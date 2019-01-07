@@ -372,7 +372,7 @@ namespace Gini {
                 } else {
                     if ($pivotName) {
                         $fieldName = $manyStructure[$field]['object'];
-                        $tableName = $o->tableName();
+                        $tableName = a($fieldName)->tableName();
                         if (!isset($this->_join[$fieldKey])) {
                             $this->_joinedTables[$fieldKey] = $fieldTable = 't'.$this->uniqid();
                             $pivotKey = "$fieldKey@pivot";
@@ -383,7 +383,7 @@ namespace Gini {
                         }
                     } else {
                         $fieldName = $structure[$field]['object'];
-                        $tableName = $o->tableName();
+                        $tableName = a($fieldName)->tableName();
                         if (!isset($this->_join[$fieldKey])) {
                             $this->_joinedTables[$fieldKey] = $fieldTable = 't'.$this->uniqid();
                             $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($tableName)

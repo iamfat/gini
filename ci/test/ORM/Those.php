@@ -221,4 +221,113 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         $those->makeSQL();
         $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "_user_friend" AS "t1" ON "t1"."user_id"="t0"."id" INNER JOIN "user" AS "t2" ON "t1"."friend_id"="t2"."id" INNER JOIN "_user_friend" AS "t3" ON "t3"."user_id"="t2"."id" WHERE "t0"."gender"=1 AND "t3"."friend_id"=0', 'SQL', $those);
     }
+
+    public function testLeftJoin(){
+
+        $db = self::getMockBuilder('\Gini\Database')
+            ->setMockClassName('MOBJ_'.uniqid())
+            ->setMethods(['query', 'quote', 'quoteIdent'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $db->expects($this->any())
+            ->method('quoteIdent')
+            ->will($this->returnCallback(function ($s) use ($db) {
+                if (is_array($s)) {
+                    foreach ($s as &$i) {
+                        $i = $db->quoteIdent($i);
+                    }
+
+                    return implode(',', $s);
+                }
+
+                return '"'.addslashes($s).'"';
+            }));
+
+        $db->expects($this->any())
+            ->method('quote')
+            ->will($this->returnCallback(function ($s) use ($db) {
+                if (is_array($s)) {
+                    foreach ($s as &$i) {
+                        $i = $db->quote($i);
+                    }
+
+                    return implode(',', $s);
+                } elseif (is_null($s)) {
+                    return 'NULL';
+                } elseif (is_bool($s)) {
+                    return $s ? 1 : 0;
+                } elseif (is_int($s) || is_float($s)) {
+                    return $s;
+                }
+
+                return '\''.addslashes($s).'\'';
+            }));
+
+        \Gini\IoC::bind('\Gini\ORM\Company', function () use ($db) {
+            $o = $this->getMockBuilder('\Gini\ORM\Object')
+                ->setMockClassName('MOBJ_'.uniqid())
+                ->setMethods(['db', 'properties', 'name', 'tableName'])
+                ->disableOriginalConstructor()
+                ->getMock();
+
+            $o->expects($this->any())
+                ->method('db')
+                ->will($this->returnValue($db));
+
+            $o->expects($this->any())
+                ->method('name')
+                ->will($this->returnValue('company'));
+
+            $o->expects($this->any())
+                ->method('tableName')
+                ->will($this->returnValue('company'));
+
+            $o->expects($this->any())
+                ->method('properties')
+                ->will($this->returnValue([
+                    'id' => 'bigint,pimary,serial',
+                    '_extra' => 'array',
+                    'name' => 'string:50',
+                    'type' => 'object:company/type'
+                ]));
+
+            return $o;
+        });
+
+        \Gini\IoC::bind('\Gini\ORM\Company\Type', function () use ($db) {
+            $o = $this->getMockBuilder('\Gini\ORM\Object')
+                ->setMockClassName('MOBJ_'.uniqid())
+                ->setMethods(['db', 'properties', 'name', 'tableName'])
+                ->disableOriginalConstructor()
+                ->getMock();
+
+            $o->expects($this->any())
+                ->method('db')
+                ->will($this->returnValue($db));
+
+            $o->expects($this->any())
+                ->method('name')
+                ->will($this->returnValue('company/type'));
+
+            $o->expects($this->any())
+                ->method('tableName')
+                ->will($this->returnValue('company_type'));
+
+            $o->expects($this->any())
+                ->method('properties')
+                ->will($this->returnValue([
+                    'id' => 'bigint,pimary,serial',
+                    '_extra' => 'array',
+                    'name' => 'string:50'
+                ]));
+
+            return $o;
+        });
+
+        \Gini\Those::reset();
+        $those = those('company')->whose('type.name')->is('test');
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."type_id" FROM "company" AS "t0" INNER JOIN "company_type" AS "t1" ON "t0"."type_id"="t1"."id" WHERE "t1"."name"=\'test\'','SQL',$those);
+    }
 }
