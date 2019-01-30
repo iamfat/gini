@@ -340,6 +340,8 @@ class Database
         return $this->_driver->createTable($table);
     }
 
+    const ADJFLAG_REMOVE_NONEXISTENT = 0x01;
+
     /**
      * Adjust table structure according schema.
      *
@@ -348,9 +350,9 @@ class Database
      *
      * @return bool
      **/
-    public function adjustTable($table, $schema)
+    public function adjustTable($table, $schema, $flag = 0)
     {
-        return $this->_driver->adjustTable($table, $schema);
+        return $this->_driver->adjustTable($table, $schema, $flag);
     }
 
     /**
@@ -421,5 +423,14 @@ class Database
     public function diagnose()
     {
         return $this->_driver->diagnose();
+    }
+
+    // allow transparent calling
+    public function __call($method, $params)
+    {
+        if (!$this->_driver) {
+            throw new \BadMethodCallException('Method ' . $method . ' is not callable');
+        }
+        return call_user_func_array([$this->_driver, $method], $params);
     }
 } // END class
