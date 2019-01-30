@@ -56,7 +56,7 @@ class Web extends \Gini\Controller\CLI
                                 'lessc %s %s %s',
                                 escapeshellarg($src_path),
                                 escapeshellarg($dst_path),
-                                '--clean-css="--s1 --advanced --compatibility=ie8"'
+                                '--clean-css="--s1 --advanced --compatibility=ie8" --strict-math=on'
                                     );
                             exec($command);
                         }
