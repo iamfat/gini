@@ -136,6 +136,7 @@ class RPC
             CURLOPT_COOKIEJAR => $cookie_file,
             CURLOPT_COOKIEFILE => $cookie_file,
             CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_URL => $this->_url,
             CURLOPT_AUTOREFERER => false,
             CURLOPT_FOLLOWLOCATION => false,
