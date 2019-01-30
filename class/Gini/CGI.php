@@ -128,7 +128,7 @@ class CGI
             for ($idx = 0; $idx < $max; $idx ++) {
                 $param = $params[$idx];
                 $rp = $rps[$idx];
-                $args[] = $param ?: (
+                $args[] = isset($param) ? $param : (
                         $rp ? (
                             $rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null
                         ) : null

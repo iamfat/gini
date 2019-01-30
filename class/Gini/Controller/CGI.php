@@ -103,7 +103,7 @@ abstract class CGI
         return new Response\HTML(V('error/http', [
             'code' => $e->getCode(),
             'message' => $e->getMessage()
-        ]), $code);
+        ]), $e->getCode());
     }
 
     /**
