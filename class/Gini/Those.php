@@ -291,6 +291,10 @@ namespace Gini {
                     $this->_join = array_merge($this->_join, $v->_join);
                 }
 
+                if ($v->_where) {
+                    $this->_join = array_merge($this->_join, [ 'AND' ], $v->_where);
+                }
+
                 $op = 'AND';
                 if (is_array($this->_where)) {
                     while (in_array(end($this->_where), ['AND', 'OR'])) {
@@ -301,11 +305,7 @@ namespace Gini {
                 if ($this->_where) {
                     $this->_where[] = 'AND';
                 }
-                $this->_where[] = $field_name.' IS NOT NULL';
-
-                if ($v->_where) {
-                    $this->_where = array_merge($this->_where, [$op], $v->_where);
-                }
+                $this->_where[] = $db->ident($v->_table, 'id').' IS NULL';
             } else {
                 foreach ($values as $v) {
                     $qv[] = $db->quote($v);
