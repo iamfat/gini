@@ -193,7 +193,7 @@ namespace Gini {
             $module_info = [];
             foreach (self::$MODULE_INFO as $b_id => $b_info) {
                 if (!$inserted &&
-                    (isset($b_info->dependencies[$info->id]) || $b_id == APP_ID)
+                    (isset($b_info->dependencies[$info->id]) || (defined('APP_ID') && $b_id == APP_ID))
                 ) {
                     $module_info[$info->id] = $info;
                     $inserted = true;
