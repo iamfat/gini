@@ -222,7 +222,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "_user_friend" AS "t1" ON "t1"."user_id"="t0"."id" INNER JOIN "user" AS "t2" ON "t1"."friend_id"="t2"."id" INNER JOIN "_user_friend" AS "t3" ON "t3"."user_id"="t2"."id" WHERE "t0"."gender"=1 AND "t3"."friend_id"=0', 'SQL', $those);
     }
 
-    public function testLeftJoin(){
+    public function testFieldOfField(){
 
         $db = self::getMockBuilder('\Gini\Database')
             ->setMockClassName('MOBJ_'.uniqid())
