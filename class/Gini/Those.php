@@ -372,19 +372,21 @@ namespace Gini {
                 } else {
                     if ($pivotName) {
                         $fieldName = $manyStructure[$field]['object'];
+                        $tableName = a($fieldName)->tableName();
                         if (!isset($this->_join[$fieldKey])) {
                             $this->_joinedTables[$fieldKey] = $fieldTable = 't'.$this->uniqid();
                             $pivotKey = "$fieldKey@pivot";
                             $pivotTable = $this->_joinedTables[$pivotKey];
-                            $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($fieldName)
+                            $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($tableName)
                                 .' AS '.$db->quoteIdent($fieldTable)
                                 .' ON '.$db->ident($pivotTable, $field.'_id').'='.$db->ident($fieldTable, 'id');
                         }
                     } else {
                         $fieldName = $structure[$field]['object'];
+                        $tableName = a($fieldName)->tableName();
                         if (!isset($this->_join[$fieldKey])) {
                             $this->_joinedTables[$fieldKey] = $fieldTable = 't'.$this->uniqid();
-                            $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($fieldName)
+                            $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($tableName)
                                 .' AS '.$db->quoteIdent($fieldTable)
                                 .' ON '.$db->ident($table, $field.'_id').'='.$db->ident($fieldTable, 'id');
                         }
