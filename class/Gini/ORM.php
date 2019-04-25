@@ -104,7 +104,7 @@ abstract class ORM
         foreach (class_parents($this) as $class) {
             $name = strtolower(implode('', array_slice(explode('\\', $class), -1)));
             $inheritance[$name] = $class;
-            if ($name == 'object') {
+            if ($name == 'base' || $name == 'object') {
                 break;
             }
         }
@@ -251,7 +251,7 @@ abstract class ORM
         foreach ($crit as $k => $v) {
             if (is_scalar($v) || is_null($v)) {
                 $ncrit[$k] = $v;
-            } elseif ($v instanceof \Gini\ORM\Object) {
+            } elseif ($v instanceof \Gini\ORM\Base) {
                 if (!isset($structure[$k]['object'])) {
                     $ncrit[$k.'_name'] = $v->name();
                 }
@@ -570,7 +570,7 @@ abstract class ORM
                 }
                 $db_data[$k.'_id'] = $o->id ?: null;
             } elseif (array_key_exists('array', $v)) {
-                $db_data[$k] = count($this->$k)>0 ? J($this->$k) : '{}';
+                $db_data[$k] = (is_object($this->$k) || is_array($this->$k)) ? J($this->$k) : '{}';
             } elseif (array_key_exists('object_list', $v)) {
                 $db_data[$k] = isset($this->$k) ? J($this->$k->keys()) : '[]';
             } else {
@@ -737,7 +737,7 @@ abstract class ORM
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
                 $o = $data[$k];
-                if (isset($o) && $o instanceof \Gini\ORM\Object && (!isset($oname) || $o->name() == $oname)) {
+                if (isset($o) && $o instanceof \Gini\ORM\Base && (!isset($oname) || $o->name() == $oname)) {
                     $this->_objects[$k] = $o;
                     $this->_oinfo[$k] = (object) ['name' => $o->name(), 'id' => $o->id];
                 } else {
@@ -884,7 +884,7 @@ abstract class ORM
     /**
      * 根据ORM定义调整数据库表结构
      *
-     * @return \Gini\ORM\Object
+     * @return \Gini\ORM\Base
      */
     public function adjustTable()
     {

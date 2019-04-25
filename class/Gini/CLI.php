@@ -184,8 +184,9 @@ class CLI
         $line = $e->getLine();
         fprintf(STDERR, "\e[31m[E] \e[1m%s (%s:%d)\e[0m\n", $message, $file, $line);
         error_log(sprintf('[E] %s (%s:%d)', $message, $file, $line));
-        $trace = array_slice($e->getTrace(), 1, 3);
+        $trace = array_slice($e->getTrace(), 1);
         foreach ($trace as $n => $t) {
+            if ($t['class'] == 'Gini\Core' && $t['function'] == 'start') break;
             $file = $t['file'];
             foreach (\Gini\Core::$MODULE_INFO as $info) {
                 if (0 == strncmp($file, $info->path, strlen($info->path))) {
@@ -194,10 +195,13 @@ class CLI
                 }
             }
             error_log(sprintf(
-                '%3d. %s%s() in (%s:%d)',
+                '%3d. %s%s(%s) in (%s:%d)',
                 $n + 1,
                 $t['class'] ? $t['class'].'::' : '',
                 $t['function'],
+                implode(", ", array_map(function ($x) {
+                    return json_encode($x, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
+                }, $t['args'])),
                 $file,
                 $t['line']
             ));
