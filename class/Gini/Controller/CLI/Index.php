@@ -233,7 +233,6 @@ class Index extends \Gini\Controller\CLI
     public function actionInstall($argv)
     {
         (count($argv) > 0 || APP_ID != 'gini') or die("Usage: gini index install <module> <version>\n\n");
-
         if (!class_exists('\Sabre\DAV\Client')) {
             self::_loadGiniComposer();
         }
@@ -286,10 +285,21 @@ class Index extends \Gini\Controller\CLI
                         $version = $matched->fullVersion;
                         $info = (object) $indexInfo[$version];
 
+                        $cacheDir = $_SERVER['HOME'] . '/.gini-modules';
+
                         $tarPath = "{$module}/{$version}.tgz";
-                        echo "Downloading {$module} from {$tarPath}...\n";
-                        $response = $client->request('GET', $tarPath, null, $headers);
-                        $this->_responseMustSucceed($response);
+                        $cacheTarPath = "$cacheDir/$tarPath";
+                        if (file_exists($cacheTarPath)) {
+                            echo "Reading {$tarPath} in local cache...\n";
+                            $moduleContent = file_get_contents($cacheTarPath);
+                        } else {
+                            echo "Downloading {$module} from {$tarPath}...\n";
+                            $response = $client->request('GET', $tarPath, null, $headers);
+                            $this->_responseMustSucceed($response);
+                            $moduleContent = $response['body'];
+                            \Gini\File::ensureDir(dirname($cacheTarPath));
+                            file_put_contents($cacheTarPath, $moduleContent);
+                        }
 
                         if ($isApp) {
                             $modulePath = $targetDir;
@@ -304,7 +314,7 @@ class Index extends \Gini\Controller\CLI
                         echo "Extracting {$module}...\n";
                         $ph = popen('tar -zx -C ' . escapeshellcmd($modulePath), 'w');
                         if (is_resource($ph)) {
-                            fwrite($ph, $response['body']);
+                            fwrite($ph, $moduleContent);
                             pclose($ph);
                         }
                     } else {
