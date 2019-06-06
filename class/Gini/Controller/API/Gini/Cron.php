@@ -25,7 +25,10 @@ class Cron extends \Gini\Controller\API
         }
 
         if ($nohup) {
-            exec('GINI_MODULE_BASE_PATH=/data/gini-modules /usr/local/share/gini/bin/gini @' . APP_ID . ' ' . $job['command'] . ' >/dev/null 2>&1 &');
+            $basePath = $_SERVER['GINI_MODULE_BASE_PATH'] ? $_SERVER['GINI_MODULE_BASE_PATH'] : SYS_PATH . '/..';
+            $appPath = APP_PATH;
+            $sysPath = SYS_PATH . '/bin/gini';
+            exec("GINI_MODULE_BASE_PATH={$basePath} GINI_APP_PATH={$appPath} {$sysPath} {$job['command']} >/dev/null 2>&1 &");
             return true;
         }
 
@@ -38,4 +41,3 @@ class Cron extends \Gini\Controller\API
         return $output;
     }
 }
-
