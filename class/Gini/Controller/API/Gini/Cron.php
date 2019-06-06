@@ -19,13 +19,19 @@ class Cron extends \Gini\Controller\API
 
     public function actionRun($name, $nohup=false)
     {
-        if ($nohup) {
-            fastcgi_finish_request();
-        }
         $job = \Gini\Config::get('cron')[$name];
         if (!$job) {
             return false;
         }
+
+        if ($nohup) {
+            $basePath = $_SERVER['GINI_MODULE_BASE_PATH'] ? $_SERVER['GINI_MODULE_BASE_PATH'] : SYS_PATH . '/..';
+            $appPath = APP_PATH;
+            $sysPath = SYS_PATH . '/bin/gini';
+            exec("GINI_MODULE_BASE_PATH={$basePath} GINI_APP_PATH={$appPath} {$sysPath} {$job['command']} >/dev/null 2>&1 &");
+            return true;
+        }
+
         $command_args = \Gini\Util::parseArgs($job['command']);
         ob_start();
         \Gini\CLI::dispatch($command_args);
