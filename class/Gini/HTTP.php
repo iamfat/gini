@@ -167,12 +167,11 @@ class HTTP
         $data = curl_exec($ch);
 
         $errno = curl_errno($ch);
-        if ($errno || !$data) {
+        if ($errno) {
             $err = curl_error($ch);
             Logger::of('core')->error("CURL ERROR($errno $err): $url ");
             curl_close($ch);
-
-            return;
+            return new HTTP\Response(null, 500);
         }
 
         $info = curl_getinfo($ch);
