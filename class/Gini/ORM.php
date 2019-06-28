@@ -466,6 +466,7 @@ abstract class ORM
                 $vvv['ref_table'] = a($structure[$k]['object'])->tableName();
                 $vvv['ref_column'] = 'id';
             } elseif ($vv['ref']) {
+                $vvv['column'] = $k;
                 $ref = explode('.', $vv['ref'], 2);
                 $vvv['ref_table'] = a($ref[0])->tableName();
                 $vvv['ref_column'] = $ref[1];
