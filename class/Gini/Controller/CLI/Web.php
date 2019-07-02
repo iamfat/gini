@@ -99,7 +99,7 @@ class Web extends \Gini\Controller\CLI
                         } else {
                             // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
                             $command = sprintf(
-                                'uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s',
+                                'uglifyjs %s -d TIMESTAMP=%s -o %s',
                                 escapeshellarg($src_path),
                                 time(),
                                 escapeshellarg($dst_path)
