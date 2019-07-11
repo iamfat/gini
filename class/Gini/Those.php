@@ -522,16 +522,17 @@ namespace Gini {
         {
             $this->resetFetch();
 
-            $db = $this->db;
+            $this->_field = $field;
+            $fieldName = $this->_fieldName();
             $mode = strtolower($mode);
             switch ($mode) {
                 case 'desc':
                 case 'd':
-                $this->_order_by[] = $db->ident($this->_table, $field).' DESC';
+                $this->_order_by[] = $fieldName.' DESC';
                 break;
                 case 'asc':
                 case 'a':
-                $this->_order_by[] = $db->ident($this->_table, $field).' ASC';
+                $this->_order_by[] = $fieldName.' ASC';
                 break;
             }
 
