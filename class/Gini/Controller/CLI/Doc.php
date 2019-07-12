@@ -73,12 +73,14 @@ class Doc extends \Gini\Controller\CLI
     {
         $opt = \Gini\Util::getOpt($args, 'f:p', ['format:', 'pretty']);
         $api = \Gini\Document\OpenAPI::scan();
-        switch ($opt['format']) {
+        $format = $opt['format'] ?: $opt['f'];
+        $pretty = isset($opt['pretty']) || isset($opt['p']);
+        switch ($format) {
             case 'yaml':
                 echo yaml_emit($api, YAML_UTF8_ENCODING) . "\n";
                 break;
             default:
-                echo json_encode($api, (isset($opt['pretty']) ? JSON_PRETTY_PRINT : 0)
+                echo json_encode($api, ($pretty ? JSON_PRETTY_PRINT : 0)
                     | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
@@ -87,12 +89,14 @@ class Doc extends \Gini\Controller\CLI
     {
         $opt = \Gini\Util::getOpt($args, 'f:p', ['format:', 'pretty']);
         $api = \Gini\Document\OpenRPC::scan();
-        switch ($opt['format']) {
+        $format = $opt['format'] ?: $opt['f'];
+        $pretty = isset($opt['pretty']) || isset($opt['p']);
+        switch ($format) {
             case 'yaml':
                 echo yaml_emit($api, YAML_UTF8_ENCODING) . "\n";
                 break;
             default:
-                echo json_encode($api, (isset($opt['pretty']) ? JSON_PRETTY_PRINT : 0)
+                echo json_encode($api, ($pretty ? JSON_PRETTY_PRINT : 0)
                     | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
     }
