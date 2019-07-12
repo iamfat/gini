@@ -44,7 +44,7 @@ class OpenAPI
             ];
 
             if ($rp->hasType()) {
-                $docParam['schema']['type'] = $rp->getType();
+                $docParam['schema']['type'] = (string) $rp->getType();
             }
             if ($rp->isDefaultValueAvailable()) {
                 $docParam['schema']['default'] = $rp->getDefaultValue();

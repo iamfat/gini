@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\REST\OpenAPI;
+namespace Gini\Document\OpenAPI;
 
 /**
  * @Annotation
@@ -14,6 +14,6 @@ class Response
     /** @var string */
     public $description;
 
-    /** @var \Gini\REST\OpenAPI\MediaType[] */
+    /** @var \Gini\Document\OpenAPI\MediaType[] */
     public $content;
 }

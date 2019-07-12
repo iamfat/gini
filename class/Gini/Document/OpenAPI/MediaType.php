@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\REST\OpenAPI;
+namespace Gini\Document\OpenAPI;
 
 /**
  * @Annotation
@@ -11,10 +11,10 @@ class MediaType
     /** @var string */
     public $type;
 
-    /** @var \Gini\REST\OpenAPI\Schema */
+    /** @var \Gini\Document\OpenAPI\Schema */
     public $schema;
 
-    /** @var \Gini\REST\OpenAPI\Example[] */
+    /** @var \Gini\Document\OpenAPI\Example[] */
     public $examples;
 
     public function toArray()

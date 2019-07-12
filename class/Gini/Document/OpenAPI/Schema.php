@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\REST\OpenAPI;
+namespace Gini\Document\OpenAPI;
 
 /**
  * @Annotation

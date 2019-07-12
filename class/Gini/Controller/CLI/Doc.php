@@ -71,7 +71,29 @@ class Doc extends \Gini\Controller\CLI
 
     public function actionOpenAPI($args)
     {
+        $opt = \Gini\Util::getOpt($args, 'f:p', ['format:', 'pretty']);
         $api = \Gini\Document\OpenAPI::scan();
-        echo json_encode($api, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        switch ($opt['format']) {
+            case 'yaml':
+                echo yaml_emit($api, YAML_UTF8_ENCODING) . "\n";
+                break;
+            default:
+                echo json_encode($api, (isset($opt['pretty']) ? JSON_PRETTY_PRINT : 0)
+                    | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+    }
+
+    public function actionOpenRPC($args)
+    {
+        $opt = \Gini\Util::getOpt($args, 'f:p', ['format:', 'pretty']);
+        $api = \Gini\Document\OpenRPC::scan();
+        switch ($opt['format']) {
+            case 'yaml':
+                echo yaml_emit($api, YAML_UTF8_ENCODING) . "\n";
+                break;
+            default:
+                echo json_encode($api, (isset($opt['pretty']) ? JSON_PRETTY_PRINT : 0)
+                    | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
     }
 }
