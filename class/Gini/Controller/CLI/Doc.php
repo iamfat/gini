@@ -2,6 +2,13 @@
 
 namespace Gini\Controller\CLI;
 
+use \Doctrine\Common\Annotations\AnnotationReader;
+use \Doctrine\Common\Annotations\AnnotationRegistry;
+
+AnnotationRegistry::registerLoader(function($class) {
+    return \Gini\Core::autoload($class);
+});
+
 class Doc extends \Gini\Controller\CLI
 {
     public function actionAPI($args)
@@ -85,7 +92,67 @@ class Doc extends \Gini\Controller\CLI
             'paths' => [],
         ];
 
-        $doc = \Gini\Document::of('Gini\\Controller\\CGI')->filterClasses(function ($rc) {
+        $routerFunc = function ($router) use (&$routerFunc, &$api) {
+            foreach ($router->rules() as $key => $rule) {
+                if ($rule['dest'] instanceof \Gini\CGI\Router) {
+                    $routerFunc($rule['dest']);
+                } else {
+                    $method = strtolower($rule['method']);
+                    $route = '/' . $rule['route'];
+
+                    list($controllerName, $action) = explode('@', $rule['dest'], 2);
+                    if (!$action) {
+                        $action = $method . 'Default';
+                    }
+
+                    $apiUnit = [
+                        'operationId' => $rule['dest'],
+                        'responses' => []
+                    ];
+
+                    try {
+                        $rm = new \ReflectionMethod($controllerName, $action);
+                        $reader = new AnnotationReader();
+                        $anns = $reader->getMethodAnnotations($rm);
+                        foreach ($anns as $ann) {
+                            if ($ann instanceof \Gini\REST\OpenAPI\Response) {
+                                $content = [];
+                                if ($ann->content) foreach ($ann->content as $mediaType) {
+                                    $content += $mediaType->toArray();
+                                }
+                                $apiUnit['responses'][$ann->code] = [
+                                    'description' => $ann->description,
+                                    'content' => $content,
+                                ];
+                            }
+                        }
+                        $rps = $rm->getParameters();
+                        $apiUnit['parameters'] = array_map(function ($rp) use ($rule) {
+                            $docParam = [
+                                'name' => $rp->name,
+                                'in' => in_array($rp->name, $rule['params']) ? 'path' : 'query',
+                                'required' => !$rp->isDefaultValueAvailable(),
+                                'schema' => []
+                            ];
+
+                            if ($rp->hasType()) {
+                                $docParam['schema']['type'] = $rp->getType();
+                            }
+                            if ($rp->isDefaultValueAvailable()) {
+                                $docParam['schema']['default'] = $rp->getDefaultValue();
+                            }
+
+                            return $docParam;
+                        }, $rps);
+                    } catch (\ReflectionException $e) { }
+
+                    $api['paths'][$route][$method] = $apiUnit;
+                }
+            }
+        };
+        $routerFunc(\Gini\CGI::router());
+
+        \Gini\Document::of('Gini\\Controller\\CGI')->filterClasses(function ($rc) {
             return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface() && $rc->isSubClassOf('\\Gini\\Controller\\REST');
         })->filterMethods(function ($rm) {
             return $rm->isPublic() && !$rm->isConstructor()
@@ -102,21 +169,23 @@ class Doc extends \Gini\Controller\CLI
                 $method = strtolower($matches[1]);
                 $pathUnits[] = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $matches[2]));
                 $route = '/' . implode('/', $pathUnits);
+
+                $operationId = $unit->class . '@' . $unit->method;
+
+                // 已经定义了路径的, 不再提供原始Controller入口的接口
+                foreach ($api['paths'] as $au) {
+                    if ($au[$method]['operationId'] === $operationId) {
+                        return;
+                    }
+                }
+
                 $apiUnit = [
                     'operationId' => $unit->class . '@' . $unit->method,
                     'parameters' => [],
-                    'responses' => [
-                        '200' => [
-                            'description' => 'Successful',
-                            'content' => [
-                                'application/json' => []
-                            ]
-                        ]
-                    ]
+                    'responses' => []
                 ];
 
                 if (count($unit->params) > 0) {
-                    $docParams = [];
                     foreach ($unit->params as $param) {
                         $docParam = [
                             'name' => $param['name'],
@@ -137,52 +206,7 @@ class Doc extends \Gini\Controller\CLI
             }
         });
 
-        $routerFunc = function ($router) use (&$routerFunc, &$api) {
-            foreach ($router->rules() as $key => $rule) {
-                if ($rule['dest'] instanceof \Gini\CGI\Router) {
-                    $routerFunc($rule['dest']);
-                } else {
-                    $method = strtolower($rule['method']);
-                    $route = '/'.$rule['route'];
-
-                    list($controllerName, $action) = explode('@', $rule['dest'], 2);
-                    if (!$action) {
-                        $action = $method . 'Default';
-                    }
-
-                    $apiUnit = [
-                        'operationId' => $rule['dest']
-                    ];
-     
-                    try {
-                        $rm = new \ReflectionMethod($controllerName, $action);
-                        $rps = $rm->getParameters();
-                        $apiUnit['parameters'] = array_map(function ($rp) {
-                            $docParam = [
-                                'name' => $rp->name,
-                                'in' => 'query',
-                                'required' => !$rp->isDefaultValueAvailable(),
-                                'schema' => []
-                            ];
-
-                            if ($rp->hasType()) {
-                                $docParam['schema']['type'] = $rp->getType();
-                            } 
-                            if ($rp->isDefaultValueAvailable()) {
-                                $docParam['schema']['default'] = $rp->getDefaultValue();
-                            }
-
-                            return $docParam;
-                        }, $rps);
-                    } catch (\ReflectionException $e) { }
-
-                    $api['paths'][$route][$method] = $apiUnit;
-                }
-            }
-        };
-        $routerFunc(\Gini\CGI::router());
-
         ksort($api['paths']);
-        echo json_encode($api, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        echo json_encode($api, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 }
