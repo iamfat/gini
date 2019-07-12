@@ -111,6 +111,11 @@ class Document
                         'class' => $className,
                         'method' => $rm->name,
                         'params' => $params,
+                        'reflection' => (object) [
+                            'class' => $rc,
+                            'method' => $rm,
+                            'params' => $rps
+                        ]
                     ]);
                 } else {
                     $docParams = array_map(function ($rp) {
