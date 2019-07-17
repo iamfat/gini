@@ -14,7 +14,7 @@ class Document
         return IoC::construct('\Gini\Document', $baseClass);
     }
 
-    public function __construct($baseClass='Gini')
+    public function __construct($baseClass = 'Gini')
     {
         $this->_baseClass = $baseClass;
     }
@@ -37,7 +37,7 @@ class Document
         return $this;
     }
 
-    public function format($formatFunc=null)
+    public function format($formatFunc = null)
     {
         $baseClass = trim($this->_baseClass, '\\');
         $baseDir = str_replace('\\', '/', $baseClass);
@@ -80,7 +80,6 @@ class Document
                 }
             }
 
-            $docClassName = strtr($name, ['/'=>'.']);
             $rms = $rc->getMethods();
             foreach ($rms as $rm) {
                 $skip = false;
@@ -97,8 +96,6 @@ class Document
                 // $method = strtolower($method[0]).substr($method, 1);
                 $rps = $rm->getParameters();
                 // echo $rm->getDocComment()."\n";
-                $method = preg_replace('/^(action|get|post|delete|put|options)/', '', $rm->name);
-                $docMethod = "$docClassName.$method";
                 if ($formatFunc) {
                     $params = array_map(function ($rp) {
                         $param = ['name' => $rp->name];
@@ -111,17 +108,23 @@ class Document
                         'class' => $className,
                         'method' => $rm->name,
                         'params' => $params,
+                        'reflection' => (object) [
+                            'class' => $rc,
+                            'method' => $rm,
+                            'params' => $rps
+                        ]
                     ]);
                 } else {
                     $docParams = array_map(function ($rp) {
                         $decl = '';
                         $rp->hasType() and $decl .= $rp->getType() . ' ';
                         $rp->isPassedByReference() and $decl .= '&';
-                        $decl .= '$'.$rp->name;
-                        $rp->isDefaultValueAvailable() and $decl .= '='.J($rp->getDefaultValue());
+                        $decl .= '$' . $rp->name;
+                        $rp->isDefaultValueAvailable() and $decl .= '=' . J($rp->getDefaultValue());
                         return $decl;
                     }, $rps);
-                    echo $docMethod . "(" . implode(', ', $docParams) .")\n";
+                    $method = preg_replace('/^(action|get|post|delete|put|options)/', '', $rm->name);
+                    echo strtr($name, ['/' => '.']) . "." . $method . "(" . implode(', ', $docParams) . ")\n";
                 }
             }
         });

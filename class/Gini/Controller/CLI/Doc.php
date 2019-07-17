@@ -10,8 +10,8 @@ class Doc extends \Gini\Controller\CLI
             return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface();
         })->filterMethods(function ($rm) {
             return $rm->isPublic() && !$rm->isConstructor()
-            && !$rm->isDestructor()
-            && preg_match('/^action/', $rm->name);
+                && !$rm->isDestructor()
+                && preg_match('/^action/', $rm->name);
         })->format();
     }
 
@@ -21,10 +21,10 @@ class Doc extends \Gini\Controller\CLI
             return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface();
         })->filterMethods(function ($rm) {
             return $rm->isPublic() && !$rm->isConstructor()
-            && !$rm->isDestructor()
-            && preg_match('/^action/', $rm->name);
+                && !$rm->isDestructor()
+                && preg_match('/^action/', $rm->name);
         })->format(function ($unit) {
-            $class = preg_replace('/^'.preg_quote('\\Gini\\Controller\\CLI\\').'/', '', $unit->class);
+            $class = preg_replace('/^' . preg_quote('\\Gini\\Controller\\CLI\\') . '/', '', $unit->class);
             $classUnits = explode('\\', $class);
             $classUnits = array_map(function ($u) {
                 return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $u));
@@ -32,7 +32,7 @@ class Doc extends \Gini\Controller\CLI
 
             $args = array_merge(['gini'], $classUnits);
             $args[] = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', preg_replace('/^action/', '', $unit->method)));
-            echo implode(' ', $args)."\n";
+            echo implode(' ', $args) . "\n";
         });
     }
 
@@ -42,10 +42,10 @@ class Doc extends \Gini\Controller\CLI
             return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface() && $rc->isSubClassOf('\\Gini\\Controller\\CGI');
         })->filterMethods(function ($rm) {
             return $rm->isPublic() && !$rm->isConstructor()
-            && !$rm->isDestructor()
-            && ($rm->name == '__index' || preg_match('/^action/', $rm->name));
+                && !$rm->isDestructor()
+                && ($rm->name == '__index' || preg_match('/^action/', $rm->name));
         })->format(function ($unit) {
-            $class = preg_replace('/^'.preg_quote('\\Gini\\Controller\\CGI\\').'/', '', $unit->class);
+            $class = preg_replace('/^' . preg_quote('\\Gini\\Controller\\CGI\\') . '/', '', $unit->class);
             $pathUnits = explode('\\', $class);
             $pathUnits = array_map(function ($u) {
                 return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $u));
@@ -61,83 +61,43 @@ class Doc extends \Gini\Controller\CLI
                     if (isset($param['default'])) {
                         $docParam .= '=' . strval($param['default']);
                     }
-                    $pathUnits[] = '{'.$docParam.'}';
+                    $pathUnits[] = '{' . $docParam . '}';
                 }
             }
 
-            echo 'REQUEST ' . implode('/', $pathUnits)."\n";
+            echo 'REQUEST ' . implode('/', $pathUnits) . "\n";
         });
     }
 
-    public function actionREST($args)
+    public function actionOpenAPI($args)
     {
-        $doc = \Gini\Document::of('Gini\\Controller\\CGI')->filterClasses(function ($rc) {
-            return !$rc->isAbstract() && !$rc->isTrait() && !$rc->isInterface() && $rc->isSubClassOf('\\Gini\\Controller\\REST');
-        })->filterMethods(function ($rm) {
-            return $rm->isPublic() && !$rm->isConstructor()
-            && !$rm->isDestructor()
-            && preg_match('/^(get|post|delete|put|options)/', $rm->name);
-        })->format(function ($unit) {
-            $class = preg_replace('/^'.preg_quote('\\Gini\\Controller\\CGI\\').'/', '', $unit->class);
-            $pathUnits = explode('\\', $class);
-            $pathUnits = array_map(function ($u) {
-                return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $u));
-            }, $pathUnits);
+        $opt = \Gini\Util::getOpt($args, 'f:p', ['format:', 'pretty']);
+        $api = \Gini\Document\OpenAPI::scan();
+        $format = $opt['format'] ?: $opt['f'];
+        $pretty = isset($opt['pretty']) || isset($opt['p']);
+        switch ($format) {
+            case 'yaml':
+                echo yaml_emit($api, YAML_UTF8_ENCODING) . "\n";
+                break;
+            default:
+                echo json_encode($api, ($pretty ? JSON_PRETTY_PRINT : 0)
+                    | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+    }
 
-            if (preg_match('/^(get|post|delete|put|options)(.+)$/', $unit->method, $matches)) {
-                $method = strtoupper($matches[1]);
-                $pathUnits[] = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $matches[2]));
-                $route = implode('/', $pathUnits);
-                echo str_pad($method, 5, ' ').' '.str_pad($route, 30, ' ');
-                if (count($unit->params) > 0) {
-                    $docParams = [];
-                    foreach ($unit->params as $param) {
-                        $docParam = $param['name'];
-                        if (isset($param['default'])) {
-                            $docParam .= ': ' . J($param['default']);
-                        }
-                        $docParams[] = $docParam;
-                    }
-                    echo "\t{ ".implode(', ', $docParams)." }";
-                }
-                echo "\n";
-            }
-        });
-
-        $routerFunc = function ($router) use (&$routerFunc) {
-            foreach ($router->rules() as $key => $rule) {
-                if ($rule['dest'] instanceof \Gini\CGI\Router) {
-                    $routerFunc($rule['dest']);
-                } else {
-                    $method = strtoupper($rule['method']);
-                    $route = $rule['route'];
-
-                    list($controllerName, $action) = explode('@', $rule['dest'], 2);
-                    if (!$action) {
-                        $action = $method.'Default';
-                    }
-
-                    echo str_pad($method, 5, ' ') . ' ' . str_pad($route, 30, ' ');
-                    try {
-                        $rm = new \ReflectionMethod($controllerName, $action);
-                        $rps = $rm->getParameters();
-                        $docParams = array_map(function ($rp) {
-                            $docParam = $rp->name;
-                            $rp->isPassedByReference() and $docParam = '&'.$docParam;
-                            $rp->hasType() and $docParam = $rp->getType() . ' ' . $docParam;
-                            $rp->isDefaultValueAvailable() and $docParam .= ': ' . J($rp->getDefaultValue());
-                            return $docParam;
-                        }, $rps);
-                        if (count($docParams) > 0) {
-                            echo "\t{ ".implode(', ', $docParams)." }";
-                        }
-                    } catch (\ReflectionException $e) {
-                    }
-
-                    echo "\n";
-                }
-            }
-        };
-        $routerFunc(\Gini\CGI::router());
+    public function actionOpenRPC($args)
+    {
+        $opt = \Gini\Util::getOpt($args, 'f:p', ['format:', 'pretty']);
+        $api = \Gini\Document\OpenRPC::scan();
+        $format = $opt['format'] ?: $opt['f'];
+        $pretty = isset($opt['pretty']) || isset($opt['p']);
+        switch ($format) {
+            case 'yaml':
+                echo yaml_emit($api, YAML_UTF8_ENCODING) . "\n";
+                break;
+            default:
+                echo json_encode($api, ($pretty ? JSON_PRETTY_PRINT : 0)
+                    | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
     }
 }

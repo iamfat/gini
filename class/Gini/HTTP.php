@@ -85,6 +85,7 @@ class HTTP
 
     public function request($method, $url, $query, $timeout = 5)
     {
+        $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?: ($_SERVER['HTTPS'] ? 'https' : 'http');
         $ch = curl_init();
         curl_setopt_array($ch, array(
             CURLOPT_DNS_USE_GLOBAL_CACHE => false,
@@ -99,7 +100,7 @@ class HTTP
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FRESH_CONNECT => true,
             CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?: 'Gini/'.SYS_VERSION,
-            CURLOPT_REFERER => 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
+            CURLOPT_REFERER => $scheme.'://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
         ));
 
         $header = $this->_header;
@@ -167,12 +168,11 @@ class HTTP
         $data = curl_exec($ch);
 
         $errno = curl_errno($ch);
-        if ($errno || !$data) {
+        if ($errno) {
             $err = curl_error($ch);
             Logger::of('core')->error("CURL ERROR($errno $err): $url ");
             curl_close($ch);
-
-            return;
+            return new HTTP\Response(null, 500);
         }
 
         $info = curl_getinfo($ch);

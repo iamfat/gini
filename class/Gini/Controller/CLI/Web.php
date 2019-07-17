@@ -56,7 +56,7 @@ class Web extends \Gini\Controller\CLI
                                 'lessc %s %s %s',
                                 escapeshellarg($src_path),
                                 escapeshellarg($dst_path),
-                                '--clean-css="--s1 --advanced --compatibility=ie8"'
+                                '--clean-css="--s1 --advanced --compatibility=ie8" --math=strict'
                                     );
                             exec($command);
                         }
@@ -99,7 +99,7 @@ class Web extends \Gini\Controller\CLI
                         } else {
                             // uglifyjs raw/js/$$JS -o web/assets/js/$$JS ; \
                             $command = sprintf(
-                                'uglifyjs %s -c warnings=false -d TIMESTAMP=%s -o %s',
+                                'uglifyjs %s -d TIMESTAMP=%s -o %s',
                                 escapeshellarg($src_path),
                                 time(),
                                 escapeshellarg($dst_path)

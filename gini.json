@@ -1,9 +1,9 @@
 {
     "id": "gini",
-    "name": "Gini Framework",
+    "name": "Gini PHP Framework",
     "author": "Jia Huang",
     "email": "iamfat@gmail.com",
-    "version": "1.11.11",
+    "version": "1.12.0",
     "build": {
         "copy": [
             "bin",
@@ -31,12 +31,13 @@
         "require": {
             "sabre/dav": "@stable",
             "doctrine/inflector": "@stable",
+            "doctrine/annotations": "@stable",
             "mtdowling/cron-expression": "@stable"
         },
         "require-dev": {
             "henrikbjorn/lurker": "1.*"
         }
     },
-    "dependencies": [],
-    "moduleClass": "\\Gini\\Module\\gini"
+    "dependencies": {},
+    "moduleClass": "\\Gini\\Module\\Gini"
 }

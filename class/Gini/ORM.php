@@ -27,7 +27,7 @@ abstract class ORM
     protected $_forUpdate = false;
 
     protected $_db_data;
-    protected $_db_time;    //上次数据库同步的时间
+    protected $_db_time; //上次数据库同步的时间
 
     private static $_STRUCTURES;
     private static $_MANY_STRUCTURES;
@@ -51,7 +51,7 @@ abstract class ORM
         }
         /*
         orm[user].call[method]
-        */
+         */
         $name = "call[$method]";
         if (!$this->event('isBinded', $name)) {
             $trace = debug_backtrace();
@@ -85,7 +85,7 @@ abstract class ORM
 
         array_unshift($args, implode(' ', $events), $this);
 
-        return call_user_func_array('\Gini\Event::'.$func, $args);
+        return call_user_func_array('\Gini\Event::' . $func, $args);
     }
 
     /**
@@ -104,7 +104,7 @@ abstract class ORM
         foreach (class_parents($this) as $class) {
             $name = strtolower(implode('', array_slice(explode('\\', $class), -1)));
             $inheritance[$name] = $class;
-            if ($name == 'object') {
+            if ($name == 'base' || $name == 'object') {
                 break;
             }
         }
@@ -144,7 +144,7 @@ abstract class ORM
     {
         $structure = [];
         $manyStructure = [];
-        foreach ((array)$properties as $k => $v) {
+        foreach ((array) $properties as $k => $v) {
             $params = explode(',', strtolower($v));
             $v = [];
             foreach ($params as $p) {
@@ -158,7 +158,7 @@ abstract class ORM
                 $structure[$k] = $v;
             }
         }
-        return [ $structure, $manyStructure ];
+        return [$structure, $manyStructure];
     }
 
     private function _prepareStructures($className)
@@ -197,16 +197,16 @@ abstract class ORM
 
                 //从数据库中获取该数据
                 foreach ($criteria as $k => $v) {
-                    $where[] = $db->quoteIdent($k).'='.
+                    $where[] = $db->quoteIdent($k) . '=' .
                         (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
                 }
 
                 $schema = $this->ormSchema();
                 $fields = array_map([$db, 'quoteIdent'], array_keys($schema['fields']));
 
-                $SQL = 'SELECT '.implode(', ', $fields)
-                    .' FROM '.$db->quoteIdent($this->tableName())
-                    .' WHERE '.implode(' AND ', $where).' LIMIT 1';
+                $SQL = 'SELECT ' . implode(', ', $fields)
+                . ' FROM ' . $db->quoteIdent($this->tableName())
+                . ' WHERE ' . implode(' AND ', $where) . ' LIMIT 1';
 
                 if ($this->_forUpdate) {
                     $SQL .= ' FOR UPDATE';
@@ -230,7 +230,7 @@ abstract class ORM
     {
         $structure = $this->structure();
         foreach ($structure as $k => $v) {
-            unset($this->$k);    //empty all public properties
+            unset($this->$k); //empty all public properties
         }
 
         if ($criteria) {
@@ -251,11 +251,11 @@ abstract class ORM
         foreach ($crit as $k => $v) {
             if (is_scalar($v) || is_null($v)) {
                 $ncrit[$k] = $v;
-            } elseif ($v instanceof \Gini\ORM\Object) {
+            } elseif ($v instanceof \Gini\ORM\Base) {
                 if (!isset($structure[$k]['object'])) {
-                    $ncrit[$k.'_name'] = $v->name();
+                    $ncrit[$k . '_name'] = $v->name();
                 }
-                $ncrit[$k.'_id'] = $v->id;
+                $ncrit[$k . '_id'] = $v->id;
             }
         }
 
@@ -341,6 +341,15 @@ abstract class ORM
                     case 'double':
                     case 'float':
                         $field['type'] = $p;
+                        if ($pv) {
+                            $field['type'] .= '(' . intval($pv) . ')';
+                        }
+                        break;
+                    case 'decimal':
+                        $field['type'] = $p;
+                        if ($pv) {
+                            $field['type'] .= '(' . strtr($pv, '.', ',') . ')';
+                        }
                         break;
                     case 'datetime':
                         $field['type'] = $p;
@@ -359,7 +368,7 @@ abstract class ORM
                         } elseif ($pv == '***') {
                             $field['type'] = 'longtext';
                         } else {
-                            $field['type'] = 'varchar('.($pv ?: 255).')';
+                            $field['type'] = 'varchar(' . ($pv ?: 255) . ')';
                         }
                         break;
                     case 'array':
@@ -383,44 +392,59 @@ abstract class ORM
                         $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => [$k]];
                         break;
                     case 'unique':
-                        $indexes['_IDX_'.$k] = ['type' => 'unique', 'fields' => [$k]];
+                        $indexes['_IDX_' . $k] = ['type' => 'unique', 'fields' => [$k]];
                         break;
                     case 'serial':
                         $field['serial'] = true;
                         break;
                     case 'index':
-                        $indexes['_IDX_'.$k] = ['fields' => [$k]];
-                        // no break
+                        $indexes['_IDX_' . $k] = ['fields' => [$k]];
+                    // no break
                     case 'object':
                         // 需要添加新的$field
                         if (!$pv) {
-                            $fields[$k.'_name'] = ['type' => 'varchar(120)'];
+                            $fields[$k . '_name'] = ['type' => 'varchar(120)'];
                         }
-                        $fields[$k.'_id'] = ['type' => 'bigint', 'null' => true];
+                        $fields[$k . '_id'] = ['type' => 'bigint', 'null' => true];
                 }
             }
 
             if ($field) {
-                if (!isset($field['null']) && !isset($field['default'])) {
-                    switch ($field['type']) {
-                    case 'int':
-                    case 'bigint':
-                    case 'double':
-                    case 'float':
-                        $field['default'] = 0;
-                        break;
-                    case 'datetime':
-                        $field['default'] = '0000-00-00 00:00:00';
-                        break;
-                    case 'timestamp':
-                        $field['default'] = 'CURRENT_TIMESTAMP';
-                        break;
-                    default:
-                        if ($field['type'] == 'text'
-                        || 0 === strncmp('varchar(', $field['type'], 8)
-                        || 0 === strncmp('char(', $field['type'], 5)) {
-                            $field['default'] = '';
-                        }
+                if (preg_match('/^(\w+)(?:\((.+)\))?$/', $field['type'], $parts)) {
+                    switch ($parts[1]) {
+                        case 'int':
+                        case 'bigint':
+                            if (!isset($field['null']) && !isset($field['default'])) {
+                                $field['default'] = 0;
+                            } else {
+                                $field['default'] = intval($field['default']);
+                            }
+                            break;case 'double':
+                        case 'float':
+                        case 'decimal':
+                            if (!isset($field['null']) && !isset($field['default'])) {
+                                $field['default'] = 0.0;
+                            } else {
+                                $field['default'] = floatval($field['default']);
+                            }
+                            break;
+                        case 'datetime':
+                            if (!isset($field['null']) && !isset($field['default'])) {
+                                $field['default'] = '0000-00-00 00:00:00';
+                            }
+                            break;
+                        case 'timestamp':
+                            if (!isset($field['null']) && !isset($field['default'])) {
+                                $field['default'] = 'CURRENT_TIMESTAMP';
+                            }
+                            break;
+                        case 'text':
+                        case 'varchar':
+                        case 'char':
+                            if (!isset($field['null']) && !isset($field['default'])) {
+                                $field['default'] = '';
+                            }
+                            break;
                     }
                 }
                 $fields[$k] = $field;
@@ -438,10 +462,11 @@ abstract class ORM
                 if (!$structure[$k]['object']) {
                     continue;
                 }
-                $vvv['column'] = $k.'_id';
+                $vvv['column'] = $k . '_id';
                 $vvv['ref_table'] = a($structure[$k]['object'])->tableName();
                 $vvv['ref_column'] = 'id';
             } elseif ($vv['ref']) {
+                $vvv['column'] = $k;
                 $ref = explode('.', $vv['ref'], 2);
                 $vvv['ref_table'] = a($ref[0])->tableName();
                 $vvv['ref_column'] = $ref[1];
@@ -451,7 +476,7 @@ abstract class ORM
             }
 
             $prefix = $table ?: $this->tableName();
-            $relations[$prefix.'_'.$k] = $vvv;
+            $relations[$prefix . '_' . $k] = $vvv;
         }
 
         // 索引项
@@ -471,24 +496,24 @@ abstract class ORM
                 // correct object name
                 if (array_key_exists('object', (array) $structure[$vvv])) {
                     if (!$structure[$vvv]['object']) {
-                        $vv[] = $vvv.'_name';
+                        $vv[] = $vvv . '_name';
                     }
-                    $vvv = $vvv.'_id';
+                    $vvv = $vvv . '_id';
                 }
             }
 
             switch ($vk) {
                 case 'unique':
-                    $indexes['_MIDX_'.$k] = ['type' => 'unique', 'fields' => $vv];
+                    $indexes['_MIDX_' . $k] = ['type' => 'unique', 'fields' => $vv];
                     break;
                 case 'primary':
                     $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => $vv];
                     break;
                 case 'fulltext':
-                    $indexes['_MIDX_'.$k] = ['type' => 'fulltext', 'fields' => $vv];
+                    $indexes['_MIDX_' . $k] = ['type' => 'fulltext', 'fields' => $vv];
                     break;
                 default:
-                    $indexes['_MIDX_'.$k] = ['fields' => $vv];
+                    $indexes['_MIDX_' . $k] = ['fields' => $vv];
             }
         }
 
@@ -503,11 +528,11 @@ abstract class ORM
         foreach ((array) $this->manyStructure() as $k => $v) {
             $table = $this->pivotTableName($k);
             $schema = $this->ormSchema([
-                $name => [ 'object' => $name ],
+                $name => ['object' => $name],
                 $k => $v,
-            ], [ "primary:$name,$k" ], [
-                $name => [ 'update' => 'cascade', 'delete' => 'cascade' ],
-                $k => [ 'update' => 'cascade', 'delete' => 'cascade' ],
+            ], ["primary:$name,$k"], [
+                $name => ['update' => 'cascade', 'delete' => 'cascade'],
+                $k => ['update' => 'cascade', 'delete' => 'cascade'],
             ], $table);
             $schemas[$table] = $schema;
         }
@@ -524,8 +549,8 @@ abstract class ORM
         $db = $this->db();
         $tbl_name = $this->tableName();
 
-        $SQL = 'DELETE FROM '.$db->quoteIdent($tbl_name)
-            .' WHERE "id"='.$db->quote($this->id);
+        $SQL = 'DELETE FROM ' . $db->quoteIdent($tbl_name)
+        . ' WHERE "id"=' . $db->quote($this->id);
 
         return (bool) $db->query($SQL);
     }
@@ -560,33 +585,37 @@ abstract class ORM
                 if ($this->_objects[$k]) {
                     $o = $this->_objects[$k];
                     if (!isset($oname)) {
-                        $db_data[$k.'_name'] = $oname ?: $o->name();
+                        $db_data[$k . '_name'] = $oname ?: $o->name();
                     }
                 } else {
                     $o = $this->_oinfo[$k];
                     if (!isset($oname)) {
-                        $db_data[$k.'_name'] = $oname ?: $o->name;
+                        $db_data[$k . '_name'] = $oname ?: $o->name;
                     }
                 }
-                $db_data[$k.'_id'] = $o->id ?: null;
+                $db_data[$k . '_id'] = $o->id ?: null;
             } elseif (array_key_exists('array', $v)) {
-                $db_data[$k] = count($this->$k)>0 ? J($this->$k) : '{}';
+                $db_data[$k] = (is_object($this->$k) || is_array($this->$k)) ? J($this->$k) : '{}';
             } elseif (array_key_exists('object_list', $v)) {
                 $db_data[$k] = isset($this->$k) ? J($this->$k->keys()) : '[]';
             } else {
                 $db_data[$k] = $this->$k;
                 if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
                     $default = $v['default'];
-                    if (is_null($default)) {
-                        if (array_key_exists('string', $v)) {
-                            $default = '';
-                        } elseif (array_key_exists('bool', $v) || array_key_exists('int', $v) || array_key_exists('bigint', $v) || array_key_exists('double', $v) || array_key_exists('float', $v)) {
-                            $default = 0;
-                        } elseif (array_key_exists('datetime', $v)) {
-                            $default = '0000-00-00 00:00:00';
-                        } elseif (array_key_exists('timestamp', $v)) {
-                            $default = SQL('NOW()');
-                        }
+                    if (array_key_exists('string', $v)) {
+                        $default = is_null($default) ? '' : (string) $default;
+                    } elseif (array_key_exists('bool', $v)
+                        || array_key_exists('int', $v)
+                        || array_key_exists('bigint', $v)) {
+                        $default = is_null($default) ? 0 : (int) $default;
+                    } elseif (array_key_exists('double', $v)
+                        || array_key_exists('float', $v)
+                        || array_key_exists('decimal', $v)) {
+                        $default = is_null($default) ? 0.0 : (float) $default;
+                    } elseif (array_key_exists('datetime', $v)) {
+                        $default = is_null($default) ? '0000-00-00 00:00:00' : $default;
+                    } elseif (array_key_exists('timestamp', $v)) {
+                        $default = is_null($default) ? SQL('NOW()') : $default;
                     }
 
                     if (!is_null($default)) {
@@ -606,19 +635,19 @@ abstract class ORM
         $pairs = [];
         foreach ($db_data as $k => $v) {
             $pairs[] = $db->quoteIdent($k) . '=' .
-               (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
+                (($v instanceof \Gini\Those\SQL) ? strval($v) : $db->quote($v));
         }
 
         if (count($pairs) > 0) {
             if ($id) {
                 if ($this->_db_data['id']
-                    || $db->value('SELECT "id" FROM '.$db->quoteIdent($tbl_name).' WHERE "id"=?', null, [$id])
+                    || $db->value('SELECT "id" FROM ' . $db->quoteIdent($tbl_name) . ' WHERE "id"=?', null, [$id])
                 ) {
                     // if data exists, use update to avoid unexpected overwrite.
                     $SQL = 'UPDATE ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs) .
-                        ' WHERE ' . $db->quoteIdent('id') . '=' . $db->quote($id);
+                    ' WHERE ' . $db->quoteIdent('id') . '=' . $db->quote($id);
                 } else {
-                    array_unshift($pairs, $db->quoteIdent('id').'='.$db->quote($id));
+                    array_unshift($pairs, $db->quoteIdent('id') . '=' . $db->quote($id));
                     $SQL = 'REPLACE INTO ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs);
                 }
             } else {
@@ -640,7 +669,7 @@ abstract class ORM
             $this->_objects = [];
             $this->_oinfo = [];
             foreach ($structure as $k => $v) {
-                unset($this->$k);    //empty all public properties
+                unset($this->$k); //empty all public properties
             }
         }
 
@@ -737,17 +766,17 @@ abstract class ORM
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
                 $o = $data[$k];
-                if (isset($o) && $o instanceof \Gini\ORM\Object && (!isset($oname) || $o->name() == $oname)) {
+                if (isset($o) && $o instanceof \Gini\ORM\Base && (!isset($oname) || $o->name() == $oname)) {
                     $this->_objects[$k] = $o;
                     $this->_oinfo[$k] = (object) ['name' => $o->name(), 'id' => $o->id];
                 } else {
                     //object need to be bind later to avoid deadlock.
                     unset($this->$k);
                     if (!isset($oname)) {
-                        $oname = strval($data[$k.'_name']);
+                        $oname = strval($data[$k . '_name']);
                     }
                     if ($oname) {
-                        $oi = (object) ['name' => $oname, 'id' => $data[$k.'_id']];
+                        $oi = (object) ['name' => $oname, 'id' => $data[$k . '_id']];
                         $this->_oinfo[$k] = $oi;
                     }
                 }
@@ -884,7 +913,7 @@ abstract class ORM
     /**
      * 根据ORM定义调整数据库表结构
      *
-     * @return \Gini\ORM\Object
+     * @return \Gini\ORM\Base
      */
     public function adjustTable()
     {
@@ -910,7 +939,7 @@ abstract class ORM
 
         $manyStructure = $this->manyStructure();
         if (!isset($manyStructure[$field])) {
-            return [ $this->$field ];
+            return [$this->$field];
         }
 
         $db = $this->db();
@@ -920,10 +949,10 @@ abstract class ORM
                 $oname = $manyStructure[$field]['object'];
                 $st = $db->query('SELECT :oid AS oid FROM :table1 WHERE :name1=:id1', [
                     ':table1' => $this->pivotTableName($field),
-                    ':name1' => $this->name().'_id',
-                    ':oid' => $field.'_id',
+                    ':name1' => $this->name() . '_id',
+                    ':oid' => $field . '_id',
                 ], [
-                    ':id1' => $this->oid
+                    ':id1' => $this->oid,
                 ]);
                 $objects = new ORMIterator($oname);
                 if ($st) {
@@ -935,11 +964,11 @@ abstract class ORM
             } else {
                 $st = $db->query('SELECT :oname AS oname, :oid AS oid FROM :table1 WHERE :name1=:id1', [
                     ':table1' => $this->pivotTableName($field),
-                    ':name1' => $this->name().'_id',
-                    ':oname' => $field.'_name',
-                    ':oid' => $field.'_id',
+                    ':name1' => $this->name() . '_id',
+                    ':oname' => $field . '_name',
+                    ':oid' => $field . '_id',
                 ], [
-                    ':id1' => $this->id
+                    ':id1' => $this->id,
                 ]);
                 $objects = [];
                 if ($st) {
@@ -953,10 +982,10 @@ abstract class ORM
 
         $st = $db->query('SELECT $name2 AS field FROM :table1 WHERE :name1=:id1', [
             ':table1' => $this->pivotTableName($field),
-            ':name1' => $this->name().'_id',
+            ':name1' => $this->name() . '_id',
             ':name2' => $field,
         ], [
-            ':id1' => $this->id
+            ':id1' => $this->id,
         ]);
         if ($st) {
             $rows = $st->rows();
@@ -977,7 +1006,7 @@ abstract class ORM
         $db = $this->db();
         $success = $db->query('INSERT INTO :table1 (:name1, :name2) VALUES(:id1, :value2)', [
             ':table1' => $this->pivotTableName($field),
-            ':name1' => $this->name().'_id',
+            ':name1' => $this->name() . '_id',
             ':name2' => $field,
         ], [
             ':id1' => $this->id,
@@ -995,7 +1024,7 @@ abstract class ORM
         $db = $this->db();
         $success = $db->query('DELETE FROM :table1 WHERE :name1=:id1 AND :name2=:value2', [
             ':table1' => $this->pivotTableName($field),
-            ':name1' => $this->name().'_id',
+            ':name1' => $this->name() . '_id',
             ':name2' => $field,
         ], [
             ':id1' => $this->id,
@@ -1013,7 +1042,7 @@ abstract class ORM
         $db = $this->db();
         $success = $db->query('DELETE FROM :table1 WHERE :name1=:id1', [
             ':table1' => $this->pivotTableName($field),
-            ':name1' => $this->name().'_id',
+            ':name1' => $this->name() . '_id',
         ], [
             ':id1' => $this->id,
         ]);
@@ -1026,7 +1055,7 @@ class_exists('\Gini\Those');
 $app = Core::app();
 if (is_subclass_of($app, '\Gini\Module\Prototype')) {
     $app->register('orm', function ($name) {
-        $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $name);
+        $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $name);
         return \Gini\IoC::construct($class_name, $criteria);
     });
 }

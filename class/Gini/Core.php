@@ -193,7 +193,7 @@ namespace Gini {
             $module_info = [];
             foreach (self::$MODULE_INFO as $b_id => $b_info) {
                 if (!$inserted &&
-                    (isset($b_info->dependencies[$info->id]) || $b_id == APP_ID)
+                    (isset($b_info->dependencies[$info->id]) || (defined('APP_ID') && $b_id == APP_ID))
                 ) {
                     $module_info[$info->id] = $info;
                     $inserted = true;
@@ -233,16 +233,16 @@ namespace Gini {
                 $path = strtolower($path);
                 if (isset($GLOBALS['gini.class_map'][$path])) {
                     require_once $GLOBALS['gini.class_map'][$path];
+                    return true;
                 }
-
-                return;
+                return false;
             }
 
             if (defined('GINI_MUST_CACHE_AUTOLOAD')) {
                 die("Missing Autoloading Cache!\n");
             }
 
-            $file = self::_require(CLASS_DIR, $path);
+            return !!self::_require(CLASS_DIR, $path);
         }
 
         /**
