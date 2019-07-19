@@ -50,9 +50,9 @@ class CGI
      */
     public static function defaultEnv()
     {
-        // use Gini-HTTP-Method to replace uncommon methods like DELETE/PUT to get through firewall
-        if ($_SERVER['HTTP_X_GINI_HTTP_METHOD']) {
-            $_SERVER['REQUEST_METHOD'] = $_SERVER['HTTP_X_GINI_HTTP_METHOD'];
+        // use X-HTTP-Method-Override to replace uncommon methods like DELETE/PUT to get through firewall
+        if ($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']) {
+            $_SERVER['REQUEST_METHOD'] = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'];
         }
         return [
             'get' => $_GET, 'post' => $_POST,

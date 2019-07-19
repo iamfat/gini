@@ -112,7 +112,7 @@ class HTTP
         $method = strtoupper($method);
         $fallbacks = (array) Config::get('system.http_method_fallbacks');
         if (isset($fallbacks[$method])) {
-            $header['Gini-HTTP-Method'] = $method;
+            $header['X-HTTP-Method-Override'] = $method;
             $method = $fallbacks[$method];
         }
 
