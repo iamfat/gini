@@ -17,14 +17,14 @@ class MySQL extends \PDO implements Driver
                 unset($this->_table_status[$table]);
                 $SQL = sprintf(
                     'SHOW TABLE STATUS FROM %s WHERE "Name"=%s',
-                        $this->quoteIdent($this->_dbname),
+                    $this->quoteIdent($this->_dbname),
                     $this->quote($table)
                 );
             } else {
                 $this->_table_status = null;
                 $SQL = sprintf(
                     'SHOW TABLE STATUS FROM %s',
-                        $this->quoteIdent($this->_dbname)
+                    $this->quoteIdent($this->_dbname)
                 );
             }
             $rs = $this->query($SQL);
@@ -192,7 +192,7 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($alter_sqls as $sqls) {
-            if (count(sqls) == 0) {
+            if (count($sqls) == 0) {
                 continue;
             }
             $SQL = sprintf(
@@ -357,12 +357,12 @@ class MySQL extends \PDO implements Driver
 
         return sprintf(
             'CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s',
-                    $this->quoteIdent($key),
-                    $this->quoteIdent($val['column']),
-                    $this->quoteIdent($val['ref_table']),
-                    $this->quoteIdent($val['ref_column']),
-                    $deleteAction,
-                    $updateAction
+            $this->quoteIdent($key),
+            $this->quoteIdent($val['column']),
+            $this->quoteIdent($val['ref_table']),
+            $this->quoteIdent($val['ref_column']),
+            $deleteAction,
+            $updateAction
                 );
     }
 
@@ -378,9 +378,9 @@ class MySQL extends \PDO implements Driver
 
         $SQL = sprintf(
             'CREATE TABLE IF NOT EXISTS %s (%s INT NOT NULL) ENGINE = %s DEFAULT CHARSET = utf8',
-                    $this->quoteIdent($table),
-                    $this->quoteIdent('_FOO'),
-                    $this->quote($engine)
+            $this->quoteIdent($table),
+            $this->quoteIdent('_FOO'),
+            $this->quote($engine)
                     );
         $rs = $this->query($SQL);
         $this->_updateTableStatus($table);
