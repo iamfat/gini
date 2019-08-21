@@ -40,13 +40,13 @@ abstract class ORM
      * Magic method to use Event('orm[$name].call[$method]') to extend ORM object.
      *
      * @param string $method
-     * @param string $params
+     * @param array $params
      *
      * @return mixed return value of the event
      */
-    public function __call($method, $params)
+    public function __call($method, array $params)
     {
-        if ($method == __FUNCTION__) {
+        if ($method === __FUNCTION__) {
             return;
         }
         /*
