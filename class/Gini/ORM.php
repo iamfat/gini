@@ -83,7 +83,7 @@ abstract class ORM
             $events[] = "orm[$name].$action";
         }
 
-        array_unshift($args, implode(' ', $events), $this);
+        array_unshift($args, $events, $this);
 
         return call_user_func_array('\Gini\Event::' . $func, $args);
     }

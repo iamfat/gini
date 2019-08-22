@@ -173,8 +173,8 @@ class Event
     {
         $return = null;
         $params = func_get_args();
-        $_EVENTS = array_shift($params);
-        foreach (static::_normalizeNames($_EVENTS) as $name) {
+        $events = array_shift($params);
+        foreach (static::_normalizeNames($events) as $name) {
             $e = static::get($name);
             if ($e) {
                 $e->_abort = false;
@@ -194,15 +194,20 @@ class Event
     /**
      * Check if an event was binded.
      *
-     * @param string $name event name
+     * @param string|array $names event names
      *
      * @return bool
      */
-    public static function isBinded($name)
+    public static function isBinded($names)
     {
-        $e = static::get($name);
-
-        return $e ? count($e->queue) > 0 : false;
+        $names = static::_normalizeNames($names);
+        foreach ($names as $name) {
+            $e = static::get($name);
+            if ($e && count($e->queue) > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
