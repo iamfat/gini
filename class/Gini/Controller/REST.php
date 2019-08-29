@@ -27,7 +27,7 @@ abstract class REST extends CGI
         $methodName = $this->action;
 
         if ($methodName) {
-            $actionName = preg_replace('/^(get|post|put|delete|options)/i', '', $this->action);
+            $actionName = preg_replace('/^(get|post|put|delete|options|patch)/i', '', $this->action);
         } else {
             $actionName = strtr($params[0], ['-' => '', '_' => '']);
             if ($actionName && $actionName[0] != '_'

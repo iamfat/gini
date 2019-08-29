@@ -3,7 +3,7 @@
     "name": "Gini PHP Framework",
     "author": "Jia Huang",
     "email": "iamfat@gmail.com",
-    "version": "1.12.0",
+    "version": "1.12.1",
     "build": {
         "copy": [
             "bin",
@@ -38,6 +38,6 @@
             "henrikbjorn/lurker": "1.*"
         }
     },
-    "dependencies": {},
-    "moduleClass": "\\Gini\\Module\\Gini"
+    "dependencies": [],
+    "moduleClass": "\\Gini\\Module\\gini"
 }

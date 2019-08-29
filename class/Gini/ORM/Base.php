@@ -24,9 +24,9 @@ abstract class Base extends \Gini\ORM
         return parent::fetch($force);
     }
 
-    public function __call($method, $params)
+    public function __call($method, array $params)
     {
-        if ($method == __CLASS__) {
+        if ($method === __FUNCTION__) {
             return;
         }
 
@@ -38,5 +38,7 @@ abstract class Base extends \Gini\ORM
 
             return $this;
         }
+
+        return parent::__call($method, $params);
     }
 }
