@@ -24,7 +24,7 @@ abstract class Base extends \Gini\ORM
         return parent::fetch($force);
     }
 
-    public function __call($method, array $params)
+    public function __call($method, $params)
     {
         if ($method === __FUNCTION__) {
             return;
