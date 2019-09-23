@@ -44,7 +44,7 @@ abstract class ORM
      *
      * @return mixed return value of the event
      */
-    public function __call($method, array $params)
+    public function __call($method, $params)
     {
         if ($method === __FUNCTION__) {
             return;
