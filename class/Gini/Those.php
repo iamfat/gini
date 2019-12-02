@@ -523,6 +523,7 @@ namespace Gini {
         public function orderBy($field, $mode = 'asc')
         {
             $this->resetFetch();
+            $originalField = $this->_field;
             $this->_field = $field;
             $field_name = $this->_fieldName();
 
@@ -538,7 +539,7 @@ namespace Gini {
                 break;
             }
 
-            unset($this->_field);
+            $this->_field = $originalField;
 
             return $this;
         }
