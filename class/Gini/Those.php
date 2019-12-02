@@ -526,6 +526,7 @@ namespace Gini {
             $originalField = $this->_field;
             $this->_field = $field;
             $field_name = $this->_fieldName();
+            $this->_field = $originalField;
 
             $mode = strtolower($mode);
             switch ($mode) {
@@ -538,8 +539,6 @@ namespace Gini {
                 $this->_order_by[] = $field_name .' ASC';
                 break;
             }
-
-            $this->_field = $originalField;
 
             return $this;
         }
