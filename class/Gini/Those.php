@@ -526,7 +526,6 @@ namespace Gini {
             $this->_field = $field;
             $field_name = $this->_fieldName();
 
-            $db = $this->db;
             $mode = strtolower($mode);
             switch ($mode) {
                 case 'desc':
@@ -538,6 +537,8 @@ namespace Gini {
                 $this->_order_by[] = $field_name .' ASC';
                 break;
             }
+
+            unset($this->_field);
 
             return $this;
         }
