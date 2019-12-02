@@ -523,17 +523,20 @@ namespace Gini {
         public function orderBy($field, $mode = 'asc')
         {
             $this->resetFetch();
+            $originalField = $this->_field;
+            $this->_field = $field;
+            $field_name = $this->_fieldName();
+            $this->_field = $originalField;
 
-            $db = $this->db;
             $mode = strtolower($mode);
             switch ($mode) {
                 case 'desc':
                 case 'd':
-                $this->_order_by[] = $db->ident($this->_table, $field).' DESC';
+                $this->_order_by[] = $field_name .' DESC';
                 break;
                 case 'asc':
                 case 'a':
-                $this->_order_by[] = $db->ident($this->_table, $field).' ASC';
+                $this->_order_by[] = $field_name .' ASC';
                 break;
             }
 
