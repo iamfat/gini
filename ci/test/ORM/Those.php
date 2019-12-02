@@ -130,6 +130,19 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE ("t0"."money">=100 AND "t0"."money"<200)', 'SQL', $those);
     }
 
+    public function testOrderBy()
+    {
+        \Gini\Those::reset();
+        $those = those('user')->orderBy('gender');
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" ORDER BY "t0"."gender" ASC', 'SQL', $those);
+
+        \Gini\Those::reset();
+        $those = those('user')->orderBy('friend.gender');
+        $those->makeSQL();
+        $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" INNER JOIN "_user_friend" AS "t1" ON "t1"."user_id"="t0"."id" INNER JOIN "user" AS "t2" ON "t1"."friend_id"="t2"."id" ORDER BY "t2"."gender" ASC', 'SQL', $those);
+    }
+
     public function testStringMatch()
     {
         \Gini\Those::reset();
