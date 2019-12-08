@@ -15,7 +15,7 @@ class Session
 
         $session_name = $session_conf['name'] ?: 'gini-session';
         $host_hash = sha1($cookie_params['domain'] ?: $_SERVER['HTTP_HOST']);
-        ini_set('session.name', $session_name.'_'.$host_hash);
+        ini_set('session.name', $session_name . '_' . $host_hash);
 
         if ($session_conf['save_handler']) {
             self::$_handlerName = $session_conf['save_handler'];
@@ -24,7 +24,7 @@ class Session
                 ini_set('session.save_handler', substr(self::$_handlerName, 9));
             } else {
                 // save_handler = Database
-                $class = '\Gini\Session\\'.self::$_handlerName;
+                $class = '\Gini\Session\\' . self::$_handlerName;
                 if (class_exists($class)) {
                     self::$_handler = \Gini\IoC::construct($class);
                     session_set_save_handler(self::$_handler, false);
@@ -94,6 +94,11 @@ class Session
         }
     }
 
+    public static function id()
+    {
+        return session_id();
+    }
+
     public static function regenerateId()
     {
         if (PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server' || session_status() == PHP_SESSION_DISABLED) {
@@ -106,14 +111,15 @@ class Session
 
     public static function open()
     {
-        if (PHP_SAPI == 'cli'
+        if (
+            PHP_SAPI == 'cli'
             || session_status() === PHP_SESSION_DISABLED
-            || session_status() === PHP_SESSION_ACTIVE) {
+            || session_status() === PHP_SESSION_ACTIVE
+        ) {
             return;
         }
 
-        set_error_handler(function () {
-        }, E_ALL ^ E_NOTICE);
+        set_error_handler(function () { }, E_ALL ^ E_NOTICE);
         session_start();
         restore_error_handler();
 
