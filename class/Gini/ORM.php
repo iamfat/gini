@@ -17,6 +17,12 @@
 
 namespace Gini;
 
+/**
+ * @property int id
+ * Class ORM
+ *
+ * @package Gini
+ */
 abstract class ORM
 {
     private $_criteria;
