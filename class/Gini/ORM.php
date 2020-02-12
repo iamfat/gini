@@ -17,36 +17,6 @@
 
 namespace Gini;
 
-/**
- * @property int id
- * Class ORM
- * @method whose($field): \Gini\Those
- * @method limit($start, $per_page = null): \Gini\Those
- * @method andWhose($field): \Gini\Those
- * @method orWhose($field): \Gini\Those
- * @method whoIs($field): \Gini\Those
- * @method andWhoIs($field): \Gini\Those
- * @method whichIs($field): \Gini\Those
- * @method andWhichIs($field): \Gini\Those
- * @method orWhoIs($field): \Gini\Those
- * @method orWhichIs($field): \Gini\Those
- * @method isIn($args): \Gini\Those
- * @method isNotIn($args): \Gini\Those
- * @method match($op, $v): \Gini\Those
- * @method is($v): \Gini\Those
- * @method isNot($v): \Gini\Those
- * @method beginsWith($v)($v): \Gini\Those
- * @method contains($v): \Gini\Those
- * @method endsWith($v): \Gini\Those
- * @method isLessThan($v): \Gini\Those
- * @method isGreaterThan($v): \Gini\Those
- * @method isGreaterThanOrEqual($v): \Gini\Those
- * @method isLessThanOrEqual($v): \Gini\Those
- * @method isBetween($a, $b): \Gini\Those
- * @method orderBy($field, $mode = 'asc'): \Gini\Those
- *
- * @package Gini
- */
 abstract class ORM
 {
     private $_criteria;
@@ -1020,7 +990,7 @@ abstract class ORM
         if ($st) {
             $rows = $st->rows();
             return array_map(function ($v) {
-                return $row->field;
+                return $v->field;
             }, $rows);
         }
 
@@ -1084,7 +1054,7 @@ class_exists('\Gini\Those');
 
 $app = Core::app();
 if (is_subclass_of($app, '\Gini\Module\Prototype')) {
-    $app->register('orm', function ($name) {
+    $app->register('orm', function ($name, $criteria) {
         $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $name);
         return \Gini\IoC::construct($class_name, $criteria);
     });

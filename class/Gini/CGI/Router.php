@@ -7,6 +7,15 @@ use \Gini\Core;
 use \Gini\IoC;
 use \Gini\Config;
 
+/**
+ * @method self get($route, $dest, ...$args)
+ * @method self post($route, $dest, ...$args)
+ * @method self put($route, $dest, ...$args)
+ * @method self patch($route, $dest, ...$args)
+ * @method self delete($route, $dest, ...$args)
+ * @method self options($route, $dest, ...$args)
+ * @method self any($route, $dest, ...$args)
+ */
 class Router
 {
     private $baseRoute;
@@ -190,36 +199,36 @@ class Router
         if (!$controller) {
             // no matches found in router
             $args = array_map('rawurldecode', explode('/', $route));
-        
+
             $path = '';
             $candidates = ['/index' => $args] + Util::pathAndArgs($args);
             $class = null;
-    
+
             foreach (array_reverse($candidates) as $path => $params) {
                 $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
                 $basename = basename($path);
                 $dirname = dirname($path);
-    
+
                 $class_namespace = '\Gini\Controller\CGI\\';
                 if ($dirname != '.') {
                     $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
                 }
-    
+
                 $class = $class_namespace.$basename.'\\Index';
                 if (class_exists($class)) {
                     break;
                 }
-    
+
                 $class = $class_namespace.$basename;
                 if (class_exists($class)) {
                     break;
                 }
-    
+
                 $class = $class_namespace.'Controller'.$basename;
                 if (class_exists($class)) {
                     break;
                 }
-    
+
                 if ($basename != 'index') {
                     $class = $class_namespace.'Index';
                     if (class_exists($class)) {
@@ -228,7 +237,7 @@ class Router
                     }
                 }
             }
-    
+
             if (!$class || !class_exists($class, false)) {
                 $class = '\Gini\Controller\CGI\Index';
                 $params = $args;

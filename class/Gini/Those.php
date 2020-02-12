@@ -601,7 +601,7 @@ namespace {
          * @param string  $name
          * @param null    $criteria
          *
-         * @return \Gini\ORM
+         * @return \Gini\ORM\Base
          */
         function a($name, $criteria = null)
         {
