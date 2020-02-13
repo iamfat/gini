@@ -23,7 +23,7 @@ final class API extends \Gini\Controller\CGI
                     'code' => -32700,
                     'message' => 'Parse error',
                 ],
-                'id' => $id,
+                'id' => null,
             ];
         } else {
             $response = \Gini\API::dispatch((array)$post, $this->env);

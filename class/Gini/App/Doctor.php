@@ -88,7 +88,7 @@ class Doctor
                     $db = \Gini\Database::db($key);
                     $database_errors = $db->diagnose();
                     if ($database_errors) {
-                        static::_outputErrors($module_errors);
+                        static::_outputErrors($database_errors);
                     } else {
                         echo "   \e[32mdone.\e[0m\n";
                     }

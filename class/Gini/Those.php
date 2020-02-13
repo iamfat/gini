@@ -597,6 +597,12 @@ namespace {
     if (function_exists('a')) {
         die('a() was declared by other libraries, which may cause problems!');
     } else {
+        /**
+         * @param string  $name
+         * @param null    $criteria
+         *
+         * @return \Gini\ORM\Base
+         */
         function a($name, $criteria = null)
         {
             $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $name);
@@ -618,6 +624,11 @@ namespace {
     if (function_exists('those')) {
         die('those() was declared by other libraries, which may cause problems!');
     } else {
+        /**
+         * @param $name
+         *
+         * @return \Gini\Those
+         */
         function those($name)
         {
             return \Gini\IoC::construct('\Gini\Those', $name);
@@ -627,6 +638,11 @@ namespace {
     if (function_exists('SQL')) {
         die('SQL() was declared by other libraries, which may cause problems!');
     } else {
+        /**
+         * @param $SQL
+         *
+         * @return \Gini\Those\SQL
+         */
         function SQL($SQL)
         {
             return \Gini\IoC::construct('\Gini\Those\SQL', $SQL);

@@ -37,7 +37,8 @@ class Database
      *
      * @param string|null $name Name of the database configured in database.yml
      *
-     * @return object
+     * @return \Gini\Database
+     * @throws \Gini\Database\Exception
      **/
     public static function db($name = null)
     {

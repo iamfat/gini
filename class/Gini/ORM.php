@@ -990,7 +990,7 @@ abstract class ORM
         if ($st) {
             $rows = $st->rows();
             return array_map(function ($v) {
-                return $row->field;
+                return $v->field;
             }, $rows);
         }
 
@@ -1054,7 +1054,7 @@ class_exists('\Gini\Those');
 
 $app = Core::app();
 if (is_subclass_of($app, '\Gini\Module\Prototype')) {
-    $app->register('orm', function ($name) {
+    $app->register('orm', function ($name, $criteria) {
         $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $name);
         return \Gini\IoC::construct($class_name, $criteria);
     });
