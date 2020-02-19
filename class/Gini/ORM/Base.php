@@ -2,6 +2,32 @@
 
 namespace Gini\ORM;
 
+/**
+ * @method self whose($field);
+ * @method self limit($start, $per_page = null);
+ * @method self andWhose($field);
+ * @method self orWhose($field);
+ * @method self whoIs($field);
+ * @method self andWhoIs($field);
+ * @method self whichIs($field);
+ * @method self andWhichIs($field);
+ * @method self orWhoIs($field);
+ * @method self orWhichIs($field);
+ * @method self isIn($args);
+ * @method self isNotIn($args);
+ * @method self match($op, $v);
+ * @method self is($v);
+ * @method self isNot($v);
+ * @method self beginsWith($v)($v);
+ * @method self contains($v);
+ * @method self endsWith($v);
+ * @method self isLessThan($v);
+ * @method self isGreaterThan($v);
+ * @method self isGreaterThanOrEqual($v);
+ * @method self isLessThanOrEqual($v);
+ * @method self isBetween($a, $b);
+ * @method self orderBy($field, $mode = 'asc');
+*/
 abstract class Base extends \Gini\ORM
 {
     public $id = 'bigint,primary,serial';
@@ -24,7 +50,7 @@ abstract class Base extends \Gini\ORM
         return parent::fetch($force);
     }
 
-    public function __call($method, array $params)
+    public function __call($method, $params)
     {
         if ($method === __FUNCTION__) {
             return;

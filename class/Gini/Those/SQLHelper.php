@@ -275,7 +275,8 @@ class SQLHelper
             }
 
             default: {
-                $this->_where[] = $field_name.$op.$this->_getValue($v, $raw);
+                // 这里是否需要接收一个 raw 参数再额外控制呢
+                $this->_where[] = $field_name.$op.$this->_getValue($v);
             }
 
         }

@@ -34,7 +34,8 @@ class ORM extends \Gini\Controller\CLI
                 }
 
                 $oname = $parts[1];
-                $className = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
+                if ($oname === 'Object') return;
+                $className = '\Gini\ORM\\' . str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($className);
@@ -110,7 +111,8 @@ class ORM extends \Gini\Controller\CLI
                 }
 
                 $oname = $parts[1];
-                $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
+                if ($oname === 'Object') return;
+                $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
@@ -169,7 +171,7 @@ class ORM extends \Gini\Controller\CLI
                 }
 
                 $oname = $parts[1];
-                $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
+                $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
@@ -191,7 +193,7 @@ class ORM extends \Gini\Controller\CLI
                     if (isset($option['object'])) {
                         $db->query('UPDATE :table SET :field=NULL WHERE :field=0', [
                             ':table' => $o->tableName(),
-                            ':field' => $field.'_id',
+                            ':field' => $field . '_id',
                         ]);
                     }
                 }

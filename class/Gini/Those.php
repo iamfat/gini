@@ -523,17 +523,20 @@ namespace Gini {
         public function orderBy($field, $mode = 'asc')
         {
             $this->resetFetch();
+            $originalField = $this->_field;
+            $this->_field = $field;
+            $field_name = $this->_fieldName();
+            $this->_field = $originalField;
 
-            $db = $this->db;
             $mode = strtolower($mode);
             switch ($mode) {
                 case 'desc':
                 case 'd':
-                $this->_order_by[] = $db->ident($this->_table, $field).' DESC';
+                $this->_order_by[] = $field_name .' DESC';
                 break;
                 case 'asc':
                 case 'a':
-                $this->_order_by[] = $db->ident($this->_table, $field).' ASC';
+                $this->_order_by[] = $field_name .' ASC';
                 break;
             }
 
@@ -594,6 +597,12 @@ namespace {
     if (function_exists('a')) {
         die('a() was declared by other libraries, which may cause problems!');
     } else {
+        /**
+         * @param string  $name
+         * @param null    $criteria
+         *
+         * @return \Gini\ORM\Base
+         */
         function a($name, $criteria = null)
         {
             $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $name);
@@ -615,6 +624,11 @@ namespace {
     if (function_exists('those')) {
         die('those() was declared by other libraries, which may cause problems!');
     } else {
+        /**
+         * @param $name
+         *
+         * @return \Gini\Those
+         */
         function those($name)
         {
             return \Gini\IoC::construct('\Gini\Those', $name);
@@ -624,6 +638,11 @@ namespace {
     if (function_exists('SQL')) {
         die('SQL() was declared by other libraries, which may cause problems!');
     } else {
+        /**
+         * @param $SQL
+         *
+         * @return \Gini\Those\SQL
+         */
         function SQL($SQL)
         {
             return \Gini\IoC::construct('\Gini\Those\SQL', $SQL);
