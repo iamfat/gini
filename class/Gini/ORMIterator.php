@@ -69,6 +69,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         } else {
             if ($scope === '*') {
                 unset($this->_fetch_flag);
+                $this->resultArray = [];
             } else {
                 unset($this->_fetch_flag[$scope]);
             }
@@ -164,7 +165,6 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
         return $this;
     }
-
 
     public function fetchArray($keys)
     {
@@ -341,52 +341,53 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $val = $key;
             $key = 'id';
         }
+        $array_column = null;
+        if (!is_array($val)) {
+            $array_column = $val;
+            $val = [$val];
+        }
 
+        $arr = [];
         if ($this->isFetchFlagged('data')) {
             // 如果已经取得了object list 就直接从这些数据中返回
             foreach (array_keys($this->objects) as $k) {
                 $o = $this->object($k);
-                if (!is_array($val)) {
-                    $arr[$o->$key] = $o->$val;
-                } else {
-                    foreach ($val as $v) {
-                        $arr[$o->$key][$v] = $o->$v;
-                    }
+                foreach ($val as $v) {
+                    $arr[$o->$key][$v] = $o->$v;
                 }
             }
         } else {
             $structure = a($this->name())->structure();
-            $get = $val;
-            if (!is_array($get)) {
-                if (isset($structure[$get]['object'])) {
-                    $get = $get . '_id';
-                }
-                $this->fetch([$key, $get]);
-            } else {
-                foreach (array_keys($get) as $k) {
-                    if (isset($structure[$get[$k]]['object'])) {
-                        $get[$k] = $get[$k] . '_id';
-                    }
-                }
-                $this->fetch(array_merge($get, [$key]));
-            }
-            foreach ($this->resultArray as $o) {
-                if (!is_array($val)) {
-                    if (isset($structure[$val]['object'])) {
-                        $arr[$o[$key]] = a($structure[$get]['object'], $o[$val . '_id']);
-                    } else {
-                        $arr[$o[$key]] = $o[$val];
-                    }
+            $columns = [];
+            $tempColumns = array_merge($val, [$key]);
+            foreach ($tempColumns as $c) {
+                if (isset($structure[$c]['object'])) {
+                    $columns[$c . '_id'] = "`{$c}_id` AS '{$c}_id'";
                 } else {
+                    $columns[$c] = "`$c` AS '$c'";
+                }
+            }
+
+
+            $SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
+            $SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 ' . join(',', $columns) . ' $3', $SQL);
+
+            $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
+            if ($result) {
+                while ($row = $result->row(\PDO::FETCH_ASSOC)) {
+                    $arr[$row[$key]] = [];
                     foreach ($val as $v) {
                         if (isset($structure[$v]['object'])) {
-                            $arr[$o[$key]][$v] = a($structure[$v]['object'], $o[$v . '_id']);
+                            $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
                         } else {
-                            $arr[$o[$key]][$v] = $o[$v];
+                            $arr[$row[$key]][$v] = $row[$v];
                         }
                     }
                 }
             }
+        }
+        if ($array_column && !empty($arr)) {
+            $arr = array_column($arr, $array_column);
         }
         return $arr;
     }
