@@ -19,6 +19,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     protected $SQL_idents;
     protected $SQL_params;
     protected $count_SQL;
+    protected $resultArray = [];
 
     private $_forUpdate = false;
 
@@ -102,6 +103,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     protected function fetch($scope = 'data')
     {
+        if (is_array($scope)) {
+            return $this->fetchArray($scope);
+        }
         if ($this->isFetchFlagged($scope)) {
             return $this;
         }
@@ -158,6 +162,47 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
         $this->setFetchFlag($scope, true);
 
+        return $this;
+    }
+
+
+    public function fetchArray($keys)
+    {
+        if ($this->isFetchFlagged('data')) { // 如果已经fetch过object list 没必要再这样get
+            return $this;
+        }
+        $requireKeys = [];
+        foreach ($keys as $key) {
+            if (!$this->isFetchFlagged('key:' . $key)) {
+                $requireKeys[$key] = "`$key` AS '$key'";
+                /* todo 想用 _fieldName()支持a.b的形式
+                        1、those里才有这个函数
+                        2、我希望多次调用这个函数时，可以共用返回数据，目前用的是每个表都存在的id作为主键，比方说get(a,[b,c,d]),将会取id,a,b,c,d，在get函数中组装为a=>[b,c,d]的形式返回，这样下次用户取get(d,[a,b])可以完全复用(如果b非唯一，则新的会覆盖旧的，也是一个问题)
+                        3、如果用2的前提，连接出来的是一个id对应多个key，应当怎样去拿到唯一的hash值或id联合值让多次调用key不相同的情况下还能保存数据？
+                */
+            }
+        }
+        if (empty($requireKeys)) {
+            return $this;
+        }
+        if (!isset($requireKeys['id'])) {
+            $requireKeys['id'] = "`id` AS 'id'";
+        }
+        // 如果不预先使用makeSQL，怎么产生this->sql?
+        $SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
+        $SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 ' . join(',', $requireKeys) . ' $3', $SQL);
+
+        $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
+        if ($result) {
+            while ($row = $result->row(\PDO::FETCH_ASSOC)) {
+                foreach (array_keys($requireKeys) as $key) {
+                    $this->resultArray[$row['id']][$key] = $row[$key];
+                }
+            }
+        }
+        foreach (array_keys($requireKeys) as $key) {
+            $this->setFetchFlag($key);
+        }
         return $this;
     }
 
@@ -292,21 +337,57 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     public function get($key = 'id', $val = null)
     {
-        $this->fetch();
-
-        $arr = array();
         if ($val === null) {
-            foreach (array_keys($this->objects) as $k) {
-                $o = $this->object($k);
-                $arr[$o->id] = $o->$key;
-            }
-        } else {
-            foreach (array_keys($this->objects) as $k) {
-                $o = $this->object($k);
-                $arr[$o->$key] = $o->$val;
-            }
+            $val = $key;
+            $key = 'id';
         }
 
+        if ($this->isFetchFlagged('data')) {
+            // 如果已经取得了object list 就直接从这些数据中返回
+            foreach (array_keys($this->objects) as $k) {
+                $o = $this->object($k);
+                if (!is_array($val)) {
+                    $arr[$o->$key] = $o->$val;
+                } else {
+                    foreach ($val as $v) {
+                        $arr[$o->$key][$v] = $o->$v;
+                    }
+                }
+            }
+        } else {
+            $structure = a($this->name())->structure();
+            $get = $val;
+            if (!is_array($get)) {
+                if (isset($structure[$get]['object'])) {
+                    $get = $get . '_id';
+                }
+                $this->fetch([$key, $get]);
+            } else {
+                foreach (array_keys($get) as $k) {
+                    if (isset($structure[$get[$k]]['object'])) {
+                        $get[$k] = $get[$k] . '_id';
+                    }
+                }
+                $this->fetch(array_merge($get, [$key]));
+            }
+            foreach ($this->resultArray as $o) {
+                if (!is_array($val)) {
+                    if (isset($structure[$val]['object'])) {
+                        $arr[$o[$key]] = a($structure[$get]['object'], $o[$val . '_id']);
+                    } else {
+                        $arr[$o[$key]] = $o[$val];
+                    }
+                } else {
+                    foreach ($val as $v) {
+                        if (isset($structure[$v]['object'])) {
+                            $arr[$o[$key]][$v] = a($structure[$v]['object'], $o[$v . '_id']);
+                        } else {
+                            $arr[$o[$key]][$v] = $o[$v];
+                        }
+                    }
+                }
+            }
+        }
         return $arr;
     }
 
@@ -322,3 +403,4 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 }
+
