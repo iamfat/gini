@@ -292,21 +292,58 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     public function get($key = 'id', $val = null)
     {
-        $this->fetch();
-
-        $arr = array();
         if ($val === null) {
-            foreach (array_keys($this->objects) as $k) {
-                $o = $this->object($k);
-                $arr[$o->id] = $o->$key;
-            }
-        } else {
-            foreach (array_keys($this->objects) as $k) {
-                $o = $this->object($k);
-                $arr[$o->$key] = $o->$val;
-            }
+            $val = $key;
+            $key = 'id';
+        }
+        $column_key = null;
+        if (!is_array($val)) {
+            $column_key = $val;
+            $val = [$val];
         }
 
+        $arr = [];
+        if ($this->isFetchFlagged('data')) {
+            // 如果已经取得了object list 就直接从这些数据中返回
+            foreach (array_keys($this->objects) as $k) {
+                $o = $this->object($k);
+                foreach ($val as $v) {
+                    $arr[$o->$key][$v] = $o->$v;
+                }
+            }
+        } else {
+            $structure = a($this->name())->structure();
+            $columns = [];
+            $tempColumns = array_merge($val, [$key]);
+            foreach ($tempColumns as $c) {
+                if (isset($structure[$c]['object'])) {
+                    $columns[$c . '_id'] = $this->db->quote_ident($c . '_id') . " AS '{$c}_id'";
+                } else {
+                    $columns[$c] = $this->db->quote_ident($c) . " AS '{$c}_id'";
+                }
+            }
+
+
+            $SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
+            $SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 ' . join(',', $columns) . ' $3', $SQL);
+
+            $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
+            if ($result) {
+                while ($row = $result->row(\PDO::FETCH_ASSOC)) {
+                    $arr[$row[$key]] = [];
+                    foreach ($val as $v) {
+                        if (isset($structure[$v]['object'])) {
+                            $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
+                        } else {
+                            $arr[$row[$key]][$v] = $row[$v];
+                        }
+                    }
+                }
+            }
+        }
+        if ($column_key && !empty($arr)) {
+            $arr = array_column($arr, $column_key);
+        }
         return $arr;
     }
 
@@ -322,3 +359,4 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 }
+
