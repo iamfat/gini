@@ -296,9 +296,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $val = $key;
             $key = 'id';
         }
-        $array_column = null;
+        $column_key = null;
         if (!is_array($val)) {
-            $array_column = $val;
+            $column_key = $val;
             $val = [$val];
         }
 
@@ -341,8 +341,8 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                 }
             }
         }
-        if ($array_column && !empty($arr)) {
-            $arr = array_column($arr, $array_column);
+        if ($column_key && !empty($arr)) {
+            $arr = array_column($arr, $column_key);
         }
         return $arr;
     }
