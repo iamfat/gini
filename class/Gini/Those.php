@@ -588,6 +588,15 @@ namespace Gini {
 
             return $this;
         }
+
+
+        public function get($key = 'id', $val = null)
+        {
+            if (!$this->SQL) {
+                $this->makeSQL();
+            }
+            return parent::get($key, $val);
+        }
     }
 
 }
