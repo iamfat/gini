@@ -317,9 +317,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $tempColumns = array_merge($val, [$key]);
             foreach ($tempColumns as $c) {
                 if (isset($structure[$c]['object'])) {
-                    $columns[$c . '_id'] = $this->db->quote_ident($c . '_id') . " AS '{$c}_id'";
+                    $columns[$c . '_id'] = $this->db->quoteIdent($c . '_id') . " AS '{$c}_id'";
                 } else {
-                    $columns[$c] = $this->db->quote_ident($c) . " AS '{$c}_id'";
+                    $columns[$c] = $this->db->quoteIdent($c) . " AS '{$c}'";
                 }
             }
 
@@ -359,4 +359,3 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 }
-
