@@ -79,10 +79,22 @@ namespace Gini {
         {
         }
 
-        public function __construct($name)
+        public function __construct($name, $criteria = null)
         {
             parent::__construct($name);
-            $this->_table = 't'.$this->uniqid();
+            $this->_table = 't' . $this->uniqid();
+            if ($criteria) {
+                if (!is_array($criteria)) {
+                    $criteria = ['id' => $criteria];
+                }
+                foreach ($criteria as $key => $value) {
+                    if (is_array($value)) {
+                        $this->whose($key)->isIn($value);
+                    } else {
+                        $this->whose($key)->is($value);
+                    }
+                }
+            }
         }
 
         public function withTrashed()
@@ -638,9 +650,9 @@ namespace {
          *
          * @return \Gini\Those
          */
-        function those($name)
+        function those($name, $criteria = null)
         {
-            return \Gini\IoC::construct('\Gini\Those', $name);
+            return \Gini\IoC::construct('\Gini\Those', $name, $criteria);
         }
     }
 
