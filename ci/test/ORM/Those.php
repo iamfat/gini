@@ -343,4 +343,215 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         $those->makeSQL();
         $this->assertAttributeEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."type_id" FROM "company" AS "t0" INNER JOIN "company_type" AS "t1" ON "t0"."type_id"="t1"."id" WHERE "t1"."name"=\'test\'','SQL',$those);
     }
+
+    public function testGet()
+    {
+
+        $db = self::getMockBuilder('\Gini\Database')
+            ->setMockClassName('MOBJ_' . uniqid())
+            ->setMethods(['query', 'quote', 'quoteIdent', 'ident'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $query = self::getMockBuilder('\Gini\Database\Statement')
+            ->setMockClassName('MOBJ_' . uniqid())
+            ->setMethods(['row'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $db->expects($this->any())
+            ->method('quoteIdent')
+            ->will($this->returnCallback(function ($s) use ($db) {
+                if (is_array($s)) {
+                    foreach ($s as &$i) {
+                        $i = $db->quoteIdent($i);
+                    }
+
+                    return implode(',', $s);
+                }
+
+                return '"' . addslashes($s) . '"';
+            }));
+
+        $db->expects($this->any())
+            ->method('quote')
+            ->will($this->returnCallback(function ($s) use ($db) {
+                if (is_array($s)) {
+                    foreach ($s as &$i) {
+                        $i = $db->quote($i);
+                    }
+
+                    return implode(',', $s);
+                } elseif (is_null($s)) {
+                    return 'NULL';
+                } elseif (is_bool($s)) {
+                    return $s ? 1 : 0;
+                } elseif (is_int($s) || is_float($s)) {
+                    return $s;
+                }
+
+                return '\'' . addslashes($s) . '\'';
+            }));
+
+
+        $db->expects($this->any())
+            ->method('ident')
+            ->will($this->returnCallback(
+                function ($s) use ($db) {
+
+                    $args = func_get_args();
+                    $ident = array();
+                    foreach ($args as $arg) {
+                        $ident[] = $db->quoteIdent($arg);
+                    }
+
+                    return implode('.', $ident);
+                }
+            ));
+
+
+        $db->expects($this->any())
+            ->method('query')
+            ->will($this->returnCallback(function ($s, $s1, $s2) use ($query) {
+                return $query;
+            }));
+        $test_rows = [
+            ['id' => 20, 'name' => 'a', 'money' => 1.0, 'father_id' => 30, 'description' => 'temp1'],
+            ['id' => 30, 'name' => 'b', 'money' => 2.0, 'father_id' => null, 'description' => 'temp2'],
+            ['id' => 40, 'name' => 'c', 'money' => 3.0, 'father_id' => 50, 'description' => 'temp3'],
+            ['id' => 50, 'name' => 'd', 'money' => 4.0, 'father_id' => null, 'description' => 'temp4'],
+        ];
+        $row_num = 0;
+        $query->expects($this->any())
+            ->method('row')
+            ->will($this->returnCallback(function ($s) use (&$test_rows, &$row_num) {
+                if (isset($test_rows[$row_num])) {
+                    $res = $test_rows[$row_num];
+                    $row_num++;
+                    return $res;
+                } else {
+                    return false;
+                }
+            }));
+
+
+        \Gini\IoC::bind('\Gini\ORM\User', function ($criteria) use ($db) {
+            $o = $this->getMockBuilder('\Gini\ORM\Object')
+                ->setMockClassName('MOBJ_' . uniqid())
+                ->setMethods(['db', 'properties', 'name', 'tableName'])
+                ->disableOriginalConstructor()
+                ->getMock();
+
+            $o->expects($this->any())
+                ->method('db')
+                ->will($this->returnValue($db));
+
+            $o->expects($this->any())
+                ->method('name')
+                ->will($this->returnValue('user'));
+
+            $o->expects($this->any())
+                ->method('tableName')
+                ->will($this->returnValue('user'));
+
+            $o->expects($this->any())
+                ->method('properties')
+                ->will($this->returnValue([
+                    'id' => 'bigint,pimary,serial',
+                    '_extra' => 'array',
+                    'name' => 'string:50',
+                    'money' => 'double,default:0',
+                    'father' => 'object:user',
+                    'description' => 'string:*,null'
+                ]));
+            $o->criteria = $criteria;
+
+            return $o;
+        });
+        \Gini\Those::reset();
+        $test_rows = [
+            ['id' => 20, 'name' => 'a'],
+            ['id' => 30, 'name' => 'b'],
+            ['id' => 40, 'name' => 'c'],
+            ['id' => 50, 'name' => 'd'],
+        ];
+        $those1 = those('user')->get('name');
+        $this->assertEquals([20 => 'a', 30 => 'b', 40 => 'c', 50 => 'd'], $those1);
+
+        \Gini\Those::reset();
+        $those = those('user')->whose('name')->is('test');
+        $test_rows = [
+        ];
+        $row_num = 0;
+        $res = $those->get('name');
+        $this->assertEquals([], $res);
+
+        \Gini\Those::reset();
+        $those = those('user')->whose('name')->is('a');
+        $test_rows = [
+            ['id' => 20, 'name' => 'a'],
+        ];
+        $row_num = 0;
+        $res = $those->get('name');
+        $this->assertEquals([20 => 'a'], $res);
+
+        \Gini\Those::reset();
+        $row_num = 0;
+        $test_rows = [
+            ['name' => 'a', 'description' => 'temp1'],
+            ['name' => 'b', 'description' => 'temp2'],
+            ['name' => 'c', 'description' => 'temp3'],
+            ['name' => 'd', 'description' => 'temp4'],
+        ];
+        $res = those('user')->get('name', 'description');
+        $this->assertEquals(['a' => 'temp1', 'b' => 'temp2', 'c' => 'temp3', 'd' => 'temp4'], $res);
+
+        \Gini\Those::reset();
+        $row_num = 0;
+        $test_rows = [
+            ['id' => 20, 'name' => 'a', 'description' => 'temp1'],
+            ['id' => 30, 'name' => 'b', 'description' => 'temp2'],
+            ['id' => 40, 'name' => 'c', 'description' => 'temp3'],
+            ['id' => 50, 'name' => 'd', 'description' => 'temp4'],
+        ];
+        $res = those('user')->get(['name', 'description']);
+        $this->assertEquals([
+            20 => ['name' => 'a', 'description' => 'temp1'],
+            30 => ['name' => 'b', 'description' => 'temp2'],
+            40 => ['name' => 'c', 'description' => 'temp3'],
+            50 => ['name' => 'd', 'description' => 'temp4']
+        ], $res);
+
+        \Gini\Those::reset();
+        $row_num = 0;
+        $test_rows = [
+            ['id' => 20, 'name' => 'a', 'description' => 'temp1'],
+            ['id' => 30, 'name' => 'b', 'description' => 'temp2'],
+            ['id' => 40, 'name' => 'c', 'description' => 'temp3'],
+            ['id' => 50, 'name' => 'd', 'description' => 'temp4'],
+        ];
+        $res = those('user')->get('name', ['id', 'description']);
+        $this->assertEquals([
+            'a' => ['id' => 20, 'description' => 'temp1'],
+            'b' => ['id' => 30, 'description' => 'temp2'],
+            'c' => ['id' => 40, 'description' => 'temp3'],
+            'd' => ['id' => 50, 'description' => 'temp4']
+        ], $res);
+
+        \Gini\Those::reset();
+        $row_num = 0;
+        $test_rows = [
+            ['id' => 20, 'father_id' => 30],
+            ['id' => 30, 'father_id' => null],
+            ['id' => 40, 'father_id' => 50],
+            ['id' => 50, 'father_id' => null],
+        ];
+        $res = those('user')->get('father');
+        $this->assertEquals(30, $res['20']->criteria);
+        $this->assertEquals(null, $res['30']);
+        $this->assertEquals(50, $res['40']->criteria);
+        $this->assertEquals(null, $res['50']);
+    }
+
 }
+

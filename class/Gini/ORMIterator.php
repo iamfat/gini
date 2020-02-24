@@ -323,7 +323,6 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                 }
             }
 
-
             $SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
             $SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 ' . join(',', $columns) . ' $3', $SQL);
 
@@ -342,7 +341,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             }
         }
         if ($column_key && !empty($arr)) {
-            $arr = array_column($arr, $column_key);
+            $arr = array_combine(array_keys($arr), array_column($arr, $column_key));
         }
         return $arr;
     }
@@ -359,3 +358,5 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 }
+
+
