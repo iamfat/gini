@@ -339,12 +339,12 @@ namespace Gini {
             return $this;
         }
 
-        private function _fieldName($suffix=null)
+        protected function _fieldName($field,$suffix=null)
         {
             $db = $this->db;
             $name = $this->name();
             // table1.table2.table3.field
-            $fields = explode('.', $this->_field);
+            $fields = explode('.', $field);
             $key = '';
 
             for (;;) {
@@ -415,7 +415,7 @@ namespace Gini {
             assert($this->_field);
 
             $db = $this->db;
-            $field_name = $this->_fieldName();
+            $field_name = $this->_fieldName($this->_field);
 
             switch ($op) {
                 case '^=': {
@@ -447,9 +447,9 @@ namespace Gini {
                                 && \array_key_exists('object', $manyStructure[$field])
                                 && !$manyStructure[$field]['object'])
                             ) {
-                            $obj_where[] = $this->_fieldName('_name').$op.$db->quote($v->name());
+                            $obj_where[] = $this->_fieldName($this->_field,'_name').$op.$db->quote($v->name());
                         }
-                        $obj_where[] = $this->_fieldName('_id').$op.intval($v->id);
+                        $obj_where[] = $this->_fieldName($this->_field,'_id').$op.intval($v->id);
                         if ($op == '<>') {
                             $this->_where[] = $this->_packWhere($obj_where, 'OR');
                         } else {
@@ -537,7 +537,7 @@ namespace Gini {
             $this->resetFetch();
             $originalField = $this->_field;
             $this->_field = $field;
-            $field_name = $this->_fieldName();
+            $field_name = $this->_fieldName($this->_field);
             $this->_field = $originalField;
 
             $mode = strtolower($mode);
@@ -670,3 +670,4 @@ namespace {
         }
     }
 }
+

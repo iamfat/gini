@@ -290,6 +290,11 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 
+    protected function _fieldName($field, $suffix = null)
+    {
+        return $this->db->quoteIdent($field.$suffix);
+    }
+
     public function get($key = 'id', $val = null)
     {
         if ($val === null) {
@@ -317,12 +322,11 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $tempColumns = array_merge($val, [$key]);
             foreach ($tempColumns as $c) {
                 if (isset($structure[$c]['object'])) {
-                    $columns[$c . '_id'] = $this->db->quoteIdent($c . '_id') . " AS '{$c}_id'";
+                    $columns[$c . '_id'] = $this->_fieldName($c , '_id') . " AS '{$c}_id'";
                 } else {
-                    $columns[$c] = $this->db->quoteIdent($c) . " AS '{$c}'";
+                    $columns[$c] = $this->_fieldName($c) . " AS '{$c}'";
                 }
             }
-
 
             $SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
             $SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 ' . join(',', $columns) . ' $3', $SQL);
@@ -333,7 +337,11 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                     $arr[$row[$key]] = [];
                     foreach ($val as $v) {
                         if (isset($structure[$v]['object'])) {
-                            $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
+                            if (is_null($row[$v . '_id'])) {
+                                $arr[$row[$key]][$v] = null;
+                            } else {
+                                $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
+                            }
                         } else {
                             $arr[$row[$key]][$v] = $row[$v];
                         }
@@ -342,7 +350,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             }
         }
         if ($column_key && !empty($arr)) {
-            $arr = array_column($arr, $column_key);
+            $arr = array_combine(array_keys($arr), array_column($arr, $column_key));
         }
         return $arr;
     }
@@ -359,3 +367,5 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 }
+
+
