@@ -332,11 +332,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                     $arr[$row[$key]] = [];
                     foreach ($val as $v) {
                         if (isset($structure[$v]['object'])) {
-                            if (is_null($row[$v . '_id'])) {
-                                $arr[$row[$key]][$v] = null;
-                            } else {
-                                $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
-                            }
+                            $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
                         } else {
                             $arr[$row[$key]][$v] = $row[$v];
                         }
