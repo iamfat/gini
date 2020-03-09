@@ -32,11 +32,33 @@ class Suite extends \Gini\Controller\CLI
 
         $gini_bin = realpath($_SERVER['_'] ?: $_SERVER['SCRIPT_FILENAME']);
         $command = escapeshellcmd($gini_bin) . ' ' . implode(' ', array_map('escapeshellarg', $args));
+        $modules = [];
         foreach (glob($suiteDir . '/*/gini.json') as $moduleInfoPath) {
-            $moduleDir = dirname($moduleInfoPath);
-            $cleanDir = \Gini\File::relativePath($moduleDir, $suiteDir);
-            echo "\e[30;42m + $cleanDir\e[K\e[0m\n";
-            $proc = proc_open($command, [STDIN, STDOUT, STDERR], $pipes, $moduleDir, $env);
+            $module = (object) @json_decode(@file_get_contents($moduleInfoPath), true);
+            $module->path = dirname($moduleInfoPath);
+            $module->shortId = \Gini\File::relativePath($module->path, $suiteDir);
+            $modules[$module->shortId] = $module;
+        }
+
+        $sortedModules = [];
+        $sortModule = function($module) use (&$sortedModules, $modules, &$sortModule) {
+            foreach((array) $module->suiteDependencies as $depId) {
+                if (isset($modules[$depId])) {
+                    $sortModule($modules[$depId]);
+                }
+            }
+            if (!isset($sortedModules[$module->shortId])) {
+                $sortedModules[$module->shortId] = $module;
+            }
+        };
+
+        foreach ($modules as $module) {
+            $sortModule($module);
+        }
+
+        foreach($sortedModules as $module) {
+            echo "\e[30;42m + $module->shortId\e[K\e[0m\n";
+            $proc = proc_open($command, [STDIN, STDOUT, STDERR], $pipes, $module->path, $env);
             if (is_resource($proc)) {
                 proc_close($proc);
             }
