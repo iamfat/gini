@@ -31,7 +31,9 @@ class Suite extends \Gini\Controller\CLI
         }
 
         $gini_bin = realpath($_SERVER['_'] ?: $_SERVER['SCRIPT_FILENAME']);
-        $command = escapeshellcmd($gini_bin) . ' ' . implode(' ', array_map('escapeshellarg', $args));
+        $opt = \Gini\Util::getOpt($args, [], ['exclude:']);
+
+        $command = escapeshellcmd($gini_bin) . ' ' . implode(' ', array_map('escapeshellarg', $opt['_']));
         $modules = [];
         foreach (glob($suiteDir . '/*/gini.json') as $moduleInfoPath) {
             $module = (object) @json_decode(@file_get_contents($moduleInfoPath), true);
@@ -56,7 +58,12 @@ class Suite extends \Gini\Controller\CLI
             $sortModule($module);
         }
 
+        $excludes = (array) explode(',', $opt['exclude']);
         foreach ($sortedModules as $module) {
+            if (in_array($module->shortId, $excludes)) {
+                continue;
+            }
+
             echo "\e[30;42m + $module->shortId\e[K\e[0m\n";
             $proc = proc_open($command, [STDIN, STDOUT, STDERR], $pipes, $module->path, $env);
             if (is_resource($proc)) {
