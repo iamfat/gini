@@ -11,8 +11,8 @@ class Suite extends \Gini\Controller\CLI
             die("Usage: gini suite [other-gini-commands]\n");
         }
 
-        $envPath = $suiteDir.'/' . $_SERVER['GINI_ENV'] . '.env';
-        $env = $_SERVER + [ 'GINI_IN_SUITE' => 1 ];
+        $envPath = $suiteDir . '/' . $_SERVER['GINI_ENV'] . '.env';
+        $env = $_SERVER + ['GINI_IN_SUITE' => 1];
         unset($env['GINI_APP_PATH']);
         if (file_exists($envPath)) {
             $rows = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -21,7 +21,7 @@ class Suite extends \Gini\Controller\CLI
                     continue;
                 }
                 list($key, $value) = explode('=', trim($row), 2);
-                $row = $key.'='.trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
+                $row = $key . '=' . trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
                     $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
                     return getenv($matches[1]) ?: $defaultValue;
                 }, $value));
@@ -41,8 +41,8 @@ class Suite extends \Gini\Controller\CLI
         }
 
         $sortedModules = [];
-        $sortModule = function($module) use (&$sortedModules, $modules, &$sortModule) {
-            foreach((array) $module->suiteDependencies as $depId) {
+        $sortModule = function ($module) use (&$sortedModules, $modules, &$sortModule) {
+            foreach ((array) $module->suiteDependencies as $depId) {
                 if (isset($modules[$depId])) {
                     $sortModule($modules[$depId]);
                 }
@@ -56,12 +56,18 @@ class Suite extends \Gini\Controller\CLI
             $sortModule($module);
         }
 
-        foreach($sortedModules as $module) {
+        foreach ($sortedModules as $module) {
             echo "\e[30;42m + $module->shortId\e[K\e[0m\n";
             $proc = proc_open($command, [STDIN, STDOUT, STDERR], $pipes, $module->path, $env);
             if (is_resource($proc)) {
-                proc_close($proc);
+                $exitCode = proc_close($proc);
+                if ($exitCode !== 0) {
+                    echo "\e[31m + $module->shortId was aborted with code=$exitCode\e[0m\n";
+                    break;
+                }
             }
         }
+
+        exit($exitCode);
     }
 }
