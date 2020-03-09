@@ -285,7 +285,7 @@ class App extends \Gini\Controller\CLI
     {
         self::giniBanner();
         $command = implode(' ', $argv);
-        $proc = proc_open($command ?: '/bin/bash -l', [STDIN, STDOUT, STDERR], $pipes, null, $_ENV);
+        $proc = proc_open($command ?: '/bin/bash -l', [STDIN, STDOUT, STDERR], $pipes, null, $_SERVER);
         if (is_resource($proc)) {
             proc_close($proc);
         }

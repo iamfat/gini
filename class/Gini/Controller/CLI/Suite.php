@@ -12,7 +12,8 @@ class Suite extends \Gini\Controller\CLI
         }
 
         $envPath = $suiteDir.'/' . $_SERVER['GINI_ENV'] . '.env';
-        $env = $_ENV + [ 'GINI_IN_SUITE' => 1 ];
+        $env = $_SERVER + [ 'GINI_IN_SUITE' => 1 ];
+        unset($env['GINI_APP_PATH']);
         if (file_exists($envPath)) {
             $rows = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($rows as &$row) {
