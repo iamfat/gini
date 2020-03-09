@@ -279,13 +279,13 @@ class App extends \Gini\Controller\CLI
     /**
      * sh -lc.
      *
-     * @param string $argv
+     * @param array $argv
      */
     public function actionSh($argv)
     {
         self::giniBanner();
         $command = implode(' ', $argv);
-        $proc = proc_open($command ?: '/bin/bash -l', [STDIN, STDOUT, STDERR], $pipes);
+        $proc = proc_open($command ?: '/bin/bash -l', [STDIN, STDOUT, STDERR], $pipes, null, $_SERVER);
         if (is_resource($proc)) {
             proc_close($proc);
         }
