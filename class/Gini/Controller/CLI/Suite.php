@@ -29,7 +29,7 @@ class Suite extends \Gini\Controller\CLI
             }
         }
 
-        $gini_bin = $_SERVER['_'] ?: $_SERVER['SCRIPT_FILENAME'];
+        $gini_bin = realpath($_SERVER['_'] ?: $_SERVER['SCRIPT_FILENAME']);
         $command = escapeshellcmd($gini_bin) . ' ' . implode(' ', array_map('escapeshellarg', $args));
         foreach (glob($suiteDir . '/*/gini.json') as $moduleInfoPath) {
             $moduleDir = dirname($moduleInfoPath);
