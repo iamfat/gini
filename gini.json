@@ -32,7 +32,7 @@
             "sabre/dav": "@stable",
             "doctrine/inflector": "@stable",
             "doctrine/annotations": "@stable",
-            "mtdowling/cron-expression": "@stable"
+            "dragonmantank/cron-expression": "@stable"
         },
         "require-dev": {
             "henrikbjorn/lurker": "1.*"
