@@ -290,6 +290,11 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 
+    protected function _fieldName($field, $suffix = null)
+    {
+        return $this->db->quoteIdent($field.$suffix);
+    }
+
     public function get($key = 'id', $val = null)
     {
         if ($val === null) {
@@ -317,9 +322,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $tempColumns = array_merge($val, [$key]);
             foreach ($tempColumns as $c) {
                 if (isset($structure[$c]['object'])) {
-                    $columns[$c . '_id'] = $this->db->quoteIdent($c . '_id') . " AS '{$c}_id'";
+                    $columns[$c . '_id'] = $this->_fieldName($c , '_id') . " AS '{$c}_id'";
                 } else {
-                    $columns[$c] = $this->db->quoteIdent($c) . " AS '{$c}'";
+                    $columns[$c] = $this->_fieldName($c) . " AS '{$c}'";
                 }
             }
 
