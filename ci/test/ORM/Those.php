@@ -548,9 +548,9 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         ];
         $res = those('user')->get('father');
         $this->assertEquals(30, $res['20']->criteria);
-        $this->assertEquals(null, $res['30']);
+        $this->assertEquals(null, $res['30']->id);
         $this->assertEquals(50, $res['40']->criteria);
-        $this->assertEquals(null, $res['50']);
+        $this->assertEquals(null, $res['50']->id);
     }
 
 }

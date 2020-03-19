@@ -251,11 +251,11 @@ namespace Gini {
             $values = func_get_args();
 
             $db = $this->db;
-            $field_name = $db->ident($this->_table, $this->_field);
+            $field_name = $this->_fieldName($this->_field);
 
             $v = reset($values);
             if ($v instanceof self) {
-                $field_name = $db->ident($this->_table, $this->_field.'_id');
+                $field_name = $this->_fieldName($this->_field.'_id');
                 $this->_join[] = 'INNER JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
                     .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
                 if ($v->_join) {
@@ -291,11 +291,11 @@ namespace Gini {
             $values = func_get_args();
 
             $db = $this->db;
-            $field_name = $db->ident($this->_table, $this->_field);
+            $field_name = $this->_fieldName($this->_field);
 
             $v = reset($values);
             if ($v instanceof self) {
-                $field_name = $db->ident($this->_table, $this->_field.'_id');
+                $field_name = $this->_fieldName($this->_field.'_id');
                 $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name)
                     .' AS '.$db->quoteIdent($v->_table)
                     .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
@@ -333,7 +333,7 @@ namespace Gini {
             assert($this->_field);
 
             $db = $this->db;
-            $field_name = $db->ident($this->_table, $this->_field);
+            $field_name = $this->_fieldName($this->_field);
             $this->_where[] = 'MATCH(' . $field_name.') AGAINST (' . $db->quote($value).')';
 
             return $this;
@@ -525,7 +525,7 @@ namespace Gini {
         {
             assert($this->_field);
             $db = $this->db;
-            $field_name = $db->ident($this->_table, $this->_field);
+            $field_name = $this->_fieldName($this->_field);
             $this->_where[] = '('.$field_name.'>='.$this->_getValue($a).
                 ' AND '.$field_name.'<'.$this->_getValue($b).')';
 
