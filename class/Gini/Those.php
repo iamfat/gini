@@ -255,7 +255,7 @@ namespace Gini {
 
             $v = reset($values);
             if ($v instanceof self) {
-                $field_name = $this->_fieldName($this->_field.'_id');
+                $field_name = $this->_fieldName($this->_field, '_id');
                 $this->_join[] = 'INNER JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
                     .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
                 if ($v->_join) {
@@ -295,7 +295,7 @@ namespace Gini {
 
             $v = reset($values);
             if ($v instanceof self) {
-                $field_name = $this->_fieldName($this->_field.'_id');
+                $field_name = $this->_fieldName($this->_field, '_id');
                 $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name)
                     .' AS '.$db->quoteIdent($v->_table)
                     .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
