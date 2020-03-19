@@ -14,7 +14,7 @@ class Composer extends \Gini\Controller\CLI
         $app = \Gini\Core::moduleInfo(APP_ID);
 
         $composer_json = [
-            'name' => $app->id,
+            'name' => 'gini/'. strtr($app->id, ['/' => '-']),
             'description' => $app->description ?: '',
             'license' => 'proprietary'
         ];
