@@ -133,7 +133,15 @@ namespace Gini {
             if (substr($dir, -1) != '/') {
                 $dir .= '/';
             }
-            self::$_base = $scheme . '://' . $host . $dir;
+
+            $base = "$scheme://$host";
+            $port = $_SERVER['SERVER_PORT'];
+            if (($scheme === 'https' && $port !== 443) || ($scheme === 'http' && $port !== 80)) {
+                $base .= ":$port";
+            }
+            $base .= $dir;
+
+            self::$_base = $base;
 
             self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl ?: ['*' => 'assets'];
         }
