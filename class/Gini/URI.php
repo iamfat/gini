@@ -135,7 +135,7 @@ namespace Gini {
             }
 
             $base = "$scheme://$host";
-            $port = $_SERVER['SERVER_PORT'];
+            $port = (int) $_SERVER['SERVER_PORT'];
             if (($scheme === 'https' && $port !== 443) || ($scheme === 'http' && $port !== 80)) {
                 $base .= ":$port";
             }
