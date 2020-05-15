@@ -205,8 +205,8 @@ abstract class ORM
                 $fields = array_map([$db, 'quoteIdent'], array_keys($schema['fields']));
 
                 $SQL = 'SELECT ' . implode(', ', $fields)
-                . ' FROM ' . $db->quoteIdent($this->tableName())
-                . ' WHERE ' . implode(' AND ', $where) . ' LIMIT 1';
+                    . ' FROM ' . $db->quoteIdent($this->tableName())
+                    . ' WHERE ' . implode(' AND ', $where) . ' LIMIT 1';
 
                 if ($this->_forUpdate) {
                     $SQL .= ' FOR UPDATE';
@@ -399,7 +399,7 @@ abstract class ORM
                         break;
                     case 'index':
                         $indexes['_IDX_' . $k] = ['fields' => [$k]];
-                    // no break
+                        // no break
                     case 'object':
                         // 需要添加新的$field
                         if (!$pv) {
@@ -419,7 +419,8 @@ abstract class ORM
                             } else {
                                 $field['default'] = intval($field['default']);
                             }
-                            break;case 'double':
+                            break;
+                        case 'double':
                         case 'float':
                         case 'decimal':
                             if (!isset($field['null']) && !isset($field['default'])) {
@@ -550,7 +551,7 @@ abstract class ORM
         $tbl_name = $this->tableName();
 
         $SQL = 'DELETE FROM ' . $db->quoteIdent($tbl_name)
-        . ' WHERE "id"=' . $db->quote($this->id);
+            . ' WHERE "id"=' . $db->quote($this->id);
 
         return (bool) $db->query($SQL);
     }
@@ -604,13 +605,17 @@ abstract class ORM
                     $default = $v['default'];
                     if (array_key_exists('string', $v)) {
                         $default = is_null($default) ? '' : (string) $default;
-                    } elseif (array_key_exists('bool', $v)
+                    } elseif (
+                        array_key_exists('bool', $v)
                         || array_key_exists('int', $v)
-                        || array_key_exists('bigint', $v)) {
+                        || array_key_exists('bigint', $v)
+                    ) {
                         $default = is_null($default) ? 0 : (int) $default;
-                    } elseif (array_key_exists('double', $v)
+                    } elseif (
+                        array_key_exists('double', $v)
                         || array_key_exists('float', $v)
-                        || array_key_exists('decimal', $v)) {
+                        || array_key_exists('decimal', $v)
+                    ) {
                         $default = is_null($default) ? 0.0 : (float) $default;
                     } elseif (array_key_exists('datetime', $v)) {
                         $default = is_null($default) ? '0000-00-00 00:00:00' : $default;
@@ -640,12 +645,13 @@ abstract class ORM
 
         if (count($pairs) > 0) {
             if ($id) {
-                if ($this->_db_data['id']
+                if (
+                    $this->_db_data['id']
                     || $db->value('SELECT "id" FROM ' . $db->quoteIdent($tbl_name) . ' WHERE "id"=?', null, [$id])
                 ) {
                     // if data exists, use update to avoid unexpected overwrite.
                     $SQL = 'UPDATE ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs) .
-                    ' WHERE ' . $db->quoteIdent('id') . '=' . $db->quote($id);
+                        ' WHERE ' . $db->quoteIdent('id') . '=' . $db->quote($id);
                 } else {
                     array_unshift($pairs, $db->quoteIdent('id') . '=' . $db->quote($id));
                     $SQL = 'REPLACE INTO ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs);
@@ -713,7 +719,7 @@ abstract class ORM
     private function _prepareName()
     {
         // remove Gini/ORM
-        list(, , $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
+        list(,, $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
         $this->_name = $name;
         $this->_tableName = str_replace('/', '_', $name);
     }
@@ -762,6 +768,8 @@ abstract class ORM
         $this->_objects = [];
         $this->_oinfo = [];
 
+        $autocast = !!\Gini\Config::get('system.orm_autocast');
+
         foreach ($this->structure() as $k => $v) {
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
@@ -789,6 +797,18 @@ abstract class ORM
                     $objects[$id] = true;
                 });
                 $this->$k = $objects;
+            } elseif ($autocast) {
+                // 根据数据类型做类型转换
+                $types = array_keys($v);
+                if (count(array_intersect($types, ['int', 'bigint'])) > 0) {
+                    $this->$k = (int) $data[$k];
+                } elseif (count(array_intersect($types, ['double', 'float', 'decimal'])) > 0) {
+                    $this->$k = (float) $data[$k];
+                } elseif (count(array_intersect($types, ['bool'])) > 0) {
+                    $this->$k = !!$data[$k];
+                } else {
+                    $this->$k = $data[$k];
+                }
             } else {
                 $this->$k = $data[$k];
             }
@@ -935,7 +955,7 @@ abstract class ORM
         }
 
         class_exists('\Doctrine\Common\Inflector\Inflector')
-        and $field = \Doctrine\Common\Inflector\Inflector::singularize($field);
+            and $field = \Doctrine\Common\Inflector\Inflector::singularize($field);
 
         $manyStructure = $this->manyStructure();
         if (!isset($manyStructure[$field])) {
