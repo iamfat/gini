@@ -29,12 +29,15 @@ abstract class ORM
     protected $_db_data;
     protected $_db_time; //上次数据库同步的时间
 
+
     private static $_STRUCTURES;
     private static $_MANY_STRUCTURES;
     private static $_RELATIONS;
     private static $_INDEXES;
 
     private static $_INJECTIONS;
+
+    private $autocast = false;
 
     /**
      * Magic method to use Event('orm[$name].call[$method]') to extend ORM object.
@@ -228,6 +231,7 @@ abstract class ORM
 
     public function __construct($criteria = null)
     {
+        $this->autocast = !!\Gini\Config::get('system.orm_autocast');
         $structure = $this->structure();
         foreach ($structure as $k => $v) {
             unset($this->$k); //empty all public properties
@@ -768,8 +772,6 @@ abstract class ORM
         $this->_objects = [];
         $this->_oinfo = [];
 
-        $autocast = !!\Gini\Config::get('system.orm_autocast');
-
         foreach ($this->structure() as $k => $v) {
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
@@ -797,7 +799,7 @@ abstract class ORM
                     $objects[$id] = true;
                 });
                 $this->$k = $objects;
-            } elseif ($autocast) {
+            } elseif ($this->autocast) {
                 // 根据数据类型做类型转换
                 $types = array_keys($v);
                 if (count(array_intersect($types, ['int', 'bigint'])) > 0) {
@@ -857,16 +859,18 @@ abstract class ORM
         // 以下返回值为了保证原始数据不被修改, 因此先用$ret复制后再返回
 
         // if $name is  {}_name or {}_id, let us get
-        if (preg_match('/^(.+)_id$/', $name, $parts)) {
-            $oname = $parts[1];
+        $parts = explode('_', $name);
+        if (end($parts) === 'id') {
+            array_pop($parts);
+            $oname = implode('_', $parts);
             if (isset($this->_objects[$oname])) {
-                return $ret = $this->_objects[$oname]->id;
+                return $this->_objects[$oname]->id;
+            } else if ($this->_oinfo[$oname]) {
+                return $this->autocast ? intval($this->_oinfo[$oname]->id) : $this->_oinfo[$oname]->id;
             }
         }
 
-        if (isset($this->_db_data[$name])) {
-            return $ret = $this->_db_data[$name];
-        }
+        return $this->_db_data[$name] ?: null;
     }
 
     public function __set($name, $value)
