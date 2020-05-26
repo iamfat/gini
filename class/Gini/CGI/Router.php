@@ -67,7 +67,7 @@ class Router
             $regex = '*';
         }
 
-        return [ $route, $regex, $params ];
+        return [$route, $regex, $params];
     }
 
     public function rules()
@@ -75,19 +75,19 @@ class Router
         return $this->rules;
     }
 
-    public function via($route, $middleware=null)
+    public function via($route, ...$middlewares)
     {
-        if (is_null($middleware)) {
-            $middleware = $route;
-            $this->middlewares['*'][] = $middleware;
+        if (count($middlewares) == 0) {
+            $middlewares = [$route];
+            $this->middlewares['*'] = array_merge($this->middlewares['*'] ?: [], $middlewares);
         } else {
             list(, $regex) = $this->_parseRoute($route);
-            $this->middlewares[$regex][] = $middleware;
+            $this->middlewares[$regex] = array_merge($this->middlewares[$regex] ?: [], $middlewares);
         }
         return $this;
     }
 
-    public function match($methods, $route, $dest, $options=[])
+    public function match($methods, $route, $dest, $options = [])
     {
         list($route, $regex, $params) = $this->_parseRoute($route);
         $options += $this->options;
@@ -107,7 +107,7 @@ class Router
         }
 
         array_walk($methods, function ($method) use ($route, $regex, $dest, $params) {
-            $this->rules = [ $method.':'.$regex => [
+            $this->rules = [$method . ':' . $regex => [
                 'method' => $method,
                 'route' => $route,
                 'dest' => $dest,
@@ -118,11 +118,11 @@ class Router
         return $this;
     }
 
-    private function _getMiddlewares($method, $route, $middlewares=[])
+    private function _getMiddlewares($method, $route, $middlewares = [])
     {
         $middlewares = (array) $middlewares;
         foreach ((array) $this->middlewares as $regex => $matched_middlewares) {
-            if ($regex === '*' || preg_match('`^'.$regex.'`i', trim($route, '/'), $matches)) {
+            if ($regex === '*' || preg_match('`^' . $regex . '`i', trim($route, '/'), $matches)) {
                 $middlewares = array_merge(
                     (array) $middlewares,
                     (array) $matched_middlewares
@@ -140,7 +140,7 @@ class Router
                 continue;
             }
 
-            if ($regex !== '*' && !preg_match('`^'.$regex.'`i', trim($route, '/'), $matches)) {
+            if ($regex !== '*' && !preg_match('`^' . $regex . '`i', trim($route, '/'), $matches)) {
                 continue;
             }
 
@@ -161,7 +161,7 @@ class Router
 
             if ($regex === '*') {
                 $matches = [];
-            } elseif (!preg_match('`^'.$regex.'`i', trim($route, '/'), $matches)) {
+            } elseif (!preg_match('`^' . $regex . '`i', trim($route, '/'), $matches)) {
                 continue;
             } else {
                 array_shift($matches);
@@ -180,7 +180,7 @@ class Router
 
             list($controllerName, $action) = explode('@', $rule['dest'], 2);
             if (!$action) {
-                $action = $method.'Default';
+                $action = $method . 'Default';
             }
 
             $controller = \Gini\IoC::construct($controllerName);
@@ -211,26 +211,26 @@ class Router
 
                 $class_namespace = '\Gini\Controller\CGI\\';
                 if ($dirname != '.') {
-                    $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
+                    $class_namespace .= strtr($dirname, ['/' => '\\']) . '\\';
                 }
 
-                $class = $class_namespace.$basename.'\\Index';
+                $class = $class_namespace . $basename . '\\Index';
                 if (class_exists($class)) {
                     break;
                 }
 
-                $class = $class_namespace.$basename;
+                $class = $class_namespace . $basename;
                 if (class_exists($class)) {
                     break;
                 }
 
-                $class = $class_namespace.'Controller'.$basename;
+                $class = $class_namespace . 'Controller' . $basename;
                 if (class_exists($class)) {
                     break;
                 }
 
                 if ($basename != 'index') {
-                    $class = $class_namespace.'Index';
+                    $class = $class_namespace . 'Index';
                     if (class_exists($class)) {
                         array_unshift($params, $basename);
                         break;
