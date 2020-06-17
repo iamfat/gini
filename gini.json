@@ -1,9 +1,8 @@
 {
     "id": "gini",
     "name": "Gini PHP Framework",
-    "author": "Jia Huang",
-    "email": "iamfat@gmail.com",
-    "version": "1.12.1",
+    "author": "iamfat@gmail.com",
+    "version": "1.12.2",
     "build": {
         "copy": [
             "bin",
