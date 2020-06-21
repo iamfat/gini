@@ -147,9 +147,9 @@ class Util
                         } else {
                             if (isset($opt[$okey])) {
                                 $opt[$okey] = [$opt[$okey]];
-                                $opt[$okey][] = false;
+                                $opt[$okey][] = true;
                             } else {
-                                $opt[$okey] = false;
+                                $opt[$okey] = true;
                             }
                         }
                     }
@@ -166,9 +166,9 @@ class Util
                             } else {
                                 if (isset($opt[$okey])) {
                                     $opt[$okey] = [$opt[$okey]];
-                                    $opt[$okey][] = false;
+                                    $opt[$okey][] = true;
                                 } else {
-                                    $opt[$okey] = false;
+                                    $opt[$okey] = true;
                                 }
                             }
                         }
