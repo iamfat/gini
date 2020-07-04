@@ -280,6 +280,8 @@ class MySQL extends \PDO implements Driver
                 $default = $field['default'];
             } elseif ($field['type'] !== 'text') {
                 $default = $field['serial'] ? null : $this->quote($field['default']);
+            } else {
+                $default = $field['default'];
             }
         }
 

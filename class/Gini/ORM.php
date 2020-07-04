@@ -379,7 +379,7 @@ abstract class ORM
                             $field['type'] = 'longtext';
                         } else {
                             $field['type'] = 'text';
-                            $field['default'] = $field['default'] ?: '{}';
+                            $field['default'] = $field['default'] ?: $this->db()->quote('{}');
                         }
                         break;
                     case 'null':
