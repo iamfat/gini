@@ -275,10 +275,10 @@ class MySQL extends \PDO implements Driver
     private function _fieldSQL($key, $field)
     {
         if (isset($field['default'])) {
-            if (($field['type'] == 'datetime' || $field['type'] == 'timestamp')
-                && ($field['default'] == 'CURRENT_TIMESTAMP')) {
+            if (in_array($field['type'], ['datetime','timestamp'])
+                && $field['default'] == 'CURRENT_TIMESTAMP') {
                 $default = $field['default'];
-            } elseif ($field['type'] !== 'text') {
+            } elseif (!in_array($field['type'], ['mediumtext', 'longtext'])) {
                 $default = $field['serial'] ? null : $this->quote($field['default']);
             }
         }
@@ -290,7 +290,7 @@ class MySQL extends \PDO implements Driver
             $field['null'] ? '' : ' NOT NULL',
             $default ? ' DEFAULT '.$default : '',
             $field['serial'] ? ' AUTO_INCREMENT' : ''
-                );
+        );
     }
 
     private function _dropIndexSQL($key, $val)
@@ -363,7 +363,7 @@ class MySQL extends \PDO implements Driver
             $this->quoteIdent($val['ref_column']),
             $deleteAction,
             $updateAction
-                );
+        );
     }
 
     public function createTable($table)
@@ -381,7 +381,7 @@ class MySQL extends \PDO implements Driver
             $this->quoteIdent($table),
             $this->quoteIdent('_FOO'),
             $this->quote($engine)
-                    );
+        );
         $rs = $this->query($SQL);
         $this->_updateTableStatus($table);
 
