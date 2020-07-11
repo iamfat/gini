@@ -61,10 +61,12 @@ namespace Gini {
         private $_join;
         private $_joinedTables;
         private $_alias;
+        private $_inverse;
 
         private $_withTrashed = false;
 
         private static $_uniqid = 0;
+
         public function uniqid()
         {
             return self::$_uniqid++;
@@ -230,12 +232,6 @@ namespace Gini {
         public function orWhichIs($field)
         {
             return $this->orWhoIs($field);
-        }
-
-        public function of($those)
-        {
-            // TO BE IMPLEMENTED
-            return $this;
         }
 
         public function alias($name)
@@ -599,6 +595,137 @@ namespace Gini {
             $this->count_SQL = trim("SELECT COUNT(DISTINCT $id_col) AS \"count\" $from_SQL");
 
             return $this;
+        }
+
+        public function whoAre($field)
+        {
+            $this->resetFetch();
+            if ($this->_where) {
+                $this->_where[] = 'AND';
+            }
+            $this->_inverse = $field;
+
+            return $this;
+        }
+
+        public function of($those)
+        {
+            assert($this->_inverse);
+            $db = $this->db;
+            $this->_inverseField($this->_inverse);
+            // 完成反转后把those的条件复制过来
+            $thoseInfo = $those->tables();
+            $mirrorTables = [];
+            $needJoin = [];
+            foreach ($thoseInfo['tables'] as $key => $v) {
+                if (isset($this->_joinedTables[$key])) {
+                    $mirrorTables[$v] = $this->_joinedTables[$key];
+                } else {
+                    /*if (isset($thoseInfo[$key.'@pivot'])) {
+                        if (!isset($this->_joinedTables[$key.'@pivot'])){
+                            $this->_joinedTables[$key.'@pivot'] = $pivotTable = 't' . $this->uniqid();
+                            $mirrorTables[$thoseInfo[$key.'@pivot']] = $pivotTable;
+                            $needJoin[$key.'@pivot'] = $thoseInfo['join'][$key.'@pivot'];
+                        } else {
+                            $mirrorTables[$thoseInfo[$key.'@pivot']] = $this->_joinedTables[$key.'@pivot'];
+                        }
+                    }*/
+                    $this->_joinedTables[$key] = $mirrorTables[$v] = 't' . $this->uniqid();
+                    if ($thoseInfo['join'][$key]) {
+                        $needJoin[$key] = $thoseInfo['join'][$key];
+                    }
+                }
+            }
+
+            foreach ($needJoin as $k => $v) {
+                $this->_join[$k] = $this->mirrorSQL($v, $mirrorTables);
+            }
+
+            foreach ($thoseInfo['where'] as $where) {
+                $this->_where[] = $this->mirrorSQL($where, $mirrorTables);
+            }
+            return $this;
+
+        }
+
+        private function mirrorSQL($sql, $mirror)
+        {
+            foreach ($mirror as $k => $v) {
+                $sql = str_replace($k, $v, $sql);
+            }
+            return $sql;
+        }
+
+        // whoAre的参数是一个其他orm产生的反查，所以不能用普通的方式生成join
+        private function _inverseField($inverseField)
+        {
+            $db = $this->db;
+            $basefields = explode('.', $inverseField);
+            $fields = $basefields;
+            $basefield = array_shift($fields);
+            $obj = a($basefield);
+            $objects[$basefield]['object'] = $obj;
+            while (!empty($fields)) {
+                $field = array_shift($fields);
+                $o = $objects[$basefield]['object'];
+                $structure = $o->structure();
+                $manyStructure = $o->manyStructure();
+                if (isset($manyStructure[$field])) {
+                    $objects[$basefield]['pivot'] = $field;
+                    $basefield = $basefield . '.' . $field;
+                    $objects[$basefield]['object'] = a($manyStructure[$field]['object']);
+                } else {
+                    $basefield = $basefield . '.' . $field;
+                    $objects[$basefield]['object'] = a($structure[$field]['object']);
+                }
+            }
+
+            $basetable = $this->_table;
+            $fields = $basefields;
+            while (count($fields) > 1) {
+                $field = array_pop($fields);
+                $table = join('.', $fields);
+                $o = $objects[$table];
+                if (isset($o['pivot'])) {
+                    $pivotKey = $table . '@pivot';
+                    $pivotName = $o['object']->pivotTableName($field);
+                    if (!isset($this->_join[$pivotKey])) {
+                        $this->_joinedTables[$pivotKey] = $pivotTable = 't' . $this->uniqid();
+                        $this->_join[$pivotKey] = 'INNER JOIN ' . $db->ident($pivotName)
+                            . ' AS ' . $db->quoteIdent($pivotTable)
+                            . ' ON ' . $db->ident($pivotTable, $field . '_id') . '=' . $db->ident($basetable, 'id');
+                        $this->_joinedTables[$table] = $joinTable = 't' . $this->uniqid();
+                        $tablename = $o['object']->tableName();
+                        $this->_join[$table] = 'INNER JOIN ' . $db->ident($tablename)
+                            . ' AS ' . $db->quoteIdent($joinTable)
+                            . ' ON ' . $db->ident($joinTable, $field . '_id') . '=' . $db->ident($pivotTable, $tablename . '_id');
+                    }
+                } elseif (!isset($this->_join[$table])) {
+                    $this->_joinedTables[$table] = $joinTable = 't' . $this->uniqid();
+                    $tablename = $o['object']->tableName();
+                    $this->_join[$table] = 'INNER JOIN ' . $db->ident($tablename)
+                        . ' AS ' . $db->quoteIdent($joinTable)
+                        . ' ON ' . $db->ident($joinTable, $field . '_id') . '=' . $db->ident($basetable, 'id');
+                }
+                $basetable = $this->_joinedTables[$table];
+            }
+
+
+        }
+
+        public function tables()
+        {
+            $base = $this->name;
+            $res = [];
+            foreach ($this->_joinedTables ?: [] as $k => $v) {
+                $res['tables'][$base . '.' . $k] = $v;
+            }
+            $res['tables'][$base] = $this->_table;
+            $res['where'] = $this->_where;
+            foreach ($this->_join ?: [] as $k => $v) {
+                $res['join'][$base . '.' . $k] = $v;
+            }
+            return $res;
         }
 
 
