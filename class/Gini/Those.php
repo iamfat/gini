@@ -61,7 +61,7 @@ namespace Gini {
         private $_join;
         private $_joinedTables;
         private $_alias;
-        private $_inverse;
+        private $_whoAreField;
 
         private $_withTrashed = false;
 
@@ -610,9 +610,9 @@ namespace Gini {
 
         public function of($those)
         {
-            assert($this->_inverse);
+            assert($this->_whoAreField);
             $db = $this->db;
-            $this->_joinWhoAreTables($this->_inverse);
+            $this->_joinWhoAreTables($this->_whoAreField);
             // 完成反转后把those的条件复制过来
             $thoseInfo = $those->context();
             $mirrorTables = [];
@@ -648,10 +648,10 @@ namespace Gini {
         }
 
         // whoAre的参数是一个其他orm产生的反查，所以不能用普通的方式生成join
-        private function _joinWhoAreTables($inverseField)
+        private function _joinWhoAreTables($whoAreField)
         {
             $db = $this->db;
-            $basefields = explode('.', $inverseField);
+            $basefields = explode('.', $whoAreField);
             $fields = $basefields;
             $basefield = array_shift($fields);
             $obj = a($basefield);
@@ -700,8 +700,6 @@ namespace Gini {
                 }
                 $basetable = $this->_joinedTables[$table];
             }
-
-
         }
 
         public function context()
