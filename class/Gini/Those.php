@@ -603,7 +603,7 @@ namespace Gini {
             if ($this->_where) {
                 $this->_where[] = 'AND';
             }
-            $this->_inverse = $field;
+            $this->_whoAreField = $field;
 
             return $this;
         }
@@ -611,7 +611,6 @@ namespace Gini {
         public function of($those)
         {
             assert($this->_whoAreField);
-            $db = $this->db;
             $this->_joinWhoAreTables($this->_whoAreField);
             // 完成反转后把those的条件复制过来
             $thoseInfo = $those->context();
