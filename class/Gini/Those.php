@@ -612,24 +612,15 @@ namespace Gini {
         {
             assert($this->_inverse);
             $db = $this->db;
-            $this->_inverseField($this->_inverse);
+            $this->_joinWhoAreTables($this->_inverse);
             // 完成反转后把those的条件复制过来
-            $thoseInfo = $those->tables();
+            $thoseInfo = $those->context();
             $mirrorTables = [];
             $needJoin = [];
             foreach ($thoseInfo['tables'] as $key => $v) {
                 if (isset($this->_joinedTables[$key])) {
                     $mirrorTables[$v] = $this->_joinedTables[$key];
                 } else {
-                    /*if (isset($thoseInfo[$key.'@pivot'])) {
-                        if (!isset($this->_joinedTables[$key.'@pivot'])){
-                            $this->_joinedTables[$key.'@pivot'] = $pivotTable = 't' . $this->uniqid();
-                            $mirrorTables[$thoseInfo[$key.'@pivot']] = $pivotTable;
-                            $needJoin[$key.'@pivot'] = $thoseInfo['join'][$key.'@pivot'];
-                        } else {
-                            $mirrorTables[$thoseInfo[$key.'@pivot']] = $this->_joinedTables[$key.'@pivot'];
-                        }
-                    }*/
                     $this->_joinedTables[$key] = $mirrorTables[$v] = 't' . $this->uniqid();
                     if ($thoseInfo['join'][$key]) {
                         $needJoin[$key] = $thoseInfo['join'][$key];
@@ -657,7 +648,7 @@ namespace Gini {
         }
 
         // whoAre的参数是一个其他orm产生的反查，所以不能用普通的方式生成join
-        private function _inverseField($inverseField)
+        private function _joinWhoAreTables($inverseField)
         {
             $db = $this->db;
             $basefields = explode('.', $inverseField);
@@ -713,7 +704,7 @@ namespace Gini {
 
         }
 
-        public function tables()
+        public function context()
         {
             $base = $this->name;
             $res = [];
