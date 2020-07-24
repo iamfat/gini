@@ -278,7 +278,7 @@ class MySQL extends \PDO implements Driver
             if (in_array($field['type'], ['datetime','timestamp'])
                 && $field['default'] == 'CURRENT_TIMESTAMP') {
                 $default = $field['default'];
-            } elseif (!in_array($field['type'], ['mediumtext', 'longtext'])) {
+            } elseif (!in_array($field['type'], ['text', 'mediumtext', 'longtext'])) {
                 $default = $field['serial'] ? null : $this->quote($field['default']);
             }
         }
