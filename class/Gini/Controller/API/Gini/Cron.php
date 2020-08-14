@@ -28,7 +28,8 @@ class Cron extends \Gini\Controller\API
             $basePath = $_SERVER['GINI_MODULE_BASE_PATH'] ? $_SERVER['GINI_MODULE_BASE_PATH'] : SYS_PATH . '/..';
             $appPath = APP_PATH;
             $sysPath = SYS_PATH . '/bin/gini';
-            exec("GINI_MODULE_BASE_PATH={$basePath} GINI_APP_PATH={$appPath} {$sysPath} {$job['command']} >/dev/null 2>&1 &");
+            $env = $_SERVER['GINI_ENV'] ?: getenv('GINI_ENV');
+            exec("GINI_MODULE_BASE_PATH={$basePath} GINI_APP_PATH={$appPath} GINI_ENV={$env} {$sysPath} {$job['command']} >/dev/null 2>&1 &");
             return true;
         }
 
