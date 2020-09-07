@@ -29,7 +29,6 @@ if (!isset($_SERVER['GINI_MODULE_BASE_PATH'])) {
 if (!isset($_SERVER['GINI_APP_PATH'])) {
     $_SERVER['GINI_APP_PATH'] = SYS_PATH;
 }
-
 chdir($_SERVER['GINI_APP_PATH']);
 
 // load class map
@@ -61,5 +60,4 @@ if (file_exists($class_path.'.phar')) {
 if (!class_exists('\\Gini\\Application', false)) {
     class Application {}
 }
-
 Core::start();

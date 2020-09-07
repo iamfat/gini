@@ -237,6 +237,11 @@ abstract class ORM
             unset($this->$k); //empty all public properties
         }
 
+        $manyStructure = $this->manyStructure();
+        foreach ($manyStructure as $k => $v) {
+            unset($this->$k);
+        }
+
         if ($criteria) {
             $this->criteria($criteria);
         }
@@ -584,6 +589,7 @@ abstract class ORM
         $structure = $this->structure();
 
         $db_data = [];
+        $manySQL = [];
         foreach ($structure as $k => $v) {
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
@@ -665,10 +671,93 @@ abstract class ORM
             }
         }
 
-        if ($SQL) {
-            $success = (bool) $db->query($SQL);
-        } else {
+        $db->beginTransaction();
+        try{
+            if ($SQL) {
+                if(!$db->query($SQL)){
+                    throw new \Exception($SQL.' failed:'.J($db->errorInfo()));
+                }
+            }
+
+            $id = $id ?: $db->lastInsertId();
+            $manyStructure = $this->manyStructure();
+
+            foreach ($manyStructure as $k => $v) {
+                if (!isset($this->$k)) {
+                    continue;
+                }
+                $pivotTableName = $db->quoteIdent($this->pivotTableName($k));
+                $news = [];
+                if (array_key_exists('object', $v)) {
+                    if (!empty($v['object'])) {
+                        $q = $db->query("select {$k}_id as id from {$pivotTableName} where {$this->name()}_id = {$id}");
+                        $olds = $q->rows();
+                        foreach ($this->$k as $mk => $mv) {
+                            $news[$mv->id] = $mv->id;
+                        }
+                        foreach ($olds as $old) {
+                            if (in_array($old->id, $news)) {
+                                unset($news[$old->id]);
+                            } else {
+                                $manySQL[] = "delete from {$pivotTableName} where {$this->name()}_id={$id} and {$k}_id={$old->id};";
+                            }
+                        }
+                        foreach ($news as $new) {
+                            $manySQL[] = "insert into {$pivotTableName} ({$this->name()}_id,{$k}_id) values ({$id},{$new});";
+                        }
+                    } else {
+                        $q = $db->query("select {$k}_id as id,{$k}_name as {$db->quote('name')} from {$pivotTableName} where {$this->name()}_id = {$id}");
+                        $olds = $q->rows();
+                        /* @var $mv \Gini\ORM */
+                        foreach ($this->$k as $mk => $mv) {
+                            $news[$mv->name()][$mv->id] = $mv->id;
+                        }
+                        foreach ($olds as $old) {
+                            if (isset($news[$old->name][$old->id])) {
+                                unset($news[$old->name][$old->id]);
+                            } else {
+                                $manySQL[] = "delete from {$pivotTableName} where {$this->name()}_id={$id} and {$k}_name='{$old->name}' and {$k}_id={$old->id};";
+                            }
+                        }
+                        foreach ($news as $type => $newarray) {
+                            foreach ($newarray as $new) {
+                                $manySQL[] = "insert into {$pivotTableName} ({$this->name()}_id,{$k}_name,{$k}_id) values ({$id},{$db->quote($type)},{$new});";
+                            }
+                        }
+                    }
+                } else {
+                    $q = $db->query("select {$k} as id from {$pivotTableName} where {$this->name()}_id = {$id}");
+                    $olds = $q->rows();
+                    foreach ($this->$k as $mk => $mv) {
+                        $news[$mv] = $mv;
+                    }
+                    foreach ($olds as $old) {
+                        if (in_array($old->id, $news)) {
+                            unset($news[$old->id]);
+                        } else {
+                            $manySQL[] = "delete from {$pivotTableName} where {$this->name()}_id={$id} and {$k}={$db->quote($old->id)};";
+                        }
+                    }
+                    foreach ($news as $new) {
+                        $manySQL[] = "insert into {$pivotTableName} ({$this->name()}_id,{$k}) values ({$id},{$db->quote($new)});";
+                    }
+                }
+                unset($this->$k);
+            }
+
+            if ($manySQL) {
+                foreach ($manySQL as $mSQL) {
+                    if (!$db->query($mSQL)) {
+                        throw new \Exception($mSQL . ' failed:' . J($db->errorInfo()));
+                    }
+                }
+            }
+            $db->commit();
             $success = true;
+
+        } catch (Exception $e) {
+            $db->rollback();
+            $success = false;
         }
 
         if ($success) {
@@ -849,6 +938,33 @@ abstract class ORM
         } elseif (isset($this->_extra[$name])) {
             // try find it in _extra
             return $this->_extra[$name];
+        } elseif (isset($this->manyStructure()[$name])) {
+            $db = $this->db();
+            $v = $this->manyStructure()[$name];
+            $pivotTableName = $db->quoteIdent($this->pivotTableName($name));
+            if (array_key_exists('object', $v)) {
+                if (!empty($v['object'])) {
+                    $q = $db->query("select {$name}_id as id from {$pivotTableName} where {$this->name()}_id = {$this->id}");
+                    $this->$name = [];
+                    $this->{$name . '_id'} = [];
+                    foreach ($q->rows() as $row) {
+                        $this->$name[] = a($v['object'], $row->id);
+                        $this->{$name . '_id'}[] = $row->id;
+                    }
+                } else {
+                    $q = $db->query("select {$name}_id as id,{$name}_name as {$db->quote('name')} from {$pivotTableName} where {$this->name()}_id = {$this->id}");
+                    $this->$name = [];
+                    foreach ($q->rows() as $row) {
+                        $this->$name[] = a($row->name, $row->id);
+                    }
+                }
+            } else {
+                $q = $db->query("select {$name} as obj from {$pivotTableName} where {$this->name()}_id = {$this->id}");
+                $this->$name = [];
+                foreach ($q->rows() as $row) {
+                    $this->$name[] = $row->obj;
+                }
+            }
         }
 
         // 直接返回, 保证引用, 能够用于数字赋值
@@ -879,12 +995,15 @@ abstract class ORM
         $this->fetch();
 
         $structure = $this->structure();
+        $manyStructure = $this->manyStructure();
         if (isset($structure[$name])) {
             if (array_key_exists('object', $structure[$name])) {
                 $this->_objects[$name] = $value;
             } else {
                 $this->$name = $value;
             }
+        } elseif (isset($manyStructure[$name])) {
+            $this->$name = $value;
         } else {
             // if $name is  {}_name or {}_id, let's update oinfo firstly.
             $is_object = false;
