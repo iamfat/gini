@@ -66,7 +66,7 @@ class Index extends \Gini\Controller\CLI
             try {
                 $rpc = new RPC(rtrim($uri, '/') . '/api');
                 $token = $rpc
-                    ->connectTimeout($_SERVER['GINI_INDEX_CONNECT_TIMEOUT'])
+                    ->connectTimeout(5000000)//($_SERVER['GINI_INDEX_CONNECT_TIMEOUT'])
                     ->createToken($username, $password);
                 if ($token) {
                     $config['username'] = $username;
