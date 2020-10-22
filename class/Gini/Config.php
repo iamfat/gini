@@ -44,7 +44,7 @@ class Config
             if ($val === null) {
                 unset(self::$items[$category]);
             } else {
-                self::$items[$category];
+                self::$items[$category] = $val;
             }
         }
     }
