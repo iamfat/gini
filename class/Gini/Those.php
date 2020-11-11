@@ -713,6 +713,8 @@ namespace Gini {
             foreach ($this->_join ?: [] as $k => $v) {
                 $res['join'][$base . '.' . $k] = $v;
             }
+            $res['sql'] = $this->SQL;
+            $res['from_sql'] = $this->from_SQL;
             return $res;
         }
 
