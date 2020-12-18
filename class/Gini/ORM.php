@@ -25,6 +25,10 @@ abstract class ORM
     private $_tableName;
     private $_oinfo;
     protected $_forUpdate = false;
+    // 如果指定id向数据库新插入一条记录的时候，是否用 replace into 代替 insert into
+    // replace into 会检测是否有符合条件的unique约束的行，如果有，直接更新改行的id
+    // insert into 直接插入，如果检测到有符合unique约束的行，插入将失败
+    protected $_forReplace = true; 
 
     protected $_db_data;
     protected $_db_time; //上次数据库同步的时间
@@ -658,7 +662,11 @@ abstract class ORM
                         ' WHERE ' . $db->quoteIdent('id') . '=' . $db->quote($id);
                 } else {
                     array_unshift($pairs, $db->quoteIdent('id') . '=' . $db->quote($id));
-                    $SQL = 'REPLACE INTO ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs);
+                    if ($this->_forReplace) {
+                        $SQL = 'REPLACE INTO ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs);
+                    } else {
+                        $SQL = 'INSERT INTO ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs);
+                    }
                 }
             } else {
                 $SQL = 'INSERT INTO ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs);
