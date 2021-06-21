@@ -7,21 +7,27 @@ class JSON implements \Gini\CGI\Response
     private $_content;
     private $_code;
 
-    public function __construct($content, $code=200)
+    public function __construct($content, $code = 200)
     {
         $this->_content = $content;
         $this->_code = $code;
     }
 
-    public function output()
+    public function output($res = null)
     {
-        http_response_code($this->_code);
-        header('Content-Type: application/json; charset=utf-8');
-        if ($this->_content !== null) {
-            file_put_contents(
-                'php://output',
-                    J($this->_content).PHP_EOL
-            );
+        if ($res) {
+            $res->status($this->_code);
+            $res->header('Content-Type', 'application/json; charset=utf-8');
+            $res->end(J($this->_content));
+        } else {
+            http_response_code($this->_code);
+            header('Content-Type', 'application/json; charset=utf-8');
+            if ($this->_content !== null) {
+                file_put_contents(
+                    'php://output',
+                    J($this->_content) . PHP_EOL
+                );
+            }
         }
     }
 

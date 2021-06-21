@@ -8,7 +8,7 @@ class Nothing implements \Gini\CGI\Response
     {
     }
 
-    public function output()
+    public function output($res = null)
     {
     }
 

@@ -11,10 +11,9 @@ class Session
     public static function setup()
     {
         $session_conf = (array) \Gini\Config::get('system.session');
-        $cookie_params = (array) $session_conf['cookie'];
 
         $session_name = $session_conf['name'] ?: 'gini-session';
-        $host_hash = sha1($cookie_params['domain'] ?: $_SERVER['HTTP_HOST']);
+        $host_hash = sha1($_SERVER['HTTP_HOST']);
         ini_set('session.name', $session_name . '_' . $host_hash);
 
         if ($session_conf['save_handler']) {
@@ -40,21 +39,16 @@ class Session
             ini_set('session.gc_maxlifetime', $session_conf['gc_maxlifetime']);
         }
 
-        if (isset($_POST['gini-session'])) {
-            session_id($_POST['gini-session']);
-        } elseif (isset($_SERVER['HTTP_X_GINI_SESSION'])) {
-            session_id($_SERVER['HTTP_X_GINI_SESSION']);
+        if (ini_get('session.use_cookies') === '1') {
+            $cookie_params = (array) $session_conf['cookie'];
+            session_set_cookie_params(
+                $cookie_params['lifetime'],
+                $cookie_params['path'],
+                $cookie_params['domain'],
+                $cookie_params['secure'] ?: false,
+                $cookie_params['httponly'] ?: false
+            );
         }
-
-        session_set_cookie_params(
-            $cookie_params['lifetime'],
-            $cookie_params['path'],
-            $cookie_params['domain'],
-            $cookie_params['secure'] ?: false,
-            $cookie_params['httponly'] ?: false
-        );
-
-        self::open();
     }
 
     public static function shutdown()
@@ -94,6 +88,11 @@ class Session
         }
     }
 
+    public static function name()
+    {
+        return session_name();
+    }
+
     public static function id()
     {
         return session_id();
@@ -101,25 +100,40 @@ class Session
 
     public static function regenerateId()
     {
-        if (PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server' || session_status() == PHP_SESSION_DISABLED) {
+        if (session_status() == PHP_SESSION_DISABLED) {
             return;
         }
         self::unlock();
-        session_regenerate_id();
+        if (version_compare(PHP_VERSION, '7.1.0') >= 0) {
+            $sid = session_create_id();
+            session_commit();
+            session_id($sid);
+            session_start();
+        } else {
+            session_regenerate_id();
+        }
         self::lock();
     }
 
     public static function open()
     {
         if (
-            PHP_SAPI == 'cli'
-            || session_status() === PHP_SESSION_DISABLED
+            session_status() === PHP_SESSION_DISABLED
             || session_status() === PHP_SESSION_ACTIVE
         ) {
             return;
         }
 
-        set_error_handler(function () { }, E_ALL ^ E_NOTICE);
+        if (isset($_COOKIE[session_name()])) {
+            session_id($_COOKIE[session_name()]);
+        } elseif (isset($_POST['gini-session'])) {
+            session_id($_POST['gini-session']);
+        } elseif (isset($_SERVER['HTTP_X_GINI_SESSION'])) {
+            session_id($_SERVER['HTTP_X_GINI_SESSION']);
+        }
+
+        set_error_handler(function () {
+        }, E_ALL ^ E_NOTICE);
         session_start();
         restore_error_handler();
 
@@ -134,7 +148,7 @@ class Session
 
     public static function close()
     {
-        if (PHP_SAPI == 'cli' || session_status() !== PHP_SESSION_ACTIVE) {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
             return;
         }
 

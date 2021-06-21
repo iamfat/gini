@@ -11,10 +11,15 @@ class JS implements \Gini\CGI\Response
         $this->_content = $content;
     }
 
-    public function output()
+    public function output($res = null)
     {
-        header('Content-Type: text/javascript');
-        file_put_contents('php://output', (string) $this->_content);
+        if ($res) {
+            $res->header('Content-Type', 'text/javascript');
+            $res->end((string) $this->_content);
+        } else {
+            header('Content-Type: text/javascript');
+            file_put_contents('php://output', (string) $this->_content);
+        }
     }
 
     public function content()

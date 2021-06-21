@@ -21,8 +21,8 @@ class CGI
     public static function stripslashes(&$value)
     {
         return is_array($value) ?
-                array_map([__CLASS__, __FUNCTION__], $value) :
-                stripslashes($value);
+            array_map([__CLASS__, __FUNCTION__], $value) :
+            stripslashes($value);
     }
 
     public static function main($argv)
@@ -81,25 +81,24 @@ class CGI
             $file = $e->getFile();
             foreach (\Gini\Core::$MODULE_INFO as $info) {
                 if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                    $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
+                    $file = "[$info->id] " . \Gini\File::relativePath($file, $info->path);
                     break;
                 }
             }
-            $line = $e->getLine();
             error_log(sprintf('ERROR %s', $message));
             $trace = array_slice($e->getTrace(), 1, 5);
             foreach ($trace as $n => $t) {
                 $file = $t['file'];
                 foreach (\Gini\Core::$MODULE_INFO as $info) {
                     if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                        $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
+                        $file = "[$info->id] " . \Gini\File::relativePath($file, $info->path);
                         break;
                     }
                 }
                 error_log(sprintf(
                     '    %d) %s%s() in %s on line %d',
                     $n + 1,
-                    $t['class'] ? $t['class'].'::' : '',
+                    $t['class'] ? $t['class'] . '::' : '',
                     $t['function'],
                     $file,
                     $t['line']
@@ -111,7 +110,7 @@ class CGI
             while (@ob_end_clean()) {
                 //清空之前的所有显示
             }
-            header('HTTP/1.1 500 Internal Server Error');
+            static::header('HTTP/1.1 500 Internal Server Error');
         }
     }
 
@@ -125,19 +124,15 @@ class CGI
         if (count($params) > 0 && is_numeric(key($params))) {
             // 需要考虑默认值以及无参数传入后使用func_get_args获取变量的情况
             $max = max(count($params), count($rps));
-            for ($idx = 0; $idx < $max; $idx ++) {
+            for ($idx = 0; $idx < $max; $idx++) {
                 $param = $params[$idx];
                 $rp = $rps[$idx];
-                $args[] = isset($param) ? $param : (
-                        $rp ? (
-                            $rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null
-                        ) : null
-                    );
+                $args[] = isset($param) ? $param : ($rp ? ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null) : null);
             }
         } elseif (count($rps) > 0) {
             // 如果是有字符串键值的, 尝试通过反射对应变量
             // 可以把form数据合并进去
-            $params = array_merge((array)$form, (array)$params);
+            $params = array_merge((array) $form, (array) $params);
             // 修正变量名以配合驼峰式命名
             // user_id, user-id, userId
             $newParams = [];
@@ -147,8 +142,7 @@ class CGI
             }
             foreach ($rps as $rp) {
                 $key = strtolower(strtr($rp->name, ['-' => '', '_' => '']));
-                $args[] = $newParams[$key] ?:
-                    ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
+                $args[] = $newParams[$key] ?: ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
             }
         }
         return $args;
@@ -174,11 +168,25 @@ class CGI
         static::$route = $route;
     }
 
-    public static function redirect($url = '', $query = null)
+    public static function redirect($url = '', $query = null, $permanent  = false)
     {
-        // session_write_close();
-        header('Location: '.URL($url, $query), true, 302);
-        exit();
+        $redirect = static::$requestOptions['redirect'];
+        if ($redirect) {
+            $redirect($url, $query, $permanent);
+        } else {
+            static::header('Location: ' . URL($url, $query), true, $permanent ? 301 : 302);
+            exit();
+        }
+    }
+
+    public static function header(string $string, bool $replace = true, int $http_response_code = null)
+    {
+        $header = static::$requestOptions['header'];
+        if ($header) {
+            $header($string, $replace, $http_response_code);
+        } else {
+            header($string, $replace, $http_response_code);
+        }
     }
 
     public static function router()
@@ -187,7 +195,7 @@ class CGI
         if (!$router && class_exists('\Gini\CGI\Router')) {
             $router = \Gini\IoC::construct('\Gini\CGI\Router');
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-                $moduleClass = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
+                $moduleClass = '\Gini\Module\\' . strtr($name, ['-' => '', '_' => '', '/' => '']);
                 if (!isset($info->error) && method_exists($moduleClass, 'cgiRoute')) {
                     call_user_func([$moduleClass, 'cgiRoute'], $router);
                 }
@@ -196,21 +204,45 @@ class CGI
         return $router;
     }
 
-    public static function setup()
+    protected static $setupOptions;
+    public static function setup(array $options = [])
     {
-        URI::setup();
-        static::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
+        static::$setupOptions = $options;
+
         Session::setup();
 
-        if (explode(';', $_SERVER['CONTENT_TYPE'], 2)[0] == 'application/json') {
-            $_POST = (array) @json_decode(self::content(), true);
-        } elseif (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
-            @parse_str(self::content(), $_POST);
+        if (!$options['aio']) {
+            static::beforeRequest($options);
         }
     }
 
     public static function shutdown()
     {
+        if (!static::$setupOptions['aio']) {
+            static::afterRequest();
+        }
         Session::shutdown();
+    }
+
+    protected static $requestOptions;
+    public static function beforeRequest(array $options = [])
+    {
+        URI::setup();
+        static::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
+        if (explode(';', $_SERVER['CONTENT_TYPE'], 2)[0] == 'application/json') {
+            $_POST = (array) @json_decode(self::content(), true);
+        } elseif (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
+            @parse_str(self::content(), $_POST);
+        }
+        static::$requestOptions = $options;
+
+        if (Config::get('session.autostart') !== false) {
+            Session::open();
+        }
+    }
+
+    public static function afterRequest(array $options = [])
+    {
+        Session::close();
     }
 }
