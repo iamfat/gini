@@ -724,6 +724,132 @@ namespace Gini {
             }
             return parent::get($key, $val);
         }
+
+        public function meet($where) {
+            if (! $where instanceof \Gini\ORM\Where) {
+                throw new \Exception('meet need orm/where object');
+            }
+            $this->_where[] = 'AND';
+            $this->_where[] = $this->createWhereSQL($where);
+            return $this;
+        }
+
+        public function createWhereSQL($where) {
+            if ($where instanceof \Gini\ORM\Condition) {
+                return $this->createConditionSQL($where);
+            }
+            if ($where instanceof \Gini\ORM\Conditions) {
+                switch ($where->type) {
+                    case (\Gini\ORM\Conditions::TYPE_ANY):
+                        $concat = 'or';
+                        break;
+                    case (\Gini\ORM\Conditions::TYPE_ALL):
+                        $concat = 'and';
+                        break;
+                    default:
+                        throw new \Exception('unknown conditions type');
+                }
+                $wheres = [];
+                foreach ($where->object_list as $object) {
+                    $wheres[] = $this->createWhereSQL($object);
+                }
+                return '('.join(' '.$concat.' ', $wheres).')';
+            }
+            throw new \Exception('unknown orm/where object type');
+        }
+
+        public function createConditionSQL($condition) {
+            if (! $condition instanceof \Gini\ORM\Condition) {
+                throw new \Exception('need condition object');
+            }
+            $field = $this->_fieldName($condition->column);
+            $db = $this->db;
+
+            switch ($condition->operator) {
+                case 'like':
+                    $where = $field.' LIKE '.$db->quote($condition->params);
+                        break;
+                case '=':
+                case '<>':
+                    if (is_object($condition->params)) {
+                        $o = a($this->name);
+                        $structure = $o->structure();
+                        $manyStructure = $o->manyStructure();
+                        $obj_where = [];
+                        if ((isset($structure[$field])
+                                && \array_key_exists('object', $structure[$field])
+                                && !$structure[$field]['object'])
+                            || (isset($manyStructure[$field])
+                                && \array_key_exists('object', $manyStructure[$field])
+                                && !$manyStructure[$field]['object'])
+                        ) {
+                            $obj_where[] = $this->_fieldName($condition->column,'_name').$condition->operator.$db->quote($condition->params->name());
+                        }
+                        $obj_where[] = $this->_fieldName($condition->column,'_id').$condition->operator.intval($condition->params->id);
+                        if ($condition->operator == '<>') {
+                            $where = $this->_packWhere($obj_where, 'OR');
+                        } else {
+                            $where = $this->_packWhere($obj_where, 'AND');
+                        }
+                    } elseif (is_null($condition->params)) {
+                        if ($condition->operator == '<>') {
+                            $where =  $field  .' IS NOT NULL';
+                        } else {
+                            $where = $field.' IS NULL';
+                        }
+                    } else {
+                        $where = $field.$condition->operator.$this->_getValue($condition->params);
+                    }
+                    break;
+                case 'between':
+                    $where = '('.$field.'>='.$this->_getValue($condition->params[0]).
+                        ' AND '.$field.'<'.$this->_getValue($condition->params[1]).')';
+                    break;
+                case 'in':
+                case 'not in':
+                    $v = reset($condition->params);
+                    if ($v instanceof self) {
+                        $field_name = $this->_fieldName($condition->column, '_id');
+                        $this->_join[] = 'INNER JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
+                            .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
+                        if ($v->_join) {
+                            $this->_join = array_merge($this->_join, $v->_join);
+                        }
+
+                        if ($v->_where) {
+                            $this->_join = array_merge($this->_join, [ 'AND' ], $v->_where);
+                        }
+
+                        $where = $db->ident($v->_table, 'id').' IS'.($condition->operator=='in'?' NOT':'').' NULL';
+                    } else {
+                        foreach ($condition->params as $v) {
+                            $qv[] = $db->quote($v);
+                        }
+                        if (empty($qv)) {
+                            if ($condition->operator=='in') {
+                                $where = '1 != 1';
+                            } else {
+                                $where = '1 = 1';
+                            }
+
+                        } else {
+                            $where = $field.($condition->operator=='in'?'':' NOT').' IN ('.implode(', ', $qv).')';
+                        }
+                    }
+                    break;
+                default:
+                    $where = $field.$condition->operator.$this->_getValue($condition->params);
+            }
+
+            return $where;
+        }
+
+        public function getSQL() {
+            if (!$this->SQL) {
+                $this->makeSQL();
+            }
+            return $this->SQL;
+        }
     }
 
 }
@@ -782,6 +908,33 @@ namespace {
         function SQL($SQL)
         {
             return \Gini\IoC::construct('\Gini\Those\SQL', $SQL);
+        }
+    }
+
+    if (function_exists('whose')) {
+        die('whose() was declared by other libraries, which may cause problems!');
+    } else {
+        function whose($name)
+        {
+            return new \Gini\ORM\Condition($name);
+        }
+    }
+    if (function_exists('anyOf')) {
+        die('anyOf() was declared by other libraries, which may cause problems!');
+    } else {
+        function anyOf()
+        {
+            $params = func_get_args();
+            return new \Gini\ORM\Conditions('any', $params);
+        }
+    }
+    if (function_exists('allOf')) {
+        die('allOf() was declared by other libraries, which may cause problems!');
+    } else {
+        function allOf()
+        {
+            $params = func_get_args();
+            return new \Gini\ORM\Conditions('all', $params);
         }
     }
 }

@@ -39,7 +39,7 @@ class ORM extends \Gini\Controller\CLI
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($className);
-                if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface()) {
+                if ($rc->isAbstract() || $rc->isTrait() || $rc->isInterface() || !$rc->isSubclassOf('\Gini\ORM\Base')) {
                     return;
                 }
 
