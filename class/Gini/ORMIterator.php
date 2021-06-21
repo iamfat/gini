@@ -39,7 +39,8 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         // 查询一下看看是不是复数
         $name = \Gini\Config::get('orm.plurals')[$name] ?: $name;
         $this->name = $name;
-        $this->table_name = str_replace('/', '_', $name);
+        //$this->table_name = str_replace('/', '_', $name);
+        $this->table_name = a($name)->tableName();
         $this->db = a($name)->db();
     }
 
