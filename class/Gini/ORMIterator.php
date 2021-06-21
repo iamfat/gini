@@ -40,8 +40,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $name = \Gini\Config::get('orm.plurals')[$name] ?: $name;
         $this->name = $name;
         //$this->table_name = str_replace('/', '_', $name);
-        $this->table_name = a($name)->tableName();
-        $this->db = a($name)->db();
+        $object = a($name);
+        $this->table_name = $object->tableName();
+        $this->db = $object->db();
     }
 
     public function __clone()
