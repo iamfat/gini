@@ -2,6 +2,10 @@
 
 namespace Gini;
 
+const CONST_PATTERN = '/\{\{\{\s*(.+)\s*\}\}\}/';
+const MOUSTACHE_PATTERN = '/\{\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}\}/i';
+const BASH_PATTERN = '/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i';
+
 class Config
 {
     public static $items = [];
@@ -65,7 +69,7 @@ class Config
     {
         self::clear();
         $exp = 300;
-        $config_file = APP_PATH.'/cache/config.json';
+        $config_file = APP_PATH . '/cache/config.json';
         if (file_exists($config_file)) {
             self::$items = (array) @json_decode(file_get_contents($config_file), true);
         } else {
@@ -74,66 +78,9 @@ class Config
         }
     }
 
-    private static function _load_config_dir($base, &$items)
-    {
-        if (!is_dir($base)) {
-            return;
-        }
-
-        $dh = opendir($base);
-        if ($dh) {
-            while ($name = readdir($dh)) {
-                if ($name[0] == '.') {
-                    continue;
-                }
-
-                $file = $base.'/'.$name;
-                if (!is_file($file)) {
-                    continue;
-                }
-
-                $category = pathinfo($name, PATHINFO_FILENAME);
-                if (!isset($items[$category])) {
-                    $items[$category] = [];
-                }
-
-                switch (pathinfo($name, PATHINFO_EXTENSION)) {
-                case 'php':
-                    $config = &$items[$category];
-                    call_user_func(function () use (&$config, $file) {
-                        include $file;
-                    });
-                    break;
-                case 'yml':
-                case 'yaml':
-                    $content = file_get_contents($file);
-                    $content = preg_replace_callback('/\{\{\{\s*(.+)\s*\}\}\}/', function ($matches) {
-                        return constant($matches[1]);
-                    }, $content);
-                    $replaceCallback = function ($matches) {
-                        $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
-                        return getenv($matches[1]) ?: $defaultValue;
-                    };
-                    $content = preg_replace_callback('/\{\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}\}/i', $replaceCallback, $content);
-                    $content = preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', $replaceCallback, $content);
-                    $content = trim($content);
-                    if ($content) {
-                        $config = (array) yaml_parse($content);
-                        $items[$category] = \Gini\Util::arrayMergeDeep(
-                            $items[$category],
-                            $config
-                        );
-                    }
-                    break;
-                }
-            }
-            closedir($dh);
-        }
-    }
-
     public static function fetch($env = null)
     {
-        $env = $env ?: APP_PATH.'/.env';
+        $env = $env ?: APP_PATH . '/.env';
         if (file_exists($env)) {
             $rows = file($env, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($rows as &$row) {
@@ -141,7 +88,7 @@ class Config
                     continue;
                 }
                 list($key, $value) = explode('=', trim($row), 2);
-                $row = $key.'='.trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
+                $row = $key . '=' . trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
                     $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
                     return getenv($matches[1]) ?: $defaultValue;
                 }, $value));
@@ -151,19 +98,124 @@ class Config
 
         $items = [];
 
+        $loadFromDir = function ($base) use (&$items) {
+            if (!is_dir($base)) {
+                return;
+            }
+
+            $dh = opendir($base);
+            if ($dh) {
+                while ($name = readdir($dh)) {
+                    if ($name[0] == '.') {
+                        continue;
+                    }
+
+                    $file = $base . '/' . $name;
+                    if (!is_file($file)) {
+                        continue;
+                    }
+
+                    $category = pathinfo($name, PATHINFO_FILENAME);
+                    if (!isset($items[$category])) {
+                        $items[$category] = [];
+                    }
+
+                    switch (pathinfo($name, PATHINFO_EXTENSION)) {
+                        case 'php':
+                            $config = &$items[$category];
+                            call_user_func(function () use (&$config, $file) {
+                                include $file;
+                            });
+                            break;
+                        case 'yml':
+                        case 'yaml':
+                            $content = file_get_contents($file);
+                            $content = preg_replace_callback(CONST_PATTERN, function ($matches) {
+                                return constant($matches[1]);
+                            }, $content);
+                            $replaceCallback = function ($matches) {
+                                $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
+                                return getenv($matches[1]) ?: $defaultValue;
+                            };
+                            $content = preg_replace_callback(MOUSTACHE_PATTERN, $replaceCallback, $content);
+                            $content = preg_replace_callback(BASH_PATTERN, $replaceCallback, $content);
+                            $content = trim($content);
+                            if ($content) {
+                                $config = (array) yaml_parse($content);
+                                $items[$category] = \Gini\Util::arrayMergeDeep(
+                                    $items[$category],
+                                    $config
+                                );
+                            }
+                            break;
+                    }
+                }
+                closedir($dh);
+            }
+        };
+
         $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
         foreach ($paths as $path) {
-            self::_load_config_dir($path, $items);
+            $loadFromDir($path);
         }
 
         $env = $_SERVER['GINI_ENV'];
         if ($env) {
-            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@'.$env);
+            $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config/@' . $env);
             foreach ($paths as $path) {
-                self::_load_config_dir($path, $items);
+                $loadFromDir($path);
             }
         }
 
         return $items;
+    }
+
+    public static function env()
+    {
+        $env = [];
+        $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
+
+        $extractEnvFromDir = function ($base) use (&$env) {
+            if (!is_dir($base)) {
+                return;
+            }
+
+            $dh = opendir($base);
+            if ($dh) {
+                while ($name = readdir($dh)) {
+                    if ($name[0] == '.') {
+                        continue;
+                    }
+
+                    $file = $base . '/' . $name;
+                    if (!is_file($file)) {
+                        continue;
+                    }
+
+                    switch (pathinfo($name, PATHINFO_EXTENSION)) {
+                        case 'yml':
+                        case 'yaml':
+                            $content = file_get_contents($file);
+                            $patterns = ['/\{\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}\}/i', '/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i'];
+                            foreach ($patterns as $pattern) {
+                                if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER)) {
+                                    foreach ($matches as $match) {
+                                        $env[$match[1]] = $match[2] ? trim($match[2], '"\'') : '';
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+                closedir($dh);
+            }
+        };
+
+        foreach ($paths as $path) {
+            $extractEnvFromDir($path);
+        }
+
+        ksort($env);
+        return $env;
     }
 }

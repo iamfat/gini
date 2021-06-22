@@ -26,9 +26,17 @@ class Config extends \Gini\Controller\CLI
         \Gini\Config::setup();
         $items = \Gini\Config::export();
         if (isset($opt['json'])) {
-            echo J($items, JSON_PRETTY_PRINT)."\n";
+            echo J($items, JSON_PRETTY_PRINT) . "\n";
         } else {
             echo yaml_emit($items, YAML_UTF8_ENCODING);
+        }
+    }
+
+    public function actionEnv($args)
+    {
+        $env = \Gini\Config::env();
+        foreach ($env as $k => $v) {
+            echo "$k=$v\n";
         }
     }
 }
