@@ -17,7 +17,7 @@ class HTML implements \Gini\CGI\Response
     {
         if ($res) {
             $res->status($this->_code);
-            $res->header('Content-Type', 'text/html; charset:utf-8');
+            $res->header('Content-Type: text/html; charset:utf-8');
             $res->end((string) $this->_content);
         } else {
             http_response_code($this->_code);

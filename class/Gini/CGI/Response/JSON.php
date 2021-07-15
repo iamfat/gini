@@ -17,11 +17,11 @@ class JSON implements \Gini\CGI\Response
     {
         if ($res) {
             $res->status($this->_code);
-            $res->header('Content-Type', 'application/json; charset=utf-8');
+            $res->header('Content-Type: application/json; charset=utf-8');
             $res->end(J($this->_content));
         } else {
             http_response_code($this->_code);
-            header('Content-Type', 'application/json; charset=utf-8');
+            header('Content-Type: application/json; charset=utf-8');
             if ($this->_content !== null) {
                 file_put_contents(
                     'php://output',

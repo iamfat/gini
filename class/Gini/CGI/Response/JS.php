@@ -14,7 +14,7 @@ class JS implements \Gini\CGI\Response
     public function output($res = null)
     {
         if ($res) {
-            $res->header('Content-Type', 'text/javascript');
+            $res->header('Content-Type: text/javascript');
             $res->end((string) $this->_content);
         } else {
             header('Content-Type: text/javascript');
