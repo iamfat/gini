@@ -10,6 +10,8 @@ class Session
 
     public static function setup()
     {
+        if (headers_sent()) return;
+
         $session_conf = (array) \Gini\Config::get('system.session');
 
         $session_name = $session_conf['name'] ?: 'gini-session';
