@@ -84,15 +84,17 @@ abstract class CGI
             $actionName = preg_replace('/^action/i', '', $methodName);
         } else {
             $actionName = strtr($params[0], ['-' => '', '_' => '']);
-            if ($actionName && $actionName[0] != '_'
-                && method_exists($this, 'action'.$actionName)) {
+            if (
+                $actionName && $actionName[0] != '_'
+                && method_exists($this, 'action' . $actionName)
+            ) {
                 array_shift($params);
             } elseif (method_exists($this, '__index')) {
                 $actionName = null;
             } else {
                 throw new Response\Exception(null, 404);
             }
-            $methodName = $actionName ? 'action'.$actionName : '__index';
+            $methodName = $actionName ? 'action' . $actionName : '__index';
         }
 
         return [$actionName, $methodName, $params];
@@ -164,10 +166,15 @@ abstract class CGI
      * @param string            $url   URL to redirect
      * @param array|string|null $query Query parameters need to include in URL
      */
-    public function redirect($url = '', $query = null)
+    public function redirect()
     {
-        // session_write_close();
-        header('Location: '.URL($url, $query), true, 302);
-        exit();
+        $args = func_get_args();
+        call_user_func_array('\Gini\CGI::redirect', $args);
+    }
+
+    public function header()
+    {
+        $args = func_get_args();
+        call_user_func_array('\Gini\CGI::header', $args);
     }
 }
