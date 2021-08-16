@@ -20,11 +20,7 @@ class Suite extends \Gini\Controller\CLI
                 if (!$row || $row[0] == '#') {
                     continue;
                 }
-                list($key, $value) = explode('=', trim($row), 2);
-                $row = $key . '=' . trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
-                    $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
-                    return getenv($matches[1]) ?: $defaultValue;
-                }, $value));
+                $row = \Gini\Config::normalizeEnv($row);
                 putenv($row);
                 $env[] = $row;
             }

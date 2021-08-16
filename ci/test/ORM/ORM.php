@@ -4,7 +4,7 @@ namespace Gini\PHPUnit\ORM {
  
     class ORM extends \Gini\PHPUnit\TestCase\CLI
     {
-        public function setUp()
+        public function setUp(): void
         {
             parent::setUp();
     
@@ -51,7 +51,7 @@ namespace Gini\PHPUnit\ORM {
                 }));
     
             \Gini\IoC::bind('\Gini\ORM\UTSample', function ($criteria = null) use ($db) {
-                $o = $this->getMockBuilder('\Gini\ORM\Object')
+                $o = $this->getMockBuilder('\Gini\ORM\Base')
                     ->setMockClassName('MOBJ_'.uniqid())
                     ->setMethods(['db', 'ownProperties', 'name', 'tableName'])
                     ->disableOriginalConstructor()
@@ -96,7 +96,7 @@ namespace Gini\PHPUnit\ORM {
             });
         }
     
-        public function tearDown()
+        public function tearDown(): void
         {
             \Gini\IoC::clear('\Gini\ORM\UTSample');
             parent::tearDown();
@@ -198,7 +198,7 @@ namespace Gini\PHPUnit\ORM {
                         ]
                     ],
                     'indexes' => [
-                        'PRIMARY' => [ 'type' => 'primary', fields => [ 'utsample_id', 'apple_id' ] ],
+                        'PRIMARY' => [ 'type' => 'primary', 'fields' => [ 'utsample_id', 'apple_id' ] ],
                     ],
                     'relations' => [
                         '_utsample_apple_utsample' => [
@@ -229,7 +229,7 @@ namespace Gini\PHPUnit\ORM {
                         ]
                     ],
                     'indexes' => [
-                        'PRIMARY' => [ 'type' => 'primary', fields => [ 'utsample_id', 'orange' ] ],
+                        'PRIMARY' => [ 'type' => 'primary', 'fields' => [ 'utsample_id', 'orange' ] ],
                     ],
                     'relations' => [
                         '_utsample_orange_utsample' => [

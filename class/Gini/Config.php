@@ -78,6 +78,23 @@ class Config
         }
     }
 
+    public static function normalizeEnv($row) {
+        list($key, $value) = explode('=', trim($row), 2);
+        $quote_matches = preg_match('/^(["\'])(.*)\1$/', $value);
+        if ($quote_matches) {
+            $value = preg_replace('/^(["\'])(.*)\1$/', '$2', $value);
+        } else {
+            $value = stripslashes($value);
+        }
+        $value = trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
+            $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
+            return getenv($matches[1]) ?: $defaultValue;
+        }, $value));
+
+        $row = $key . '=' . addslashes($value);
+        return $row;
+    }
+
     public static function fetch($env = null)
     {
         $env = $env ?: APP_PATH . '/.env';
@@ -87,11 +104,7 @@ class Config
                 if (!$row || $row[0] == '#') {
                     continue;
                 }
-                list($key, $value) = explode('=', trim($row), 2);
-                $row = $key . '=' . trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
-                    $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
-                    return getenv($matches[1]) ?: $defaultValue;
-                }, $value));
+                $row = static::normalizeEnv($row);
                 putenv($row);
             }
         }

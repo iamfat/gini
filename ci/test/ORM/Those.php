@@ -4,7 +4,7 @@ namespace Gini\PHPUnit\ORM;
 
 class Those extends \Gini\PHPUnit\TestCase\CLI
 {
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -49,7 +49,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
             }));
 
         \Gini\IoC::bind('\Gini\ORM\User', function () use ($db) {
-            $o = $this->getMockBuilder('\Gini\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_'.uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
@@ -86,7 +86,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
 
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         \Gini\IoC::clear('\Gini\ORM\User');
         parent::tearDown();
@@ -278,7 +278,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
             }));
 
         \Gini\IoC::bind('\Gini\ORM\Company', function () use ($db) {
-            $o = $this->getMockBuilder('\Gini\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_'.uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
@@ -309,7 +309,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         });
 
         \Gini\IoC::bind('\Gini\ORM\Company\Type', function () use ($db) {
-            $o = $this->getMockBuilder('\Gini\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_'.uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
@@ -436,7 +436,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
 
 
         \Gini\IoC::bind('\Gini\ORM\User', function ($criteria) use ($db) {
-            $o = $this->getMockBuilder('\Gini\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_' . uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
@@ -625,7 +625,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
             }));
 
         \Gini\IoC::bind('\Gini\ORM\User', function ($criteria) use ($db) {
-            $o = $this->getMockBuilder('\Gini\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_' . uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
@@ -659,7 +659,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         });
 
         \Gini\IoC::bind('\Gini\ORM\Group', function ($criteria) use ($db) {
-            $o = $this->getMockBuilder('\Gini\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_' . uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
@@ -691,7 +691,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         });
 
         \Gini\IoC::bind('\Gini\ORM\Room', function ($criteria) use ($db) {
-            $o = $this->getMockBuilder('\Gini\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_' . uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
@@ -721,7 +721,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         });
 
         \Gini\IoC::bind('\Gini\ORM\Room\Member', function ($criteria) use ($db) {
-            $o = $this->getMockBuilder('\Gini\ORM\Object')
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_' . uniqid())
                 ->setMethods(['db', 'properties', 'name', 'tableName'])
                 ->disableOriginalConstructor()
