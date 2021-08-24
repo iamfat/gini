@@ -5,6 +5,7 @@ namespace Gini;
 const CONST_PATTERN = '/\{\{\{\s*(.+)\s*\}\}\}/';
 const MOUSTACHE_PATTERN = '/\{\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}\}/i';
 const BASH_PATTERN = '/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i';
+const QUOTE_PATTERN = '/^(["\'])(.*)\1$/';
 
 class Config
 {
@@ -78,11 +79,12 @@ class Config
         }
     }
 
-    public static function normalizeEnv($row) {
+    public static function normalizeEnv($row)
+    {
         list($key, $value) = explode('=', trim($row), 2);
-        $quote_matches = preg_match('/^(["\'])(.*)\1$/', $value);
+        $quote_matches = preg_match(QUOTE_PATTERN, $value);
         if ($quote_matches) {
-            $value = preg_replace('/^(["\'])(.*)\1$/', '$2', $value);
+            $value = preg_replace(QUOTE_PATTERN, '$2', $value);
         } else {
             $value = stripslashes($value);
         }
@@ -95,7 +97,7 @@ class Config
         return $row;
     }
 
-    public static function fetch($env = null)
+    public static function fetch($env = null, $keepVars = false)
     {
         $env = $env ?: APP_PATH . '/.env';
         if (file_exists($env)) {
@@ -111,7 +113,7 @@ class Config
 
         $items = [];
 
-        $loadFromDir = function ($base) use (&$items) {
+        $loadFromDir = function ($base) use (&$items, $keepVars) {
             if (!is_dir($base)) {
                 return;
             }
@@ -143,12 +145,26 @@ class Config
                         case 'yml':
                         case 'yaml':
                             $content = file_get_contents($file);
-                            $content = preg_replace_callback(CONST_PATTERN, function ($matches) {
-                                return constant($matches[1]);
-                            }, $content);
-                            $replaceCallback = function ($matches) {
-                                $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
-                                return getenv($matches[1]) ?: $defaultValue;
+                            if (!$keepVars) {
+                                $content = preg_replace_callback(CONST_PATTERN, function ($matches) {
+                                    return constant($matches[1]);
+                                }, $content);
+                            }
+
+                            $replaceCallback = function ($matches) use ($keepVars) {
+                                $envValue = getenv($matches[1]);
+                                $defaultValue = $matches[2];
+                                $quote_matches = preg_match(QUOTE_PATTERN, $defaultValue);
+                                if ($quote_matches) {
+                                    $defaultValue = preg_replace(QUOTE_PATTERN, '$2', $defaultValue);
+                                } else {
+                                    $defaultValue = stripslashes($defaultValue);
+                                }
+                                $mergedValue = $envValue ?: $defaultValue;
+                                if ($keepVars) {
+                                    return '${' . $matches[1] . ($mergedValue ? ':=' . addslashes($mergedValue) : '') . '}';
+                                }
+                                return $mergedValue;
                             };
                             $content = preg_replace_callback(MOUSTACHE_PATTERN, $replaceCallback, $content);
                             $content = preg_replace_callback(BASH_PATTERN, $replaceCallback, $content);
