@@ -111,8 +111,8 @@ class Config extends \Gini\Controller\CLI
             }
 
             $newItems = \Gini\Util::arrayMergeDeep(
-                $items,
-                $origItems
+                $origItems,
+                $items
             );
 
             if (count($origItems) > 0) {

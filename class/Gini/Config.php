@@ -90,7 +90,7 @@ class Config
         }
         $value = trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
             $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
-            return getenv($matches[1]) ?: $defaultValue;
+            return getenv($matches[1]) ?? $defaultValue;
         }, $value));
 
         $row = $key . '=' . addslashes($value);
@@ -160,9 +160,9 @@ class Config
                                 } else {
                                     $defaultValue = stripslashes($defaultValue);
                                 }
-                                $mergedValue = $envValue ?: $defaultValue;
+                                $mergedValue = strval($envValue ?? $defaultValue ?? '');
                                 if ($keepVars) {
-                                    return '${' . $matches[1] . ($mergedValue ? ':=' . addslashes($mergedValue) : '') . '}';
+                                    return '${' . $matches[1] . (strlen($mergedValue) > 0 ? ':=' . addslashes($mergedValue) : '') . '}';
                                 }
                                 return $mergedValue;
                             };
