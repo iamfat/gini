@@ -106,7 +106,7 @@ class Session
             return;
         }
         self::unlock();
-        if (version_compare(PHP_VERSION, '7.1.0') >= 0) {
+        if (version_compare(PHP_VERSION, '8.0.0') >= 0) {
             $sid = session_create_id();
             session_commit();
             session_id($sid);
