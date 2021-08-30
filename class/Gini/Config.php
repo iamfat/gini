@@ -82,9 +82,8 @@ class Config
     public static function normalizeEnv($row)
     {
         list($key, $value) = explode('=', trim($row), 2);
-        $quote_matches = preg_match(QUOTE_PATTERN, $value);
-        if ($quote_matches) {
-            $value = preg_replace(QUOTE_PATTERN, '$2', $value);
+        if (preg_match(QUOTE_PATTERN, $value, $quote_matches)) {
+            $value = $quote_matches[2] ?? '';
         } else {
             $value = stripslashes($value);
         }
@@ -153,14 +152,13 @@ class Config
 
                             $replaceCallback = function ($matches) use ($keepVars) {
                                 $envValue = getenv($matches[1]);
-                                $defaultValue = $matches[2];
-                                $quote_matches = preg_match(QUOTE_PATTERN, $defaultValue);
-                                if ($quote_matches) {
-                                    $defaultValue = preg_replace(QUOTE_PATTERN, '$2', $defaultValue);
+                                $defaultValue = $matches[2] ?? '';
+                                if (preg_match(QUOTE_PATTERN, $defaultValue, $quote_matches)) {
+                                    $defaultValue = $quote_matches[2] ?? '';
                                 } else {
                                     $defaultValue = stripslashes($defaultValue);
                                 }
-                                $mergedValue = strval($envValue ?? $defaultValue ?? '');
+                                $mergedValue = strval($envValue ?? $defaultValue);
                                 if ($keepVars) {
                                     return '${' . $matches[1] . (strlen($mergedValue) > 0 ? ':=' . addslashes($mergedValue) : '') . '}';
                                 }
@@ -170,7 +168,7 @@ class Config
                             $content = preg_replace_callback(BASH_PATTERN, $replaceCallback, $content);
                             $content = trim($content);
                             if ($content) {
-                                $config = (array) yaml_parse($content);
+                                $config = (array) @yaml_parse($content);
                                 $items[$category] = \Gini\Util::arrayMergeDeep(
                                     $items[$category],
                                     $config
