@@ -79,17 +79,26 @@ class Config
         }
     }
 
-    public static function normalizeEnv($row)
+    public static function stripQuote($value)
     {
-        list($key, $value) = explode('=', trim($row), 2);
         if (preg_match(QUOTE_PATTERN, $value, $quote_matches)) {
             $value = $quote_matches[2] ?? '';
         } else {
-            $value = stripslashes($value);
+            $value = stripslashes($value ?? '');
         }
-        $value = trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i', function ($matches) {
-            $defaultValue = $matches[2] ? trim($matches[2], '"\'') : $matches[0];
-            return getenv($matches[1]) ?? $defaultValue;
+        return $value;
+    }
+
+    public static function normalizeEnv($row)
+    {
+        list($key, $value) = explode('=', trim($row), 2);
+        $value = static::stripQuote($value);
+        $value = trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.*?))?\s*\}/i', function ($matches) {
+            $envValue = getenv($matches[1]);
+            if ($envValue === false) {
+                $envValue = static::stripQuote($matches[2]);
+            }
+            return $envValue;
         }, $value));
 
         $row = $key . '=' . addslashes($value);
@@ -152,17 +161,13 @@ class Config
 
                             $replaceCallback = function ($matches) use ($keepVars) {
                                 $envValue = getenv($matches[1]);
-                                $defaultValue = $matches[2] ?? '';
-                                if (preg_match(QUOTE_PATTERN, $defaultValue, $quote_matches)) {
-                                    $defaultValue = $quote_matches[2] ?? '';
-                                } else {
-                                    $defaultValue = stripslashes($defaultValue);
+                                if ($envValue === false) {
+                                    $envValue = static::stripQuote($matches[2]);
                                 }
-                                $mergedValue = strval($envValue ?? $defaultValue);
                                 if ($keepVars) {
-                                    return '${' . $matches[1] . (strlen($mergedValue) > 0 ? ':=' . addslashes($mergedValue) : '') . '}';
+                                    return '${' . $matches[1] . (strlen($envValue) > 0 ? ':=' . addslashes($envValue) : '') . '}';
                                 }
-                                return $mergedValue;
+                                return $envValue;
                             };
                             $content = preg_replace_callback(MOUSTACHE_PATTERN, $replaceCallback, $content);
                             $content = preg_replace_callback(BASH_PATTERN, $replaceCallback, $content);
