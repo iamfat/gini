@@ -34,7 +34,9 @@ class ORM extends \Gini\Controller\CLI
                 }
 
                 $oname = $parts[1];
-                if ($oname === 'Object') return;
+                if ($oname === 'Object' || $oname === 'Base') {
+                    return;
+                }
                 $className = '\Gini\ORM\\' . str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
@@ -111,7 +113,9 @@ class ORM extends \Gini\Controller\CLI
                 }
 
                 $oname = $parts[1];
-                if ($oname === 'Object') return;
+                if ($oname === 'Object' || $oname === 'Base') {
+                    return;
+                }
                 $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
