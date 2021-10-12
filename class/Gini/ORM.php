@@ -2,7 +2,7 @@
 
 /**
  * Those ORM
- * $object = new \Gini\ORM\Object($id|[criteria array]);.
+ * $object = new \Gini\ORM\Base($id|[criteria array]);.
  *
  * @author Jia Huang
  *
@@ -28,7 +28,7 @@ abstract class ORM
     // 如果指定id向数据库新插入一条记录的时候，是否用 replace into 代替 insert into
     // replace into 会检测是否有符合条件的unique约束的行，如果有，直接更新改行的id
     // insert into 直接插入，如果检测到有符合unique约束的行，插入将失败
-    protected $_forReplace = true; 
+    protected $_forReplace = true;
 
     protected $_db_data;
     protected $_db_time; //上次数据库同步的时间
@@ -233,11 +233,22 @@ abstract class ORM
         return $this;
     }
 
+    public function resetFetch()
+    {
+        // clean $_db_time to trigger later fetch
+        $this->_db_time = 0;
+        $this->_objects = [];
+        $this->_oinfo = [];
+        foreach ($this->structure() as $k => $v) {
+            unset($this->$k); //empty all public properties
+        }
+    }
+
     public function __construct($criteria = null)
     {
         $this->autocast = !!\Gini\Config::get('system.orm_autocast');
-        $structure = $this->structure();
-        foreach ($structure as $k => $v) {
+        $properties = $this->ownProperties();
+        foreach ($properties as $k => $v) {
             unset($this->$k); //empty all public properties
         }
 
@@ -340,7 +351,6 @@ abstract class ORM
 
         foreach ($structure as $k => $v) {
             $field = null;
-            $index = null;
 
             foreach ($v as $p => $pv) {
                 switch ($p) {
@@ -577,18 +587,10 @@ abstract class ORM
         return $this->forceDelete();
     }
 
-    public function save()
+    public function dbData()
     {
-        $this->fetch();
-        $schema = (array) $this->ormSchema();
-        $db = $this->db();
-
-        $success = false;
-
-        $structure = $this->structure();
-
         $db_data = [];
-        foreach ($structure as $k => $v) {
+        foreach ($this->structure() as $k => $v) {
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
                 if ($this->_objects[$k]) {
@@ -637,9 +639,31 @@ abstract class ORM
                 }
             }
         }
+        return $db_data;
+    }
+
+    public function dbDataCheck($db_data)
+    {
+        foreach ($this->structure() as $k => $v) {
+            if (is_numeric($v['string']) && mb_strlen($db_data[$k]) < intval($v['string'])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function save()
+    {
+        $this->fetch();
+        $db = $this->db();
+
+        $db_data = $this->dbData();
 
         // diff db_data and this->_db_data
-        $db_data = array_diff_assoc((array) $db_data, (array) $this->_db_data);
+        $db_data = array_diff_assoc($db_data, (array) $this->_db_data);
+        if (!$this->dbDataCheck($db_data)) {
+            return false;
+        }
 
         $tbl_name = $this->tableName();
         $id = intval($db_data['id'] ?: $this->_db_data['id']);
@@ -682,13 +706,7 @@ abstract class ORM
         if ($success) {
             $id = $id ?: $db->lastInsertId();
             $this->criteria($id);
-            // clean $_db_time to trigger later fetch
-            $this->_db_time = 0;
-            $this->_objects = [];
-            $this->_oinfo = [];
-            foreach ($structure as $k => $v) {
-                unset($this->$k); //empty all public properties
-            }
+            $this->resetFetch();
         }
 
         return $success;
@@ -873,7 +891,7 @@ abstract class ORM
             $oname = implode('_', $parts);
             if (isset($this->_objects[$oname])) {
                 return $this->_objects[$oname]->id;
-            } else if ($this->_oinfo[$oname]) {
+            } elseif ($this->_oinfo[$oname]) {
                 return $this->autocast ? intval($this->_oinfo[$oname]->id) : $this->_oinfo[$oname]->id;
             }
         }
