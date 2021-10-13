@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true" bootstrap="./lib/bootstrap.php">
-    <testsuites>
-        <testsuite name="gini">
-            <directory suffix=".php">./ci/test</directory>
-        </testsuite>
-    </testsuites>
-    <filter>
-        <whitelist addUncoveredFilesFromWhitelist="true">
-          <directory suffix=".php">class</directory>
-        </whitelist>
-    </filter>
-    <logging>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" bootstrap="./lib/bootstrap.php" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+  <coverage includeUncoveredFiles="true">
+    <include>
+      <directory suffix=".php">class</directory>
+    </include>
+  </coverage>
+  <testsuites>
+    <testsuite name="gini">
+      <directory suffix=".php">./ci/test</directory>
+    </testsuite>
+  </testsuites>
+  <!-- <logging>
         <log type="junit" target="reports/unit.xml"/>
         <log type="coverage-clover" target="reports/coverage.xml"/>
-    </logging>
+    </logging> -->
 </phpunit>
