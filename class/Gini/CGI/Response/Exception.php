@@ -20,7 +20,7 @@ class Exception extends \Exception
         226 => 'IM Used',
         300 => 'Multiple Choices',
         301 => 'Moved Permanently',
-        302 => 'Found',
+        302 => 'Temporarily',
         303 => 'See Other',
         304 => 'Not Modified',
         305 => 'Use Proxy',
