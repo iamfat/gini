@@ -153,56 +153,6 @@ class App extends \Gini\Controller\CLI
         }
     }
 
-    public function actionWatch($args)
-    {
-        $watcher = new \Lurker\ResourceWatcher(in_array('-r', $args) ? new \Lurker\Tracker\RecursiveIteratorTracker() : null);
-
-        // Config
-        $paths = \Gini\Core::pharFilePaths(RAW_DIR, 'config');
-        array_walk($paths, function ($path) use ($watcher) {
-            $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru('gini config update');
-            });
-        });
-
-        // Class && View
-        $paths
-            = array_merge(
-                \Gini\Core::pharFilePaths(CLASS_DIR, ''),
-                \Gini\Core::pharFilePaths(VIEW_DIR, '')
-            );
-        array_walk($paths, function ($path) use ($watcher) {
-            $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru('gini cache');
-            });
-        });
-
-        // ORM
-        $paths = \Gini\Core::pharFilePaths(CLASS_DIR, 'Gini/ORM');
-        array_walk($paths, function ($path) use ($watcher) {
-            $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru('gini orm update');
-            });
-        });
-
-        // Web
-        $paths
-            = array_merge(
-                \Gini\Core::pharFilePaths(RAW_DIR, 'assets'),
-                \Gini\Core::pharFilePaths(RAW_DIR, 'js'),
-                \Gini\Core::pharFilePaths(RAW_DIR, 'less')
-            );
-
-        array_walk($paths, function ($path) use ($watcher) {
-            $watcher->trackByListener($path, function (\Lurker\Event\FilesystemEvent $event) {
-                passthru('gini web update');
-            });
-        });
-
-        echo "watching config/class/view/orm/web...\n";
-        $watcher->start();
-    }
-
     /**
      * View or update current module version
      *

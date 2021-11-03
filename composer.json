@@ -1,0 +1,21 @@
+{
+    "name": "genee/gini",
+    "description": "",
+    "license": "proprietary",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Jia Huang",
+            "email": "iamfat@gmail.com"
+        }
+    ],
+    "bin": [
+        "bin/gini"
+    ],
+    "require": {
+        "sabre/dav": "@stable",
+        "doctrine/inflector": "@stable",
+        "doctrine/annotations": "@stable",
+        "mtdowling/cron-expression": "@stable"
+    }
+}
