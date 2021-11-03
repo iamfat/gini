@@ -94,9 +94,9 @@ class App extends \Gini\Controller\CLI
     {
         self::giniBanner();
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            $error = FALSE;
+            $error = false;
             if (isset($info->error)) {
-                $error = TRUE;
+                $error = true;
             } else {
                 $rPath = \Gini\File::relativePath($info->path, APP_PATH);
                 if ($rPath && $rPath[0] == '.') {

@@ -182,10 +182,10 @@ class Whose implements Condition
                     $those->context('join', $join);
                 }
             } else {
-                $pivotName = NULL;
+                $pivotName = null;
             }
 
-            if (count($fields) == 0 && $field && $suffix !== NULL) {
+            if (count($fields) == 0 && $field && $suffix !== null) {
                 if ($pivotName) {
                     $pivotKey = "$fieldKey@pivot";
                     $pivotTable = $joinedTables[$pivotKey];
