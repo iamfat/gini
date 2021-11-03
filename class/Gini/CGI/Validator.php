@@ -36,7 +36,7 @@ namespace Gini\CGI {
 
         public function done()
         {
-            if (count($this->_errors) > 0) {
+            if ($this->_errors && count($this->_errors) > 0) {
                 throw new Validator\Exception();
             }
         }
