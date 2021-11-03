@@ -11,7 +11,8 @@ class Schema
     /** @var string */
     public $type;
 
-    public function toArray() {
+    public function toArray()
+    {
         return [
             'type' => $this->type,
         ];

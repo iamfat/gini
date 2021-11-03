@@ -44,14 +44,13 @@ namespace Gini\PHPUnit\TestCase\CGI {
             $content = \Gini\CGI::request('hello/arguments/1/2/3')->execute()->content();
             $this->assertSame($content, ['1', '2', '3']);
         }
-
     }
 
 }
 
 namespace Gini\Controller\CGI {
-    use \Gini\Controller\REST;
-    use \Gini\CGI\Response;
+    use Gini\Controller\REST;
+    use Gini\CGI\Response;
 
     class Hello extends REST
     {
@@ -79,6 +78,5 @@ namespace Gini\Controller\CGI {
         {
             return new Response\JSON(func_get_args());
         }
-
-    }    
+    }
 }

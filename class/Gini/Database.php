@@ -341,7 +341,7 @@ class Database
         return $this->_driver->createTable($table);
     }
 
-    const ADJFLAG_REMOVE_NONEXISTENT = 0x01;
+    public const ADJFLAG_REMOVE_NONEXISTENT = 0x01;
 
     /**
      * Adjust table structure according schema.

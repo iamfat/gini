@@ -2,7 +2,6 @@
 
 namespace Gini\Document\OpenRPC;
 
-
 abstract class AbstractLexer
 {
     /**
@@ -222,7 +221,7 @@ abstract class AbstractLexer
     {
         static $regex;
 
-        if ( ! isset($regex)) {
+        if (! isset($regex)) {
             $regex = sprintf(
                 '/(%s)|%s/%s',
                 implode(')|(', $this->getCatchablePatterns()),

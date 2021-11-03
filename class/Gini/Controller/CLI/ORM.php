@@ -45,6 +45,10 @@ class ORM extends \Gini\Controller\CLI
                     return;
                 }
 
+                if (!$rc->isSubclassOf('\Gini\ORM\Base')) {
+                    return;
+                }
+
                 $oname = strtolower($oname);
                 $orms[$oname] = \Gini\IoC::construct($className);
             });

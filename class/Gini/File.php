@@ -49,7 +49,7 @@ class File
             ++$c;
         }
 
-        return number_format($a).$unim[$c];
+        return number_format($a) . $unim[$c];
     }
 
     /**
@@ -66,7 +66,7 @@ class File
                     if ($n === '.' || $n === '..') {
                         continue;
                     }
-                    self::removeDir($path.'/'.$n);
+                    self::removeDir($path . '/' . $n);
                 }
                 closedir($dh);
             }
@@ -105,12 +105,12 @@ class File
                     continue;
                 }
 
-                $path = $source.'/'.$name;
+                $path = $source . '/' . $name;
                 if (is_dir($path)) {
-                    self::copy($path, $dest.'/'.$name);
+                    self::copy($path, $dest . '/' . $name);
                 } else {
                     self::ensureDir($dest, $mode);
-                    $dest_path = $dest.'/'.$name;
+                    $dest_path = $dest . '/' . $name;
                     copy($path, $dest_path);
                 }
             }
@@ -131,7 +131,7 @@ class File
                     if ($file === '.' || $file === '..') {
                         continue;
                     }
-                    self::traverse($path.$file, $callback);
+                    self::traverse($path . $file, $callback);
                 }
                 closedir($dh);
             }
@@ -145,7 +145,7 @@ class File
         }
         // some compatibility fixes for Windows paths
         $from = is_dir($from) ? rtrim($from, '\/') : $from;
-        $to = is_dir($to)   ? rtrim($to, '\/') : $to;
+        $to = is_dir($to) ? rtrim($to, '\/') : $to;
         $from = str_replace('\\', '/', $from);
         $to = str_replace('\\', '/', $to);
 
@@ -167,7 +167,7 @@ class File
                     $relPath = array_pad($relPath, $padLength, '..');
                     break;
                 } else {
-                    $relPath[0] = './'.$relPath[0];
+                    $relPath[0] = './' . $relPath[0];
                 }
             }
         }
@@ -178,7 +178,7 @@ class File
     public static function inPaths($path, $paths = array())
     {
         foreach ($paths as $p) {
-            if (preg_match('|^'.preg_quote($p).'|iu', $path)) {
+            if (preg_match('|^' . preg_quote($p) . '|iu', $path)) {
                 return true;
             }
         }
@@ -239,10 +239,10 @@ class File
         }
     }
 
-    public static function eachFilesIn($root, $callback)
+    public static function eachFilesIn($root, $callback, array $options = [])
     {
-        $walk = function ($root, $prefix, $callback) use (&$walk) {
-            $dir = $root.'/'.$prefix;
+        $walk = function ($root, $prefix, $callback) use (&$walk, $options) {
+            $dir = $root . '/' . $prefix;
             if (!is_dir($dir)) {
                 return;
             }
@@ -253,8 +253,16 @@ class File
                         continue;
                     }
 
-                    $file = $prefix ? $prefix.'/'.$name : $name;
-                    $full_path = $root.'/'.$file;
+                    if ($name[0] === '.' && $options['hidden'] !== true) {
+                        continue;
+                    }
+
+                    $file = $prefix ? $prefix . '/' . $name : $name;
+                    $full_path = $root . '/' . $file;
+
+                    if ($options['filter'] && !$options['filter']($file)) {
+                        continue;
+                    }
 
                     if (is_dir($full_path)) {
                         $walk($root, $file, $callback);
@@ -263,6 +271,45 @@ class File
 
                     if ($callback) {
                         $callback($file);
+                    }
+                }
+                closedir($dh);
+            }
+        };
+
+        $walk($root, '', $callback);
+    }
+
+    public static function eachDirsIn($root, $callback, array $options = [])
+    {
+        $walk = function ($root, $prefix, $callback) use (&$walk, $options) {
+            $dir = $root . '/' . $prefix;
+            if (!is_dir($dir)) {
+                return;
+            }
+            $dh = opendir($dir);
+            if ($dh) {
+                while (false !== ($name = readdir($dh))) {
+                    if ($name === '.' || $name === '..') {
+                        continue;
+                    }
+
+                    if ($name[0] === '.' && $options['hidden'] !== true) {
+                        continue;
+                    }
+
+                    $file = $prefix ? $prefix . '/' . $name : $name;
+                    $full_path = $root . '/' . $file;
+
+                    if ($options['filter'] && !$options['filter']($file)) {
+                        continue;
+                    }
+
+                    if (is_dir($full_path)) {
+                        if ($callback) {
+                            $callback($file);
+                        }
+                        $walk($root, $file, $callback);
                     }
                 }
                 closedir($dh);

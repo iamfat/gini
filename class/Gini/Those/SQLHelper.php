@@ -390,26 +390,25 @@ class SQLHelper
         $db = $this->db;
         $table = $this->_table;
 
-        $from_SQL = 'FROM '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
-
+        $from_SQL = ' FROM '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
         if ($this->_join) {
             $from_SQL .= ' '.implode(' ', $this->_join);
         }
 
         if ($this->_where) {
-            $from_SQL .= ' WHERE '.implode(' ', $this->_where);
+            $where_SQL = ' WHERE '.implode(' ', $this->_where);
         }
 
         if ($this->_order_by) {
-            $order_SQL = 'ORDER BY '.implode(', ', $this->_order_by);
+            $order_SQL = ' ORDER BY '.implode(', ', $this->_order_by);
         }
 
         if ($this->_limit) {
-            $limit_SQL = 'LIMIT '.$this->_limit;
+            $limit_SQL = ' LIMIT '.$this->_limit;
         }
 
         $id_col = $db->ident($table, 'id');
-        $SQL = trim("SELECT DISTINCT $id_col $from_SQL $order_SQL $limit_SQL");
+        $SQL = trim("SELECT DISTINCT $id_col$from_SQL$where_SQL$order_SQL$limit_SQL");
 
         unset($this->_join);
         unset($this->_where);

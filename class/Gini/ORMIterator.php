@@ -34,6 +34,16 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this->name;
     }
 
+    public function db()
+    {
+        return $this->db;
+    }
+
+    public function tableName()
+    {
+        return $this->table_name;
+    }
+
     public function __construct($name)
     {
         // 查询一下看看是不是复数
@@ -51,14 +61,10 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     public function query()
     {
-        $db = $this->db;
-
         $args = func_get_args();
-
-        $this->SQL = $SQL = $args[0];
+        $this->SQL = $args[0];
         $this->SQL_idents = $args[1] ?: null;
         $this->SQL_params = $args[2] ?: null;
-
         return $this;
     }
 
@@ -324,7 +330,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $tempColumns = array_merge($val, [$key]);
             foreach ($tempColumns as $c) {
                 if (isset($structure[$c]['object'])) {
-                    $columns[$c . '_id'] = $this->_fieldName($c , '_id') . " AS '{$c}_id'";
+                    $columns[$c . '_id'] = $this->_fieldName($c, '_id') . " AS '{$c}_id'";
                 } else {
                     $columns[$c] = $this->_fieldName($c) . " AS '{$c}'";
                 }
@@ -364,6 +370,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->_forUpdate = !!$forUpdate;
         return $this;
     }
+
+    public function SQL()
+    {
+        return $this->SQL;
+    }
 }
-
-

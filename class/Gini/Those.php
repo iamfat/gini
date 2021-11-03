@@ -56,12 +56,13 @@ namespace Gini {
     class Those extends ORMIterator
     {
         private $_table;
-        private $_field;
+        private $_from;
         private $_where;
         private $_join;
         private $_joinedTables;
         private $_alias;
-        private $_whoAreField;
+
+        private $_condition;
 
         private $_withTrashed = false;
 
@@ -84,16 +85,23 @@ namespace Gini {
         public function __construct($name, $criteria = null)
         {
             parent::__construct($name);
+
             $this->_table = 't' . $this->uniqid();
+            $db = $this->db();
+            $this->_from = [
+                $db->ident($this->tableName()) . ' AS ' . $db->quoteIdent($this->_table)
+            ];
+
             if ($criteria) {
                 if (!is_array($criteria)) {
                     $criteria = ['id' => $criteria];
                 }
                 foreach ($criteria as $key => $value) {
+                    $whose = new \Gini\Those\Whose($key);
                     if (is_array($value)) {
-                        $this->whose($key)->isIn($value);
+                        $this->meet($whose->isIn($value));
                     } else {
-                        $this->whose($key)->is($value);
+                        $this->meet($whose->is($value));
                     }
                 }
             }
@@ -122,7 +130,7 @@ namespace Gini {
             return parent::fetch($scope);
         }
 
-        private function _getValue($v)
+        private function _fieldValue($v)
         {
             if ($v instanceof \Gini\Those\SQL) {
                 return strval($v);
@@ -145,7 +153,7 @@ namespace Gini {
             return $db->quote($v);
         }
 
-        private function _packWhere($where, $op = 'AND')
+        public static function packWhere($where, $op = 'AND')
         {
             if (!is_array($where)) {
                 $where = [$where];
@@ -154,7 +162,7 @@ namespace Gini {
                 return $where[0];
             }
 
-            return '('.implode(' '.$op.' ', $where).')';
+            return '(' . implode(' ' . $op . ' ', $where) . ')';
         }
 
         public function limit($start, $per_page = null)
@@ -173,11 +181,11 @@ namespace Gini {
         public function whose($field)
         {
             $this->resetFetch();
+            $this->finalizeCondition();
             if ($this->_where) {
                 $this->_where[] = 'AND';
             }
-            $this->_field = $field;
-
+            $this->_condition = new \Gini\Those\Whose($field);
             return $this;
         }
 
@@ -189,370 +197,140 @@ namespace Gini {
         public function orWhose($field)
         {
             $this->resetFetch();
+            $this->finalizeCondition();
             if ($this->_where) {
                 $this->_where[] = 'OR';
             }
-            $this->_field = $field;
+            $this->_condition = new \Gini\Those\Whose($field);
+            return $this;
+        }
+
+        public function __call($method, $params)
+        {
+            if ($method === __FUNCTION__) {
+                return;
+            }
+
+            if ($this->_condition && is_callable([$this->_condition, $method])) {
+                call_user_func_array([$this->_condition, $method], $params);
+            }
 
             return $this;
         }
 
-        public function whoIs($field)
+        public function whoAre($field)
         {
             $this->resetFetch();
-            $this->_field = $field;
-
+            $this->finalizeCondition();
+            if ($this->_where) {
+                $this->_where[] = 'AND';
+            }
+            $this->_condition = new \Gini\Those\WhoAre($field);
             return $this;
         }
 
-        public function andWhoIs($field)
+        public function andWhoAre($field)
         {
-            return $this->whoIs($field);
+            return $this->whoAre($field);
         }
 
-        public function whichIs($field)
-        {
-            return $this->whoIs($field);
-        }
-
-        public function andWhichIs($field)
-        {
-            return $this->whoIs($field);
-        }
-
-        public function orWhoIs($field)
+        public function orWhoAre($field)
         {
             $this->resetFetch();
-            $this->_where[] = 'OR';
-            $this->_field = $field;
-
+            $this->finalizeCondition();
+            if ($this->_where) {
+                $this->_where[] = 'OR';
+            }
+            $this->_condition = new \Gini\Those\WhoAre($field);
             return $this;
         }
 
-        public function orWhichIs($field)
+        public function whoIsThe($field)
         {
-            return $this->orWhoIs($field);
+            return $this->whoAre($field);
         }
 
-        public function alias($name)
+        public function andWhoIsThe($field)
+        {
+            return $this->whoAre($field);
+        }
+
+        public function orWhoIsThe($field)
+        {
+            return $this->orWhoAre($field);
+        }
+
+        public function whichAre($field)
+        {
+            return $this->whoAre($field);
+        }
+
+        public function andWhichAre($field)
+        {
+            return $this->whoAre($field);
+        }
+
+
+        public function orWhichAre($field)
+        {
+            return $this->orWhoAre($field);
+        }
+
+        public function whichIsThe($field)
+        {
+            return $this->whoAre($field);
+        }
+
+        public function andWhichIsThe($field)
+        {
+            return $this->whoAre($field);
+        }
+
+        public function orWhichIsThe($field)
+        {
+            return $this->orWhoAre($field);
+        }
+
+        public function alias($name = null)
         {
             $this->resetFetch();
             $this->_alias[$name] = $this->_table;
-
-            return $this;
-        }
-
-        public function isIn()
-        {
-            $values = func_get_args();
-
-            $db = $this->db;
-            $field_name = $this->_fieldName($this->_field);
-
-            $v = reset($values);
-            if ($v instanceof self) {
-                $field_name = $this->_fieldName($this->_field, '_id');
-                $this->_join[] = 'INNER JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
-                    .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
-                if ($v->_join) {
-                    $this->_join = array_merge($this->_join, $v->_join);
-                }
-
-                $op = 'AND';
-                if (is_array($this->_where)) {
-                    while (in_array(end($this->_where), ['AND', 'OR'])) {
-                        $op = array_pop($this->_where);
-                    }
-                }
-
-                if ($v->_where) {
-                    if ($this->_where) {
-                        $this->_where = array_merge($this->_where, [$op], $v->_where);
-                    } else {
-                        $this->_where = $v->_where;
-                    }
-                }
-            } else {
-                foreach ($values as $v) {
-                    $qv[] = $db->quote($v);
-                }
-                $this->_where[] = $field_name.' IN ('.implode(', ', $qv).')';
-            }
-
-            return $this;
-        }
-
-        public function isNotIn()
-        {
-            $values = func_get_args();
-
-            $db = $this->db;
-            $field_name = $this->_fieldName($this->_field);
-
-            $v = reset($values);
-            if ($v instanceof self) {
-                $field_name = $this->_fieldName($this->_field, '_id');
-                $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name)
-                    .' AS '.$db->quoteIdent($v->_table)
-                    .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
-                if ($v->_join) {
-                    $this->_join = array_merge($this->_join, $v->_join);
-                }
-
-                if ($v->_where) {
-                    $this->_join = array_merge($this->_join, [ 'AND' ], $v->_where);
-                }
-
-                $op = 'AND';
-                if (is_array($this->_where)) {
-                    while (in_array(end($this->_where), ['AND', 'OR'])) {
-                        $op = array_pop($this->_where);
-                    }
-                }
-
-                if ($this->_where) {
-                    $this->_where[] = 'AND';
-                }
-                $this->_where[] = $db->ident($v->_table, 'id').' IS NULL';
-            } else {
-                foreach ($values as $v) {
-                    $qv[] = $db->quote($v);
-                }
-                $this->_where[] = $field_name.' NOT IN ('.implode(', ', $qv).')';
-            }
-
-            return $this;
-        }
-
-        public function isRelatedTo($value)
-        {
-            assert($this->_field);
-
-            $db = $this->db;
-            $field_name = $this->_fieldName($this->_field);
-            $this->_where[] = 'MATCH(' . $field_name.') AGAINST (' . $db->quote($value).')';
-
-            return $this;
-        }
-
-        protected function _fieldName($field,$suffix=null)
-        {
-            $db = $this->db;
-            $name = $this->name();
-            // table1.table2.table3.field
-            $fields = explode('.', $field);
-            $key = '';
-
-            for (;;) {
-                // chop field one by one
-                $field = array_shift($fields);
-                $fieldKey = $key ? $key.'.'.$field : $field;
-                $table = $key ? $this->_joinedTables[$key] : $this->_table;
-
-                $o = a($name);
-                $structure = $o->structure();
-                $manyStructure = $o->manyStructure();
-                if (isset($manyStructure[$field])) {
-                    // it is a many-field, a pivot table required
-                    $pivotName = $o->pivotTableName($field);
-                    $pivotKey = "$fieldKey@pivot";
-                    if (!isset($this->_join[$pivotKey])) {
-                        $this->_joinedTables[$pivotKey] = $pivotTable = 't'.$this->uniqid();
-                        $this->_join[$pivotKey] = 'INNER JOIN '.$db->ident($pivotName)
-                            .' AS '.$db->quoteIdent($pivotTable)
-                            .' ON '.$db->ident($pivotTable, $name.'_id').'='.$db->ident($table, 'id');
-                    }
-                } else {
-                    $pivotName = null;
-                }
-
-                if (count($fields) == 0
-                    || (isset($structure[$field]) && !isset($structure[$field]['object']))
-                    || (isset($manyStructure[$field]) && !isset($manyStructure[$field]['object']))
-                    ) {
-                    if ($pivotName) {
-                        $pivotKey = "$fieldKey@pivot";
-                        $pivotTable = $this->_joinedTables[$pivotKey];
-                        return $db->ident($pivotTable, $field.$suffix);
-                    } else {
-                        return $db->ident($table, $field.$suffix);
-                    }
-                } else {
-                    if ($pivotName) {
-                        $fieldName = $manyStructure[$field]['object'];
-                        $tableName = a($fieldName)->tableName();
-                        if (!isset($this->_join[$fieldKey])) {
-                            $this->_joinedTables[$fieldKey] = $fieldTable = 't'.$this->uniqid();
-                            $pivotKey = "$fieldKey@pivot";
-                            $pivotTable = $this->_joinedTables[$pivotKey];
-                            $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($tableName)
-                                .' AS '.$db->quoteIdent($fieldTable)
-                                .' ON '.$db->ident($pivotTable, $field.'_id').'='.$db->ident($fieldTable, 'id');
-                        }
-                    } else {
-                        $fieldName = $structure[$field]['object'];
-                        $tableName = a($fieldName)->tableName();
-                        if (!isset($this->_join[$fieldKey])) {
-                            $this->_joinedTables[$fieldKey] = $fieldTable = 't'.$this->uniqid();
-                            $this->_join[$fieldKey] = 'INNER JOIN '.$db->ident($tableName)
-                                .' AS '.$db->quoteIdent($fieldTable)
-                                .' ON '.$db->ident($table, $field.'_id').'='.$db->ident($fieldTable, 'id');
-                        }
-                    }
-
-                    $name = $fieldName;
-                    $key = $fieldKey;
-                }
-            }
-        }
-
-        public function match($op, $v)
-        {
-            assert($this->_field);
-
-            $db = $this->db;
-            $field_name = $this->_fieldName($this->_field);
-
-            switch ($op) {
-                case '^=': {
-                    $this->_where[] = $field_name.' LIKE '.$db->quote($v.'%');
-                }
-                break;
-
-                case '$=': {
-                    $this->_where[] = $field_name.' LIKE '.$db->quote('%'.$v);
-                }
-                break;
-
-                case '*=': {
-                    $this->_where[] = $field_name.' LIKE '.$db->quote('%'.$v.'%');
-                }
-                break;
-
-                case '=': case '<>': {
-                    if (is_object($v)) {
-                        $o = a($this->name);
-                        $field = $this->_field;
-                        $structure = $o->structure();
-                        $manyStructure = $o->manyStructure();
-                        $obj_where = [];
-                        if ((isset($structure[$field])
-                                && \array_key_exists('object', $structure[$field])
-                                && !$structure[$field]['object'])
-                            || (isset($manyStructure[$field])
-                                && \array_key_exists('object', $manyStructure[$field])
-                                && !$manyStructure[$field]['object'])
-                            ) {
-                            $obj_where[] = $this->_fieldName($this->_field,'_name').$op.$db->quote($v->name());
-                        }
-                        $obj_where[] = $this->_fieldName($this->_field,'_id').$op.intval($v->id);
-                        if ($op == '<>') {
-                            $this->_where[] = $this->_packWhere($obj_where, 'OR');
-                        } else {
-                            $this->_where[] = $this->_packWhere($obj_where, 'AND');
-                        }
-                        break;
-                    } elseif (is_null($v)) {
-                        if ($op == '<>') {
-                            $this->_where[] = $field_name.' IS NOT NULL';
-                        } else {
-                            $this->_where[] = $field_name.' IS NULL';
-                        }
-                        break;
-                    }
-                }
-
-                default: {
-                    $this->_where[] = $field_name.$op.$this->_getValue($v);
-                }
-
-            }
-
-            return $this;
-        }
-
-        // is(1), is('hello'), is('@name')
-        public function is($v)
-        {
-            return $this->match('=', $v);
-        }
-
-        public function isNot($v)
-        {
-            return $this->match('<>', $v);
-        }
-
-        public function beginsWith($v)
-        {
-            return $this->match('^=', $v);
-        }
-
-        public function contains($v)
-        {
-            return $this->match('*=', $v);
-        }
-
-        public function endsWith($v)
-        {
-            return $this->match('$=', $v);
-        }
-
-        public function isLessThan($v)
-        {
-            return $this->match('<', $v);
-        }
-
-        public function isGreaterThan($v)
-        {
-            return $this->match('>', $v);
-        }
-
-        public function isGreaterThanOrEqual($v)
-        {
-            return $this->match('>=', $v);
-        }
-
-        public function isLessThanOrEqual($v)
-        {
-            return $this->match('<=', $v);
-        }
-
-        public function isBetween($a, $b)
-        {
-            assert($this->_field);
-            $db = $this->db;
-            $field_name = $this->_fieldName($this->_field);
-            $this->_where[] = '('.$field_name.'>='.$this->_getValue($a).
-                ' AND '.$field_name.'<'.$this->_getValue($b).')';
-
             return $this;
         }
 
         public function orderBy($field, $mode = 'asc')
         {
             $this->resetFetch();
-            $originalField = $this->_field;
-            $this->_field = $field;
-            $field_name = $this->_fieldName($this->_field);
-            $this->_field = $originalField;
+            $fieldName = \Gini\Those\Whose::fieldName($this, $field);
 
             $mode = strtolower($mode);
             switch ($mode) {
                 case 'desc':
                 case 'd':
-                $this->_order_by[] = $field_name .' DESC';
-                break;
+                    $this->_order_by[] = $fieldName . ' DESC';
+                    break;
                 case 'asc':
                 case 'a':
-                $this->_order_by[] = $field_name .' ASC';
-                break;
+                    $this->_order_by[] = $fieldName . ' ASC';
+                    break;
             }
 
             return $this;
         }
 
+        public function finalizeCondition()
+        {
+            if ($this->_condition) {
+                $condition = $this->_condition;
+                $this->condition = null;
+                $this->_meet($condition);
+            }
+        }
+
         public function makeSQL()
         {
+            $this->finalizeCondition();
+
             $db = $this->db;
             $table = $this->_table;
 
@@ -563,24 +341,24 @@ namespace Gini {
                 }
             }
 
-            $from_SQL = 'FROM '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
-
             if ($this->_join) {
-                $from_SQL .= ' '.implode(' ', $this->_join);
+                $this->_from[0] .= ' ' . implode(' ', $this->_join);
             }
 
-            if ($this->_where) {
-                $from_SQL .= ' WHERE '.implode(' ', $this->_where);
-            }
-
+            $from_SQL = ' FROM ' . implode(', ', $this->_from);
             $this->from_SQL = $from_SQL;
 
+            if ($this->_where) {
+                $where_SQL = ' WHERE ' . implode(' ', $this->_where);
+            }
+            $this->where_SQL = $where_SQL;
+
             if ($this->_order_by) {
-                $order_SQL = 'ORDER BY '.implode(', ', $this->_order_by);
+                $order_SQL = ' ORDER BY ' . implode(', ', $this->_order_by);
             }
 
             if ($this->_limit) {
-                $limit_SQL = 'LIMIT '.$this->_limit;
+                $limit_SQL = ' LIMIT ' . $this->_limit;
             }
 
             $fields = $this->fields();
@@ -591,131 +369,63 @@ namespace Gini {
             $id_col = $db->ident($table, 'id');
 
             $this->SQL = trim("SELECT DISTINCT $id_col" . ($quoted_fields ? ',' . implode(',', $quoted_fields) : '')
-                . " $from_SQL $order_SQL $limit_SQL");
-            $this->count_SQL = trim("SELECT COUNT(DISTINCT $id_col) AS \"count\" $from_SQL");
+                . "$from_SQL$where_SQL$order_SQL$limit_SQL");
+            $this->count_SQL = trim("SELECT COUNT(DISTINCT $id_col) AS \"count\" $from_SQL $where_SQL");
 
             return $this;
         }
 
-        public function whoAre($field)
+        public function context($name = '*', $value = null)
         {
-            $this->resetFetch();
-            if ($this->_where) {
-                $this->_where[] = 'AND';
-            }
-            $this->_whoAreField = $field;
+            switch ($name) {
+                case 'current-table':
+                    return $this->_table;
 
-            return $this;
-        }
-
-        public function of($those)
-        {
-            assert($this->_whoAreField);
-            $this->_joinWhoAreTables($this->_whoAreField);
-            // 完成反转后把those的条件复制过来
-            $thoseInfo = $those->context();
-            $mirrorTables = [];
-            $needJoin = [];
-            foreach ($thoseInfo['tables'] as $key => $v) {
-                if (isset($this->_joinedTables[$key])) {
-                    $mirrorTables[$v] = $this->_joinedTables[$key];
-                } else {
-                    $this->_joinedTables[$key] = $mirrorTables[$v] = 't' . $this->uniqid();
-                    if ($thoseInfo['join'][$key]) {
-                        $needJoin[$key] = $thoseInfo['join'][$key];
+                case 'from':
+                    if ($value !== null) {
+                        $this->_from = (array)$value;
                     }
-                }
-            }
+                    return $this->_from;
 
-            foreach ($needJoin as $k => $v) {
-                $this->_join[$k] = $this->mirrorSQL($v, $mirrorTables);
-            }
-
-            foreach ($thoseInfo['where'] as $where) {
-                $this->_where[] = $this->mirrorSQL($where, $mirrorTables);
-            }
-            return $this;
-
-        }
-
-        private function mirrorSQL($sql, $mirror)
-        {
-            foreach ($mirror as $k => $v) {
-                $sql = str_replace($k, $v, $sql);
-            }
-            return $sql;
-        }
-
-        // whoAre的参数是一个其他orm产生的反查，所以不能用普通的方式生成join
-        private function _joinWhoAreTables($whoAreField)
-        {
-            $db = $this->db;
-            $basefields = explode('.', $whoAreField);
-            $fields = $basefields;
-            $basefield = array_shift($fields);
-            $obj = a($basefield);
-            $objects[$basefield]['object'] = $obj;
-            while (!empty($fields)) {
-                $field = array_shift($fields);
-                $o = $objects[$basefield]['object'];
-                $structure = $o->structure();
-                $manyStructure = $o->manyStructure();
-                if (isset($manyStructure[$field])) {
-                    $objects[$basefield]['pivot'] = $field;
-                    $basefield = $basefield . '.' . $field;
-                    $objects[$basefield]['object'] = a($manyStructure[$field]['object']);
-                } else {
-                    $basefield = $basefield . '.' . $field;
-                    $objects[$basefield]['object'] = a($structure[$field]['object']);
-                }
-            }
-
-            $basetable = $this->_table;
-            $fields = $basefields;
-            while (count($fields) > 1) {
-                $field = array_pop($fields);
-                $table = join('.', $fields);
-                $o = $objects[$table];
-                if (isset($o['pivot'])) {
-                    $pivotKey = $table . '@pivot';
-                    $pivotName = $o['object']->pivotTableName($field);
-                    if (!isset($this->_join[$pivotKey])) {
-                        $this->_joinedTables[$pivotKey] = $pivotTable = 't' . $this->uniqid();
-                        $this->_join[$pivotKey] = 'INNER JOIN ' . $db->ident($pivotName)
-                            . ' AS ' . $db->quoteIdent($pivotTable)
-                            . ' ON ' . $db->ident($pivotTable, $field . '_id') . '=' . $db->ident($basetable, 'id');
-                        $this->_joinedTables[$table] = $joinTable = 't' . $this->uniqid();
-                        $tablename = $o['object']->tableName();
-                        $this->_join[$table] = 'INNER JOIN ' . $db->ident($tablename)
-                            . ' AS ' . $db->quoteIdent($joinTable)
-                            . ' ON ' . $db->ident($joinTable, $field . '_id') . '=' . $db->ident($pivotTable, $tablename . '_id');
+                case 'alias':
+                    if ($value !== null) {
+                        $this->_alias = (array)$value;
                     }
-                } elseif (!isset($this->_join[$table])) {
-                    $this->_joinedTables[$table] = $joinTable = 't' . $this->uniqid();
-                    $tablename = $o['object']->tableName();
-                    $this->_join[$table] = 'INNER JOIN ' . $db->ident($tablename)
-                        . ' AS ' . $db->quoteIdent($joinTable)
-                        . ' ON ' . $db->ident($joinTable, $field . '_id') . '=' . $db->ident($basetable, 'id');
-                }
-                $basetable = $this->_joinedTables[$table];
+                    return $this->_alias;
+
+                case 'join':
+                    if ($value !== null) {
+                        $this->_join = (array)$value;
+                    }
+                    return $this->_join;
+
+                case 'where':
+                    if ($value !== null) {
+                        $this->_where = (array)$value;
+                    }
+                    return $this->_where;
+                case 'joined-tables':
+                    if ($value !== null) {
+                        $this->_joinedTables = (array)$value;
+                    }
+                    return $this->_joinedTables;
+                case 'tables':
+                    $tables = [];
+                    foreach ((array)$this->_joinedTables as $k => $v) {
+                        $tables[$this->name . '.' . $k] = $v;
+                    }
+                    $tables[$this->name] = $this->_table;
+                    return $tables;
+                case '*':
+                    return [
+                        'current-table' => $this->context('current-table'),
+                        'joined-tables' => $this->context('joined-tables'),
+                        'join' => $this->context('join'),
+                        'where' => $this->context('where'),
+                        'alias' => $this->context('alias'),
+                    ];
             }
         }
-
-        public function context()
-        {
-            $base = $this->name;
-            $res = [];
-            foreach ($this->_joinedTables ?: [] as $k => $v) {
-                $res['tables'][$base . '.' . $k] = $v;
-            }
-            $res['tables'][$base] = $this->_table;
-            $res['where'] = $this->_where;
-            foreach ($this->_join ?: [] as $k => $v) {
-                $res['join'][$base . '.' . $k] = $v;
-            }
-            return $res;
-        }
-
 
         public function get($key = 'id', $val = null)
         {
@@ -724,8 +434,33 @@ namespace Gini {
             }
             return parent::get($key, $val);
         }
-    }
 
+        private function _meet($condition)
+        {
+            $where = $condition->createWhere($this);
+            if ($where === false) {
+                // remove prev op (AND or OR)
+                if ($this->_where) {
+                    array_pop($this->_where);
+                }
+            } else {
+                $this->_where[] = $where;
+            }
+        }
+
+        public function meet($condition)
+        {
+            if (!$condition instanceof \Gini\Those\Condition) {
+                throw new \Exception('invalid meet condition');
+            }
+            $this->finalizeCondition();
+            if ($this->_where) {
+                $this->_where[] = 'AND';
+            }
+            $this->_condition = $condition;
+            return $this;
+        }
+    }
 }
 
 namespace {
@@ -741,7 +476,7 @@ namespace {
          */
         function a($name, $criteria = null)
         {
-            $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $name);
+            $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $name);
 
             return \Gini\IoC::construct($class_name, $criteria);
         }
@@ -784,4 +519,43 @@ namespace {
             return \Gini\IoC::construct('\Gini\Those\SQL', $SQL);
         }
     }
+
+    if (function_exists('whose')) {
+        die('whose() was declared by other libraries, which may cause problems!');
+    } else {
+        function whose($name)
+        {
+            return new \Gini\Those\Whose($name);
+        }
+    }
+
+    if (function_exists('anyOf')) {
+        die('anyOf() was declared by other libraries, which may cause problems!');
+    } else {
+        function anyOf()
+        {
+            $params = func_get_args();
+            return new \Gini\Those\AnyOf($params);
+        }
+    }
+
+    if (function_exists('allOf')) {
+        die('allOf() was declared by other libraries, which may cause problems!');
+    } else {
+        function allOf()
+        {
+            $params = func_get_args();
+            return new \Gini\Those\AllOf($params);
+        }
+    }
+
+    if (function_exists('whoAre')) {
+        die('whoAre() was declared by other libraries, which may cause problems!');
+    } else {
+        function whoAre($name)
+        {
+            return new \Gini\Those\WhoAre($name);
+        }
+    }
+
 }

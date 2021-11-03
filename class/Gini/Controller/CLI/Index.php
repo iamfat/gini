@@ -2,8 +2,8 @@
 
 namespace Gini\Controller\CLI;
 
-use \Gini\CGI\Response;
-use \Gini\RPC;
+use Gini\CGI\Response;
+use Gini\RPC;
 
 class AuthorizationException extends \Exception
 {
@@ -89,7 +89,7 @@ class Index extends \Gini\Controller\CLI
     private function _responseMustSucceed($response)
     {
         if ($response['statusCode'] == 401 && isset($response['headers']['www-authenticate'])) {
-            throw new AuthorizationException;
+            throw new AuthorizationException();
         } elseif ($response['statusCode'] < 200 || $response['statusCode'] > 206) {
             throw new Response\Exception(null, $response['statusCode']);
         }

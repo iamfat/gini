@@ -69,12 +69,12 @@ namespace Gini {
             */
             if ($path[0] != '/' && $path[0] != '.') {
                 // 相对路径
-                $npath = getcwd().'/modules/'.$path;
-                $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'].'/'.$path;
+                $npath = getcwd() . '/modules/' . $path;
+                $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/' . $path;
             }
             // $path = realpath($path);
 
-            $info_script = $path.'/gini.json';
+            $info_script = $path . '/gini.json';
             if (!file_exists($info_script)) {
                 return false;
             }
@@ -93,7 +93,7 @@ namespace Gini {
                 $info->dependencies['gini'] = '*';
             }
 
-            $info->moduleClass = '\Gini\Module\\'.strtr($info->id, ['-' => '', '_' => '', '/' => '']);
+            $info->moduleClass = '\Gini\Module\\' . strtr($info->id, ['-' => '', '_' => '', '/' => '']);
             $info->path = $path;
 
             return $info;
@@ -113,7 +113,7 @@ namespace Gini {
 
         public static function saveModuleInfo($info)
         {
-            $info_script = $info->path.'/gini.json';
+            $info_script = $info->path . '/gini.json';
             unset($info->path);
             unset($info->error);
             $json = json_encode($info, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
@@ -145,8 +145,8 @@ namespace Gini {
                     // }
 
                     // use flat structure
-                    $npath = getcwd().'/modules/'.$path;
-                    $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'].'/'.$path;
+                    $npath = getcwd() . '/modules/' . $path;
+                    $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/' . $path;
                 } else {
                     $id = basename($path);
                 }
@@ -192,7 +192,8 @@ namespace Gini {
             $inserted = false;
             $module_info = [];
             foreach (self::$MODULE_INFO as $b_id => $b_info) {
-                if (!$inserted &&
+                if (
+                    !$inserted &&
                     (isset($b_info->dependencies[$info->id]) || (defined('APP_ID') && $b_id == APP_ID))
                 ) {
                     $module_info[$info->id] = $info;
@@ -210,9 +211,7 @@ namespace Gini {
 
             if (!isset(self::$MODULE_INSTANCES[$info->id])) {
                 $moduleClass = class_exists($info->moduleClass) ?
-                    $info->moduleClass : (
-                        class_exists('\Gini\Module\Prototype') ? '\Gini\Module\Prototype' : '\stdClass'
-                    );
+                    $info->moduleClass : (class_exists('\Gini\Module\Prototype') ? '\Gini\Module\Prototype' : '\stdClass');
                 self::$MODULE_INSTANCES[$info->id] = IoC::construct($moduleClass);
             }
 
@@ -265,7 +264,7 @@ namespace Gini {
                     }
                 }
             } else {
-                $file = self::locatePharFile($base, $name.'.php', $scope);
+                $file = self::locatePharFile($base, $name . '.php', $scope);
                 if ($file) {
                     require_once $file;
 
@@ -296,12 +295,12 @@ namespace Gini {
                 }
             } elseif (isset(self::$MODULE_INFO[$scope])) {
                 $info = self::$MODULE_INFO[$scope];
-                $file_path = 'phar://'.$info->path.'/'.$phar.'.phar/'.$file;
+                $file_path = 'phar://' . $info->path . '/' . $phar . '.phar/' . $file;
                 if (file_exists($file_path)) {
                     return $file_path;
                 }
 
-                $file_path = $info->path.'/'.$phar.'/'.$file;
+                $file_path = $info->path . '/' . $phar . '/' . $file;
                 if (file_exists($file_path)) {
                     return $file_path;
                 }
@@ -329,7 +328,7 @@ namespace Gini {
                 }
             } elseif (isset(self::$MODULE_INFO[$scope])) {
                 $info = self::$MODULE_INFO[$scope];
-                $file_path = $info->path.'/'.$file;
+                $file_path = $info->path . '/' . $file;
                 if (file_exists($file_path)) {
                     return $file_path;
                 }
@@ -349,9 +348,9 @@ namespace Gini {
         public static function pharFilePaths($base, $file)
         {
             foreach (self::$MODULE_INFO as $info) {
-                $file_path = 'phar://'.$info->path.'/'.$base.'.phar';
+                $file_path = 'phar://' . $info->path . '/' . $base . '.phar';
                 if ($file) {
-                    $file_path .= '/'.$file;
+                    $file_path .= '/' . $file;
                 }
 
                 if (file_exists($file_path)) {
@@ -359,9 +358,9 @@ namespace Gini {
                     continue;
                 }
 
-                $file_path = $info->path.'/'.$base;
+                $file_path = $info->path . '/' . $base;
                 if ($file) {
-                    $file_path .= '/'.$file;
+                    $file_path .= '/' . $file;
                 }
 
                 if (file_exists($file_path)) {
@@ -382,7 +381,7 @@ namespace Gini {
         public static function filePaths($file)
         {
             foreach (self::$MODULE_INFO as $info) {
-                $file_path = $info->path.'/'.$file;
+                $file_path = $info->path . '/' . $file;
                 if (file_exists($file_path)) {
                     $file_paths[] = $file_path;
                 }
@@ -436,6 +435,7 @@ namespace Gini {
             spl_autoload_register('\Gini\Core::autoload');
             register_shutdown_function('\Gini\Core::shutdown');
             set_exception_handler('\Gini\Core::exception');
+
             set_error_handler('\Gini\Core::error', E_ALL & ~E_NOTICE);
 
             assert_options(ASSERT_ACTIVE, 1);
@@ -466,7 +466,7 @@ namespace Gini {
             define('APP_ID', $info->id);
 
             // load composer if detected
-            $composer_path = APP_PATH.'/vendor/autoload.php';
+            $composer_path = APP_PATH . '/vendor/autoload.php';
             if (file_exists($composer_path)) {
                 require_once $composer_path;
             }
@@ -480,7 +480,7 @@ namespace Gini {
             define('APP_HASH', sha1(array_reduce(
                 self::$MODULE_INFO,
                 function ($str, $info) {
-                    return $str.':'.$info->id.'/'.$info->version;
+                    return $str . ':' . $info->id . '/' . $info->version;
                 },
                 ''
             )));
@@ -488,7 +488,7 @@ namespace Gini {
             // module setup won't be run before CLASS cache
             if (isset($GLOBALS['gini.class_map'])) {
                 array_walk(self::$MODULE_INFO, function ($info, $name) {
-                    $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
+                    $class = '\Gini\Module\\' . strtr($name, ['-' => '', '_' => '', '/' => '']);
                     !isset($info->error) and method_exists($info->moduleClass, 'setup')
                         and call_user_func([$info->moduleClass, 'setup']);
                 });

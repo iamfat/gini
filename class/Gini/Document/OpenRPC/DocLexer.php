@@ -6,28 +6,28 @@ use Doctrine\Common\Lexer\AbstractLexer;
 
 final class DocLexer extends AbstractLexer
 {
-    const T_NONE                = 1;
-    const T_INTEGER             = 2;
-    const T_STRING              = 3;
-    const T_FLOAT               = 4;
-    const T_NEWLINE             = 5;
-    const T_SPACE               = 6;
+    public const T_NONE                = 1;
+    public const T_INTEGER             = 2;
+    public const T_STRING              = 3;
+    public const T_FLOAT               = 4;
+    public const T_NEWLINE             = 5;
+    public const T_SPACE               = 6;
 
     // All tokens that are also identifiers should be >= 100
-    const T_IDENTIFIER          = 100;
-    const T_AT                  = 101;
-    const T_CLOSE_CURLY_BRACES  = 102;
-    const T_CLOSE_PARENTHESIS   = 103;
-    const T_COMMA               = 104;
-    const T_EQUALS              = 105;
-    const T_FALSE               = 106;
-    const T_NAMESPACE_SEPARATOR = 107;
-    const T_OPEN_CURLY_BRACES   = 108;
-    const T_OPEN_PARENTHESIS    = 109;
-    const T_TRUE                = 110;
-    const T_NULL                = 111;
-    const T_COLON               = 112;
-    const T_MINUS               = 113;
+    public const T_IDENTIFIER          = 100;
+    public const T_AT                  = 101;
+    public const T_CLOSE_CURLY_BRACES  = 102;
+    public const T_CLOSE_PARENTHESIS   = 103;
+    public const T_COMMA               = 104;
+    public const T_EQUALS              = 105;
+    public const T_FALSE               = 106;
+    public const T_NAMESPACE_SEPARATOR = 107;
+    public const T_OPEN_CURLY_BRACES   = 108;
+    public const T_OPEN_PARENTHESIS    = 109;
+    public const T_TRUE                = 110;
+    public const T_NULL                = 111;
+    public const T_COLON               = 112;
+    public const T_MINUS               = 113;
 
     /**
      * @var array
@@ -62,7 +62,7 @@ final class DocLexer extends AbstractLexer
      * Whether the next token starts immediately, or if there were
      * non-captured symbols before that
      */
-    public function nextTokenIsAdjacent() : bool
+    public function nextTokenIsAdjacent(): bool
     {
         return $this->token === null
             || ($this->lookahead !== null

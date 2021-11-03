@@ -6,7 +6,7 @@ namespace Gini\PHPUnit\REST {
     {
         public function testDefault()
         {
-            \Gini\IoC::bind('\Gini\HTTP', function(){
+            \Gini\IoC::bind('\Gini\HTTP', function () {
                 $http = $this->getMockBuilder('\Gini\HTTP')
                     ->setMockClassName('MOBJ_'.uniqid())
                     ->setMethods(['request'])
@@ -45,12 +45,12 @@ HTML;
 
             try {
                 $data = $rest->get('hello/exception');
-                $this->assertEquals($data['hello'], '401'); 
+                $this->assertEquals($data['hello'], '401');
             } catch (\Gini\REST\Exception $e) {
                 $data = $e->getData();
-                $this->assertEquals($data['hello'], '401');                
+                $this->assertEquals($data['hello'], '401');
             }
-            
+
             \Gini\IoC::clear('\Gini\HTTP');
         }
     }

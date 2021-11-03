@@ -4,18 +4,9 @@ namespace Gini\Controller\CLI;
 
 class Cron extends \Gini\Controller\CLI
 {
-    public function __index($args)
-    {
-        $helps = array(
-                'list' => 'List crons',
-                'export' => 'Export to STDIN in crontab syntax',
-            );
-
-        foreach ($helps as $command => $help) {
-            printf("gini cron %-20s %s\n", $command, $help);
-        }
-    }
-
+    /**
+     * List current crons.
+     */
     public function actionList($args)
     {
         $cron = (array) \Gini\Config::get('cron');
@@ -28,6 +19,9 @@ class Cron extends \Gini\Controller\CLI
         echo yaml_emit($cron, YAML_UTF8_ENCODING);
     }
 
+    /**
+     * Run specified cron.
+     */
     public function actionRun($args)
     {
         foreach ($args as $name) {
@@ -86,6 +80,9 @@ class Cron extends \Gini\Controller\CLI
         }
     }
 
+    /**
+     * Export to STDIN in crontab syntax.
+     */
     public function actionExport($args)
     {
         $gini_bin = $_SERVER['_'] ?: $_SERVER['SCRIPT_FILENAME'];

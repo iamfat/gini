@@ -10,7 +10,9 @@ class Session
 
     public static function setup()
     {
-        if (headers_sent()) return;
+        if (headers_sent()) {
+            return;
+        }
 
         $session_conf = (array) \Gini\Config::get('system.session');
 

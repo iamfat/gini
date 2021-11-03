@@ -30,7 +30,7 @@ class HTTP
             return call_user_func_array([$this, 'request'], $params);
         }
     }
- 
+
     public function clean()
     {
         $this->_header = [];

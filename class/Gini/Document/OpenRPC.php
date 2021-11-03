@@ -2,12 +2,12 @@
 
 namespace Gini\Document;
 
-use \Doctrine\Common\Annotations\AnnotationReader;
-use \Doctrine\Common\Annotations\AnnotationException;
-use \Doctrine\Common\Annotations\AnnotationRegistry;
-use \Doctrine\Common\Inflector\Inflector;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\AnnotationException;
+use Doctrine\Common\Annotations\AnnotationRegistry;
+use Doctrine\Common\Inflector\Inflector;
 
-use \Gini\Document\OpenRPC\DocLexer;
+use Gini\Document\OpenRPC\DocLexer;
 
 AnnotationRegistry::registerUniqueLoader(function ($class) {
     return \Gini\Core::autoload($class);
@@ -19,7 +19,7 @@ class OpenRPC
 
     public function __construct()
     {
-        $this->lexer = new DocLexer;
+        $this->lexer = new DocLexer();
     }
 
     public function fetchPlainText()
@@ -36,7 +36,6 @@ class OpenRPC
             }
 
             if ($peek['type'] === DocLexer::T_NEWLINE) {
-
                 while ($this->lexer->isNextToken(DocLexer::T_SPACE)) {
                     if (!$this->lexer->moveNext()) {
                         break;
@@ -122,7 +121,8 @@ class OpenRPC
                 // }
                 print_r($ann);
             }
-        } catch (AnnotationException $e) { }
+        } catch (AnnotationException $e) {
+        }
 
 
         $rps = $rm->getParameters();

@@ -4,7 +4,8 @@ namespace Gini\PHPUnit\Config;
 
 class Config extends \Gini\PHPUnit\TestCase\CLI
 {
-    public function testNormalizeEnv() {
+    public function testNormalizeEnv()
+    {
         $row = 'FOO="this\'s is value"';
         $normalizedRow = \Gini\Config::normalizeEnv($row);
         putenv($normalizedRow);
@@ -30,7 +31,7 @@ class Config extends \Gini\PHPUnit\TestCase\CLI
         putenv($normalizedRow);
         $this->assertEquals("someHAHA", getenv('FOO2'));
 
-        $row = 'FOO2=some${FOO1:=HA\\\'s HA\'}';
+        $row = 'FOO2=some${FOO1:=HA\\\'s HA}';
         $normalizedRow = \Gini\Config::normalizeEnv($row);
         putenv($normalizedRow);
         $this->assertEquals("someHA\'s HA", getenv('FOO2'));

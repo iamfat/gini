@@ -10,7 +10,7 @@ namespace Gini\CGI {
 
     class Validator
     {
-        private $_errors;
+        private $_errors = [];
 
         public function errors()
         {

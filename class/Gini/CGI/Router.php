@@ -2,10 +2,10 @@
 
 namespace Gini\CGI;
 
-use \Gini\Util;
-use \Gini\Core;
-use \Gini\IoC;
-use \Gini\Config;
+use Gini\Util;
+use Gini\Core;
+use Gini\IoC;
+use Gini\Config;
 
 /**
  * @method self get($route, $dest, ...$args)

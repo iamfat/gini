@@ -4,7 +4,7 @@ namespace Gini\PHPUnit\RPC {
 
     class General extends \Gini\PHPUnit\TestCase\CLI
     {
-       private function _testCall($method, $params)
+        private function _testCall($method, $params)
         {
             $apiData =  [
                     'jsonrpc' => '2.0',
@@ -59,7 +59,6 @@ namespace Gini\PHPUnit\RPC {
             $response = $this->_testCall('RPCTest.camelCaseParams', ['a_id' => 1, 'Bid' => 2]);
             $this->assertSame($response['result'], ['aId' => 1, 'bId' => 2]);
         }
-
     }
 
 }
@@ -73,11 +72,13 @@ namespace Gini\Controller\API {
             return $s;
         }
 
-        public function actionEcho($a, $b, $c=2) {
+        public function actionEcho($a, $b, $c=2)
+        {
             return ['a' => $a, 'b' => $b, 'c' => $c];
         }
 
-        public function actionCamelCaseParams($a_id, $bId) {
+        public function actionCamelCaseParams($a_id, $bId)
+        {
             return ['aId' => $a_id, 'bId' => $bId];
         }
     }

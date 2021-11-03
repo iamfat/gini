@@ -8,9 +8,9 @@ class Redis implements Driver
     private $_resource;
     private $_quorum;
 
-    const CLOCK_DRIFT_FACTOR = 0.01;
-    const RETRY_MAX = 3;
-    const RETRY_DELAY = 200;
+    public const CLOCK_DRIFT_FACTOR = 0.01;
+    public const RETRY_MAX = 3;
+    public const RETRY_DELAY = 200;
 
     public function __construct($path, $resource)
     {

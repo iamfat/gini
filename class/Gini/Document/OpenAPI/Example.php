@@ -22,7 +22,9 @@ class Example
 
     public function toArray()
     {
-        if (!$this->key) $this->key = uniqid();
+        if (!$this->key) {
+            $this->key = uniqid();
+        }
         return [
             $this->key => [
                 'summary' => $this->summary,

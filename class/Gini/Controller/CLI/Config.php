@@ -58,7 +58,7 @@ class Config extends \Gini\Controller\CLI
             if (!$row || $row[0] == '#') {
                 continue;
             }
-            list($key,) = explode('=', trim($row), 2);
+            list($key, ) = explode('=', trim($row), 2);
             $vars[$key] = true;
         }
 

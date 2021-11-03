@@ -16,7 +16,7 @@
 
 namespace Gini\Controller;
 
-use \Gini\CGI\Response;
+use Gini\CGI\Response;
 
 abstract class REST extends CGI
 {

@@ -10,10 +10,6 @@
  * @copyright Genee, 2014-02-07
  **/
 
-/**
- * Define DocBlock.
- **/
-
 namespace Gini;
 
 class CLI
@@ -52,7 +48,6 @@ class CLI
         case '-h':
             $method = 'commandHelp';
             break;
-        case '':
         case 'root':
             $method = 'commandRoot';
             break;
@@ -186,7 +181,9 @@ class CLI
         error_log(sprintf('[E] %s (%s:%d)', $message, $file, $line));
         $trace = array_slice($e->getTrace(), 1);
         foreach ($trace as $n => $t) {
-            if ($t['class'] == 'Gini\Core' && $t['function'] == 'start') break;
+            if ($t['class'] == 'Gini\Core' && $t['function'] == 'start') {
+                break;
+            }
             $file = $t['file'];
             foreach (\Gini\Core::$MODULE_INFO as $info) {
                 if (0 == strncmp($file, $info->path, strlen($info->path))) {

@@ -10,6 +10,4 @@ class Util extends \Gini\PHPUnit\TestCase\CLI
         $this->assertEquals($opt['prefix'], 'hello');
         $this->assertFalse($opt['suffix']);
     }
-
 }
-

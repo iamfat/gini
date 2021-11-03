@@ -33,20 +33,20 @@ class I18N extends \Gini\Controller\CLI
         //$package = sprintf('--package-name=%s --package-version=%s',
         $cmd = sprintf(
             'cd %s && find class view -name "*.php" -o -name "*.phtml" | xargs xgettext -LPHP %s --from-code=UTF-8 -i --copyright-holder=%s --foreign-user --package-name=%s --package-version=%s --msgid-bugs-address=%s -o %s',
-                escapeshellarg($path),
-                $keywords,
-                escapeshellarg($info->author ?: 'Gini Team'),
-                escapeshellarg($info->id),
-                escapeshellarg($info->version),
-                escapeshellarg($info->email ?: 'l10n@geneegroup.com'),
-                escapeshellarg($l10n_template)
-                );
+            escapeshellarg($path),
+            $keywords,
+            escapeshellarg($info->author ?: 'Gini Team'),
+            escapeshellarg($info->id),
+            escapeshellarg($info->version),
+            escapeshellarg($info->email ?: 'l10n@geneegroup.com'),
+            escapeshellarg($l10n_template)
+        );
         passthru($cmd);
 
         // extract msgid ""{context}\004{txt} to msgctxt and msgid
         $cmd = sprintf(
             "sed -i 's/msgid   \"\\(.*\\)'\004'/msgctxt \"\\1\"\\nmsgid \"/g' %s",
-                escapeshellarg($l10n_template)
+            escapeshellarg($l10n_template)
         );
         passthru($cmd);
 
@@ -68,15 +68,15 @@ class I18N extends \Gini\Controller\CLI
             if (!file_exists($l10n_pofile)) {
                 $cmd = sprintf(
                     'msginit --no-translator -o %1$s -i %2$s -l %3$s',
-                       escapeshellarg($l10n_pofile),
-                       escapeshellarg($l10n_template),
-                       escapeshellarg($locale)
+                    escapeshellarg($l10n_pofile),
+                    escapeshellarg($l10n_template),
+                    escapeshellarg($locale)
                 );
             } else {
                 $cmd = sprintf(
                     'msgmerge --update --suffix=none --no-fuzzy-matching -q %1$s %2$s',
-                       escapeshellarg($l10n_pofile),
-                       escapeshellarg($l10n_template)
+                    escapeshellarg($l10n_pofile),
+                    escapeshellarg($l10n_template)
                 );
             }
 
@@ -105,8 +105,8 @@ class I18N extends \Gini\Controller\CLI
             echo "merge: $appname.po\n";
             $cmd = sprintf(
                 'msgcat -o %1$s %2$s',
-                   escapeshellarg($pofile),
-                   implode(' ', array_map('escapeshellarg', $paths))
+                escapeshellarg($pofile),
+                implode(' ', array_map('escapeshellarg', $paths))
             );
             passthru($cmd);
 

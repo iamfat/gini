@@ -2,7 +2,7 @@
 
 namespace Gini\CGI;
 
-use \Gini\IoC;
+use Gini\IoC;
 
 class Middleware
 {

@@ -2,8 +2,8 @@
 
 namespace Gini\Document;
 
-use \Doctrine\Common\Annotations\AnnotationReader;
-use \Doctrine\Common\Annotations\AnnotationRegistry;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\AnnotationRegistry;
 
 AnnotationRegistry::registerUniqueLoader(function ($class) {
     return \Gini\Core::autoload($class);
@@ -11,10 +11,10 @@ AnnotationRegistry::registerUniqueLoader(function ($class) {
 
 class OpenAPI
 {
-    public static function parsePathItem($rm, $pathParameters=[])
+    public static function parsePathItem($rm, $pathParameters = [])
     {
         $pathItem = [
-            'operationId' => $rm->class.'@'.$rm->name,
+            'operationId' => $rm->class . '@' . $rm->name,
             'responses' => [],
             'parameters' => [],
         ];
@@ -24,8 +24,10 @@ class OpenAPI
         foreach ($anns as $ann) {
             if ($ann instanceof \Gini\REST\OpenAPI\Response) {
                 $content = [];
-                if ($ann->content) foreach ($ann->content as $mediaType) {
-                    $content += $mediaType->toArray();
+                if ($ann->content) {
+                    foreach ($ann->content as $mediaType) {
+                        $content += $mediaType->toArray();
+                    }
                 }
                 $pathItem['responses'][$ann->code] = [
                     'description' => $ann->description,
@@ -89,7 +91,8 @@ class OpenAPI
                         $rm = new \ReflectionMethod($controllerName, $action);
                         $apiUnit = self::parsePathItem($rm, $rule['params']);
                         $api['paths'][$route][$method] = $apiUnit;
-                    } catch (\ReflectionException $e) { }
+                    } catch (\ReflectionException $e) {
+                    }
                 }
             }
         };

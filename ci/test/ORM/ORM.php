@@ -1,21 +1,21 @@
 <?php
 
 namespace Gini\PHPUnit\ORM {
- 
+
     class ORM extends \Gini\PHPUnit\TestCase\CLI
     {
         public function setUp(): void
         {
             parent::setUp();
-    
+
             class_exists('\Gini\Those');
-    
+
             $db = $this->getMockBuilder('\Gini\Database')
                 ->setMockClassName('MOBJ_'.uniqid())
                 ->setMethods(['query', 'quote', 'quoteIdent'])
                 ->disableOriginalConstructor()
                 ->getMock();
-    
+
             $db->expects($this->any())
                 ->method('quoteIdent')
                 ->will($this->returnCallback(function ($s) use ($db) {
@@ -23,13 +23,13 @@ namespace Gini\PHPUnit\ORM {
                         foreach ($s as &$i) {
                             $i = $db->quoteIdent($i);
                         }
-    
+
                         return implode(',', $s);
                     }
-    
+
                     return '"'.addslashes($s).'"';
                 }));
-    
+
             $db->expects($this->any())
                 ->method('quote')
                 ->will($this->returnCallback(function ($s) use ($db) {
@@ -37,7 +37,7 @@ namespace Gini\PHPUnit\ORM {
                         foreach ($s as &$i) {
                             $i = $db->quote($i);
                         }
-    
+
                         return implode(',', $s);
                     } elseif (is_null($s)) {
                         return 'NULL';
@@ -46,29 +46,29 @@ namespace Gini\PHPUnit\ORM {
                     } elseif (is_int($s) || is_float($s)) {
                         return $s;
                     }
-    
+
                     return '\''.addslashes($s).'\'';
                 }));
-    
+
             \Gini\IoC::bind('\Gini\ORM\UTSample', function ($criteria = null) use ($db) {
                 $o = $this->getMockBuilder('\Gini\ORM\Base')
                     ->setMockClassName('MOBJ_'.uniqid())
                     ->setMethods(['db', 'ownProperties', 'name', 'tableName'])
                     ->disableOriginalConstructor()
                     ->getMock();
-    
+
                 $o->expects($this->any())
                     ->method('db')
                     ->will($this->returnValue($db));
-    
+
                 $o->expects($this->any())
                     ->method('name')
                     ->will($this->returnValue('utsample'));
-    
+
                 $o->expects($this->any())
                     ->method('tableName')
                     ->will($this->returnValue('utsample'));
-    
+
                 $o->expects($this->any())
                     ->method('ownProperties')
                     ->will($this->returnValue([
@@ -91,24 +91,24 @@ namespace Gini\PHPUnit\ORM {
                     $criteria = $o->normalizeCriteria($o->criteria($criteria));
                     $o->setData($criteria);
                 }
-    
+
                 return $o;
             });
         }
-    
+
         public function tearDown(): void
         {
             \Gini\IoC::clear('\Gini\ORM\UTSample');
             parent::tearDown();
         }
-    
+
         public function testSaveObject()
         {
             $o1 = a('utsample');
             $o2 = a('utsample');
-    
+
             $o2->id = 10;
-            
+
             $o1->object = $o2;
             $o1->db()
                 ->expects($this->any())
@@ -119,7 +119,7 @@ namespace Gini\PHPUnit\ORM {
                         'INSERT INTO "utsample" SET "_extra"=\'{}\',"object_name"=\'utsample\',"object_id"=10,"sample_id"=NULL,"number"=0,"boolean"=0,"datetime"=\'0000-00-00 00:00:00\',"timestamp"=NOW(),"text"=\'\''
                     );
                 }));
-    
+
             $o1->save();
         }
 
@@ -138,7 +138,7 @@ namespace Gini\PHPUnit\ORM {
             $this->assertEquals($fields['timestamp'], ['type'=>'timestamp','default'=>'CURRENT_TIMESTAMP']);
             $this->assertEquals($fields['text'], ['type'=>'varchar(255)','default'=>'']);
         }
-    
+
         public function testGet()
         {
             $o1 = a('utsample', 2);
@@ -148,16 +148,16 @@ namespace Gini\PHPUnit\ORM {
                'object_id' => 2,
                'sample_id' => 4,
             ]);
-    
+
             $this->assertEquals($o1->id, 10);
-    
+
             $this->assertEquals($o1->object->id, 2);
             $this->assertEquals($o1->sample->id, 4);
-    
+
             $this->assertEquals($o1->object_id, 2);
             $this->assertEquals($o1->sample_id, 4);
         }
-    
+
         public function testInjection()
         {
             $o1 = a('utsample', 2);
@@ -244,5 +244,5 @@ namespace Gini\PHPUnit\ORM {
             ]);
         }
     }
-    
+
 }

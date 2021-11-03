@@ -2,7 +2,7 @@
 
 namespace Gini\CGI\Response;
 
-use \Gini\CGI;
+use Gini\CGI;
 
 class Redirection extends \Gini\CGI\Response
 {

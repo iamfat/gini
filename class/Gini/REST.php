@@ -62,7 +62,7 @@ class REST
             if (intval($status->code / 100) !== 2) {
                 throw  IoC::construct('\Gini\REST\Exception', $status->text, $status->code, $data);
             }
-    
+
             return $data;
         }
     }

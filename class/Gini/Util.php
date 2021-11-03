@@ -93,7 +93,6 @@ class Util
     {
         // parse shortopts: e.g.   vo:h => ['v', 'o:', 'h']
         preg_match_all('/([a-z])(:+)?/', $opts, $parts);
-
         return array_combine($parts[1], $parts[2]);
     }
 
@@ -106,7 +105,6 @@ class Util
                 $t[$p[1]] = $p[2];
             }
         }
-
         return $t;
     }
 
@@ -135,7 +133,6 @@ class Util
                 }
 
                 if ($v[1] == '-') {
-
                     list($okey, $oval) = explode('=', substr($v, 2), 2);
                     if (isset($longopts[$okey])) {
                         $o = $longopts[$okey];

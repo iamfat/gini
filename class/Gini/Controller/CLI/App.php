@@ -163,7 +163,7 @@ class App extends \Gini\Controller\CLI
     {
         $info = \Gini\Core::moduleInfo(APP_ID);
         $opt = \Gini\Util::getOpt($argv, 'f', ['force']);
-        
+
         if (isset($opt['f']) || isset($opt['force'])) {
             $force = true;
         } else {

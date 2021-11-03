@@ -114,10 +114,10 @@ class Doctor
 
         // enumerate all doctor extensions
         if ((
-                !$items || (
-                    in_array('dependencies', $items) && in_array('module_spec', $items)
-                )
-            ) && !isset($errors['dependencies'])
+            !$items || (
+                in_array('dependencies', $items) && in_array('module_spec', $items)
+            )
+        ) && !isset($errors['dependencies'])
         ) {
             // check gini dependencies
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
