@@ -645,7 +645,10 @@ abstract class ORM
     public function dbDataCheck($db_data)
     {
         foreach ($this->structure() as $k => $v) {
-            if (is_numeric($v['string']) && mb_strlen($db_data[$k]) < intval($v['string'])) {
+            if (
+                isset($v['string']) && is_numeric($v['string'])
+                && mb_strlen($db_data[$k]) > intval($v['string'])
+            ) {
                 return false;
             }
         }
