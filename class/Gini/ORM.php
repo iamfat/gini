@@ -966,8 +966,9 @@ abstract class ORM
             return [];
         }
 
-        class_exists('\Doctrine\Common\Inflector\Inflector')
-            and $field = \Doctrine\Common\Inflector\Inflector::singularize($field);
+        if (class_exists('\Doctrine\Common\Inflector\Inflector')) {
+            $field = \Doctrine\Common\Inflector\Inflector::singularize($field);
+        }
 
         $manyStructure = $this->manyStructure();
         if (!isset($manyStructure[$field])) {
