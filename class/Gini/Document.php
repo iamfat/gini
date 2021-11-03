@@ -123,7 +123,7 @@ class Document
                         $rp->isDefaultValueAvailable() and $decl .= '=' . J($rp->getDefaultValue());
                         return $decl;
                     }, $rps);
-                    $method = preg_replace('/^(action|get|post|delete|put|options)/', '', $rm->name);
+                    $method = preg_replace('/^(action|get|post|delete|put|patch|options)/', '', $rm->name);
                     echo strtr($name, ['/' => '.']) . "." . $method . "(" . implode(', ', $docParams) . ")\n";
                 }
             }
