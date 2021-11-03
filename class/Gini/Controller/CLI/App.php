@@ -56,7 +56,7 @@ class App extends \Gini\Controller\CLI
         ];
 
         foreach ($prompt as $k => $v) {
-            $data[$k] = readline($v.' ['.($default[$k] ?: 'N/A').']: ');
+            $data[$k] = readline($v . ' [' . ($default[$k] ?: 'N/A') . ']: ');
             if (!$data[$k]) {
                 $data[$k] = $default[$k];
             }
@@ -65,7 +65,7 @@ class App extends \Gini\Controller\CLI
         $data['dependencies'] = @json_decode($data['dependencies']) ?: (object) [];
 
         $gini_json = J($data, JSON_PRETTY_PRINT);
-        file_put_contents($path.'/gini.json', $gini_json);
+        file_put_contents($path . '/gini.json', $gini_json);
     }
 
     public function __index($args)
@@ -94,26 +94,29 @@ class App extends \Gini\Controller\CLI
     {
         self::giniBanner();
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            if (!isset($info->error)) {
+            $error = FALSE;
+            if (isset($info->error)) {
+                $error = TRUE;
+            } else {
                 $rPath = \Gini\File::relativePath($info->path, APP_PATH);
-                if ($rPath[0] == '.') {
+                if ($rPath && $rPath[0] == '.') {
                     $rPath = \Gini\File::relativePath($info->path, dirname(SYS_PATH));
 
                     if ($rPath[0] == '.') {
-                        $rPath = '@/'.\Gini\File::relativePath($info->path, $_SERVER['GINI_MODULE_BASE_PATH']);
+                        $rPath = '@/' . \Gini\File::relativePath($info->path, $_SERVER['GINI_MODULE_BASE_PATH']);
                     } else {
-                        $rPath = '!/'.$rPath;
+                        $rPath = '!/' . $rPath;
                     }
                 }
             }
 
             printf(
                 "%s %s %s %s %s\e[0m\n",
-                $info->error ? "\e[31m" : '',
+                $error ? "\e[31m" : '',
                 $this->_strPad($name, 30, ' '),
                 $this->_strPad($info->version, 15, ' '),
                 $this->_strPad($info->name, 30, ' '),
-                $info->error ?: $rPath
+                $error ? $info->error : $rPath
             );
         }
         echo "\n";
@@ -140,8 +143,8 @@ class App extends \Gini\Controller\CLI
             return;
         }
 
-        $env = $opt['e'] ?: $opt['env'] ?: null;
-        if ($opt['_'][0] == 'clean') {
+        $env = $opt['e'] ?? $opt['env'] ?? null;
+        if ($opt['_'][0] ?? '' == 'clean') {
             \Gini\App\Cache::clean();
         } else {
             $errors = \Gini\App\Doctor::diagnose(['dependencies', 'composer']);
@@ -173,8 +176,8 @@ class App extends \Gini\Controller\CLI
         $version = $opt['_'][0];
         if ($version) {
             $WORK_TREE = escapeshellarg(APP_PATH);
-            $GIT_DIR = escapeshellarg(APP_PATH.'/.git');
-            if (is_dir(APP_PATH.'/.git') && !$force) {
+            $GIT_DIR = escapeshellarg(APP_PATH . '/.git');
+            if (is_dir(APP_PATH . '/.git') && !$force) {
                 $content = `git --git-dir=$GIT_DIR --work-tree=$WORK_TREE status --short --untracked-files=no`;
                 if ($content) {
                     echo "$content\n";
@@ -200,7 +203,7 @@ class App extends \Gini\Controller\CLI
             \Gini\Core::saveModuleInfo($info);
 
             // commit it if it is a git repo
-            if (is_dir(APP_PATH.'/.git')) {
+            if (is_dir(APP_PATH . '/.git')) {
                 $GIT_MSG = escapeshellarg("Bumped version to {$info->version}");
                 $command = "git --git-dir=$GIT_DIR --work-tree=$WORK_TREE commit -m $GIT_MSG gini.json && git --git-dir=$GIT_DIR tag {$info->version}";
                 passthru($command);

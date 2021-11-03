@@ -16,11 +16,11 @@ class Session
 
         $session_conf = (array) \Gini\Config::get('system.session');
 
-        $session_name = $session_conf['name'] ?: 'gini-session';
-        $host_hash = sha1($_SERVER['HTTP_HOST']);
+        $session_name = $session_conf['name'] ?? 'gini-session';
+        $host_hash = sha1($_SERVER['HTTP_HOST'] ?? '');
         ini_set('session.name', $session_name . '_' . $host_hash);
 
-        if ($session_conf['save_handler']) {
+        if (isset($session_conf['save_handler'])) {
             self::$_handlerName = $session_conf['save_handler'];
             // save_handler = internal/files
             if (0 == strncmp(self::$_handlerName, 'internal/', 9)) {
@@ -35,11 +35,11 @@ class Session
             }
         }
 
-        if ($session_conf['save_path']) {
+        if (isset($session_conf['save_path'])) {
             session_save_path($session_conf['save_path']);
         }
 
-        if ($session_conf['gc_maxlifetime']) {
+        if (isset($session_conf['gc_maxlifetime'])) {
             ini_set('session.gc_maxlifetime', $session_conf['gc_maxlifetime']);
         }
 

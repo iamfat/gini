@@ -135,7 +135,7 @@ class Cache
         $plurals = self::_getORMPlurals();
 
         // update orm plurals
-        $c = (array) $config_items['orm']['plurals'];
+        $c = ($config_items['orm'] ?? [])['plurals'] ?? [];
         $c += array_filter($plurals, function ($v) use ($c) {
             return in_array($v, $c);
         });

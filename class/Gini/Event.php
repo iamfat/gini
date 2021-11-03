@@ -128,7 +128,7 @@ class Event
 
     public static function get($name, $ensure = false)
     {
-        $e = self::$_EVENTS[$name];
+        $e = self::$_EVENTS[$name] ?? null;
         if (!$e && $ensure) {
             $e = self::$_EVENTS[$name] = new self($name);
         }

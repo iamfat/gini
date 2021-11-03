@@ -156,7 +156,7 @@ abstract class CGI
             case 'files':
                 return $this->env['files'] ?: [];
             default:
-                return array_merge((array) $this->env['get'], (array) $this->env['post']);
+                return array_merge($this->env['get'] ?? [], $this->env['post'] ?? []);
         }
     }
 

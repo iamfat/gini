@@ -26,7 +26,7 @@ namespace Gini {
 
             $ui = parse_url($url);
 
-            if ($ui['scheme'] == 'mailto') {
+            if (isset($ui['scheme']) && $ui['scheme'] == 'mailto') {
                 //邮件地址
                 return 'mailto:' . $ui['user'] . '@' . $ui['host'];
             }
@@ -47,14 +47,13 @@ namespace Gini {
                 $ui['fragment'] = $fragment;
             }
 
-            if ($ui['host']) {
+            if (isset($ui['host'])) {
                 $scheme = $ui['scheme']
-                    ?: ($_SERVER['HTTP_X_FORWARDED_PROTO']
-                        ?: ($_SERVER['HTTPS'] ? 'https' : 'http'));
-                $url = $scheme ?: 'http';
-                $url .= '://';
+                    ?? ($_SERVER['HTTP_X_FORWARDED_PROTO']
+                        ?? (isset($_SERVER['HTTPS']) ? 'https' : 'http'));
+                $url = $scheme . '://';
 
-                if ($ui['user']) {
+                if (isset($ui['user'])) {
                     if ($ui['pass']) {
                         $url .= $ui['user'] . ':' . $ui['pass'] . '@';
                     } else {
@@ -64,7 +63,7 @@ namespace Gini {
 
                 $url .= $ui['host'];
 
-                if ($ui['port']) {
+                if (isset($ui['port'])) {
                     $url .= ':' . $ui['port'];
                 }
 
@@ -73,15 +72,15 @@ namespace Gini {
                 $url = self::base();
             }
 
-            if ($ui['path']) {
+            if (isset($ui['path'])) {
                 $url .= ltrim($ui['path'], '/');
             }
 
-            if ($ui['query']) {
+            if (isset($ui['query'])) {
                 $url .= '?' . $ui['query'];
             }
 
-            if ($ui['fragment']) {
+            if (isset($ui['fragment'])) {
                 $url .= '#' . $ui['fragment'];
             }
 
@@ -127,14 +126,15 @@ namespace Gini {
         protected static $_rurl;
         public static function setup()
         {
-            $host = $_SERVER['HTTP_HOST'];
-            $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?: ($_SERVER['HTTPS'] ? 'https' : 'http');
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? (isset($_SERVER['HTTPS']) ? 'https' : 'http');
             $dir = dirname($_SERVER['SCRIPT_NAME']);
             if (substr($dir, -1) != '/') {
                 $dir .= '/';
             }
             self::$_base = $scheme . '://' . $host . $dir;
-            self::$_rurl = \Gini\Core::moduleInfo(APP_ID)->rurl ?: ['*' => 'assets'];
+            $mi = \Gini\Core::moduleInfo(APP_ID);
+            self::$_rurl = $mi->rurl ?? ['*' => 'assets'];
         }
 
         public static function base($base = null)
@@ -153,7 +153,7 @@ namespace Gini {
             // $info = \Gini\Core::moduleInfo(APP_ID);
             $config = (array) \Gini\Config::get('system.rurl_mod');
             if ($type) {
-                $query = $config[$type]['query'];
+                $query = ($config[$type] ?? [])['query'] ?? null;
                 $query = $query ? strtr($query, [
                     '$(TIMESTAMP)' => time(),
                     '$(VERSION)' => APP_HASH,
@@ -166,8 +166,8 @@ namespace Gini {
         public static function rurl($path, $type)
         {
             $ui = parse_url($path);
-            if (!$ui['host']) {
-                $base = self::$_rurl[$type] ?: (self::$_rurl['*'] . '/' . $type ?: '');
+            if (!isset($ui['host'])) {
+                $base = self::$_rurl[$type] ?? ((self::$_rurl['*'] ?? '') . '/' . ($type ?? ''));
                 $path = self::base() . rtrim($base, '/') . '/' . $path;
             }
 

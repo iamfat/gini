@@ -28,12 +28,11 @@ class Config
 
     public static function get($key)
     {
-        list($category, $key) = explode('.', $key, 2);
-        if ($key === null) {
-            return self::$items[$category];
+        $c = explode('.', $key, 2);
+        if (count($c) == 1) {
+            return self::$items[$c[0]] ?? null;
         }
-
-        return self::$items[$category][$key];
+        return self::$items[$c[0]][$c[1]] ?? null;
     }
 
     public static function set($key, $val)

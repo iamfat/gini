@@ -33,7 +33,6 @@ abstract class ORM
     protected $_db_data;
     protected $_db_time; //上次数据库同步的时间
 
-
     private static $_STRUCTURES;
     private static $_MANY_STRUCTURES;
     private static $_RELATIONS;
@@ -42,6 +41,10 @@ abstract class ORM
     private static $_INJECTIONS;
 
     private $autocast = false;
+
+    protected static $db_name;
+    protected static $db_relation = [];
+    protected static $db_index = [];
 
     /**
      * Magic method to use Event('orm[$name].call[$method]') to extend ORM object.
@@ -140,7 +143,7 @@ abstract class ORM
         $properties = $this->ownProperties();
         //check all injections
         $class_name = get_class($this);
-        foreach ((array) self::$_INJECTIONS[$class_name] as $injection) {
+        foreach (self::$_INJECTIONS[$class_name] ?? [] as $injection) {
             $properties = array_merge($properties, (array) $injection['properties']);
         }
 
@@ -227,7 +230,7 @@ abstract class ORM
             }
 
             //给object赋值
-            $this->setData((array) $data);
+            $this->setData($data ?? []);
         }
 
         return $this;
@@ -298,9 +301,9 @@ abstract class ORM
     {
         $class_name = get_class($this);
         if (!isset(self::$_RELATIONS[$class_name])) {
-            $db_relation = (array) static::$db_relation;
+            $db_relation = static::$db_relation;
             //check all injections
-            foreach ((array) self::$_INJECTIONS[$class_name] as $injection) {
+            foreach (self::$_INJECTIONS[$class_name] ?? [] as $injection) {
                 $db_relation = array_merge($db_relation, (array) $injection['relations']);
             }
 
@@ -325,9 +328,9 @@ abstract class ORM
     {
         $class_name = get_class($this);
         if (!isset(self::$_INDEXES[$class_name])) {
-            $indexes = (array) static::$db_index;
+            $indexes = static::$db_index;
             //check all injections
-            foreach ((array) self::$_INJECTIONS[$class_name] as $injection) {
+            foreach (self::$_INJECTIONS[$class_name] ?? [] as $injection) {
                 $indexes = array_merge($indexes, (array) $injection['indexes']);
             }
             self::$_INDEXES[$class_name] = $indexes;
@@ -397,7 +400,7 @@ abstract class ORM
                             $field['type'] = 'longtext';
                         } else {
                             $field['type'] = 'text';
-                            $field['default'] = $field['default'] ?: '{}';
+                            $field['default'] = $field['default'] ?? '{}';
                         }
                         break;
                     case 'null':
@@ -484,7 +487,7 @@ abstract class ORM
                 $vvv['column'] = $k . '_id';
                 $vvv['ref_table'] = a($structure[$k]['object'])->tableName();
                 $vvv['ref_column'] = 'id';
-            } elseif ($vv['ref']) {
+            } elseif (isset($vv['ref'])) {
                 $vvv['column'] = $k;
                 $ref = explode('.', $vv['ref'], 2);
                 $vvv['ref_table'] = a($ref[0])->tableName();
@@ -593,13 +596,13 @@ abstract class ORM
         foreach ($this->structure() as $k => $v) {
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
-                if ($this->_objects[$k]) {
+                if (isset($this->_objects[$k])) {
                     $o = $this->_objects[$k];
                     if (!isset($oname)) {
                         $db_data[$k . '_name'] = $oname ?: $o->name();
                     }
                 } else {
-                    $o = $this->_oinfo[$k];
+                    $o = $this->_oinfo[$k] ?? null;
                     if (!isset($oname)) {
                         $db_data[$k . '_name'] = $oname ?: $o->name;
                     }
@@ -612,7 +615,7 @@ abstract class ORM
             } else {
                 $db_data[$k] = $this->$k;
                 if (is_null($db_data[$k]) && !array_key_exists('null', $v)) {
-                    $default = $v['default'];
+                    $default = $v['default'] ?? null;
                     if (array_key_exists('string', $v)) {
                         $default = is_null($default) ? '' : (string) $default;
                     } elseif (
@@ -669,7 +672,7 @@ abstract class ORM
         }
 
         $tbl_name = $this->tableName();
-        $id = intval($db_data['id'] ?: $this->_db_data['id']);
+        $id = intval($db_data['id'] ?? $this->_db_data['id'] ?? 0);
         unset($db_data['id']);
 
         $pairs = [];
@@ -752,7 +755,7 @@ abstract class ORM
     private function _prepareName()
     {
         // remove Gini/ORM
-        list(, , $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
+        list(,, $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
         $this->_name = $name;
         $this->_tableName = str_replace('/', '_', $name);
     }
@@ -804,7 +807,7 @@ abstract class ORM
         foreach ($this->structure() as $k => $v) {
             if (array_key_exists('object', $v)) {
                 $oname = $v['object'];
-                $o = $data[$k];
+                $o = $data[$k] ?? null;
                 if (isset($o) && $o instanceof \Gini\ORM\Base && (!isset($oname) || $o->name() == $oname)) {
                     $this->_objects[$k] = $o;
                     $this->_oinfo[$k] = (object) ['name' => $o->name(), 'id' => $o->id];
@@ -812,10 +815,10 @@ abstract class ORM
                     //object need to be bind later to avoid deadlock.
                     unset($this->$k);
                     if (!isset($oname)) {
-                        $oname = strval($data[$k . '_name']);
+                        $oname = strval($data[$k . '_name'] ?? '');
                     }
                     if ($oname) {
-                        $oi = (object) ['name' => $oname, 'id' => $data[$k . '_id']];
+                        $oi = (object) ['name' => $oname, 'id' => $data[$k . '_id'] ?? null];
                         $this->_oinfo[$k] = $oi;
                     }
                 }
@@ -841,7 +844,7 @@ abstract class ORM
                     $this->$k = $data[$k];
                 }
             } else {
-                $this->$k = $data[$k];
+                $this->$k = $data[$k] ?? null;
             }
         }
 
@@ -894,12 +897,12 @@ abstract class ORM
             $oname = implode('_', $parts);
             if (isset($this->_objects[$oname])) {
                 return $this->_objects[$oname]->id;
-            } elseif ($this->_oinfo[$oname]) {
+            } elseif (isset($this->_oinfo[$oname])) {
                 return $this->autocast ? intval($this->_oinfo[$oname]->id) : $this->_oinfo[$oname]->id;
             }
         }
 
-        return $this->_db_data[$name] ?: null;
+        return $this->_db_data[$name] ?? null;
     }
 
     public function __set($name, $value)

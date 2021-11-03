@@ -38,6 +38,7 @@ class CLI
             return;
         }
 
+        $method = null;
         switch ($cmd) {
         case '-v':
             $method = 'commandVersion';
@@ -196,9 +197,9 @@ class CLI
                 $n + 1,
                 $t['class'] ? $t['class'].'::' : '',
                 $t['function'],
-                implode(", ", array_map(function ($x) {
+                isset($t['args']) ? implode(", ", array_map(function ($x) {
                     return json_encode($x, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
-                }, $t['args'])),
+                }, $t['args'])) : '',
                 $file,
                 $t['line']
             ));

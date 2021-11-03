@@ -24,7 +24,7 @@ class Doctor
                     $errors['dependencies'][] = "$name: $info->error";
                 }
             }
-            if ($errors['dependencies']) {
+            if (isset($errors['dependencies'])) {
                 static::_outputErrors($errors['dependencies']);
             } else {
                 echo "   \e[32mdone.\e[0m\n";
@@ -37,13 +37,13 @@ class Doctor
             echo "Checking composer dependencies...\n";
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
                 if ($info->composer) {
-                    if (!file_exists(APP_PATH.'/vendor')) {
-                        $errors['composer'][] = $name.': composer packages missing!';
+                    if (!file_exists(APP_PATH . '/vendor')) {
+                        $errors['composer'][] = $name . ': composer packages missing!';
                     }
                     break;
                 }
             }
-            if ($errors['composer']) {
+            if (isset($errors['composer'])) {
                 static::_outputErrors($errors['composer']);
             } else {
                 echo "   \e[32mdone.\e[0m\n";
@@ -54,11 +54,11 @@ class Doctor
         if (!$items || in_array('file', $items)) {
             echo "Checking file/directory modes...\n";
             // check if /tmp/gini-session is writable
-            $path_gini_session = sys_get_temp_dir().'/gini-session';
+            $path_gini_session = sys_get_temp_dir() . '/gini-session';
             if (is_dir($path_gini_session) && !is_writable($path_gini_session)) {
                 $errors['file'][] = "$path_gini_session is not writable!";
             }
-            if ($errors['file']) {
+            if (isset($errors['file'])) {
                 static::_outputErrors($errors['file']);
             } else {
                 echo "   \e[32mdone.\e[0m\n";
@@ -68,7 +68,7 @@ class Doctor
 
         if (!$items || in_array('web', $items)) {
             echo "Checking web dependencies...\n";
-            if (!file_exists(APP_PATH.'/web')) {
+            if (!file_exists(APP_PATH . '/web')) {
                 $errors['web'][] = "Please run \e[1m\"gini web update\"\e[0m to generate web directory!";
             }
             if ($errors['web']) {
@@ -100,12 +100,12 @@ class Doctor
         if (defined('I18N_PATH') && (!$items || in_array('i18n', $items))) {
             echo "Checking Locale...\n";
             $locale = \Gini\Config::get('system.locale') ?: 'en_US';
-            $lodir = I18N_PATH.'/'.$locale.'/LC_MESSAGES';
-            $mofile = $lodir.'/'.APP_ID.'.mo';
-            $pofile = $lodir.'/'.APP_ID.'.po';
+            $lodir = I18N_PATH . '/' . $locale . '/LC_MESSAGES';
+            $mofile = $lodir . '/' . APP_ID . '.mo';
+            $pofile = $lodir . '/' . APP_ID . '.po';
 
             if (!file_exists($mofile) || !file_exists($pofile)) {
-                static::_outputErrors(['Please run: gini i18n format '.$locale]);
+                static::_outputErrors(['Please run: gini i18n format ' . $locale]);
             } else {
                 echo "   \e[32mdone.\e[0m\n";
             }
@@ -113,11 +113,7 @@ class Doctor
         }
 
         // enumerate all doctor extensions
-        if ((
-            !$items || (
-                in_array('dependencies', $items) && in_array('module_spec', $items)
-            )
-        ) && !isset($errors['dependencies'])
+        if ((!$items || (in_array('dependencies', $items) && in_array('module_spec', $items))) && !isset($errors['dependencies'])
         ) {
             // check gini dependencies
             foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
@@ -125,7 +121,7 @@ class Doctor
                 echo "Checking Module[$name]...\n";
                 $module_errors = is_callable($diag_func) ? call_user_func($diag_func) : null;
                 $module = \Gini\Core::module($name);
-                if (!is_subclass_of($module, '\Gini\Module\Prototype')) {
+                if (!($module instanceof \Gini\Module\Prototype)) {
                     $module_errors[] = "Please upgrade module class to extends from \Gini\Module\Prototype!";
                 }
                 if ($module_errors) {

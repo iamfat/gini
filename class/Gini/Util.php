@@ -133,8 +133,10 @@ class Util
                 }
 
                 if ($v[1] == '-') {
-                    list($okey, $oval) = explode('=', substr($v, 2), 2);
-                    if (isset($longopts[$okey])) {
+                    $okv = explode('=', substr($v, 2), 2);
+                    $okey = $okv[0] ?? null;
+                    $oval = $okv[1] ?? null;
+                    if ($okey && isset($longopts[$okey])) {
                         $o = $longopts[$okey];
                         if ($o == ':' || $o == '::') {
                             if (!$oval) {

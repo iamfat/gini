@@ -49,10 +49,10 @@ class URI extends \Gini\PHPUnit\TestCase\CLI
 
     public function tearDown(): void
     {
-        $_SERVER['HTTP_HOST'] = $this->_SERVER['HTTP_HOST'];
-        $_SERVER['HTTP_X_FORWARDED_PROTO'] = $this->_SERVER['HTTP_HOST'];
-        $_SERVER['HTTPS'] = $this->_SERVER['HTTPS'];
-        $_SERVER['SCRIPT_NAME'] = $this->_SERVER['SCRIPT_NAME'];
+        $_SERVER['HTTP_HOST'] = $this->_SERVER['HTTP_HOST'] ?? null;
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = $this->_SERVER['HTTP_HOST'] ?? null;
+        $_SERVER['HTTPS'] = $this->_SERVER['HTTPS'] ?? null;
+        $_SERVER['SCRIPT_NAME'] = $this->_SERVER['SCRIPT_NAME'] ?? null;
         \Gini\Config::set('system.rurl_mod', $this->rurl_mod);
     }
 }

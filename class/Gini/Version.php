@@ -21,11 +21,11 @@ class Version
     {
         if (!isset(self::$versionCache[$version])) {
             $this->valid = preg_match('`^(\d+)(?:\.(\d+|[*x]))?(?:\.(\d+|[*x]))?(?:-([^+]+))?(?:\+(.+))?$`', $version, $parts);
-            $this->majorVersion = $parts[1];
-            $this->minorVersion = is_numeric($parts[2]) ? $parts[2] : 'x';
-            $this->patchVersion = is_numeric($parts[3]) ? $parts[3] : 'x';
-            $this->preReleaseVersion = $parts[4];
-            $this->buildVersion = $parts[5];
+            $this->majorVersion = $parts[1] ?? null;
+            $this->minorVersion = isset($parts[2]) && is_numeric($parts[2]) ? $parts[2] : 'x';
+            $this->patchVersion = isset($parts[3]) && is_numeric($parts[3]) ? $parts[3] : 'x';
+            $this->preReleaseVersion = $parts[4] ?? null;
+            $this->buildVersion = $parts[5] ?? null;
             self::$versionCache[$version] = [
                 'valid' => $this->valid,
                 'major' => $this->majorVersion,

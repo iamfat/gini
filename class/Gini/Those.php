@@ -61,6 +61,8 @@ namespace Gini {
         private $_join;
         private $_joinedTables;
         private $_alias;
+        private $_order_by;
+        private $_limit;
 
         private $_condition;
 
@@ -348,15 +350,18 @@ namespace Gini {
             $from_SQL = ' FROM ' . implode(', ', $this->_from);
             $this->from_SQL = $from_SQL;
 
+            $where_SQL = '';
             if ($this->_where) {
                 $where_SQL = ' WHERE ' . implode(' ', $this->_where);
             }
             $this->where_SQL = $where_SQL;
 
+            $order_SQL = '';
             if ($this->_order_by) {
                 $order_SQL = ' ORDER BY ' . implode(', ', $this->_order_by);
             }
 
+            $limit_SQL = '';
             if ($this->_limit) {
                 $limit_SQL = ' LIMIT ' . $this->_limit;
             }

@@ -241,7 +241,7 @@ namespace Gini {
                 die("Missing Autoloading Cache!\n");
             }
 
-            return !!self::_require(CLASS_DIR, $path);
+            return defined('CLASS_DIR') && !!self::_require(CLASS_DIR, $path);
         }
 
         /**
@@ -347,6 +347,7 @@ namespace Gini {
          **/
         public static function pharFilePaths($base, $file)
         {
+            $file_paths = [];
             foreach (self::$MODULE_INFO as $info) {
                 $file_path = 'phar://' . $info->path . '/' . $base . '.phar';
                 if ($file) {
@@ -367,8 +368,7 @@ namespace Gini {
                     $file_paths[] = $file_path;
                 }
             }
-
-            return array_unique((array) $file_paths);
+            return array_unique($file_paths);
         }
 
         /**
@@ -408,7 +408,7 @@ namespace Gini {
         /**
          * @ignore Error Handler
          **/
-        public static function error($errno, $errstr, $errfile, $errline, $errcontext)
+        public static function error($errno, $errstr, $errfile, $errline)
         {
             // error was suppressed with the @-operator
             if (0 === error_reporting()) {
@@ -430,17 +430,17 @@ namespace Gini {
          **/
         public static function start()
         {
-            error_reporting(E_ALL & ~E_NOTICE);
-
             spl_autoload_register('\Gini\Core::autoload');
             register_shutdown_function('\Gini\Core::shutdown');
             set_exception_handler('\Gini\Core::exception');
 
-            set_error_handler('\Gini\Core::error', E_ALL & ~E_NOTICE);
+            $env = $_SERVER['GINI_ENV'] ?? 'production';
+            error_reporting($env == 'production' ? (E_ALL & ~(E_NOTICE | E_WARNING)) : (E_ALL & ~E_NOTICE));
+            set_error_handler('\Gini\Core::error', E_ALL & ~(E_NOTICE | E_WARNING));
 
             assert_options(ASSERT_ACTIVE, 1);
             assert_options(ASSERT_WARNING, 0);
-            assert_options(ASSERT_QUIET_EVAL, 1);
+            defined('ASSERT_QUIET_EVAL') && assert_options(ASSERT_QUIET_EVAL, 1);   // not available in PHP8
             assert_options(ASSERT_CALLBACK, '\Gini\Core::assertion');
 
             mb_internal_encoding('utf-8');

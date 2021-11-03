@@ -253,14 +253,14 @@ class File
                         continue;
                     }
 
-                    if ($name[0] === '.' && $options['hidden'] !== true) {
+                    if ($name[0] === '.' && (!isset($options['hidden']) || $options['hidden'] !== true)) {
                         continue;
                     }
 
                     $file = $prefix ? $prefix . '/' . $name : $name;
                     $full_path = $root . '/' . $file;
 
-                    if ($options['filter'] && !$options['filter']($file)) {
+                    if (isset($options['filter']) && !$options['filter']($file)) {
                         continue;
                     }
 

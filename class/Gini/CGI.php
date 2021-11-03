@@ -51,13 +51,13 @@ class CGI
     public static function defaultEnv()
     {
         // use X-HTTP-Method-Override to replace uncommon methods like DELETE/PUT to get through firewall
-        if ($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']) {
+        if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
             $_SERVER['REQUEST_METHOD'] = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'];
         }
         return [
             'get' => $_GET, 'post' => $_POST,
             'files' => $_FILES, 'server' => $_SERVER, 'cookie' => $_COOKIE,
-            'route' => static::$route, 'method' => $_SERVER['REQUEST_METHOD'],
+            'route' => static::$route, 'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
         ];
     }
 
@@ -125,9 +125,12 @@ class CGI
             // 需要考虑默认值以及无参数传入后使用func_get_args获取变量的情况
             $max = max(count($params), count($rps));
             for ($idx = 0; $idx < $max; $idx++) {
-                $param = $params[$idx];
-                $rp = $rps[$idx];
-                $args[] = isset($param) ? $param : ($rp ? ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null) : null);
+                $rp = $rps[$idx] ?? null;
+                $args[] = $params[$idx] ??
+                    ($rp
+                        ? ($rp->isDefaultValueAvailable()
+                            ? $rp->getDefaultValue() : null)
+                        : null);
             }
         } elseif (count($rps) > 0) {
             // 如果是有字符串键值的, 尝试通过反射对应变量

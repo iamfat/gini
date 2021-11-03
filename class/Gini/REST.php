@@ -47,12 +47,12 @@ class REST
         }
 
         if (in_array($method, self::$supportedMethods)) {
-            list($path, $query, $timeout) = $params;
-            $query or $query = [];
-            $timeout or $timeout = $this->timeout;
+            $path = $params[0] ?? '';
+            $query = $params[1] ?? [];
+            $timeout = $params[2] ?? $this->timeout;
 
             $url = $this->_url . '/' . ltrim($path, '/');
-            $response = $this->_http->request($method, $url, $query, $this->timeout);
+            $response = $this->_http->request($method, $url, $query, $timeout);
             $status = $response->status();
 
             $raw_data = (string) $response;

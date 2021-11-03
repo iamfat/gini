@@ -23,7 +23,10 @@ class IoC
         if (isset(static::$CALLBACKS[$key])) {
             $o = static::$CALLBACKS[$key];
             if ($o->singleton) {
-                return $o->object ?: $o->object = call_user_func_array($o->callback, $args);
+                if (!isset($o->object)) {
+                    $o->object = call_user_func_array($o->callback, $args);
+                }
+                return $o->object;
             }
 
             return call_user_func_array($o->callback, $args);

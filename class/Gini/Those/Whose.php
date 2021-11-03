@@ -141,16 +141,15 @@ class Whose implements Condition
             array_shift($fields);
         }
 
-
         if (is_string($options)) {
             $suffix = $options;
             $options = ['suffix' => $options];
         } else {
-            $options = (array)$options;
+            $options = $options ?? [];
         }
 
-        $suffix = $options['suffix'];
-        switch ($options['join']) {
+        $suffix = $options['suffix'] ?? null;
+        switch ($options['join'] ?? null) {
             case 'inner':
                 $JOIN_OP = 'INNER JOIN ';
                 break;
@@ -183,10 +182,10 @@ class Whose implements Condition
                     $those->context('join', $join);
                 }
             } else {
-                $pivotName = null;
+                $pivotName = NULL;
             }
 
-            if (count($fields) == 0 && $field && $suffix !== null) {
+            if (count($fields) == 0 && $field && $suffix !== NULL) {
                 if ($pivotName) {
                     $pivotKey = "$fieldKey@pivot";
                     $pivotTable = $joinedTables[$pivotKey];

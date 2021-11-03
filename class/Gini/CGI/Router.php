@@ -98,7 +98,7 @@ class Router
             $dest = $router;
         } else {
             if ($dest[0] != '\\') {
-                $dest = ($options['classPrefix'] ?: '\\Gini\\Controller\\CGI\\') . $dest;
+                $dest = ($options['classPrefix'] ?? '\\Gini\\Controller\\CGI\\') . $dest;
             }
         }
 
@@ -152,6 +152,7 @@ class Router
 
     private function _getController($method, $route)
     {
+        $controller = null;
         // go through rules
         foreach ($this->rules as $key => $rule) {
             list($m, $regex) = explode(':', $key, 2);
