@@ -27,7 +27,7 @@ namespace Gini\ORM;
  * @method self isLessThanOrEqual($v);
  * @method self isBetween($a, $b);
  * @method self orderBy($field, $mode = 'asc');
-*/
+ */
 abstract class Base extends \Gini\ORM
 {
     public $id = 'bigint,primary,serial';
@@ -39,11 +39,19 @@ abstract class Base extends \Gini\ORM
     {
         if ($this->criteria() === null && $this->those) {
             //try those API
-            $ids = (array) $this->those->limit(1)->get('id');
-            $this->criteria(reset($ids));
+            $those = $this->those();
+            $those->limit(1)->makeSQL();
+            $this->criteria(new \Gini\Database\SQL($those->SQL()));
         }
-
         return parent::fetch($force);
+    }
+
+    public function those()
+    {
+        if (!$this->those) {
+            $this->those = new \Gini\Those($this->name());
+        }
+        return $this->those;
     }
 
     public function __call($method, $params)
@@ -52,13 +60,10 @@ abstract class Base extends \Gini\ORM
             return;
         }
 
-        if (method_exists('\Gini\Those', $method)) {
-            if (!$this->those) {
-                $this->those = \Gini\IoC::construct('\Gini\Those', $this->name());
-            }
-            call_user_func_array([$this->those, $method], $params);
-
-            return $this;
+        $those = $this->those();
+        if ($those->methodExists($method)) {
+            $ret = call_user_func_array([$those, $method], $params);
+            return $those === $ret ? $this : $ret;
         }
 
         return parent::__call($method, $params);

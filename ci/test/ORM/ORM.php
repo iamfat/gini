@@ -8,7 +8,7 @@ namespace Gini\PHPUnit\ORM {
         {
             parent::setUp();
 
-            class_exists('\Gini\Those');
+            class_exists('\Gini\ORM');
 
             $db = $this->getMockBuilder('\Gini\Database')
                 ->setMockClassName('MOBJ_'.uniqid())

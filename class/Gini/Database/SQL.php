@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\Those;
+namespace Gini\Database;
 
 class SQL
 {

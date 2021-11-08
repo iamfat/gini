@@ -132,29 +132,6 @@ namespace Gini {
             return parent::fetch($scope);
         }
 
-        private function _fieldValue($v)
-        {
-            if ($v instanceof \Gini\Those\SQL) {
-                return strval($v);
-            }
-            $db = $this->db;
-            if (preg_match('/^@(?:(\w+)\.)?(\w+)$/', $v, $parts)) {
-                //有可能是某个table的field名
-                list(, $table, $field) = $parts;
-                if ($table) {
-                    while (isset($this->_alias[$table])) {
-                        $table = $this->_alias[$table];
-                    }
-                } else {
-                    $table = $this->_table;
-                }
-
-                return $db->ident($table, $field);
-            }
-
-            return $db->quote($v);
-        }
-
         public static function packWhere($where, $op = 'AND')
         {
             if (!is_array($where)) {
@@ -213,11 +190,25 @@ namespace Gini {
                 return;
             }
 
-            if ($this->_condition && is_callable([$this->_condition, $method])) {
-                call_user_func_array([$this->_condition, $method], $params);
+            if ($this->_condition && method_exists($this->_condition, $method)) {
+                $ret = call_user_func_array([$this->_condition, $method], $params);
+                return $ret === $this->_condition ? $this : $ret;
             }
 
-            return $this;
+            throw new \BadMethodCallException();
+        }
+
+        public function methodExists($method)
+        {
+            if (method_exists($this, $method)) {
+                return true;
+            }
+
+            if ($this->_condition && method_exists($this->_condition, $method)) {
+                return true;
+            }
+
+            return false;
         }
 
         public function whoAre($field)
@@ -469,33 +460,7 @@ namespace Gini {
 }
 
 namespace {
-
-    if (function_exists('a')) {
-        die('a() was declared by other libraries, which may cause problems!');
-    } else {
-        /**
-         * @param string  $name
-         * @param null    $criteria
-         *
-         * @return \Gini\ORM\Base
-         */
-        function a($name, $criteria = null)
-        {
-            $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $name);
-
-            return \Gini\IoC::construct($class_name, $criteria);
-        }
-    }
-
-    // alias to a()
-    if (function_exists('an')) {
-        die('an() was declared by other libraries, which may cause problems!');
-    } else {
-        function an($name, $criteria = null)
-        {
-            return a($name, $criteria);
-        }
-    }
+    class_exists('\Gini\ORM');
 
     if (function_exists('those')) {
         die('those() was declared by other libraries, which may cause problems!');
@@ -507,21 +472,7 @@ namespace {
          */
         function those($name, $criteria = null)
         {
-            return \Gini\IoC::construct('\Gini\Those', $name, $criteria);
-        }
-    }
-
-    if (function_exists('SQL')) {
-        die('SQL() was declared by other libraries, which may cause problems!');
-    } else {
-        /**
-         * @param $SQL
-         *
-         * @return \Gini\Those\SQL
-         */
-        function SQL($SQL)
-        {
-            return \Gini\IoC::construct('\Gini\Those\SQL', $SQL);
+            return new \Gini\Those($name, $criteria);
         }
     }
 
@@ -562,5 +513,4 @@ namespace {
             return new \Gini\Those\WhoAre($name);
         }
     }
-
 }

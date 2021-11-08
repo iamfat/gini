@@ -242,7 +242,7 @@ class Whose implements Condition
 
     public static function fieldValue(Those $those, $v)
     {
-        if ($v instanceof \Gini\Those\SQL) {
+        if ($v instanceof \Gini\Database\SQL) {
             return strval($v);
         }
 
