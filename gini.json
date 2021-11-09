@@ -1,6 +1,7 @@
 {
     "id": "gini",
     "name": "Gini PHP Framework",
+    "description": "Gini PHP Framework",
     "author": "iamfat@gmail.com",
     "version": "1.13.2",
     "build": {
@@ -15,7 +16,6 @@
     },
     "composer": {
         "name": "genee/gini",
-        "description": "Gini PHP Framework",
         "license": "MIT",
         "type": "library",
         "authors": [

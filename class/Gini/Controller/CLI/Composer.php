@@ -13,12 +13,6 @@ class Composer extends \Gini\Controller\CLI
     {
         $app = \Gini\Core::moduleInfo(APP_ID);
 
-        $composer_json = [
-            'name' => 'gini/'. strtr($app->id, ['/' => '-']),
-            'description' => $app->description ?: '',
-            'license' => 'proprietary'
-        ];
-
         $opt = \Gini\Util::getOpt($args, 'f', ['force']);
 
         if (isset($opt['f']) || isset($opt['force'])) {
@@ -28,6 +22,8 @@ class Composer extends \Gini\Controller\CLI
         }
 
         echo "Generating Composer configuration file...\n";
+
+        $composer_json = [];
 
         $walked = [];
         $walk = function ($info) use (&$walk, &$walked, &$composer_json) {
@@ -46,8 +42,12 @@ class Composer extends \Gini\Controller\CLI
 
         $walk($app);
 
+        if (!isset($composer_json['name'])) {
+            $composer_json['name'] = APP_ID === 'gini' ? 'genee/gini' : "gini-modules/${APP_ID}";
+        }
+
         if (isset($composer_json['require']) || isset($composer_json['require-dev'])) {
-            if (!$force && file_exists(APP_PATH.'/composer.json')) {
+            if (!$force && file_exists(APP_PATH . '/composer.json')) {
                 $confirm = strtolower(readline('File exists. Overwrite? [Y/n] '));
                 if ($confirm && $confirm != 'y') {
                     echo "   \e[33mcanceled.\e[0m\n";
@@ -56,7 +56,7 @@ class Composer extends \Gini\Controller\CLI
                 }
             }
 
-            file_put_contents(APP_PATH.'/composer.json', J($composer_json, JSON_PRETTY_PRINT));
+            file_put_contents(APP_PATH . '/composer.json', J($composer_json, JSON_PRETTY_PRINT));
             echo "   \e[32mdone.\e[0m\n";
         }
     }
