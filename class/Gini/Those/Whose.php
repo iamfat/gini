@@ -342,11 +342,15 @@ class Whose implements Condition
                         $where = $db->ident($v->context('current-table'), 'id') . ' IS NULL';
                     }
                 } else {
+                    $qv = [];
                     foreach ($this->params as $v) {
                         $qv[] = $db->quote($v);
                     }
-                    if (!empty($qv)) {
-                        $where = self::fieldName($those, $this->field) . ($this->op == 'in' ? '' : ' NOT') . ' IN (' . implode(', ', $qv) . ')';
+                    if (count($qv) > 0) {
+                        $where = self::fieldName($those, $this->field) .
+                        ($this->op == 'in' ? '' : ' NOT') . ' IN (' . implode(', ', $qv) . ')';
+                    } else {
+                        $where = $this->op == 'in' ? '1 = 0' : '1 = 1';
                     }
                 }
                 break;
