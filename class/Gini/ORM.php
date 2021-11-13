@@ -190,6 +190,7 @@ namespace Gini {
         public function fetch($force = false)
         {
             if ($force || $this->_db_time == 0) {
+                $data = null;
                 if ($this->_criteria) {
                     $db = $this->db();
                     if ($this->_criteria instanceof Database\SQL) {
