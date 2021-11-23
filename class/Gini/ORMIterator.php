@@ -63,8 +63,8 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     {
         $args = func_get_args();
         $this->SQL = $args[0];
-        $this->SQL_idents = $args[1] ?: null;
-        $this->SQL_params = $args[2] ?: null;
+        $this->SQL_idents = $args[1] ?? null;
+        $this->SQL_params = $args[2] ?? null;
         return $this;
     }
 
@@ -151,6 +151,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                                 // if all fields were loaded, just setData to improve performance
                                 $o = a($this->name);
                                 $o->setData((array) $row);
+                                $o->criteria($row['id']);
                                 $objects[$row['id']] = $o;
                             } else {
                                 $objects[$row['id']] = true;
@@ -183,6 +184,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     public function object($id)
     {
+        if (!isset($this->objects[$id])) {
+            return null;
+        }
         if ($this->objects[$id] === true) {
             $this->objects[$id] = a($this->name, $id);
         }
@@ -300,7 +304,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     protected function _fieldName($field, $suffix = null)
     {
-        return $this->db->quoteIdent($field.$suffix);
+        return $this->db->quoteIdent($field . $suffix);
     }
 
     public function get($key = 'id', $val = null)

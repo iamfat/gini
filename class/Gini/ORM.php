@@ -749,7 +749,7 @@ namespace Gini {
         private function _prepareName()
         {
             // remove Gini/ORM
-            list(,, $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
+            list(, , $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
             $this->_name = $name;
             $this->_tableName = str_replace('/', '_', $name);
         }
