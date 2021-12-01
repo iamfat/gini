@@ -43,14 +43,14 @@ class Config extends \Gini\Controller\CLI
     public function actionMergeEnv($args)
     {
         $opt = \Gini\Util::getOpt($args, 'e:f', ['env:']);
-        $envFile = ($opt['e'] ?: $opt['env']) ?: APP_PATH . '/.env';
+        $envFile = $opt['e'] ?? $opt['env'] ?? APP_PATH . '/.env';
         if ($envFile && !is_file($envFile)) {
             echo "Invalid env file.";
             return;
         }
 
         $force = $opt['f'];
-        $dstPath = $opt['_'][0] ?: 'raw/config';
+        $dstPath = $opt['_'][0] ?? 'raw/config';
 
         $vars = [];
         $rows = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);

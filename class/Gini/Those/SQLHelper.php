@@ -28,7 +28,7 @@ class SQLHelper
 
     public function __construct($name)
     {
-        $name = \Gini\Config::get('orm.plurals')[$name] ?: $name;
+        $name = \Gini\Config::get('orm.plurals')[$name] ?? $name;
         $this->name = $name;
         //$this->table_name = str_replace('/', '_', $name);
         $object = a($name);

@@ -62,9 +62,9 @@ class RPC
         $id = base_convert($this->_uniqid++, 10, 36);
 
         $rpcTimeout = Config::get('rpc.timeout');
-        $timeout = $rpcTimeout[$method] ?: $rpcTimeout['default'];
+        $timeout = $rpcTimeout[$method] ?? $rpcTimeout['default'];
 
-        $this->_header['X-Gini-RPC-Session'] = $_SERVER['HTTP_X_GINI_RPC_SESSION'] ?: gethostname().'/'.APP_ID.'/'.md5(uniqid('', true));
+        $this->_header['X-Gini-RPC-Session'] = $_SERVER['HTTP_X_GINI_RPC_SESSION'] ?? gethostname().'/'.APP_ID.'/'.md5(uniqid('', true));
 
         $raw_data = $this->post(J([
             'jsonrpc' => '2.0',
@@ -145,7 +145,7 @@ class RPC
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_RETURNTRANSFER => true,
             // CURLOPT_FRESH_CONNECT => false,
-            CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?: 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)',
+            CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?? 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)',
             CURLOPT_HTTPHEADER => $header,
         ]);
 

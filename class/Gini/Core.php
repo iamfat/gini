@@ -85,7 +85,7 @@ namespace Gini {
                 $info->dependencies = [];
             }
 
-            if (!$info->id) {
+            if (!isset($info->id)) {
                 $info->id = \Gini\File::relativePath($path, $_SERVER['GINI_MODULE_BASE_PATH']);
             }
 
@@ -108,7 +108,7 @@ namespace Gini {
          **/
         public static function moduleInfo($id)
         {
-            return self::$MODULE_INFO[$id] ?: false;
+            return self::$MODULE_INFO[$id] ?? false;
         }
 
         public static function saveModuleInfo($info)

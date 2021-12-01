@@ -24,7 +24,7 @@ class Redis implements Driver
                 $q = parse_str($u['query']);
             }
             $redis = new \Redis();
-            $redis->connect($u['host'], $u['port'] ?: 6379, 0.01);
+            $redis->connect($u['host'], $u['port'] ?? 6379, 0.01);
             $q['auth'] and $redis->auth($q['auth']);
             $this->_instances[$url] = $redis;
         }

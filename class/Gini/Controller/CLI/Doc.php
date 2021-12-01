@@ -73,7 +73,7 @@ class Doc extends \Gini\Controller\CLI
     {
         $opt = \Gini\Util::getOpt($args, 'f:p', ['format:', 'pretty']);
         $api = \Gini\Document\OpenAPI::scan();
-        $format = $opt['format'] ?: $opt['f'];
+        $format = $opt['format'] ?? $opt['f'];
         $pretty = isset($opt['pretty']) || isset($opt['p']);
         switch ($format) {
             case 'yaml':
@@ -89,7 +89,7 @@ class Doc extends \Gini\Controller\CLI
     {
         $opt = \Gini\Util::getOpt($args, 'f:p', ['format:', 'pretty']);
         $api = \Gini\Document\OpenRPC::scan();
-        $format = $opt['format'] ?: $opt['f'];
+        $format = $opt['format'] ?? $opt['f'];
         $pretty = isset($opt['pretty']) || isset($opt['p']);
         switch ($format) {
             case 'yaml':

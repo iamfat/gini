@@ -918,7 +918,7 @@ namespace Gini {
                     $rname = $parts[1];
                     if (isset($structure[$rname]) && array_key_exists('object', $structure[$rname])) {
                         $is_object = true;
-                        $oname = $structure[$rname]['object'] ?: $rname;
+                        $oname = $structure[$rname]['object'] ?? $rname;
                         $this->_oinfo[$rname] = (object) ['name' => $oname, 'id' => (int) $value];
                         unset($this->_objects[$rname]);
                     }

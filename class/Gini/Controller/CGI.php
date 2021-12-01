@@ -53,7 +53,7 @@ abstract class CGI
      *
      * @var array
      */
-    public $middlewares;
+    public $middlewares = [];
 
     /**
      * Function called right before action is being executed.
@@ -150,11 +150,11 @@ abstract class CGI
     {
         switch ($mode) {
             case 'get':
-                return $this->env['get'] ?: [];
+                return $this->env['get'] ?? [];
             case 'post':
-                return $this->env['post'] ?: [];
+                return $this->env['post'] ?? [];
             case 'files':
-                return $this->env['files'] ?: [];
+                return $this->env['files'] ?? [];
             default:
                 return array_merge($this->env['get'] ?? [], $this->env['post'] ?? []);
         }

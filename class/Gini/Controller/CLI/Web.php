@@ -189,7 +189,7 @@ class Web extends \Gini\Controller\CLI
             return;
         }
 
-        $addr = $args[0] ?: 'localhost:3000';
+        $addr = $args[0] ?? 'localhost:3000';
         $command
             = sprintf('php -S %s -c %s -t %s', $addr, APP_PATH . '/raw/cli-server.ini', APP_PATH . '/web');
         $proc = proc_open($command, [STDIN, STDOUT, STDERR], $pipes);

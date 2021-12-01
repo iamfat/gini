@@ -145,7 +145,7 @@ class CGI
             }
             foreach ($rps as $rp) {
                 $key = strtolower(strtr($rp->name, ['-' => '', '_' => '']));
-                $args[] = $newParams[$key] ?: ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
+                $args[] = $newParams[$key] ?? ($rp->isDefaultValueAvailable() ? $rp->getDefaultValue() : null);
             }
         }
         return $args;
@@ -231,7 +231,7 @@ class CGI
     public static function beforeRequest(array $options = [])
     {
         URI::setup();
-        static::$route = trim($_SERVER['PATH_INFO'] ?: $_SERVER['ORIG_PATH_INFO'], '/');
+        static::$route = trim($_SERVER['PATH_INFO'] ?? $_SERVER['ORIG_PATH_INFO'], '/');
         if (explode(';', $_SERVER['CONTENT_TYPE'], 2)[0] == 'application/json') {
             $_POST = (array) @json_decode(self::content(), true);
         } elseif (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {

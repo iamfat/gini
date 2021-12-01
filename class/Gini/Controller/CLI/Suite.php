@@ -26,7 +26,7 @@ class Suite extends \Gini\Controller\CLI
             }
         }
 
-        $gini_bin = realpath($_SERVER['_'] ?: $_SERVER['SCRIPT_FILENAME']);
+        $gini_bin = realpath($_SERVER['_'] ?? $_SERVER['SCRIPT_FILENAME']);
         $opt = \Gini\Util::getOpt($args, [], ['exclude:']);
 
         $command = escapeshellcmd($gini_bin) . ' ' . implode(' ', array_map('escapeshellarg', $opt['_']));

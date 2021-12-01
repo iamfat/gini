@@ -22,7 +22,7 @@ abstract class REST extends CGI
 {
     protected function normalizeActionParams()
     {
-        $method = strtolower($this->env['method'] ?: 'get');
+        $method = strtolower($this->env['method'] ?? 'get');
         $params = (array) $this->params;
         $methodName = $this->action;
 

@@ -34,12 +34,12 @@ class Index extends \Gini\Controller\CLI
             $config = yaml_parse(@file_get_contents($configFile));
         }
 
-        return (array) $config;
+        return $config ?? [];
     }
 
     private static function _serverUri()
     {
-        return $_SERVER['GINI_INDEX_URI'] ?: 'http://gini-index.genee.cn/';
+        return $_SERVER['GINI_INDEX_URI'] ?? 'http://gini-index.genee.cn/';
     }
 
     private static function _davOptionsAndHeaders($forceLogin = false)
@@ -167,7 +167,7 @@ class Index extends \Gini\Controller\CLI
     public function actionPublish($argv)
     {
         $appId = APP_ID;
-        $version = $argv[0] ?: \Gini\Core::moduleInfo($appId)->version;
+        $version = $argv[0] ?? \Gini\Core::moduleInfo($appId)->version;
 
         $GIT_DIR = escapeshellarg(APP_PATH . '/.git');
         $command = "git --git-dir=$GIT_DIR archive $version --format tgz 2> /dev/null";

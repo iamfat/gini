@@ -37,7 +37,7 @@ class Composer extends \Gini\Controller\CLI
                     $walk($app);
                 }
             }
-            $composer_json = \Gini\Util::arrayMergeDeep($info->composer ?: [], $composer_json);
+            $composer_json = \Gini\Util::arrayMergeDeep($info->composer ?? [], $composer_json);
         };
 
         $walk($app);

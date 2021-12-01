@@ -17,13 +17,13 @@ class CLI
     public static function main(array $argv)
     {
         $cmd = count($argv) > 0 ? strtolower($argv[0]) : '';
-        if ($cmd[0] == '@') {
+        if (isset($cmd[0]) && $cmd[0] == '@') {
             // @app: automatically set APP_PATH and run
-            $app_base_path = isset($_SERVER['GINI_MODULE_BASE_PATH']) ?
-                                $_SERVER['GINI_MODULE_BASE_PATH'] : $_SERVER['GINI_SYS_PATH'].'/..';
+            $app_base_path =
+                $_SERVER['GINI_MODULE_BASE_PATH'] ?? $_SERVER['GINI_SYS_PATH'] . '/..';
 
             $cmd = substr($cmd, 1);
-            $_SERVER['GINI_APP_PATH'] = $app_base_path.'/'.$cmd;
+            $_SERVER['GINI_APP_PATH'] = $app_base_path . '/' . $cmd;
             if (!is_dir($_SERVER['GINI_APP_PATH'])) {
                 exit("\e[1;34mgini\e[0m: missing app '$cmd'.\n");
             }
@@ -40,18 +40,18 @@ class CLI
 
         $method = null;
         switch ($cmd) {
-        case '-v':
-            $method = 'commandVersion';
-            break;
-        case '--':
-            $method = 'commandAvailable';
-            break;
-        case '-h':
-            $method = 'commandHelp';
-            break;
-        case 'root':
-            $method = 'commandRoot';
-            break;
+            case '-v':
+                $method = 'commandVersion';
+                break;
+            case '--':
+                $method = 'commandAvailable';
+                break;
+            case '-h':
+                $method = 'commandHelp';
+                break;
+            case 'root':
+                $method = 'commandRoot';
+                break;
         }
 
         if ($method && method_exists(__CLASS__, $method)) {
@@ -63,7 +63,7 @@ class CLI
 
     public static function commandRoot()
     {
-        echo APP_PATH."\n";
+        echo APP_PATH . "\n";
     }
 
     public static function commandVersion()
@@ -76,7 +76,7 @@ class CLI
     {
         echo "Usage: gini <command>\n";
         echo "where <command> is one of:\n";
-        echo '    '.implode(',  ', self::possibleCommands([]))."\n\n";
+        echo '    ' . implode(',  ', self::possibleCommands([])) . "\n\n";
         echo "gini -v    show gini version\n";
         echo "gini -h    show quick help\n";
         echo "\n";
@@ -92,7 +92,7 @@ class CLI
         foreach (array_reverse($candidates) as $path => $params) {
             $paths = \Gini\Core::pharFilePaths(
                 CLASS_DIR,
-                rtrim('Gini/Controller/CLI/'.ltrim($path, '/'), '/')
+                rtrim('Gini/Controller/CLI/' . ltrim($path, '/'), '/')
             );
             foreach ($paths as $p) {
                 if (!is_dir($p)) {
@@ -112,15 +112,15 @@ class CLI
 
             $class_namespace = '\Gini\Controller\CLI\\';
             if ($dirname != '.') {
-                $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
+                $class_namespace .= strtr($dirname, ['/' => '\\']) . '\\';
             }
 
-            $class = $class_namespace.$basename;
+            $class = $class_namespace . $basename;
             if (class_exists($class)) {
                 break;
             }
 
-            $class = $class_namespace.'Controller'.$basename;
+            $class = $class_namespace . 'Controller' . $basename;
             if (class_exists($class)) {
                 break;
             }
@@ -173,7 +173,7 @@ class CLI
         $file = $e->getFile();
         foreach (\Gini\Core::$MODULE_INFO as $info) {
             if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
+                $file = "[$info->id] " . \Gini\File::relativePath($file, $info->path);
                 break;
             }
         }
@@ -188,17 +188,17 @@ class CLI
             $file = $t['file'];
             foreach (\Gini\Core::$MODULE_INFO as $info) {
                 if (0 == strncmp($file, $info->path, strlen($info->path))) {
-                    $file = "[$info->id] ".\Gini\File::relativePath($file, $info->path);
+                    $file = "[$info->id] " . \Gini\File::relativePath($file, $info->path);
                     break;
                 }
             }
             error_log(sprintf(
                 '%3d. %s%s(%s) in (%s:%d)',
                 $n + 1,
-                $t['class'] ? $t['class'].'::' : '',
+                $t['class'] ? $t['class'] . '::' : '',
                 $t['function'],
                 isset($t['args']) ? implode(", ", array_map(function ($x) {
-                    return json_encode($x, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
+                    return json_encode($x, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
                 }, $t['args'])) : '',
                 $file,
                 $t['line']
@@ -214,7 +214,9 @@ class CLI
 
         $candidates = Util::pathAndArgs($argv, true);
 
-        $class = null;
+        $class = '';
+        $path = '';
+        $params = [];
         foreach (array_reverse($candidates) as $path => $params) {
             $path = strtr(ltrim($path, '/'), ['-' => '', '_' => '']);
             $basename = basename($path);
@@ -222,15 +224,15 @@ class CLI
 
             $class_namespace = '\Gini\Controller\CLI\\';
             if ($dirname != '.') {
-                $class_namespace .= strtr($dirname, ['/' => '\\']).'\\';
+                $class_namespace .= strtr($dirname, ['/' => '\\']) . '\\';
             }
 
-            $class = $class_namespace.$basename;
+            $class = $class_namespace . $basename;
             if (class_exists($class)) {
                 break;
             }
 
-            $class = $class_namespace.'Controller'.$basename;
+            $class = $class_namespace . 'Controller' . $basename;
             if (class_exists($class)) {
                 break;
             }
@@ -246,9 +248,9 @@ class CLI
 
         $controller = \Gini\IoC::construct($class);
 
-        $action = strtr($params[0], ['-' => '', '_' => '']);
-        if ($action && method_exists($controller, 'action'.$action)) {
-            $action = 'action'.$action;
+        $action = count($params) > 0 ? strtr($params[0], ['-' => '', '_' => '']) : null;
+        if ($action && method_exists($controller, 'action' . $action)) {
+            $action = 'action' . $action;
             array_shift($params);
         } elseif (method_exists($controller, '__index')) {
             $action = '__index';

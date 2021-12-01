@@ -79,10 +79,10 @@ class Router
     {
         if (count($middlewares) == 0) {
             $middlewares = [$route];
-            $this->middlewares['*'] = array_merge($this->middlewares['*'] ?: [], $middlewares);
+            $this->middlewares['*'] = array_merge($this->middlewares['*'] ?? [], $middlewares);
         } else {
             list(, $regex) = $this->_parseRoute($route);
-            $this->middlewares[$regex] = array_merge($this->middlewares[$regex] ?: [], $middlewares);
+            $this->middlewares[$regex] = array_merge($this->middlewares[$regex] ?? [], $middlewares);
         }
         return $this;
     }
@@ -118,14 +118,13 @@ class Router
         return $this;
     }
 
-    private function _getMiddlewares($method, $route, $middlewares = [])
+    private function _getMiddlewares(string $method, string $route, array $middlewares = [])
     {
-        $middlewares = (array) $middlewares;
-        foreach ((array) $this->middlewares as $regex => $matched_middlewares) {
+        foreach ($this->middlewares as $regex => $matched_middlewares) {
             if ($regex === '*' || preg_match('`^' . $regex . '`i', trim($route, '/'), $matches)) {
                 $middlewares = array_merge(
-                    (array) $middlewares,
-                    (array) $matched_middlewares
+                    $middlewares,
+                    $matched_middlewares
                 );
             }
         }
@@ -253,8 +252,8 @@ class Router
         $middlewares = $this->_getMiddlewares($method, $route);
 
         $controller->middlewares = array_unique(array_merge(
-            (array) $middlewares,
-            (array) $controller->middlewares
+            $middlewares,
+            $controller->middlewares
         ));
 
         $controller->app = Core::app();

@@ -56,7 +56,7 @@ class App extends \Gini\Controller\CLI
         ];
 
         foreach ($prompt as $k => $v) {
-            $data[$k] = readline($v . ' [' . ($default[$k] ?: 'N/A') . ']: ');
+            $data[$k] = readline($v . ' [' . ($default[$k] ?? 'N/A') . ']: ');
             if (!$data[$k]) {
                 $data[$k] = $default[$k];
             }
@@ -79,7 +79,7 @@ class App extends \Gini\Controller\CLI
 
     public function actionInfo($args)
     {
-        $path = $args[0] ?: APP_ID;
+        $path = $args[0] ?? APP_ID;
 
         $info = \Gini\Core::moduleInfo($path);
         if ($info) {
@@ -173,7 +173,7 @@ class App extends \Gini\Controller\CLI
             $force = false;
         }
 
-        $version = $opt['_'][0];
+        $version = $opt['_'][0] ?? null;
         if ($version) {
             $WORK_TREE = escapeshellarg(APP_PATH);
             $GIT_DIR = escapeshellarg(APP_PATH . '/.git');
@@ -189,7 +189,7 @@ class App extends \Gini\Controller\CLI
             // set current version
             if (preg_match('/^(major|minor|patch)?\+(\d+)$/', $version, $matches)) {
                 $v = new \Gini\Version($info->version);
-                $v->bump($matches[1] ?: 'patch', (int) $matches[2]);
+                $v->bump($matches[1] ?? 'patch', (int) $matches[2]);
             } else {
                 $v = new \Gini\Version($version);
                 if ($v->isValid()) {

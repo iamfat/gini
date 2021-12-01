@@ -21,7 +21,7 @@ class API
     public static function dispatch(array $data, $env = [])
     {
         try {
-            $id = $data['id'] ?: null;
+            $id = $data['id'] ?? null;
             $env = $env ?: \Gini\CGI::defaultEnv();
 
             if (!isset($data['method'])

@@ -95,7 +95,7 @@ class Config
         $value = trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.*?))?\s*\}/i', function ($matches) {
             $envValue = getenv($matches[1]);
             if ($envValue === false) {
-                $envValue = static::stripQuote($matches[2]);
+                $envValue = static::stripQuote($matches[2] ?? '');
             }
             return $envValue;
         }, $value));
@@ -161,7 +161,7 @@ class Config
                             $replaceCallback = function ($matches) use ($keepVars) {
                                 $envValue = getenv($matches[1]);
                                 if ($envValue === false) {
-                                    $envValue = static::stripQuote($matches[2]);
+                                    $envValue = static::stripQuote($matches[2] ?? '');
                                 }
                                 if ($keepVars) {
                                     return '${' . $matches[1] . (strlen($envValue) > 0 ? ':=' . addslashes($envValue) : '') . '}';
