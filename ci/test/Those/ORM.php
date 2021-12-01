@@ -76,7 +76,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
             ->will($this->returnCallback(function () {
                 $r = current($this->resultRows);
                 next($this->resultRows);
-                return $r ?: [];
+                return $r ?? [];
             }));
 
         $db->expects($this->any())
@@ -145,17 +145,17 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
         \Gini\Those::reset();
         $user = a('user')->whose('money')->is(100);
         $user->those()->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."money"=100', $user->those()->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."money"=100', $user->those()->SQL());
 
         \Gini\Those::reset();
         $user = a('user')->whose('name')->beginsWith('COOL');
         $user->those()->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'COOL%\'', $user->those()->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'COOL%\'', $user->those()->SQL());
 
         \Gini\Those::reset();
         $user  = a('user')->whose('name')->contains('COOL');
         $user->those()->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'%COOL%\'', $user->those()->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'%COOL%\'', $user->those()->SQL());
     }
 
     public function testFetch()
@@ -166,7 +166,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
             ['id' => 1],
         ];
         $user->fetch();
-        $this->assertEquals(
+        self::assertEquals(
             'SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."money"=100 LIMIT 1',
             $this->SQLs[0]
         );

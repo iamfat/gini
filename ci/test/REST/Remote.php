@@ -41,14 +41,14 @@ HTML;
 
             $rest = new \Gini\REST('http://localhost/rest');
             $data = $rest->get('hello/article/1');
-            $this->assertEquals($data['hello'], 'world');
+            self::assertEquals($data['hello'], 'world');
 
             try {
                 $data = $rest->get('hello/exception');
-                $this->assertEquals($data['hello'], '401');
+                self::assertEquals($data['hello'], '401');
             } catch (\Gini\REST\Exception $e) {
                 $data = $e->getData();
-                $this->assertEquals($data['hello'], '401');
+                self::assertEquals($data['hello'], '401');
             }
 
             \Gini\IoC::clear('\Gini\HTTP');

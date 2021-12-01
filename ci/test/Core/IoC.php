@@ -7,37 +7,37 @@ class IoC extends \Gini\PHPUnit\TestCase\CLI
     public function testBind()
     {
         $a = \Gini\IoC::construct('stdClass');
-        $this->assertFalse(isset($a->foo));
+        self::assertFalse(isset($a->foo));
 
         \Gini\IoC::bind('stdClass', function () {
             return (object) ['foo' => 'bar', 'uniqid' => uniqid()];
         });
 
         $a = \Gini\IoC::construct('stdClass');
-        $this->assertEquals($a->foo, 'bar');
+        self::assertEquals($a->foo, 'bar');
 
         $b = \Gini\IoC::construct('stdClass');
-        $this->assertNotEquals($a->uniqid, $b->uniqid);
+        self::assertNotEquals($a->uniqid, $b->uniqid);
 
         \Gini\IoC::singleton('stdClass', function () {
             return (object) ['foo' => 'bar', 'uniqid' => uniqid()];
         });
 
         $a = \Gini\IoC::construct('stdClass');
-        $this->assertEquals($a->foo, 'bar');
+        self::assertEquals($a->foo, 'bar');
 
         $b = \Gini\IoC::construct('stdClass');
-        $this->assertEquals($b->foo, 'bar');
+        self::assertEquals($b->foo, 'bar');
 
-        $this->assertEquals($a->uniqid, $b->uniqid);
+        self::assertEquals($a->uniqid, $b->uniqid);
 
         \Gini\IoC::instance('stdClass', $a);
         $c = \Gini\IoC::construct('stdClass');
-        $this->assertEquals($c->foo, 'bar');
-        $this->assertEquals($a->uniqid, $c->uniqid);
+        self::assertEquals($c->foo, 'bar');
+        self::assertEquals($a->uniqid, $c->uniqid);
 
         \Gini\IoC::clear('stdClass');
         $a = \Gini\IoC::construct('stdClass');
-        $this->assertFalse(isset($a->foo));
+        self::assertFalse(isset($a->foo));
     }
 }

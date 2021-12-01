@@ -23,11 +23,11 @@ class Version extends \Gini\PHPUnit\TestCase\CLI
             $aVersion = new \Gini\Version($a);
             foreach ($versions as $ib => $b) {
                 if ($ia == $ib) {
-                    $this->assertEquals($aVersion->compare($b), 0, "expecting $a = $b");
+                    self::assertEquals($aVersion->compare($b), 0, "expecting $a = $b");
                 } elseif ($ia > $ib) {
-                    $this->assertEquals($aVersion->compare($b), 1, "expecting $a > $b");
+                    self::assertEquals($aVersion->compare($b), 1, "expecting $a > $b");
                 } else {
-                    $this->assertEquals($aVersion->compare($b), -1, "expecting $a < $b");
+                    self::assertEquals($aVersion->compare($b), -1, "expecting $a < $b");
                 }
             }
         }
@@ -57,11 +57,11 @@ class Version extends \Gini\PHPUnit\TestCase\CLI
             $aVersion = new \Gini\Version($a);
             foreach ($versions as $ib => $b) {
                 if ($ia == $ib) {
-                    $this->assertEquals($aVersion->compare($b), 0, "expecting $a = $b");
+                    self::assertEquals($aVersion->compare($b), 0, "expecting $a = $b");
                 } elseif ($ia > $ib) {
-                    $this->assertEquals($aVersion->compare($b), 1, "expecting $a > $b");
+                    self::assertEquals($aVersion->compare($b), 1, "expecting $a > $b");
                 } else {
-                    $this->assertEquals($aVersion->compare($b), -1, "expecting $a < $b");
+                    self::assertEquals($aVersion->compare($b), -1, "expecting $a < $b");
                 }
             }
         }
@@ -137,9 +137,9 @@ class Version extends \Gini\PHPUnit\TestCase\CLI
         foreach ($tests as $t) {
             $v = new \Gini\Version($t[1]);
             if ($t[2]) {
-                $this->assertTrue($v->satisfies($t[0]), $t[1].' should satisfy '.$t[0]);
+                self::assertTrue($v->satisfies($t[0]), $t[1].' should satisfy '.$t[0]);
             } else {
-                $this->assertFalse($v->satisfies($t[0]), $t[1].' should not satisfy '.$t[0]);
+                self::assertFalse($v->satisfies($t[0]), $t[1].' should not satisfy '.$t[0]);
             }
         }
     }

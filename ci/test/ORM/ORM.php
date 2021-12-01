@@ -114,7 +114,7 @@ namespace Gini\PHPUnit\ORM {
                 ->expects($this->any())
                 ->method('query')
                 ->will($this->returnCallback(function ($SQL) {
-                    $this->assertEquals(
+                    self::assertEquals(
                         $SQL,
                         'INSERT INTO "utsample" SET "_extra"=\'{}\',"object_name"=\'utsample\',"object_id"=10,"sample_id"=NULL,"number"=0,"boolean"=0,"datetime"=\'0000-00-00 00:00:00\',"timestamp"=NOW(),"text"=\'\''
                     );
@@ -127,16 +127,16 @@ namespace Gini\PHPUnit\ORM {
         {
             $schema = a('utsample')->ormSchema();
             $fields = $schema['fields'];
-            $this->assertEquals($fields['id'], ['type'=>'bigint','serial'=>true,'default'=>0]);
-            $this->assertEquals($fields['_extra'], ['type'=>'text','default'=>'{}']);
-            $this->assertEquals($fields['object_name'], ['type'=>'varchar(120)']);
-            $this->assertEquals($fields['object_id'], ['type'=>'bigint','null'=>true]);
-            $this->assertEquals($fields['sample_id'], ['type'=>'bigint','null'=>true]);
-            $this->assertEquals($fields['number'], ['type'=>'int','default'=>0]);
-            $this->assertEquals($fields['boolean'], ['type'=>'int','default'=>0]);
-            $this->assertEquals($fields['datetime'], ['type'=>'datetime','default'=>'0000-00-00 00:00:00']);
-            $this->assertEquals($fields['timestamp'], ['type'=>'timestamp','default'=>'CURRENT_TIMESTAMP']);
-            $this->assertEquals($fields['text'], ['type'=>'varchar(255)','default'=>'']);
+            self::assertEquals($fields['id'], ['type'=>'bigint','serial'=>true,'default'=>0]);
+            self::assertEquals($fields['_extra'], ['type'=>'text','default'=>'{}']);
+            self::assertEquals($fields['object_name'], ['type'=>'varchar(120)']);
+            self::assertEquals($fields['object_id'], ['type'=>'bigint','null'=>true]);
+            self::assertEquals($fields['sample_id'], ['type'=>'bigint','null'=>true]);
+            self::assertEquals($fields['number'], ['type'=>'int','default'=>0]);
+            self::assertEquals($fields['boolean'], ['type'=>'int','default'=>0]);
+            self::assertEquals($fields['datetime'], ['type'=>'datetime','default'=>'0000-00-00 00:00:00']);
+            self::assertEquals($fields['timestamp'], ['type'=>'timestamp','default'=>'CURRENT_TIMESTAMP']);
+            self::assertEquals($fields['text'], ['type'=>'varchar(255)','default'=>'']);
         }
 
         public function testGet()
@@ -149,13 +149,13 @@ namespace Gini\PHPUnit\ORM {
                'sample_id' => 4,
             ]);
 
-            $this->assertEquals($o1->id, 10);
+            self::assertEquals($o1->id, 10);
 
-            $this->assertEquals($o1->object->id, 2);
-            $this->assertEquals($o1->sample->id, 4);
+            self::assertEquals($o1->object->id, 2);
+            self::assertEquals($o1->sample->id, 4);
 
-            $this->assertEquals($o1->object_id, 2);
-            $this->assertEquals($o1->sample_id, 4);
+            self::assertEquals($o1->object_id, 2);
+            self::assertEquals($o1->sample_id, 4);
         }
 
         public function testInjection()
@@ -176,16 +176,16 @@ namespace Gini\PHPUnit\ORM {
             ]);
 
             $props = $o1->properties();
-            $this->assertEquals($props['inject_prop1'], 'string:*');
-            $this->assertEquals($props['inject_prop2'], 'int');
-            $this->assertEquals($o1->ormIndexes(), ['inject_prop1', 'unique:inject_prop2']);
-            $this->assertEquals($o1->ormRelations(), ['sample' => ['update' => 'cascade', 'delete' => 'cascade']]);
+            self::assertEquals($props['inject_prop1'], 'string:*');
+            self::assertEquals($props['inject_prop2'], 'int');
+            self::assertEquals($o1->ormIndexes(), ['inject_prop1', 'unique:inject_prop2']);
+            self::assertEquals($o1->ormRelations(), ['sample' => ['update' => 'cascade', 'delete' => 'cascade']]);
         }
 
         public function testORMAdditionalSchemas()
         {
             $o = a('utsample');
-            $this->assertEquals($o->ormAdditionalSchemas(), [
+            self::assertEquals($o->ormAdditionalSchemas(), [
                 '_utsample_apple' => [
                     'fields' => [
                         'utsample_id' => [

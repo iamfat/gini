@@ -222,7 +222,7 @@ class Meet extends \Gini\PHPUnit\TestCase\CLI
             )
         );
         $those->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'%a%\' AND ("t0"."id" IN (\'1\', \'2\', \'3\') OR "t0"."name" LIKE \'%g%\')', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'%a%\' AND ("t0"."id" IN (\'1\', \'2\', \'3\') OR "t0"."name" LIKE \'%g%\')', $those->SQL());
     }
 
     public function testMeetWhose()
@@ -232,7 +232,7 @@ class Meet extends \Gini\PHPUnit\TestCase\CLI
             whose('user.name')->contains('b')
         );
         $those->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t1"."name" LIKE \'%a%\' AND "t2"."name" LIKE \'%b%\'', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t1"."name" LIKE \'%a%\' AND "t2"."name" LIKE \'%b%\'', $those->SQL());
     }
 
     public function testMeetWithForeignKeys()
@@ -245,7 +245,7 @@ class Meet extends \Gini\PHPUnit\TestCase\CLI
             )
         );
         $those->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t1"."name" LIKE \'%a%\' AND (("t2"."money">=\'10\' AND "t2"."money"<\'20\') OR "t1"."name"=\'c\')', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t1"."name" LIKE \'%a%\' AND (("t2"."money">=\'10\' AND "t2"."money"<\'20\') OR "t1"."name"=\'c\')', $those->SQL());
     }
 
     public function testMeetNestedCondition()
@@ -265,6 +265,6 @@ class Meet extends \Gini\PHPUnit\TestCase\CLI
             )
         );
         $those->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t1"."name" LIKE \'%a%\' AND (("t2"."money">=\'10\' AND "t2"."money"<\'20\') OR ("t1"."name"=\'c\' OR "t2"."name"=\'b\') OR ("t0"."user_id"=0 AND "t1"."id" IS NULL))', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t1"."name" LIKE \'%a%\' AND (("t2"."money">=\'10\' AND "t2"."money"<\'20\') OR ("t1"."name"=\'c\' OR "t2"."name"=\'b\') OR ("t0"."user_id"=0 AND "t1"."id" IS NULL))', $those->SQL());
     }
 }

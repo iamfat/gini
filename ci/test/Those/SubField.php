@@ -150,6 +150,6 @@ class SubField extends \Gini\PHPUnit\TestCase\CLI
         \Gini\Those::reset();
         $those = those('company')->whose('type.name')->is('test');
         $those->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."type_id" FROM "company" AS "t0" LEFT JOIN "company_type" AS "t1" ON "t0"."type_id"="t1"."id" WHERE "t1"."name"=\'test\'', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."type_id" FROM "company" AS "t0" LEFT JOIN "company_type" AS "t1" ON "t0"."type_id"="t1"."id" WHERE "t1"."name"=\'test\'', $those->SQL());
     }
 }

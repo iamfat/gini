@@ -21,13 +21,13 @@ namespace Gini\PHPUnit\RPC {
             $var = uniqid();
 
             $response = $this->_testCall('RPCTest.camelCaseMethod', [$var]);
-            $this->assertSame($var, $response['result'], 'call RPCTest.camelCaseMethod');
+            self::assertSame($var, $response['result'], 'call RPCTest.camelCaseMethod');
 
             $this->_testCall('rpctest.camelcasemethod', [$var]);
-            $this->assertSame($var, $response['result'], 'call rpctest.camelcasemethod');
+            self::assertSame($var, $response['result'], 'call rpctest.camelcasemethod');
 
             $this->_testCall('rpctest/camelCaseMethod', [$var]);
-            $this->assertSame($var, $response['result'], 'rpctest/camelCaseMethod');
+            self::assertSame($var, $response['result'], 'rpctest/camelCaseMethod');
         }
 
         public function testNamedParameters()
@@ -35,10 +35,10 @@ namespace Gini\PHPUnit\RPC {
             $var = uniqid();
 
             $response = $this->_testCall('RPCTest.echo', ['a' => 1, 'b' => 2, 'c' => 3]);
-            $this->assertSame($response['result'], ['a' => 1, 'b' => 2, 'c' => 3]);
+            self::assertSame($response['result'], ['a' => 1, 'b' => 2, 'c' => 3]);
 
             $response = $this->_testCall('RPCTest.echo', ['b' => 2, 'a' => 1, 'c'=> 3]);
-            $this->assertSame($response['result'], ['a' => 1, 'b' => 2, 'c' => 3]);
+            self::assertSame($response['result'], ['a' => 1, 'b' => 2, 'c' => 3]);
         }
 
         public function testUnnamedParameters()
@@ -46,7 +46,7 @@ namespace Gini\PHPUnit\RPC {
             $var = uniqid();
 
             $response = $this->_testCall('RPCTest.echo', [1]);
-            $this->assertSame($response['result'], ['a' => 1, 'b' => null, 'c' => 2]);
+            self::assertSame($response['result'], ['a' => 1, 'b' => null, 'c' => 2]);
         }
 
         public function testCamelCasedParameters()
@@ -54,10 +54,10 @@ namespace Gini\PHPUnit\RPC {
             $var = uniqid();
 
             $response = $this->_testCall('RPCTest.camelCaseParams', ['a-id' => 1, 'bid' => 2]);
-            $this->assertSame($response['result'], ['aId' => 1, 'bId' => 2]);
+            self::assertSame($response['result'], ['aId' => 1, 'bId' => 2]);
 
             $response = $this->_testCall('RPCTest.camelCaseParams', ['a_id' => 1, 'Bid' => 2]);
-            $this->assertSame($response['result'], ['aId' => 1, 'bId' => 2]);
+            self::assertSame($response['result'], ['aId' => 1, 'bId' => 2]);
         }
     }
 

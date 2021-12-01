@@ -153,6 +153,6 @@ class ORMIterator extends \Gini\PHPUnit\TestCase\CLI
             $criterias[] = $u->criteria();
         }
 
-        $this->assertEquals($criterias, [['id' => 20], ['id' => 30], ['id' => 40]]);
+        self::assertEquals($criterias, [['id' => 20], ['id' => 30], ['id' => 40]]);
     }
 }

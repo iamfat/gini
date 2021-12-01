@@ -11,6 +11,6 @@ class Event extends \Gini\PHPUnit\TestCase\CLI
         });
 
         $foo = \Gini\Event::trigger('abc');
-        $this->assertEquals($foo, 'foo');
+        self::assertEquals($foo, 'foo');
     }
 }

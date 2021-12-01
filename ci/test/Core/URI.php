@@ -20,13 +20,13 @@ class URI extends \Gini\PHPUnit\TestCase\CLI
         $_SERVER['HTTPS'] = true;
         \Gini\URI::setup();
 
-        $this->assertEquals(URL('hello'), 'ftp://fake.com/abc/hello');
+        self::assertEquals(URL('hello'), 'ftp://fake.com/abc/hello');
 
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         \Gini\URI::setup();
-        $this->assertEquals(URL('hello'), 'ftp://fake.com/hello');
+        self::assertEquals(URL('hello'), 'ftp://fake.com/hello');
 
-        $this->assertEquals(URL('http://foo.bar/abc'), 'http://foo.bar/abc');
+        self::assertEquals(URL('http://foo.bar/abc'), 'http://foo.bar/abc');
     }
 
     public function testRURL()
@@ -38,13 +38,13 @@ class URI extends \Gini\PHPUnit\TestCase\CLI
         \Gini\Config::set('system.rurl_mod', []);
         \Gini\URI::setup();
 
-        $this->assertEquals(RURL('hello.js', 'js'), 'ftp://fake.com/abc/assets/js/hello.js');
+        self::assertEquals(RURL('hello.js', 'js'), 'ftp://fake.com/abc/assets/js/hello.js');
 
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         \Gini\URI::setup();
-        $this->assertEquals(RURL('hello.js', 'js'), 'ftp://fake.com/assets/js/hello.js');
+        self::assertEquals(RURL('hello.js', 'js'), 'ftp://fake.com/assets/js/hello.js');
 
-        $this->assertEquals(RURL('http://abc.com/ade/hello.js', 'js'), 'http://abc.com/ade/hello.js');
+        self::assertEquals(RURL('http://abc.com/ade/hello.js', 'js'), 'http://abc.com/ade/hello.js');
     }
 
     public function tearDown(): void

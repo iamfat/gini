@@ -8,7 +8,7 @@ namespace Gini\PHPUnit\TestCase\CGI {
         {
             \Gini\CGI::router()->cleanUp();
             $content = \Gini\CGI::request('hello/parameters/1')->execute()->content();
-            $this->assertSame($content, ['1', null, 2]);
+            self::assertSame($content, ['1', null, 2]);
         }
 
         public function testRouter()
@@ -22,27 +22,27 @@ namespace Gini\PHPUnit\TestCase\CGI {
                 });
 
             $content = \Gini\CGI::request('foo/bar')->execute()->content();
-            $this->assertEquals($content['function'], 'getAny');
-            $this->assertEquals($content['method'], 'GET');
+            self::assertEquals($content['function'], 'getAny');
+            self::assertEquals($content['method'], 'GET');
 
             $content = \Gini\CGI::request('hello/world/1')->execute()->content();
-            $this->assertEquals($content['id'], 1);
-            $this->assertEquals($content['method'], 'GET');
+            self::assertEquals($content['id'], 1);
+            self::assertEquals($content['method'], 'GET');
 
             $content = \Gini\CGI::request('hello/world/2', ['method'=>'POST'])->execute()->content();
-            $this->assertEquals($content['id'], 2);
-            $this->assertEquals($content['method'], 'POST');
+            self::assertEquals($content['id'], 2);
+            self::assertEquals($content['method'], 'POST');
 
             $content = \Gini\CGI::request('hello/nested/world/1')->execute()->content();
-            $this->assertEquals($content['id'], 1);
-            $this->assertEquals($content['method'], 'GET');
+            self::assertEquals($content['id'], 1);
+            self::assertEquals($content['method'], 'GET');
         }
 
         public function testArguments()
         {
             \Gini\CGI::router()->cleanUp();
             $content = \Gini\CGI::request('hello/arguments/1/2/3')->execute()->content();
-            $this->assertSame($content, ['1', '2', '3']);
+            self::assertSame($content, ['1', '2', '3']);
         }
     }
 

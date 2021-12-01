@@ -218,7 +218,7 @@ class WhoAre extends \Gini\PHPUnit\TestCase\CLI
                 those('group')->whose('name')->contains('f')
             );
         $those->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0", "group" AS t1 LEFT JOIN "_group_member" AS "t2" ON "t2"."group_id"="t1"."id" LEFT JOIN "user" AS "t3" ON "t2"."member_id"="t3"."id" WHERE ("t1"."name" LIKE \'%f%\' AND "t0"."id" = "t3"."id")', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0", "group" AS t1 LEFT JOIN "_group_member" AS "t2" ON "t2"."group_id"="t1"."id" LEFT JOIN "user" AS "t3" ON "t2"."member_id"="t3"."id" WHERE ("t1"."name" LIKE \'%f%\' AND "t0"."id" = "t3"."id")', $those->SQL());
     }
 
     public function testWhoAreWithWhose()
@@ -230,7 +230,7 @@ class WhoAre extends \Gini\PHPUnit\TestCase\CLI
                 those('group')->whose('name')->contains('f')
             );
         $those->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id", "group" AS t2 LEFT JOIN "_group_member" AS "t3" ON "t3"."group_id"="t2"."id" LEFT JOIN "user" AS "t4" ON "t3"."member_id"="t4"."id" WHERE "t1"."name"=\'g\' AND ("t2"."name" LIKE \'%f%\' AND "t0"."id" = "t4"."id")', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id", "group" AS t2 LEFT JOIN "_group_member" AS "t3" ON "t3"."group_id"="t2"."id" LEFT JOIN "user" AS "t4" ON "t3"."member_id"="t4"."id" WHERE "t1"."name"=\'g\' AND ("t2"."name" LIKE \'%f%\' AND "t0"."id" = "t4"."id")', $those->SQL());
 
         \Gini\Those::reset();
         $those = those('user')
@@ -239,6 +239,6 @@ class WhoAre extends \Gini\PHPUnit\TestCase\CLI
                 those('room/member')->whose('room.name')->contains('f')
             );
         $those->makeSQL();
-        $this->assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id", "room_member" AS t2 LEFT JOIN "room" AS "t3" ON "t2"."room_id"="t3"."id" LEFT JOIN "user" AS "t4" ON "t2"."user_id"="t4"."id" WHERE "t1"."name"=\'g\' AND ("t3"."name" LIKE \'%f%\' AND "t0"."id" = "t4"."id")', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."father_id"="t1"."id", "room_member" AS t2 LEFT JOIN "room" AS "t3" ON "t2"."room_id"="t3"."id" LEFT JOIN "user" AS "t4" ON "t2"."user_id"="t4"."id" WHERE "t1"."name"=\'g\' AND ("t3"."name" LIKE \'%f%\' AND "t0"."id" = "t4"."id")', $those->SQL());
     }
 }
