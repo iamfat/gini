@@ -302,7 +302,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 
-    protected function _fieldName($field, $suffix = null)
+    protected function fieldName($field, $suffix = null)
     {
         return $this->db->quoteIdent($field . $suffix);
     }
@@ -334,9 +334,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $tempColumns = array_merge($val, [$key]);
             foreach ($tempColumns as $c) {
                 if (isset($structure[$c]['object'])) {
-                    $columns[$c . '_id'] = $this->_fieldName($c, '_id') . " AS '{$c}_id'";
+                    $columns[$c . '_id'] = $this->fieldName($c, '_id') . " AS '{$c}_id'";
                 } else {
-                    $columns[$c] = $this->_fieldName($c) . " AS '{$c}'";
+                    $columns[$c] = $this->fieldName($c) . " AS '{$c}'";
                 }
             }
 

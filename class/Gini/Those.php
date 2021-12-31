@@ -132,6 +132,11 @@ namespace Gini {
             return parent::fetch($scope);
         }
 
+        protected function fieldName($field, $suffix = null)
+        {
+            return \Gini\Those\Whose::fieldName($this, $field . $suffix);
+        }
+
         public static function packWhere($where, $op = 'AND')
         {
             if (!is_array($where)) {
