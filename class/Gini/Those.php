@@ -315,7 +315,7 @@ namespace Gini {
         {
             if ($this->_condition) {
                 $condition = $this->_condition;
-                $this->condition = null;
+                $this->_condition = null;
                 $this->_meet($condition);
             }
         }
@@ -334,11 +334,12 @@ namespace Gini {
                 }
             }
 
+            $from = $this->_from;
             if ($this->_join) {
-                $this->_from[0] .= ' ' . implode(' ', $this->_join);
+                $from[0] .= ' ' . implode(' ', $this->_join);
             }
 
-            $from_SQL = ' FROM ' . implode(', ', $this->_from);
+            $from_SQL = ' FROM ' . implode(', ', $from);
             $this->from_SQL = $from_SQL;
 
             $where_SQL = '';
@@ -428,7 +429,19 @@ namespace Gini {
             if (!$this->SQL) {
                 $this->makeSQL();
             }
-            return parent::get($key, $val);
+            if ($val === null) {
+                $val = $key;
+                $key = 'id';
+            }
+            if (!is_array($val)) {
+                $val = [$val];
+            }
+            $key = [\Gini\Those\Whose::fieldName($this, $key) => $key];
+            $values = [];
+            foreach ($val as $v) {
+                $values[\Gini\Those\Whose::fieldName($this, $v)] = $v;
+            }
+            return parent::get($key, $values);
         }
 
         private function _meet($condition)

@@ -300,7 +300,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     protected function _fieldName($field, $suffix = null)
     {
-        return $this->db->quoteIdent($field.$suffix);
+        $field = str_replace('"', '', $field).$suffix;
+        $fields = explode('.',$field);
+        return join('.', array_map(function ($f) {return $this->db->quoteIdent($f);},$fields));
     }
 
     public function get($key = 'id', $val = null)
@@ -309,9 +311,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $val = $key;
             $key = 'id';
         }
-        $column_key = null;
         if (!is_array($val)) {
-            $column_key = $val;
             $val = [$val];
         }
 
@@ -327,12 +327,17 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         } else {
             $structure = a($this->name())->structure();
             $columns = [];
-            $tempColumns = array_merge($val, [$key]);
-            foreach ($tempColumns as $c) {
+            $tempColumns = array_merge($val, is_array($key)?$key:[$key]);
+            foreach ($tempColumns as $k => $c) {
+                $k = $k?:$c;
                 if (isset($structure[$c]['object'])) {
-                    $columns[$c . '_id'] = $this->_fieldName($c, '_id') . " AS '{$c}_id'";
+                    if (isset($structure[$k]['object'])) {
+                        $columns[$c . '_id'] = $this->_fieldName($k, '_id') . " AS '{$c}_id'";
+                    } else {
+                        $columns[$c . '_id'] = $this->_fieldName($k) . " AS '{$c}_id'";
+                    }
                 } else {
-                    $columns[$c] = $this->_fieldName($c) . " AS '{$c}'";
+                    $columns[$c] = $this->_fieldName($k) . " AS '{$c}'";
                 }
             }
 
@@ -340,20 +345,22 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 ' . join(',', $columns) . ' $3', $SQL);
 
             $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
+            $row_key = is_array($key)?array_values($key)[0]:$key;
             if ($result) {
                 while ($row = $result->row(\PDO::FETCH_ASSOC)) {
-                    $arr[$row[$key]] = [];
+                    $arr[$row[$row_key]] = [];
                     foreach ($val as $v) {
                         if (isset($structure[$v]['object'])) {
-                            $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
+                            $arr[$row[$row_key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
                         } else {
-                            $arr[$row[$key]][$v] = $row[$v];
+                            $arr[$row[$row_key]][$v] = $row[$v];
                         }
                     }
                 }
             }
         }
-        if ($column_key && !empty($arr)) {
+        if (count($val) == 1 && !empty($arr)) {
+            $column_key = array_values($val)[0];
             $arr = array_combine(array_keys($arr), array_column($arr, $column_key));
         }
         return $arr;
