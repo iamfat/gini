@@ -426,9 +426,6 @@ namespace Gini {
 
         public function get($key = 'id', $val = null)
         {
-            if (!$this->SQL) {
-                $this->makeSQL();
-            }
             if ($val === null) {
                 $val = $key;
                 $key = 'id';
@@ -441,6 +438,7 @@ namespace Gini {
             foreach ($val as $v) {
                 $values[\Gini\Those\Whose::fieldName($this, $v)] = $v;
             }
+            $this->makeSQL();
             return parent::get($key, $values);
         }
 
