@@ -115,6 +115,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         }
 
         switch ($scope) {
+            case 'dryrun':
+                // 什么都不干, 只是为了帮助子类做一些必要的重载工作
+                break;
             case 'count':
                 if (!isset($this->count_SQL) && $this->SQL) {
                     // guess count_SQL via SQL
@@ -129,40 +132,39 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                 $this->total_count = $this->count_SQL ? $this->db->value($this->count_SQL, $this->SQL_idents, $this->SQL_params) : 0;
                 break;
             default:
-                if ($this->SQL) {
-                    $SQL = $this->SQL;
-                    if ($this->_forUpdate) {
-                        $SQL .= ' FOR UPDATE';
-                    }
-                    $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
+                if (!$this->SQL) break;
+                $SQL = $this->SQL;
+                if ($this->_forUpdate) {
+                    $SQL .= ' FOR UPDATE';
+                }
+                $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
 
-                    $objects = [];
+                $objects = [];
 
-                    if ($result) {
-                        $fields = $this->fields();
-                        $loaded = false; // flag to show if all fields were loaded
-                        $loaded_checked = false; // flag to show if we've already checked once
-                        while ($row = $result->row(\PDO::FETCH_ASSOC)) {
-                            if (!$loaded_checked) {
-                                $loaded = empty(array_diff_key($fields, $row));
-                                $loaded_checked = true;
-                            }
-                            if ($loaded) {
-                                // if all fields were loaded, just setData to improve performance
-                                $o = a($this->name);
-                                $o->setData((array) $row);
-                                $o->criteria($row['id']);
-                                $objects[$row['id']] = $o;
-                            } else {
-                                $objects[$row['id']] = true;
-                            }
+                if ($result) {
+                    $fields = $this->fields();
+                    $loaded = false; // flag to show if all fields were loaded
+                    $loaded_checked = false; // flag to show if we've already checked once
+                    while ($row = $result->row(\PDO::FETCH_ASSOC)) {
+                        if (!$loaded_checked) {
+                            $loaded = empty(array_diff_key($fields, $row));
+                            $loaded_checked = true;
+                        }
+                        if ($loaded) {
+                            // if all fields were loaded, just setData to improve performance
+                            $o = a($this->name);
+                            $o->setData((array) $row);
+                            $o->criteria($row['id']);
+                            $objects[$row['id']] = $o;
+                        } else {
+                            $objects[$row['id']] = true;
                         }
                     }
-
-                    $this->objects = $objects;
-                    $this->count = count($objects);
-                    $this->current_id = key($objects);
                 }
+
+                $this->objects = $objects;
+                $this->count = count($objects);
+                $this->current_id = key($objects);
         }
 
         $this->setFetchFlag($scope, true);
@@ -340,24 +342,27 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                 }
             }
 
-            $SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
-            $SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 ' . join(',', $columns) . ' $3', $SQL);
+            $this->fetch('dryrun');
+            if ($this->SQL) {
+                $SQL = preg_replace('/\bSQL_CALC_FOUND_ROWS\b/', '', $this->SQL);
+                $SQL = preg_replace('/^(SELECT)\s(.+?)\s(FROM\s)\s*/', '$1 ' . join(',', $columns) . ' $3', $SQL);
 
-            $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
-            if ($result) {
-                while ($row = $result->row(\PDO::FETCH_ASSOC)) {
-                    $arr[$row[$key]] = [];
-                    foreach ($val as $v) {
-                        if (isset($structure[$v]['object'])) {
-                            $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
-                        } else {
-                            $arr[$row[$key]][$v] = $row[$v];
+                $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
+                if ($result) {
+                    while ($row = $result->row(\PDO::FETCH_ASSOC)) {
+                        $arr[$row[$key]] = [];
+                        foreach ($val as $v) {
+                            if (isset($structure[$v]['object'])) {
+                                $arr[$row[$key]][$v] = a($structure[$v]['object'], $row[$v . '_id']);
+                            } else {
+                                $arr[$row[$key]][$v] = $row[$v];
+                            }
                         }
                     }
                 }
             }
         }
-        if ($column_key && !empty($arr)) {
+        if ($column_key && count($arr) > 0) {
             $arr = array_combine(array_keys($arr), array_column($arr, $column_key));
         }
         return $arr;

@@ -128,7 +128,6 @@ namespace Gini {
             if (!$this->SQL) {
                 $this->makeSQL();
             }
-
             return parent::fetch($scope);
         }
 
@@ -426,14 +425,6 @@ namespace Gini {
                         'alias' => $this->context('alias'),
                     ];
             }
-        }
-
-        public function get($key = 'id', $val = null)
-        {
-            if (!$this->SQL) {
-                $this->makeSQL();
-            }
-            return parent::get($key, $val);
         }
 
         private function _meet($condition)
