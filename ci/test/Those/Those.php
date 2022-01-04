@@ -5,6 +5,7 @@ namespace Gini\PHPUnit\Those;
 class Those extends \Gini\PHPUnit\TestCase\CLI
 {
     private $resultRows = [];
+    private $lastQuery = '';
 
     public function setUp(): void
     {
@@ -81,6 +82,7 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         $db->expects($this->any())
             ->method('query')
             ->will($this->returnCallback(function ($s, $s1, $s2) use ($result) {
+                $this->lastQuery = $s;
                 return $result;
             }));
 
@@ -127,8 +129,85 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
             return $o;
         });
 
+        \Gini\IoC::bind('\Gini\ORM\Group\User', function ($criteria = null) use ($db) {
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
+                ->setMockClassName('MOBJ_' . uniqid())
+                ->setMethods(['db', 'ownProperties', 'name', 'tableName'])
+                ->disableOriginalConstructor()
+                ->getMock();
+
+            $o->expects($this->any())
+                ->method('db')
+                ->will($this->returnValue($db));
+
+            $o->expects($this->any())
+                ->method('name')
+                ->will($this->returnValue('group_user'));
+
+            $o->expects($this->any())
+                ->method('tableName')
+                ->will($this->returnValue('group_user'));
+
+            $o->expects($this->any())
+                ->method('ownProperties')
+                ->will($this->returnValue([
+                    'id' => 'bigint,pimary,serial',
+                    '_extra' => 'array',
+                    'group' => 'object:group',
+                    'user' => 'object:user',
+                ]));
+
+            unset($o->id);
+            unset($o->_extra);
+            if (isset($criteria)) {
+                $criteria = $o->normalizeCriteria($o->criteria($criteria));
+                $o->setData($criteria);
+            }
+
+            return $o;
+        });
+
+
+        \Gini\IoC::bind('\Gini\ORM\Group', function ($criteria = null) use ($db) {
+            $o = $this->getMockBuilder('\Gini\ORM\Base')
+                ->setMockClassName('MOBJ_' . uniqid())
+                ->setMethods(['db', 'ownProperties', 'name', 'tableName'])
+                ->disableOriginalConstructor()
+                ->getMock();
+
+            $o->expects($this->any())
+                ->method('db')
+                ->will($this->returnValue($db));
+
+            $o->expects($this->any())
+                ->method('name')
+                ->will($this->returnValue('group'));
+
+            $o->expects($this->any())
+                ->method('tableName')
+                ->will($this->returnValue('group'));
+
+            $o->expects($this->any())
+                ->method('ownProperties')
+                ->will($this->returnValue([
+                    'id' => 'bigint,pimary,serial',
+                    '_extra' => 'array',
+                    'name' => 'string',
+                ]));
+
+            unset($o->id);
+            unset($o->_extra);
+            if (isset($criteria)) {
+                $criteria = $o->normalizeCriteria($o->criteria($criteria));
+                $o->setData($criteria);
+            }
+
+            return $o;
+        });
+
         $plurals = \Gini\Config::get('orm.plurals');
         $plurals['users'] = 'user';
+        $plurals['groups'] = 'group';
         \Gini\Config::set('orm.plurals', $plurals);
     }
 
@@ -355,5 +434,24 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         self::assertEquals(null, $res[30]->id);
         self::assertEquals(['id' => 50], $res[40]->criteria());
         self::assertEquals(null, $res[50]->id);
+    }
+
+    public function testGetSQL() {
+        \Gini\Those::reset();
+        $this->resultRows = [];
+        $res = those('group/user')->get('user');
+        self::assertEquals('SELECT "t0"."user_id" AS \'user_id\',"t0"."id" AS \'id\' FROM "group_user" AS "t0"', $this->lastQuery);
+
+        \Gini\Those::reset();
+        $res = those('group/user')->whose('user.name')->is('g')->get('user.id');
+        self::assertEquals('SELECT "t1"."id" AS \'user.id\',"t0"."id" AS \'id\' FROM "group_user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."user_id"="t1"."id" WHERE "t1"."name"=\'g\'', $this->lastQuery);
+
+        \Gini\Those::reset();
+        $res = those('group/user')->get('user.name');
+        self::assertEquals('SELECT "t1"."name" AS \'user.name\',"t0"."id" AS \'id\' FROM "group_user" AS "t0" LEFT JOIN "user" AS "t1" ON "t0"."user_id"="t1"."id"', $this->lastQuery);
+
+        \Gini\Those::reset();
+        $res = those('group/user')->whose('user.name')->is('g')->get('group.name');
+        self::assertEquals('SELECT "t1"."name" AS \'group.name\',"t0"."id" AS \'id\' FROM "group_user" AS "t0" LEFT JOIN "group" AS "t1" ON "t0"."group_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t2"."name"=\'g\'', $this->lastQuery);
     }
 }
