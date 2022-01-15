@@ -11,7 +11,7 @@ class Suite extends \Gini\Controller\CLI
             die("Usage: gini suite [other-gini-commands]\n");
         }
 
-        $envPath = $suiteDir . '/' . $_SERVER['GINI_ENV'] . '.env';
+        $envPath = $suiteDir . '/.env';
         $env = $_SERVER + ['GINI_IN_SUITE' => 1];
         unset($env['GINI_APP_PATH']);
         if (file_exists($envPath)) {
