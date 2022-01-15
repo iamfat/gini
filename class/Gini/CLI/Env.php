@@ -1,0 +1,63 @@
+<?php
+
+namespace Gini\CLI;
+
+const QUOTE_PATTERN = '/^(["\'])(.*)\1$/';
+
+class Env
+{
+    public static function setup()
+    {
+        $envPath = $_SERVER['PWD'] . '/.env';
+        if (file_exists($envPath)) {
+            $rows = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($rows as &$row) {
+                if (!$row || $row[0] == '#') {
+                    continue;
+                }
+                $row = static::normalize($row);
+                putenv($row);
+            }
+        }
+    }
+
+    public static function stripQuote($value)
+    {
+        if (preg_match(QUOTE_PATTERN, $value, $quote_matches)) {
+            $value = $quote_matches[2] ?? '';
+        } else {
+            $value = stripslashes($value ?? '');
+        }
+        return $value;
+    }
+
+    public static function normalize($row)
+    {
+        list($key, $value) = explode('=', trim($row), 2);
+        $value = static::stripQuote($value);
+        $value = trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.*?))?\s*\}/i', function ($matches) {
+            $envValue = getenv($matches[1]);
+            if ($envValue === false) {
+                $envValue = static::stripQuote($matches[2] ?? '');
+            }
+            return $envValue;
+        }, $value));
+
+        $row = $key . '=' . addslashes($value);
+        return $row;
+    }
+
+    public static function get($name, $defaultValue = '')
+    {
+        $envValue = getenv($name);
+        if ($envValue === false) {
+            $envValue = static::stripQuote($defaultValue);
+        }
+        return $envValue;
+    }
+
+    public static function getAll()
+    {
+        return getenv();
+    }
+}

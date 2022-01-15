@@ -23,18 +23,25 @@ class CLI
                 $_SERVER['GINI_MODULE_BASE_PATH'] ?? $_SERVER['GINI_SYS_PATH'] . '/..';
 
             $cmd = substr($cmd, 1);
-            $_SERVER['GINI_APP_PATH'] = $app_base_path . '/' . $cmd;
+            $_SERVER['GINI_APP_PATH'] = $cmd && $cmd[0] == '.'
+                ? $_SERVER['PWD'] . '/' . $cmd
+                : $app_base_path . '/' . $cmd;
             if (!is_dir($_SERVER['GINI_APP_PATH'])) {
                 exit("\e[1;34mgini\e[0m: missing app '$cmd'.\n");
             }
 
-            array_shift($argv);
-            $eargv = array(escapeshellcmd($_SERVER['SCRIPT_FILENAME']));
-            foreach ($argv as $arg) {
-                $eargv[] = escapeshellcmd($arg);
+            // remove "@app"
+            $exec_args = array_slice($argv, 1);
+            array_unshift($exec_args, $_SERVER['SCRIPT_FILENAME']);
+            if (version_compare(PHP_VERSION, '7.4.0') < 0) {
+                $exec_args = implode(' ', array_map('escapeshellcmd', $exec_args));
             }
-            proc_close(proc_open(implode(' ', $eargv), [STDIN, STDOUT, STDERR], $pipes, null, $_SERVER));
 
+            $env = array_filter($_SERVER, function ($key) {
+                return !in_array($key, ['argc', 'argv']);
+            }, ARRAY_FILTER_USE_KEY);
+
+            proc_close(proc_open($exec_args, [STDIN, STDOUT, STDERR], $pipes, null, $env));
             return;
         }
 
@@ -208,9 +215,9 @@ class CLI
 
     public static function dispatch(array $argv)
     {
-        if (!isset($GLOBALS['gini.class_map'])) {
-            fputs(STDERR, "\e[33mNOTICE: You are currently executing commands without cache!\e[0m\n\n");
-        }
+        // if (!isset($GLOBALS['gini.class_map'])) {
+        //     fputs(STDERR, "\e[33mNOTICE: You are currently executing commands without cache!\e[0m\n\n");
+        // }
 
         $candidates = Util::pathAndArgs($argv, true);
 
@@ -267,6 +274,7 @@ class CLI
     {
         URI::setup();
         Session::setup();
+        CLI\Env::setup();
     }
 
     public static function shutdown()

@@ -22,14 +22,14 @@ class Cache
                 if (preg_match('/^(.+)\.php$/', $file, $parts)) {
                     $class_name = trim(strtolower($parts[1]), '/');
                     $class_name = strtr($class_name, '-', '_');
-                    $class_map[$class_name] = $class_dir.'/'.$file;
+                    $class_map[$class_name] = $class_dir . '/' . $file;
                 }
             });
         }
 
-        \Gini\File::ensureDir(APP_PATH.'/cache');
+        \Gini\File::ensureDir(APP_PATH . '/cache');
         file_put_contents(
-            APP_PATH.'/cache/class_map.json',
+            APP_PATH . '/cache/class_map.json',
             J($class_map)
         );
         echo "   \e[32mdone.\e[0m\n";
@@ -59,9 +59,9 @@ class Cache
             });
         }
 
-        \Gini\File::ensureDir(APP_PATH.'/cache');
+        \Gini\File::ensureDir(APP_PATH . '/cache');
         file_put_contents(
-            APP_PATH.'/cache/view_map.json',
+            APP_PATH . '/cache/view_map.json',
             J($view_map)
         );
         echo "   \e[32mdone.\e[0m\n";
@@ -90,7 +90,7 @@ class Cache
                     return;
                 }
 
-                $class_name = '\Gini\ORM\\'.str_replace('/', '\\', $oname);
+                $class_name = '\Gini\ORM\\' . str_replace('/', '\\', $oname);
 
                 // Check if it is abstract class
                 $rc = new \ReflectionClass($class_name);
@@ -127,11 +127,11 @@ class Cache
         return $plurals;
     }
 
-    private static function _cacheConfig($env)
+    private static function _cacheConfig()
     {
         printf("%s\n", 'Updating config cache...');
 
-        $config_items = \Gini\Config::fetch($env);
+        $config_items = \Gini\Config::fetch();
         $plurals = self::_getORMPlurals();
 
         // update orm plurals
@@ -142,9 +142,9 @@ class Cache
 
         $config_items['orm']['plurals'] = $c;
 
-        $config_file = APP_PATH.'/cache/config.json';
+        $config_file = APP_PATH . '/cache/config.json';
 
-        \Gini\File::ensureDir(APP_PATH.'/cache');
+        \Gini\File::ensureDir(APP_PATH . '/cache');
         file_put_contents(
             $config_file,
             J($config_items)
@@ -155,7 +155,7 @@ class Cache
         echo "   \e[32mdone.\e[0m\n";
     }
 
-    public static function setup($env)
+    public static function setup()
     {
         self::_cacheClass();
         echo "\n";
@@ -163,12 +163,12 @@ class Cache
         self::_cacheView();
         echo "\n";
 
-        self::_cacheConfig($env);
+        self::_cacheConfig();
         echo "\n";
 
         // check gini dependencies
         foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-            $class = '\Gini\Module\\'.strtr($name, ['-' => '', '_' => '', '/' => '']);
+            $class = '\Gini\Module\\' . strtr($name, ['-' => '', '_' => '', '/' => '']);
             $cache_func = "$class::cache";
             if (is_callable($cache_func)) {
                 echo "Setting up cache for Module[$name]...\n";
@@ -181,7 +181,7 @@ class Cache
     public static function clean()
     {
         echo "Cleaning Cache...\n";
-        \Gini\File::removeDir(APP_PATH.'/cache');
+        \Gini\File::removeDir(APP_PATH . '/cache');
         echo "   \e[32mdone.\e[0m\n";
     }
 }

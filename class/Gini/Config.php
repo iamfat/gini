@@ -5,7 +5,6 @@ namespace Gini;
 const CONST_PATTERN = '/\{\{\{\s*(.+)\s*\}\}\}/';
 const MOUSTACHE_PATTERN = '/\{\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}\}/i';
 const BASH_PATTERN = '/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.+?))?\s*\}/i';
-const QUOTE_PATTERN = '/^(["\'])(.*)\1$/';
 
 class Config
 {
@@ -77,46 +76,8 @@ class Config
         }
     }
 
-    public static function stripQuote($value)
+    public static function fetch($keepVars = false)
     {
-        if (preg_match(QUOTE_PATTERN, $value, $quote_matches)) {
-            $value = $quote_matches[2] ?? '';
-        } else {
-            $value = stripslashes($value ?? '');
-        }
-        return $value;
-    }
-
-    public static function normalizeEnv($row)
-    {
-        list($key, $value) = explode('=', trim($row), 2);
-        $value = static::stripQuote($value);
-        $value = trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.*?))?\s*\}/i', function ($matches) {
-            $envValue = getenv($matches[1]);
-            if ($envValue === false) {
-                $envValue = static::stripQuote($matches[2] ?? '');
-            }
-            return $envValue;
-        }, $value));
-
-        $row = $key . '=' . addslashes($value);
-        return $row;
-    }
-
-    public static function fetch($env = null, $keepVars = false)
-    {
-        $env = $env ?: APP_PATH . '/.env';
-        if (file_exists($env)) {
-            $rows = file($env, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($rows as &$row) {
-                if (!$row || $row[0] == '#') {
-                    continue;
-                }
-                $row = static::normalizeEnv($row);
-                putenv($row);
-            }
-        }
-
         $items = [];
 
         $loadFromDir = function ($base) use (&$items, $keepVars) {
@@ -158,12 +119,13 @@ class Config
                             }
 
                             $replaceCallback = function ($matches) use ($keepVars) {
-                                $envValue = getenv($matches[1]);
-                                if ($envValue === false) {
-                                    $envValue = static::stripQuote($matches[2] ?? '');
-                                }
-                                if ($keepVars) {
-                                    return '${' . $matches[1] . (strlen($envValue) > 0 ? ':=' . addslashes($envValue) : '') . '}';
+                                if (isset($matches[1])) {
+                                    $name = $matches[1];
+                                    $defaultValue = $matches[2] ?? '';
+                                    $envValue = CLI\Env::get($name, $defaultValue);
+                                    if ($keepVars) {
+                                        return '${' . $matches[1] . (strlen($envValue) > 0 ? ':=' . addslashes($envValue) : '') . '}';
+                                    }
                                 }
                                 return $envValue;
                             };
@@ -230,7 +192,7 @@ class Config
                             foreach ($patterns as $pattern) {
                                 if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER)) {
                                     foreach ($matches as $match) {
-                                        $env[$match[1]] = $match[2] ? trim($match[2], '"\'') : '';
+                                        $env[$match[1]] = isset($match[2]) ? trim($match[2], '"\'') : '';
                                     }
                                 }
                             }

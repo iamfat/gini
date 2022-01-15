@@ -136,14 +136,13 @@ class App extends \Gini\Controller\CLI
     public function actionCache($args)
     {
         self::giniBanner();
-        $opt = \Gini\Util::getOpt($args, 'he:', ['help', 'env:']);
+        $opt = \Gini\Util::getOpt($args, 'h', ['help']);
         if (isset($opt['h']) || isset($opt['help'])) {
-            echo "Usage: gini cache [-h|--help] [-e|--env=ENV] [clean]\n";
+            echo "Usage: gini cache [-h|--help] [clean]\n";
 
             return;
         }
 
-        $env = $opt['e'] ?? $opt['env'] ?? null;
         if ($opt['_'][0] ?? '' == 'clean') {
             \Gini\App\Cache::clean();
         } else {
@@ -151,8 +150,7 @@ class App extends \Gini\Controller\CLI
             if ($errors) {
                 return;
             }
-
-            \Gini\App\Cache::setup($env);
+            \Gini\App\Cache::setup();
         }
     }
 

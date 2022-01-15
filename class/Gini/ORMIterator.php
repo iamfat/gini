@@ -132,7 +132,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                 $this->total_count = $this->count_SQL ? $this->db->value($this->count_SQL, $this->SQL_idents, $this->SQL_params) : 0;
                 break;
             default:
-                if (!$this->SQL) break;
+                if (!$this->SQL) {
+                    break;
+                }
                 $SQL = $this->SQL;
                 if ($this->_forUpdate) {
                     $SQL .= ' FOR UPDATE';

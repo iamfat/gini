@@ -141,7 +141,7 @@ class File
     public static function relativePath($to, $from = null)
     {
         if (!$from) {
-            $from = getcwd();
+            $from = APP_PATH;
         }
         // some compatibility fixes for Windows paths
         $from = is_dir($from) ? rtrim($from, '\/') : $from;

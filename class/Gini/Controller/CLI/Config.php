@@ -58,6 +58,7 @@ class Config extends \Gini\Controller\CLI
             if (!$row || $row[0] == '#') {
                 continue;
             }
+            putenv(\Gini\CLI\Env::normalize($row));
             list($key, ) = explode('=', trim($row), 2);
             $vars[$key] = true;
         }
@@ -92,7 +93,7 @@ class Config extends \Gini\Controller\CLI
             return null;
         };
 
-        $conf = \Gini\Config::fetch($envFile, true);
+        $conf = \Gini\Config::fetch(true);
         // 遍历$conf
         $conf = $filterEnvRelated($conf);
 

@@ -69,7 +69,7 @@ namespace Gini {
             */
             if ($path[0] != '/' && $path[0] != '.') {
                 // 相对路径
-                $npath = getcwd() . '/modules/' . $path;
+                $npath = APP_PATH . '/modules/' . $path;
                 $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/' . $path;
             }
             // $path = realpath($path);
@@ -145,7 +145,7 @@ namespace Gini {
                     // }
 
                     // use flat structure
-                    $npath = getcwd() . '/modules/' . $path;
+                    $npath = APP_PATH . '/modules/' . $path;
                     $path = is_dir($npath) ? $npath : $_SERVER['GINI_MODULE_BASE_PATH'] . '/' . $path;
                 } else {
                     $id = basename($path);
