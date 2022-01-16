@@ -3,7 +3,7 @@
     "name": "Gini PHP Framework",
     "description": "Gini PHP Framework",
     "author": "iamfat@gmail.com",
-    "version": "1.13.2",
+    "version": "2.0.0-dev",
     "build": {
         "copy": [
             "bin",
