@@ -8,7 +8,7 @@ class Env
 {
     public static function setup()
     {
-        $envPath = $_SERVER['PWD'] . '/.env';
+        $envPath = static::dotEnv();
         if (file_exists($envPath)) {
             $rows = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($rows as &$row) {
@@ -19,6 +19,11 @@ class Env
                 putenv($row);
             }
         }
+    }
+
+    public static function dotEnv()
+    {
+        return $_SERVER['PWD'] . '/.env';
     }
 
     public static function stripQuote($value)

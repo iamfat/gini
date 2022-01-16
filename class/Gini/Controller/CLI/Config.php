@@ -43,7 +43,7 @@ class Config extends \Gini\Controller\CLI
     public function actionMergeEnv($args)
     {
         $opt = \Gini\Util::getOpt($args, 'e:f', ['env:']);
-        $envFile = $opt['e'] ?? $opt['env'] ?? APP_PATH . '/.env';
+        $envFile = $opt['e'] ?? $opt['env'] ?? \Gini\CLI\Env::dotEnv();
         if ($envFile && !is_file($envFile)) {
             echo "Invalid env file.";
             return;
@@ -59,7 +59,7 @@ class Config extends \Gini\Controller\CLI
                 continue;
             }
             putenv(\Gini\CLI\Env::normalize($row));
-            list($key, ) = explode('=', trim($row), 2);
+            list($key,) = explode('=', trim($row), 2);
             $vars[$key] = true;
         }
 
