@@ -304,11 +304,11 @@ namespace Gini {
             switch ($mode) {
                 case 'desc':
                 case 'd':
-                    $this->_order_by[] = $fieldName . ' DESC';
+                    $this->_order_by[$fieldName] = 'DESC';
                     break;
                 case 'asc':
                 case 'a':
-                    $this->_order_by[] = $fieldName . ' ASC';
+                    $this->_order_by[$fieldName] = 'ASC';
                     break;
             }
 
@@ -353,7 +353,10 @@ namespace Gini {
 
             $order_SQL = '';
             if ($this->_order_by) {
-                $order_SQL = ' ORDER BY ' . implode(', ', $this->_order_by);
+                $order_by = array_map(function ($k, $v) {
+                    return "$k $v";
+                }, array_keys($this->_order_by), array_values($this->_order_by));
+                $order_SQL = ' ORDER BY ' . implode(', ', $order_by);
             }
 
             $limit_SQL = '';
@@ -366,9 +369,14 @@ namespace Gini {
             $quoted_fields = array_map(function ($field) use ($db, $table) {
                 return $db->ident($table, $field);
             }, array_keys($fields));
-            $id_col = $db->ident($table, 'id');
 
-            $this->SQL = trim("SELECT DISTINCT $id_col" . ($quoted_fields ? ',' . implode(',', $quoted_fields) : '')
+            $id_col = $db->ident($table, 'id');
+            array_unshift($quoted_fields, $id_col);
+            if ($this->_order_by) {
+                array_push($quoted_fields, ...array_keys($this->_order_by));
+            }
+
+            $this->SQL = trim("SELECT DISTINCT " . implode(',', array_unique($quoted_fields))
                 . "$from_SQL$where_SQL$order_SQL$limit_SQL");
             $this->count_SQL = trim("SELECT COUNT(DISTINCT $id_col) AS \"count\" $from_SQL $where_SQL");
 

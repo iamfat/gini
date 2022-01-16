@@ -35,7 +35,7 @@ class SQLHelper
         $this->table_name = $object->tableName();
         $this->db = $object->db();
 
-        $this->_table = 't'.$this->uniqid();
+        $this->_table = 't' . $this->uniqid();
     }
 
     private function _getValue($v, $raw = false)
@@ -70,7 +70,7 @@ class SQLHelper
             return $where[0];
         }
 
-        return '('.implode(' '.$op.' ', $where).')';
+        return '(' . implode(' ' . $op . ' ', $where) . ')';
     }
 
     public function limit($start, $per_page = null)
@@ -164,9 +164,9 @@ class SQLHelper
 
         $v = reset($values);
         if ($v instanceof self) {
-            $field_name = $db->ident($this->_table, $this->_field.'_id');
-            $this->_join[] = 'INNER JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
-                .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
+            $field_name = $db->ident($this->_table, $this->_field . '_id');
+            $this->_join[] = 'INNER JOIN ' . $db->ident($v->table_name) . ' AS ' . $db->quoteIdent($v->_table)
+                . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
             if ($v->_join) {
                 $this->_join = array_merge($this->_join, $v->_join);
             }
@@ -177,7 +177,7 @@ class SQLHelper
             foreach ($values as $v) {
                 $qv[] = $db->quote($v);
             }
-            $this->_where[] = $field_name.' IN ('.implode(', ', $qv).')';
+            $this->_where[] = $field_name . ' IN (' . implode(', ', $qv) . ')';
         }
 
         return $this;
@@ -192,9 +192,9 @@ class SQLHelper
 
         $v = reset($values);
         if ($v instanceof self) {
-            $field_name = $db->ident($this->_table, $this->_field.'_id');
-            $this->_join[] = 'LEFT JOIN '.$db->ident($v->table_name).' AS '.$db->quoteIdent($v->_table)
-                .' ON '.$field_name.'='.$db->ident($v->_table, 'id');
+            $field_name = $db->ident($this->_table, $this->_field . '_id');
+            $this->_join[] = 'LEFT JOIN ' . $db->ident($v->table_name) . ' AS ' . $db->quoteIdent($v->_table)
+                . ' ON ' . $field_name . '=' . $db->ident($v->_table, 'id');
             if ($v->_join) {
                 $this->_join = array_merge($this->_join, $v->_join);
             }
@@ -202,12 +202,12 @@ class SQLHelper
                 $this->_where = array_merge((array) $this->_where, $v->_where);
                 $this->_where[] = 'AND';
             }
-            $this->_where[] = $field_name.' IS NOT NULL';
+            $this->_where[] = $field_name . ' IS NOT NULL';
         } else {
             foreach ($values as $v) {
                 $qv[] = $db->quote($v);
             }
-            $this->_where[] = $field_name.' NOT IN ('.implode(', ', $qv).')';
+            $this->_where[] = $field_name . ' NOT IN (' . implode(', ', $qv) . ')';
         }
 
         return $this;
@@ -219,7 +219,7 @@ class SQLHelper
 
         $db = $this->db;
         $field_name = $db->ident($this->_table, $this->_field);
-        $this->_where[] = 'MATCH(' . $field_name.') AGAINST (' . $db->quote($value).')';
+        $this->_where[] = 'MATCH(' . $field_name . ') AGAINST (' . $db->quote($value) . ')';
 
         return $this;
     }
@@ -233,54 +233,54 @@ class SQLHelper
 
         switch ($op) {
             case '^=': {
-                $this->_where[] = $field_name.' LIKE '.$db->quote($v.'%');
-            }
-            break;
+                    $this->_where[] = $field_name . ' LIKE ' . $db->quote($v . '%');
+                }
+                break;
 
             case '$=': {
-                $this->_where[] = $field_name.' LIKE '.$db->quote('%'.$v);
-            }
-            break;
+                    $this->_where[] = $field_name . ' LIKE ' . $db->quote('%' . $v);
+                }
+                break;
 
             case '*=': {
-                $this->_where[] = $field_name.' LIKE '.$db->quote('%'.$v.'%');
-            }
-            break;
+                    $this->_where[] = $field_name . ' LIKE ' . $db->quote('%' . $v . '%');
+                }
+                break;
 
-            case '=': case '<>': {
-                if (is_object($v)) {
-                    $o = a($this->name);
-                    $field = $this->_field;
-                    $structure = $o->structure();
-                    if (array_key_exists('object', $structure[$field])) {
-                        if (!$structure[$field]['object']) {
-                            $obj_where[] = $db->ident($this->_table, $field.'_name').$op.$db->quote($v->name());
+            case '=':
+            case '<>': {
+                    if (is_object($v)) {
+                        $o = a($this->name);
+                        $field = $this->_field;
+                        $structure = $o->structure();
+                        if (array_key_exists('object', $structure[$field])) {
+                            if (!$structure[$field]['object']) {
+                                $obj_where[] = $db->ident($this->_table, $field . '_name') . $op . $db->quote($v->name());
+                            }
+
+                            $obj_where[] = $db->ident($this->_table, $field . '_id') . $op . intval($v->id);
+
+                            if ($op == '<>') {
+                                $this->_where[] = $this->_packWhere($obj_where, 'OR');
+                            } else {
+                                $this->_where[] = $this->_packWhere($obj_where, 'AND');
+                            }
+                            break;
                         }
-
-                        $obj_where[] = $db->ident($this->_table, $field.'_id').$op.intval($v->id);
-
+                    } elseif (is_null($v)) {
                         if ($op == '<>') {
-                            $this->_where[] = $this->_packWhere($obj_where, 'OR');
+                            $this->_where[] = $field_name . ' IS NOT NULL';
                         } else {
-                            $this->_where[] = $this->_packWhere($obj_where, 'AND');
+                            $this->_where[] = $field_name . ' IS NULL';
                         }
                         break;
                     }
-                } elseif (is_null($v)) {
-                    if ($op == '<>') {
-                        $this->_where[] = $field_name.' IS NOT NULL';
-                    } else {
-                        $this->_where[] = $field_name.' IS NULL';
-                    }
-                    break;
                 }
-            }
 
             default: {
-                // 这里是否需要接收一个 raw 参数再额外控制呢
-                $this->_where[] = $field_name.$op.$this->_getValue($v);
-            }
-
+                    // 这里是否需要接收一个 raw 参数再额外控制呢
+                    $this->_where[] = $field_name . $op . $this->_getValue($v);
+                }
         }
 
         return $this;
@@ -337,8 +337,8 @@ class SQLHelper
         assert($this->_field);
         $db = $this->db;
         $field_name = $db->ident($this->_table, $this->_field);
-        $this->_where[] = '('.$field_name.'>='.$this->_getValue($a, $raw).
-            ' AND '.$field_name.'<'.$this->_getValue($b, $raw).')';
+        $this->_where[] = '(' . $field_name . '>=' . $this->_getValue($a, $raw) .
+            ' AND ' . $field_name . '<' . $this->_getValue($b, $raw) . ')';
 
         return $this;
     }
@@ -347,15 +347,16 @@ class SQLHelper
     {
         $db = $this->db;
         $mode = strtolower($mode);
+        $fieldName = $db->ident($this->_table, $field);
         switch ($mode) {
             case 'desc':
             case 'd':
-            $this->_order_by[] = $db->ident($this->_table, $field).' DESC';
-            break;
+                $this->_order_by[$fieldName] = 'DESC';
+                break;
             case 'asc':
             case 'a':
-            $this->_order_by[] = $db->ident($this->_table, $field).' ASC';
-            break;
+                $this->_order_by[$fieldName] = 'ASC';
+                break;
         }
 
         return $this;
@@ -363,7 +364,7 @@ class SQLHelper
 
     public function where(array $where)
     {
-        $this->_where = count($where) > 1 ? ['('.implode(') AND (', $where).')'] : $where;
+        $this->_where = count($where) > 1 ? ['(' . implode(') AND (', $where) . ')'] : $where;
 
         return $this;
     }
@@ -390,25 +391,32 @@ class SQLHelper
         $db = $this->db;
         $table = $this->_table;
 
-        $from_SQL = ' FROM '.$db->ident($this->table_name).' AS '.$db->quoteIdent($this->_table);
+        $from_SQL = ' FROM ' . $db->ident($this->table_name) . ' AS ' . $db->quoteIdent($this->_table);
         if ($this->_join) {
-            $from_SQL .= ' '.implode(' ', $this->_join);
+            $from_SQL .= ' ' . implode(' ', $this->_join);
         }
 
         if ($this->_where) {
-            $where_SQL = ' WHERE '.implode(' ', $this->_where);
+            $where_SQL = ' WHERE ' . implode(' ', $this->_where);
         }
 
         if ($this->_order_by) {
-            $order_SQL = ' ORDER BY '.implode(', ', $this->_order_by);
+            $order_by = array_map(function ($k, $v) {
+                return "$k $v";
+            }, array_keys($this->_order_by), array_values($this->_order_by));
+            $order_SQL = ' ORDER BY ' . implode(', ', $order_by);
         }
 
         if ($this->_limit) {
-            $limit_SQL = ' LIMIT '.$this->_limit;
+            $limit_SQL = ' LIMIT ' . $this->_limit;
         }
 
-        $id_col = $db->ident($table, 'id');
-        $SQL = trim("SELECT DISTINCT $id_col$from_SQL$where_SQL$order_SQL$limit_SQL");
+        $quoted_fields = [$db->ident($table, 'id')];
+        if ($this->_order_by) {
+            $quoted_fields += array_keys($this->_order_by);
+        }
+
+        $SQL = trim("SELECT DISTINCT " . implode(',', array_unique($quoted_fields)) . "$from_SQL$where_SQL$order_SQL$limit_SQL");
 
         unset($this->_join);
         unset($this->_where);

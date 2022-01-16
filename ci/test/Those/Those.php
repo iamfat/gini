@@ -260,12 +260,12 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         \Gini\Those::reset();
         $those = those('user')->orderBy('gender');
         $those->makeSQL();
-        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" ORDER BY "t0"."gender" ASC', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description","t0"."gender" FROM "user" AS "t0" ORDER BY "t0"."gender" ASC', $those->SQL());
 
         \Gini\Those::reset();
         $those = those('user')->orderBy('friend.gender');
         $those->makeSQL();
-        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" LEFT JOIN "_user_friend" AS "t1" ON "t1"."user_id"="t0"."id" LEFT JOIN "user" AS "t2" ON "t1"."friend_id"="t2"."id" ORDER BY "t2"."gender" ASC', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description","t2"."gender" FROM "user" AS "t0" LEFT JOIN "_user_friend" AS "t1" ON "t1"."user_id"="t0"."id" LEFT JOIN "user" AS "t2" ON "t1"."friend_id"="t2"."id" ORDER BY "t2"."gender" ASC', $those->SQL());
     }
 
     public function testStringMatch()
