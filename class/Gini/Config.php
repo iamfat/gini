@@ -119,13 +119,11 @@ class Config
                             }
 
                             $replaceCallback = function ($matches) use ($keepVars) {
-                                if (isset($matches[1])) {
-                                    $name = $matches[1];
-                                    $defaultValue = $matches[2] ?? '';
-                                    $envValue = CLI\Env::get($name, $defaultValue);
-                                    if ($keepVars) {
-                                        return '${' . $matches[1] . (strlen($envValue) > 0 ? ':=' . addslashes($envValue) : '') . '}';
-                                    }
+                                $name = $matches[1];
+                                $defaultValue = $matches[2] ?? '';
+                                $envValue = CLI\Env::get($name, $defaultValue);
+                                if ($keepVars) {
+                                    return '${' . $matches[1] . (strlen($envValue) > 0 ? ':=' . addslashes($envValue) : '') . '}';
                                 }
                                 return $envValue;
                             };
