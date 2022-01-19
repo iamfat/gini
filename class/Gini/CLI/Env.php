@@ -41,15 +41,10 @@ class Env
         list($key, $value) = explode('=', trim($row), 2);
         $value = static::stripQuote($value);
         $value = trim(preg_replace_callback('/\$\{([A-Z0-9_]+?)\s*(?:\:\=\s*(.*?))?\s*\}/i', function ($matches) {
-            $envValue = getenv($matches[1]);
-            if ($envValue === false) {
-                $envValue = static::stripQuote($matches[2] ?? '');
-            }
-            return $envValue;
+            return static::get($matches[1], $matches[2] ?? '');
         }, $value));
 
-        $row = $key . '=' . addslashes($value);
-        return $row;
+        return $key . '=' . addslashes($value);
     }
 
     public static function get($name, $defaultValue = '')
