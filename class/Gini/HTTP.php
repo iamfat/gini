@@ -91,6 +91,7 @@ class HTTP
             CURLOPT_DNS_USE_GLOBAL_CACHE => false,
             CURLOPT_DNS_CACHE_TIMEOUT => 0,
             CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_HEADER => true,
             CURLOPT_AUTOREFERER => true,
             CURLOPT_FOLLOWLOCATION => true,
