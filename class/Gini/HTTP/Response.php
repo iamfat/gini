@@ -33,7 +33,7 @@ class Response
 
     public function status()
     {
-        preg_match('|HTTP/(\d\.\d)\s+(\d+)\s+(.*)|', $this->status, $parts);
+        preg_match('|HTTP/([\d.]+)\s+(\d+)\s+(.*)|', $this->status, $parts);
 
         return (object) [
             'version' => $parts[1],
