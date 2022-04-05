@@ -214,6 +214,7 @@ namespace Gini {
 
                     if ($this->_forUpdate) {
                         $SQL .= ' FOR UPDATE';
+                        $this->_forUpdate = false; // add FOR UPDATE for only once
                     }
 
                     $result = $db->query($SQL);
@@ -239,6 +240,7 @@ namespace Gini {
             foreach ($this->structure() as $k => $v) {
                 unset($this->$k); //empty all public properties
             }
+            $this->_forUpdate = true;
         }
 
         public function __construct($criteria = null)

@@ -93,6 +93,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $this->setFetchFlag('*', false);
             $this->SQL = null;
             $this->count_SQL = null;
+            $this->_forUpdate = true;
         }
     }
 
@@ -138,6 +139,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
                 $SQL = $this->SQL;
                 if ($this->_forUpdate) {
                     $SQL .= ' FOR UPDATE';
+                    $this->_forUpdate = false; // add FOR UPDATE for only once
                 }
                 $result = $this->db->query($SQL, $this->SQL_idents, $this->SQL_params);
 
