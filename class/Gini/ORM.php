@@ -217,6 +217,7 @@ abstract class ORM
 
                 if ($this->_forUpdate) {
                     $SQL .= ' FOR UPDATE';
+                    $this->_forUpdate = false; // add FOR UPDATE for only once
                 }
 
                 $result = $db->query($SQL);
@@ -242,6 +243,7 @@ abstract class ORM
         foreach ($this->structure() as $k => $v) {
             unset($this->$k); //empty all public properties
         }
+        $this->_forUpdate = true;
     }
 
     public function __construct($criteria = null)
