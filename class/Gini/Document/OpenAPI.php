@@ -122,7 +122,21 @@ class OpenAPI
             $pathUnits = array_map(function ($u) {
                 return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $u));
             }, $pathUnits);
-            $pathUnits[] = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $matches[2]));
+
+            if (strtolower($matches[2]) != 'default') {
+                $pathUnits[] = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $matches[2]));
+            }
+
+            if (count($unit->params) > 0) {
+                foreach ($unit->params as $param) {
+                    $docParam = strtr(ucwords(strtr($param['name'], [ '_' => ' ', '-' => ' '])), ' ', '');
+                    $docParam[0] = strtolower($docParam[0]);
+                    if (isset($param['default'])) {
+                        $docParam .= '=' . strval($param['default']);
+                    }
+                    $pathUnits[] = '{' . $docParam . '}';
+                }
+            }
 
             $route = '/' . implode('/', $pathUnits);
 
