@@ -2,12 +2,8 @@
 
 namespace Gini\Document;
 
+use Doctrine\Common\Annotations\DocParser;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\AnnotationRegistry;
-
-AnnotationRegistry::registerUniqueLoader(function ($class) {
-    return \Gini\Core::autoload($class);
-});
 
 class OpenAPI
 {
@@ -19,10 +15,12 @@ class OpenAPI
             'parameters' => [],
         ];
 
-        $reader = new AnnotationReader();
+        $parser = new DocParser();
+        $parser->setIgnoreNotImportedAnnotations(true);
+        $reader = new AnnotationReader($parser);
         $anns = $reader->getMethodAnnotations($rm);
         foreach ($anns as $ann) {
-            if ($ann instanceof \Gini\REST\OpenAPI\Response) {
+            if ($ann instanceof \Gini\Document\OpenAPI\Response) {
                 $content = [];
                 if ($ann->content) {
                     foreach ($ann->content as $mediaType) {
