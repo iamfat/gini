@@ -42,13 +42,6 @@ abstract class CGI
     public $env;
 
     /**
-     * route to current controller.
-     *
-     * @var string
-     **/
-    public $route;
-
-    /**
      * contains all middlware instances for current controller
      *
      * @var array
