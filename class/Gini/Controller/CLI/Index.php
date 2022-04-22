@@ -169,8 +169,14 @@ class Index extends \Gini\Controller\CLI
         $appId = APP_ID;
         $version = $argv[0] ?? \Gini\Core::moduleInfo($appId)->version;
 
-        $GIT_DIR = escapeshellarg(APP_PATH . '/.git');
-        $command = "git --git-dir=$GIT_DIR archive $version --format tgz 2> /dev/null";
+        $EXCLUDES = '--exclude "./vendor" --exclude "./modules" --exclude "./composer.*" --exclude "./.*"';
+        $giniIgnore = APP_PATH . '/.gini-ignore';
+        if (file_exists($giniIgnore)) {
+            $EXCLUDES .= ' -X ' . escapeshellarg($giniIgnore);
+        }
+
+        $REPO_DIR = escapeshellarg(APP_PATH);
+        $command = "tar c -C $REPO_DIR $EXCLUDES -z . 2> /dev/null";
 
         $ph = popen($command, 'r');
         if (is_resource($ph)) {
