@@ -244,124 +244,126 @@ class Index extends \Gini\Controller\CLI
         }
 
         $this->_runWithAuthorization(function ($client, $headers) use ($argv) {
-            $installedModules = [];
-            $installModule = function ($module, $versionRange, $targetDir, $isApp = false) use (&$installModule, &$installedModules, &$client, &$options, &$headers) {
-                if (isset($installedModules[$module])) {
-                    $info = $installedModules[$module];
-                    $v = new \Gini\Version($info->version);
-                    // if installed version is incorrect, abort the operation.
-                    if (!$v->satisfies($versionRange)) {
-                        die("Conflict detected on $module! Installed: {$v->fullVersion} Expecting: $versionRange\n");
-                    }
+            $loadedModules = [];
+
+            $loadModule = function ($name, $versionRange) use (&$loadedModules, &$client, &$headers) {
+                if (isset($loadedModules[$name])) {
+                    $module = $loadedModules[$name];
                 } else {
                     // try to see if we've already got it somewhere
-                    if (isset(\Gini\Core::$MODULE_INFO[$module])) {
-                        $info = \Gini\Core::$MODULE_INFO[$module];
-                        $v = new \Gini\Version($info->version);
+                    if (isset(\Gini\Core::$MODULE_INFO[$name])) {
+                        $module = \Gini\Core::$MODULE_INFO[$name];
+                        $v = new \Gini\Version($module->version);
                         if ($v->satisfies($versionRange)) {
-                            $matched = $v;
+                            $matched = $module;
+                            $matchedVersion = $v;
                         }
                     }
 
                     // fetch index.json
-                    echo "Fetching catalog of {$module}...\n";
-                    $response = $client->request('GET', $module . '/index.json', null, $headers);
+                    echo "Fetching catalog of {$name}...\n";
+                    $response = $client->request('GET', $name . '/index.json', null, $headers);
                     if ($response['statusCode'] != 404) {
                         $this->_responseMustSucceed($response);
-                        $indexInfo = (array) json_decode($response['body'], true);
+                        $moduleIndex = (array) json_decode($response['body'], true);
                         // find latest match version
-                        foreach ($indexInfo as $version => $foo) {
+                        foreach ($moduleIndex as $version => $m) {
+                            if (!$m) continue;
                             $v = new \Gini\Version($version);
                             if ($v->satisfies($versionRange)) {
-                                if ($matched) {
-                                    if ($matched->compare($v) > 0) {
-                                        continue;
-                                    }
+                                if ($matchedVersion && $matchedVersion->compare($v) > 0) {
+                                    continue;
                                 }
-                                $matched = $v;
+                                $matchedVersion = $v;
+                                $matched = (object) $m;
                             }
                         }
                     }
 
                     if (!$matched) {
-                        die("Failed to locate required version!\n");
+                        die("  Failed to locate required version!\n");
                     }
 
-                    if (!$info || $matched->fullVersion != $info->version) {
-                        $version = $matched->fullVersion;
-                        $info = (object) $indexInfo[$version];
-
-                        $cacheDir = $_SERVER['HOME'] . '/.gini-modules';
-
-                        $tarPath = "{$module}/{$version}.tgz";
-                        $cacheTarPath = "$cacheDir/$tarPath";
-                        if (file_exists($cacheTarPath)) {
-                            echo "Reading {$tarPath} in local cache...\n";
-                            $moduleContent = file_get_contents($cacheTarPath);
-                        } else {
-                            echo "Downloading {$module} from {$tarPath}...\n";
-                            $response = $client->request('GET', $tarPath, null, $headers);
-                            $this->_responseMustSucceed($response);
-                            $moduleContent = $response['body'];
-                            \Gini\File::ensureDir(dirname($cacheTarPath));
-                            file_put_contents($cacheTarPath, $moduleContent);
-                        }
-
-                        if ($isApp) {
-                            $modulePath = $targetDir;
-                        } else {
-                            $modulePath = "$targetDir/modules/$module";
-                        }
-
-                        if (is_dir($modulePath) && file_exists($modulePath)) {
-                            \Gini\File::removeDir($modulePath);
-                        }
-                        \Gini\File::ensureDir($modulePath);
-                        echo "Extracting {$module}...\n";
-                        $ph = popen('tar -zx -C ' . escapeshellcmd($modulePath), 'w');
-                        if (is_resource($ph)) {
-                            fwrite($ph, $moduleContent);
-                            pclose($ph);
-                        }
-                    } else {
-                        $version = $info->version;
-                        echo "Found local copy of {$module}/{$version}.\n";
+                    if (!$module || $matched->version != $module->version) {
+                        $module = $matched;
                     }
-
-                    $installedModules[$module] = $info;
-                    echo "\n";
                 }
 
-                if ($info) {
-                    foreach ((array) $info->dependencies as $m => $r) {
-                        if ($m == 'gini') {
-                            continue;
-                        }
-                        $installModule($m, $r, $targetDir, false);
+                $loadedModules[$name] = $module;
+                return $module;
+            };
+
+            $installModule = function ($module, $targetDir) use (&$installModule, &$loadModule, &$client, &$headers) {
+                $name = $module->id;
+                $version = $module->version;
+
+                if ($name !== APP_ID &&  (!isset(\Gini\Core::$MODULE_INFO[$name]) || \Gini\Core::$MODULE_INFO[$name]->version !== $version)) {
+
+                    echo "Installing $name/$version...\n";
+                    $cacheDir = $_SERVER['HOME'] . '/.gini-modules';
+                    $tarPath = "{$name}/{$version}.tgz";
+                    $cacheTarPath = "$cacheDir/$tarPath";
+                    if (file_exists($cacheTarPath)) {
+                        echo "  Reading {$tarPath} in local cache...\n";
+                        $moduleContent = file_get_contents($cacheTarPath);
+                    } else {
+                        echo "  Downloading {$name} from {$tarPath}...\n";
+                        $response = $client->request('GET', $tarPath, null, $headers);
+                        $this->_responseMustSucceed($response);
+                        $moduleContent = $response['body'];
+                        \Gini\File::ensureDir(dirname($cacheTarPath));
+                        file_put_contents($cacheTarPath, $moduleContent);
                     }
+
+                    if ($name === APP_ID) {
+                        $modulePath = $targetDir;
+                    } else {
+                        $modulePath = "$targetDir/modules/$name";
+                    }
+
+                    if (is_dir($modulePath) && file_exists($modulePath)) {
+                        \Gini\File::removeDir($modulePath);
+                    }
+                    \Gini\File::ensureDir($modulePath);
+                    echo "  Extracting {$name}...\n";
+                    $ph = popen('tar -zx -C ' . escapeshellcmd($modulePath), 'w');
+                    if (is_resource($ph)) {
+                        fwrite($ph, $moduleContent);
+                        pclose($ph);
+                    }
+                }
+
+                $deps = [];
+                foreach ((array) $module->dependencies as $name => $r) {
+                    if ($name == 'gini') {
+                        continue;
+                    }
+                    $deps[] = $loadModule($name, $r);
+                }
+                foreach ($deps as $dep) {
+                    $installModule($dep, $targetDir);
                 }
             };
 
             if (count($argv) > 0) {
                 // e.g. gini install xxx
                 $module = $argv[0];
-
                 if (count($argv) > 1) {
                     $versionRange = $argv[1];
                 } else {
                     $versionRange = readline('Please provide a version constraint for the ' . $module . ' requirement:');
                 }
-
-                $installModule($module, $versionRange, $_SERVER['PWD'] . "/$module", true);
+                $targetDir = $_SERVER['PWD'] . "/$module";
+                $app = $loadModule($module, $versionRange);
             } else {
                 // run: gini install, then you should be in module directory
-                if (APP_ID != 'gini') {
-                    // try to install its dependencies
-                    $app = \Gini\Core::moduleInfo(APP_ID);
-                    $installedModules[APP_ID] = $app;
-                    $installModule(APP_ID, $app->version, APP_PATH, true);
+                if (APP_ID == 'gini') {
+                    return;
                 }
+                $app = \Gini\Core::moduleInfo(APP_ID);
+                $targetDir = APP_PATH;
             }
+            $installModule($app, $targetDir);
         });
     }
 
