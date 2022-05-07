@@ -176,7 +176,7 @@ class Index extends \Gini\Controller\CLI
         }
 
         $REPO_DIR = escapeshellarg(APP_PATH);
-        $command = "tar c -C $REPO_DIR $EXCLUDES -z . 2> /dev/null";
+        $command = "tar c -C $REPO_DIR $EXCLUDES -z * 2> /dev/null";
 
         $ph = popen($command, 'r');
         if (is_resource($ph)) {
