@@ -40,6 +40,10 @@ class MySQL extends \PDO implements Driver
     public function __construct($dsn, $username = null, $password = null, $options = null)
     {
         $options = (array) $options;
+        if (!isset($options['charset'])) {
+            $options['charset'] = 'utf8';
+        }
+
         parent::__construct($dsn, $username, $password, $options);
         $this->_options = $options;
 
@@ -48,7 +52,6 @@ class MySQL extends \PDO implements Driver
         }
 
         //enable ANSI mode
-        $this->query('SET NAMES \'utf8\'');
         $this->query('SET sql_mode=\'ANSI\'');
     }
 
