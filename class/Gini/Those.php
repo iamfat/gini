@@ -319,24 +319,24 @@ namespace Gini {
         {
             if ($this->_condition) {
                 $condition = $this->_condition;
-                $this->condition = null;
+                $this->_condition = null;
                 $this->_meet($condition);
             }
         }
 
         public function makeSQL()
         {
-            $this->finalizeCondition();
-
-            $db = $this->db;
-            $table = $this->_table;
-
             if (!$this->_withTrashed) {
                 $properties = a($this->name)->properties();
                 if (isset($properties['deleted_at'])) {
                     $this->andWhose('deleted_at')->is(null);
                 }
             }
+
+            $this->finalizeCondition();
+
+            $db = $this->db;
+            $table = $this->_table;
 
             if ($this->_join) {
                 $this->_from[0] .= ' ' . implode(' ', $this->_join);
