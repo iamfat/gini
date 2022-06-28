@@ -751,7 +751,7 @@ namespace Gini {
         private function _prepareName()
         {
             // remove Gini/ORM
-            list(, , $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
+            list(,, $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
             $this->_name = $name;
             $this->_tableName = str_replace('/', '_', $name);
         }
@@ -986,9 +986,7 @@ namespace Gini {
                 return [];
             }
 
-            if (class_exists('\Doctrine\Common\Inflector\Inflector')) {
-                $field = \Doctrine\Common\Inflector\Inflector::singularize($field);
-            }
+            $field = \Gini\Util::singularize($field);
 
             $manyStructure = $this->manyStructure();
             if (!isset($manyStructure[$field])) {

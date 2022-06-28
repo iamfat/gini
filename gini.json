@@ -29,7 +29,7 @@
         ],
         "require": {
             "sabre/dav": "^4.1",
-            "doctrine/inflector": "^1.3",
+            "doctrine/inflector": "^2",
             "doctrine/annotations": "^1.10",
             "dragonmantank/cron-expression": "^3.0"
         }

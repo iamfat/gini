@@ -76,7 +76,7 @@ class Util
             if (!preg_match('|^[a-z][a-z0-9-_]+$|i', $arg)) {
                 break;
             }
-            $path .= '/'.$arg;
+            $path .= '/' . $arg;
             $candidates[$path] = $argv;
         }
 
@@ -159,7 +159,7 @@ class Util
                             if ($o == ':' || $o == '::') {
                                 $oval = array_shift($argv);
                                 if (!$oval) {
-                                    throw new \Exception('missing arguments for -'.$v[1]);
+                                    throw new \Exception('missing arguments for -' . $v[1]);
                                 }
                                 $opt[$okey] = $oval;
                             } else {
@@ -175,9 +175,30 @@ class Util
                 }
             }
         } catch (\Exception $e) {
-            error_log('\Gini\Util::getOpt error: '.$e->getMessage());
+            error_log('\Gini\Util::getOpt error: ' . $e->getMessage());
         }
 
         return $opt;
+    }
+
+    private static $inflector;
+    private static function getInflector()
+    {
+        if (!self::$inflector && class_exists('\Doctrine\Inflector\InflectorFactory')) {
+            self::$inflector = \Doctrine\Inflector\InflectorFactory::create()->build();
+        }
+        return self::$inflector;
+    }
+
+    public static function singularize($str)
+    {
+        $inflector = self::getInflector();
+        return $inflector ? $inflector->singularize($str) : $str;
+    }
+
+    public static function pluralize($str)
+    {
+        $inflector = self::getInflector();
+        return $inflector ? $inflector->pluralize($str) : $str;
     }
 }
