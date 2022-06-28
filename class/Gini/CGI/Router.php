@@ -87,6 +87,37 @@ class Router
         return $this;
     }
 
+    public static function fromJSON($json)
+    {
+        $router = new self($json['base'], $json['options']);
+        if (isset($json['middlewares'])) {
+            $router->middlewares = $json['middlewares'];
+        }
+        if (isset($json['rules'])) {
+            $router->rules = [];
+            foreach ($json['rules'] as $k => $rule) {
+                $rule['dest'] = is_string($rule['dest']) ? $rule['dest'] : self::fromJSON($rule['dest']);
+                $router->rules[$k] = $rule;
+            }
+        }
+        return $router;
+    }
+
+    public function toJSON()
+    {
+        $json = [
+            'base' => $this->baseRoute,
+            'options' => $this->options,
+            'rules' => [],
+            'middlewares' => $this->middlewares,
+        ];
+        foreach ($this->rules as $k => $rule) {
+            $rule['dest'] = is_string($rule['dest']) ? $rule['dest'] : $rule['dest']->toJSON();
+            $json['rules'][$k] = $rule;
+        }
+        return $json;
+    }
+
     public function match($methods, $route, $dest, $options = [])
     {
         list($route, $regex, $params) = $this->_parseRoute($route);
@@ -97,6 +128,7 @@ class Router
             call_user_func($dest, $router);
             $dest = $router;
         } else {
+            $dest = strtr($dest, ['::' => '@']); // allow both '::' and '@'
             if ($dest[0] != '\\') {
                 $dest = ($options['classPrefix'] ?? '\\Gini\\Controller\\CGI\\') . $dest;
             }

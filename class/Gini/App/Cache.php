@@ -149,6 +149,20 @@ class Cache
         echo "   \e[32mdone.\e[0m\n";
     }
 
+    private static function _cacheRouters()
+    {
+        printf("%s\n", 'Updating router cache...');
+
+        $router = \Gini\CGI::router(true);
+        $router_cache = $router->toJSON();
+        \Gini\File::ensureDir(APP_PATH . '/cache');
+        file_put_contents(
+            APP_PATH . '/cache/router.json',
+            J($router_cache)
+        );
+        echo "   \e[32mdone.\e[0m\n";
+    }
+
     public static function setup()
     {
         self::_cacheClass();
@@ -158,6 +172,9 @@ class Cache
         echo "\n";
 
         self::_cacheConfig();
+        echo "\n";
+
+        self::_cacheRouters();
         echo "\n";
 
         // check gini dependencies

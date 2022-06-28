@@ -192,15 +192,24 @@ class CGI
         }
     }
 
-    public static function router()
+    public static function router($nocache = true)
     {
         static $router;
         if (!$router && class_exists('\Gini\CGI\Router')) {
-            $router = \Gini\IoC::construct('\Gini\CGI\Router');
-            foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
-                $moduleClass = '\Gini\Module\\' . strtr($name, ['-' => '', '_' => '', '/' => '']);
-                if (!isset($info->error) && method_exists($moduleClass, 'cgiRoute')) {
-                    call_user_func([$moduleClass, 'cgiRoute'], $router);
+            // load router cache
+            $router_cache_file = $_SERVER['GINI_APP_PATH'] . '/cache/router.json';
+            if (!$nocache && file_exists($router_cache_file)) {
+                $router_cache = @json_decode(@file_get_contents($router_cache_file), true);
+                if ($router_cache) {
+                    $router = \Gini\CGI\Router::fromJSON($router_cache);
+                }
+            } else {
+                $router = new \Gini\CGI\Router();
+                foreach (\Gini\Core::$MODULE_INFO as $name => $info) {
+                    $moduleClass = '\Gini\Module\\' . strtr($name, ['-' => '', '_' => '', '/' => '']);
+                    if (!isset($info->error) && method_exists($moduleClass, 'cgiRoute')) {
+                        call_user_func([$moduleClass, 'cgiRoute'], $router);
+                    }
                 }
             }
         }
