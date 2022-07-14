@@ -139,17 +139,36 @@ abstract class CGI
      *
      * @return array Return corresponding form data
      */
-    public function form($mode = '*')
+    public function form($mode = '*', $data = null, $overwrite = false)
     {
-        switch ($mode) {
-            case 'get':
-                return $this->env['get'] ?? [];
-            case 'post':
-                return $this->env['post'] ?? [];
-            case 'files':
-                return $this->env['files'] ?? [];
-            default:
-                return array_merge($this->env['get'] ?? [], $this->env['post'] ?? []);
+        if ($data === null) {
+            switch ($mode) {
+                case 'get':
+                    return $this->env['get'] ?? [];
+                case 'post':
+                    return $this->env['post'] ?? [];
+                case 'files':
+                    return $this->env['files'] ?? [];
+                default:
+                    return array_merge($this->env['get'] ?? [], $this->env['post'] ?? []);
+            }
+        } else {
+            switch ($mode) {
+                case 'get':
+                    $this->env['get'] = $this->env['get'] ?? [];
+                    if ($overwrite) {
+                        $this->env['get'] = $data;
+                    } else {
+                        array_merge($this->env['get'], $data);
+                    }
+                case 'post':
+                    $this->env['post'] = $this->env['post'] ?? [];
+                    if ($overwrite) {
+                        $this->env['post'] = $data;
+                    } else {
+                        array_merge($this->env['post'], $data);
+                    }
+            }
         }
     }
 
