@@ -34,12 +34,12 @@ namespace Gini {
             if ($query) {
                 if ($ui['query']) {
                     if (is_string($query)) {
-                        parse_str($query, $query);
+                        $query = self::parseQuery($query);
                     }
-                    parse_str($ui['query'], $old_query);
-                    $ui['query'] = http_build_query(array_merge($old_query, $query));
+                    $old_query = self::parseQuery($ui['query']);
+                    $ui['query'] = self::buildQuery(array_merge($old_query, $query));
                 } else {
-                    $ui['query'] = is_string($query) ? $query : http_build_query($query);
+                    $ui['query'] = is_string($query) ? $query : self::buildQuery($query);
                 }
             }
 
@@ -172,6 +172,41 @@ namespace Gini {
             }
 
             return self::_rurl_mod($path, $type);
+        }
+
+        public static function parseQuery($str)
+        {
+            $arr = [];
+            $str = ltrim($str, '?');
+            $pairs = explode('&', $str);
+            foreach ($pairs as $pair) {
+                list($name, $value) = explode('=', $pair, 2);
+                if (isset($arr[$name])) {
+                    if (is_array($arr[$name])) {
+                        $arr[$name][] = $value;
+                    } else {
+                        $arr[$name] = [$arr[$name], $value];
+                    }
+                } else {
+                    $arr[$name] = $value;
+                }
+            }
+            return $arr;
+        }
+
+        public static function buildQuery($pairs)
+        {
+            $arr = [];
+            foreach ($pairs as $k => $v) {
+                if (is_array($v)) {
+                    foreach ($v as $vv) {
+                        array_push($arr, rawurlencode($k) . '=' . rawurlencode($vv));
+                    }
+                } else {
+                    array_push($arr, rawurlencode($k) . '=' . rawurlencode($v));
+                }
+            }
+            return join('&', $arr);
         }
     }
 }

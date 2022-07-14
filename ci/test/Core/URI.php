@@ -47,6 +47,13 @@ class URI extends \Gini\PHPUnit\TestCase\CLI
         self::assertEquals(RURL('http://abc.com/ade/hello.js', 'js'), 'http://abc.com/ade/hello.js');
     }
 
+    public function testParseQuery()
+    {
+        self::assertEquals(\Gini\URI::parseQuery("?a=1&a=2&a=3&b=4"), ['a' => [1, 2, 3], 'b' => 4]);
+        self::assertEquals(\Gini\URI::parseQuery("a=1&a=2&a=3&b=4"), ['a' => [1, 2, 3], 'b' => 4]);
+        self::assertEquals(\Gini\URI::buildQuery(['a' => [1, 2, 3], 'b' => 4]), "a=1&a=2&a=3&b=4");
+    }
+
     public function tearDown(): void
     {
         $_SERVER['HTTP_HOST'] = $this->_SERVER['HTTP_HOST'] ?? null;

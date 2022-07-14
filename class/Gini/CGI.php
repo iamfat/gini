@@ -54,6 +54,11 @@ class CGI
         if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
             $_SERVER['REQUEST_METHOD'] = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'];
         }
+        // PHP uses a non-standards compliant practice for $_GET, fix it here
+        if (isset($_SERVER['QUERY_STRING'])) {
+            $_GET = URI::parseQuery($_SERVER['QUERY_STRING']);
+        }
+
         return [
             'get' => $_GET, 'post' => $_POST,
             'files' => $_FILES, 'server' => $_SERVER, 'cookie' => $_COOKIE,
@@ -244,7 +249,7 @@ class CGI
         if (explode(';', $_SERVER['CONTENT_TYPE'], 2)[0] == 'application/json') {
             $_POST = (array) @json_decode(self::content(), true);
         } elseif (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
-            @parse_str(self::content(), $_POST);
+            $_POST = URI::parseQuery(self::content());
         }
         static::$requestOptions = $options;
 

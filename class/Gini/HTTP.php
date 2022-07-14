@@ -130,7 +130,7 @@ class HTTP
                 if ($method != 'GET' && $contentType == 'application/json') {
                     $query = json_encode((object) $query, JSON_UNESCAPED_UNICODE);
                 } else {
-                    $query = http_build_query($query);
+                    $query = URI::buildQuery($query);
                 }
             }
         }

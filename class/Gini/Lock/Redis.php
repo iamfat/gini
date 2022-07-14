@@ -2,6 +2,8 @@
 
 namespace Gini\Lock;
 
+use \Gini\URI;
+
 class Redis implements Driver
 {
     private $_instances = [];
@@ -17,19 +19,17 @@ class Redis implements Driver
         $urls = array_map('trim', explode(',', $path));
         foreach ($urls as $url) {
             $u = parse_url($url);
-            if (!$u['host']) {
-                continue;
-            }
-            if ($u['query']) {
-                $q = parse_str($u['query']);
-            }
+            if (!isset($u['host'])) continue;
+            $q = isset($u['query']) ? URI::parseQuery($u['query']) : [];
             $redis = new \Redis();
             $redis->connect($u['host'], $u['port'] ?? 6379, 0.01);
-            $q['auth'] and $redis->auth($q['auth']);
+            if (isset($q['auth'])) {
+                $redis->auth($q['auth']);
+            }
             $this->_instances[$url] = $redis;
         }
         $this->_quorum = min(count($this->_instances), (count($this->_instances) / 2 + 1));
-        $this->_resource = $resource.'-lock';
+        $this->_resource = $resource . '-lock';
         $this->_token = uniqid();
     }
 
