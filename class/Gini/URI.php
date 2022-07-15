@@ -16,6 +16,9 @@
 
 namespace Gini {
 
+    const ARRAY_FORM_REGEX = '#^([^\[]+)(\[.*\])$#i';
+    const ARRAY_UNIT_REGEX = '#\[(.*?)\]#';
+
     class URI
     {
         public static function url($url = null, $query = null, $fragment = null)
@@ -176,7 +179,7 @@ namespace Gini {
 
         public static function parseQuery($str)
         {
-            $arr = [];
+            $query = [];
             $str = ltrim($str, '?');
             $pairs = explode('&', $str);
             foreach ($pairs as $pair) {
@@ -184,32 +187,64 @@ namespace Gini {
                 list($name, $value) = explode('=', $pair, 2);
                 $name = rawurldecode($name);
                 $value = rawurldecode($value);
-                if (isset($arr[$name])) {
-                    if (is_array($arr[$name])) {
-                        $arr[$name][] = $value;
+                // for backward-compatibilty, parse [], [xxx]
+                if (preg_match(ARRAY_FORM_REGEX, $name, $array_matches)) {
+                    $name = $array_matches[1];
+                    if (!isset($query[$name])) {
+                        $query[$name] = [];
+                    } else if (!is_array($query[$name])) {
+                        $query[$name] = [$query[$name]];
+                    }
+                    preg_match_all(ARRAY_UNIT_REGEX, $array_matches[2], $unit_matches);
+                    $v = &$query[$name];
+                    $k = array_pop($unit_matches[1]);
+                    foreach ($unit_matches[1] as $unit) {
+                        if ($unit === '') {
+                            // just refer to last item of the array
+                            $vl = count($v);
+                            if ($vl < 1) {
+                                $v[] = [];
+                                $vl++;
+                            }
+                            $v = &$v[$vl - 1];
+                            continue;
+                        }
+                        if (!isset($v[$unit])) {
+                            $v[$unit] = [];
+                        }
+                        $v = &$v[$unit];
+                    }
+                    if ($k === '') {
+                        $v[] = $value;
                     } else {
-                        $arr[$name] = [$arr[$name], $value];
+                        $v[$k] = $value;
+                    }
+                } else if (isset($query[$name])) {
+                    if (is_array($query[$name])) {
+                        $query[$name][] = $value;
+                    } else {
+                        $query[$name] = [$query[$name], $value];
                     }
                 } else {
-                    $arr[$name] = $value;
+                    $query[$name] = $value;
                 }
             }
-            return $arr;
+            return $query;
         }
 
         public static function buildQuery($pairs)
         {
-            $arr = [];
+            $query = [];
             foreach ($pairs as $k => $v) {
                 if (is_array($v)) {
                     foreach ($v as $vv) {
-                        array_push($arr, rawurlencode($k) . '=' . rawurlencode($vv));
+                        array_push($query, rawurlencode($k) . '=' . rawurlencode($vv));
                     }
                 } else {
-                    array_push($arr, rawurlencode($k) . '=' . rawurlencode($v));
+                    array_push($query, rawurlencode($k) . '=' . rawurlencode($v));
                 }
             }
-            return join('&', $arr);
+            return join('&', $query);
         }
     }
 }

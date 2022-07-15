@@ -52,12 +52,12 @@ class URI extends \Gini\PHPUnit\TestCase\CLI
         self::assertEquals(\Gini\URI::parseQuery(""), []);
         self::assertEquals(\Gini\URI::parseQuery("?a=1&a=2&a=3&b=4"), ['a' => [1, 2, 3], 'b' => 4]);
         self::assertEquals(\Gini\URI::parseQuery("a=1&a=2&a=3&b=4"), ['a' => [1, 2, 3], 'b' => 4]);
-        self::assertEquals(\Gini\URI::parseQuery("code=dSpC8jKtk9DQ3bhFMuN96FZYRCZDUnChqnym3MpC&redirect_uri=http%3A%2F%2F10.199.51.15%2Flims%2Fgapper_login%2Fauth%3Fsource%3Dgateway&grant_type=authorization_code&client_id=lims_seu&client_secret=c088c68c66bf6b83dfrwe4768d737438"), [
-            'code' => 'dSpC8jKtk9DQ3bhFMuN96FZYRCZDUnChqnym3MpC', 
-            'redirect_uri' => 'http://10.199.51.15/lims/gapper_login/auth?source=gateway',
-            'grant_type' => 'authorization_code',
-            'client_id' => 'lims_seu', 'client_secret' => 'c088c68c66bf6b83dfrwe4768d737438'
-        ]);
+        self::assertEquals(\Gini\URI::parseQuery("a[]=1&a[]=2&a[]=3"), ['a' => [1, 2, 3]]);
+        self::assertEquals(\Gini\URI::parseQuery("a[0]=1&a[1]=2&a[2]=3"), ['a' => [1, 2, 3]]);
+        self::assertEquals(\Gini\URI::parseQuery("a[a]=1&a[b]=2&a[c]=3"), ['a' => ['a' => 1, 'b' => 2, 'c' => 3]]);
+        self::assertEquals(\Gini\URI::parseQuery("a[a][]=1&a[a][]=2"), ['a' => ['a' => [1, 2]]]);
+        self::assertEquals(\Gini\URI::parseQuery("a[][]=1&a[][]=2"), ['a' => [[1, 2]]]);
+        self::assertEquals(\Gini\URI::parseQuery("a[][a]=1&a[][b]=2"), ['a' => [['a' => 1, 'b' => 2]]]);
         self::assertEquals(\Gini\URI::buildQuery(['a' => [1, 2, 3], 'b' => 4]), "a=1&a=2&a=3&b=4");
     }
 
