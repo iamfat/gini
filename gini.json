@@ -32,6 +32,9 @@
             "doctrine/inflector": "^2",
             "doctrine/annotations": "^1.10",
             "dragonmantank/cron-expression": "^3.0"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "^9.5"
         }
     },
     "dependencies": [],

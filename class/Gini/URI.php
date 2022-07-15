@@ -180,7 +180,10 @@ namespace Gini {
             $str = ltrim($str, '?');
             $pairs = explode('&', $str);
             foreach ($pairs as $pair) {
+                if ($pair === '') continue;
                 list($name, $value) = explode('=', $pair, 2);
+                $name = rawurldecode($name);
+                $value = rawurldecode($value);
                 if (isset($arr[$name])) {
                     if (is_array($arr[$name])) {
                         $arr[$name][] = $value;
