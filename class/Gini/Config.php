@@ -27,11 +27,18 @@ class Config
 
     public static function get($key)
     {
-        $c = explode('.', $key, 2);
-        if (count($c) == 1) {
-            return self::$items[$c[0]] ?? null;
+        $c = explode('.', $key);
+        $it = &self::$items;
+        foreach ($c as $i => $ck) {
+            $it = &$it[$ck] ?? null;
+            if (is_scalar($it)) {
+                break;
+            }
         }
-        return self::$items[$c[0]][$c[1]] ?? null;
+        if ($i < count($c) - 1) {
+            return null;
+        }
+        return $it;
     }
 
     public static function set($key, $val)

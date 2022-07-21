@@ -467,14 +467,12 @@ namespace Gini {
 
             // load composer if detected
             $composer_path = APP_PATH . '/vendor/autoload.php';
-            if (file_exists($composer_path)) {
-                require_once $composer_path;
-            }
+            file_exists($composer_path) && require_once($composer_path);
 
             Config::setup();
             Event::setup();
 
-            method_exists('\Gini\Application', 'setup') and \Gini\Application::setup();
+            method_exists('\Gini\Application', 'setup') && \Gini\Application::setup();
 
             // 生成一个 APP_HASH 用于做版本唯一说明
             define('APP_HASH', sha1(array_reduce(
