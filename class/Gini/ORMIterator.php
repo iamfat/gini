@@ -201,54 +201,51 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     }
 
     // Iterator Start
-    public function rewind()
+    public function rewind(): void
     {
         $this->fetch();
         reset($this->objects);
         $this->current_id = key($this->objects);
     }
 
+    #[\ReturnTypeWillChange]
     public function current()
     {
         $this->fetch();
-
         return $this->object($this->current_id);
     }
 
+    #[\ReturnTypeWillChange]
     public function key()
     {
         $this->fetch();
-
         return $this->current_id;
     }
 
-    public function next()
+    public function next(): void
     {
         $this->fetch();
         next($this->objects);
         $this->current_id = key($this->objects);
-
-        return $this->object($this->current_id);
     }
 
-    public function valid()
+    public function valid(): bool
     {
         $this->fetch();
-
         return isset($this->objects[$this->current_id]);
     }
     // Iterator End
 
     // Countable Start
-    public function count()
+    public function count(): int
     {
         $this->fetch();
-
         return (int) $this->count;
     }
     // Countable End
 
     // ArrayAccess Start
+    #[\ReturnTypeWillChange]
     public function offsetGet($id)
     {
         $this->fetch();
@@ -257,7 +254,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         }
     }
 
-    public function offsetUnset($id)
+    public function offsetUnset($id): void
     {
         $this->fetch();
         unset($this->objects[$id]);
@@ -267,7 +264,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         }
     }
 
-    public function offsetSet($id, $object)
+    public function offsetSet($id, $object): void
     {
         $this->fetch();
         if ($object->id) {
@@ -278,10 +275,9 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->count = count($this->objects);
     }
 
-    public function offsetExists($id)
+    public function offsetExists($id): bool
     {
         $this->fetch();
-
         return isset($this->objects[$id]);
     }
 
