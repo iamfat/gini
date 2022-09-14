@@ -42,13 +42,12 @@ final class QuerySet implements Prototype
     {
         if (preg_match(REGEX_RANGE, $v,  $matches)) {
             $range = [];
-
-            if ($matches[2]) {
+            if ($matches[2] !== '') {
                 $lop = $matches[1] === '(' ? 'gt' : 'gte';
                 $range[] = [$lop, smartCast($matches[2])];
             }
 
-            if ($matches[3]) {
+            if ($matches[3] !== '') {
                 $rop = $matches[4] === ')' ? 'lt' : 'lte';
                 $range[] = [$rop, smartCast($matches[3])];
             }
