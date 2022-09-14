@@ -24,9 +24,10 @@ class URI extends \Gini\PHPUnit\TestCase\CLI
 
         $_SERVER['SCRIPT_NAME'] = '/index.php';
         \Gini\URI::setup();
-        self::assertEquals(URL('hello'), 'ftp://fake.com/hello');
+        self::assertEquals(URL('hello?abc=1#def'), 'ftp://fake.com/hello?abc=1#def');
 
-        self::assertEquals(URL('http://foo.bar/abc'), 'http://foo.bar/abc');
+        self::assertEquals(URL('http://foo.bar/abc#def'), 'http://foo.bar/abc#def');
+        self::assertEquals(URL('http://foo.bar/abc#def', ['foo' => 'bar']), 'http://foo.bar/abc?foo=bar#def');
     }
 
     public function testRURL()
