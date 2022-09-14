@@ -24,6 +24,7 @@ class Middlewares extends \Gini\PHPUnit\TestCase\CLI
         self::assertSame(QuerySet::parseSet('[1000,)'), [['gte', 1000]]);
         self::assertSame(QuerySet::parseSet('[,15m)'), [['lt', '15m']]);
         self::assertSame(QuerySet::parseSet('(0,]'), [['gt', 0]]);
+        self::assertSame(QuerySet::parseSet('(,0]'), [['lte', 0]]);
 
         // it should parse set
         self::assertSame(QuerySet::parseSet('1,2,3m'), [1, 2, '3m']);
