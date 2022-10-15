@@ -17,8 +17,12 @@ function smartCast($v)
         return false;
     }
 
-    if ($v === 'null' || $v === '') {
+    if ($v === 'null') {
         return null;
+    }
+
+    if ($v === '') {
+        return '';
     }
 
     if (preg_match('/^[\'"](.*)[\'"]$/', $v, $matches)) {
@@ -71,7 +75,7 @@ final class QuerySet implements Prototype
             ];
         }
 
-        if ($v === '') return null;
+        if ($v === '') return '';
 
         $not = false;
         $or = false;
