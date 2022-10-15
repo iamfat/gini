@@ -15,7 +15,7 @@ class Middlewares extends \Gini\PHPUnit\TestCase\CLI
         self::assertSame(QuerySet::parseSet('true'), true, 'boolean');
         self::assertSame(QuerySet::parseSet('false'), false, 'boolean');
         self::assertSame(QuerySet::parseSet('null'), null, 'null');
-        self::assertSame(QuerySet::parseSet(''), null, 'empty');
+        self::assertSame(QuerySet::parseSet(''), '', 'blank');
 
         // it should parse range
         self::assertSame(QuerySet::parseSet('(-15m,15m]'), [['gt', '-15m'], ['lte', '15m']]);
@@ -34,6 +34,7 @@ class Middlewares extends \Gini\PHPUnit\TestCase\CLI
         // it should parse not
         self::assertSame(QuerySet::parseSet('!true'), [['not', true]]);
         self::assertSame(QuerySet::parseSet('!1,2,3'), [['not', [1, 2, 3]]]);
+        self::assertSame(QuerySet::parseSet('!'), [['not', '']]);
 
         // it should parse string pattern
         // *abc*
@@ -42,5 +43,6 @@ class Middlewares extends \Gini\PHPUnit\TestCase\CLI
         self::assertSame(QuerySet::parseSet('!1*2*3'), [['not like', '1%2%3']]);
         self::assertSame(QuerySet::parseSet('!1*,2*'), [['not', ['1*', '2*']]]);
         self::assertSame(QuerySet::parseSet('|a*,b*'), [['or', ['a*', 'b*']]]);
+
     }
 }
