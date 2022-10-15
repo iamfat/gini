@@ -49,6 +49,11 @@ class Whose implements Condition
 
     public function beginsWith($v)
     {
+        return $this->startsWith($v);
+    }
+
+    public function startsWith($v)
+    {
         return $this->match('^=', $v);
     }
 
@@ -60,6 +65,11 @@ class Whose implements Condition
     public function endsWith($v)
     {
         return $this->match('$=', $v);
+    }
+
+    public function notLike($v)
+    {
+        return $this->match('not like', $v);
     }
 
     public function isLessThan($v)
@@ -113,10 +123,10 @@ class Whose implements Condition
                 $this->params = $value;
                 break;
 
+            case '!=':
             case '<>':
                 $this->op = '<>';
                 $this->params = $value;
-                break;
                 break;
 
             default:
@@ -276,6 +286,10 @@ class Whose implements Condition
                 $fieldName = self::fieldName($those, $this->field);
                 $where = $fieldName . ' LIKE ' . $db->quote($this->params);
                 break;
+            case 'not like':
+                $fieldName = self::fieldName($those, $this->field);
+                $where = $fieldName . ' NOT LIKE ' . $db->quote($this->params);
+                break;
             case '=':
             case '<>':
                 if ($this->params instanceof \Gini\ORM\Base) {
@@ -348,7 +362,7 @@ class Whose implements Condition
                     }
                     if (count($qv) > 0) {
                         $where = self::fieldName($those, $this->field) .
-                        ($this->op == 'in' ? '' : ' NOT') . ' IN (' . implode(', ', $qv) . ')';
+                            ($this->op == 'in' ? '' : ' NOT') . ' IN (' . implode(', ', $qv) . ')';
                     } elseif ($this->op == 'in') {
                         $where = '1 = 0';
                     }

@@ -212,6 +212,29 @@ class Meet extends \Gini\PHPUnit\TestCase\CLI
         parent::tearDown();
     }
 
+    public function testMeetWhose()
+    {
+        \Gini\Those::reset();
+        $those = those('room/member')->whose('room.name')->contains('a')->meet(
+            whose('user.name')->contains('b')
+        );
+        $those->makeSQL();
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t1"."name" LIKE \'%a%\' AND "t2"."name" LIKE \'%b%\'', $those->SQL());
+    }
+
+    public function testMeetAllOf()
+    {
+        \Gini\Those::reset();
+        $those = those('room/member')->meet(
+            allOf(
+                whose('room.name')->contains('a'),
+                whose('user.name')->contains('b')
+            )
+        );
+        $those->makeSQL();
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE ("t1"."name" LIKE \'%a%\' AND "t2"."name" LIKE \'%b%\')', $those->SQL());
+    }
+
     public function testMeetAnyOf()
     {
         \Gini\Those::reset();
@@ -225,14 +248,15 @@ class Meet extends \Gini\PHPUnit\TestCase\CLI
         self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'%a%\' AND ("t0"."id" IN (\'1\', \'2\', \'3\') OR "t0"."name" LIKE \'%g%\')', $those->SQL());
     }
 
-    public function testMeetWhose()
+    public function testMeetLikeAllOf()
     {
         \Gini\Those::reset();
-        $those = those('room/member')->whose('room.name')->contains('a')->meet(
+        $those = those('room/member')->meet(
+            whose('room.name')->contains('a'),
             whose('user.name')->contains('b')
         );
         $those->makeSQL();
-        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t1"."name" LIKE \'%a%\' AND "t2"."name" LIKE \'%b%\'', $those->SQL());
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."room_id","t0"."user_id" FROM "room_member" AS "t0" LEFT JOIN "room" AS "t1" ON "t0"."room_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE ("t1"."name" LIKE \'%a%\' AND "t2"."name" LIKE \'%b%\')', $those->SQL());
     }
 
     public function testMeetWithForeignKeys()

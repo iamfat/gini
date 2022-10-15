@@ -448,11 +448,9 @@ namespace Gini {
             }
         }
 
-        public function meet($condition)
+        public function meet(...$conditions)
         {
-            if (!$condition instanceof \Gini\Those\Condition) {
-                throw new \Exception('invalid meet condition');
-            }
+            $condition = count($conditions) > 1 ? allOf(...$conditions) : $conditions[0];
             $this->finalizeCondition();
             if ($this->_where) {
                 $this->_where[] = 'AND';
