@@ -324,6 +324,24 @@ namespace Gini {
             }
         }
 
+        private $fieldsFilter;
+        protected function fields()
+        {
+            $fields = parent::fields();
+            return isset($this->fieldsFilter) ? \array_intersect_key($fields, $this->fieldsFilter) : $fields;
+        }
+
+        public function withFields(...$fields)
+        {
+            if (count($fields) < 1 || $fields[0] === '*') {
+                $this->fieldsFilter = null;
+            } else {
+                $this->fieldsFilter = array_combine($fields, $fields);
+            }
+            $this->setFetchFlag('data', false);
+            return $this;
+        }
+
         public function makeSQL()
         {
             if (!$this->_withTrashed) {

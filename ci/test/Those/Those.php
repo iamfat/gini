@@ -436,7 +436,8 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         self::assertEquals(null, $res[50]->id);
     }
 
-    public function testGetSQL() {
+    public function testGetSQL()
+    {
         \Gini\Those::reset();
         $this->resultRows = [];
         $res = those('group/user')->get('user');
@@ -453,5 +454,18 @@ class Those extends \Gini\PHPUnit\TestCase\CLI
         \Gini\Those::reset();
         $res = those('group/user')->whose('user.name')->is('g')->get('group.name');
         self::assertEquals('SELECT "t1"."name" AS \'group.name\',"t0"."id" AS \'id\' FROM "group_user" AS "t0" LEFT JOIN "group" AS "t1" ON "t0"."group_id"="t1"."id" LEFT JOIN "user" AS "t2" ON "t0"."user_id"="t2"."id" WHERE "t2"."name"=\'g\'', $this->lastQuery);
+    }
+
+    public function testFilterFields()
+    {
+        \Gini\Those::reset();
+        $those = those('user');
+        $those->makeSQL();
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0"', $those->SQL());
+
+        \Gini\Those::reset();
+        $those = those('user')->withFields('name');
+        $those->makeSQL();
+        self::assertEquals('SELECT DISTINCT "t0"."id","t0"."name" FROM "user" AS "t0"', $those->SQL());
     }
 }
