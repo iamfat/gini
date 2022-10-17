@@ -5,14 +5,19 @@ namespace Gini\Database;
 class SQL
 {
     private $_SQL;
+    private $_sep;
 
-    public function __construct($SQL)
+    public function __construct($SQL, $sep = ',')
     {
-        $this->_SQL = strval($SQL);
+        $this->_SQL = $SQL;
+        $this->_sep = $sep;
     }
 
     public function __toString()
     {
-        return $this->_SQL;
+        if (is_array($this->_SQL)) {
+            return join($this->_sep, $this->_SQL);
+        }
+        return strval($this->_SQL);
     }
 }

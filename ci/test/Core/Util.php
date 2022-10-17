@@ -10,4 +10,10 @@ class Util extends \Gini\PHPUnit\TestCase\CLI
         self::assertEquals($opt['prefix'], 'hello');
         self::assertFalse($opt['suffix']);
     }
+
+    public function testSingularize()
+    {
+        self::assertEquals(\Gini\Util::singularize('some/birds'), 'some/bird');
+        self::assertEquals(\Gini\Util::singularize('some/data'), 'some/datum');
+    }
 }

@@ -130,8 +130,9 @@ namespace Gini {
                 foreach ($s as &$i) {
                     $i = $this->quoteIdent($i);
                 }
-
                 return implode(',', $s);
+            } elseif ($s instanceof SQL) {
+                return strval($s);
             }
             return $this->_driver->quoteIdent($s);
         }
@@ -193,11 +194,7 @@ namespace Gini {
             if (is_array($idents)) {
                 $conversions = [];
                 foreach ($idents as $k => $v) {
-                    if ($v instanceof SQL) {
-                        $conversions[$k] = strval($v);
-                    } else {
-                        $conversions[$k] = $this->quoteIdent($v);
-                    }
+                    $conversions[$k] = $this->quoteIdent($v);
                 }
                 $SQL = strtr($SQL, $conversions);
             }
@@ -206,9 +203,7 @@ namespace Gini {
             if (is_array($params)) {
                 $conversions = [];
                 foreach ($params as $k => $v) {
-                    if ($v instanceof SQL) {
-                        $conversions[$k] = strval($v);
-                    } else if (is_array($v)) {
+                    if (is_array($v) || $v instanceof SQL) {
                         $conversions[$k] = $this->quote($v);
                     } else {
                         $filtered_params[$k] = $v;

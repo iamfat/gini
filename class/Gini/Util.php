@@ -2,6 +2,8 @@
 
 namespace Gini;
 
+const UPPERCASE_PATTERN = '/[A-Z]/';
+
 class Util
 {
     public static function arrayReplaceKeys(array &$arr, $key_arr)
@@ -200,5 +202,16 @@ class Util
     {
         $inflector = self::getInflector();
         return $inflector ? $inflector->pluralize($str) : $str;
+    }
+
+    public static $hyphenateCache = [];
+    public static function hyphenate(string $name)
+    {
+        if (!isset(self::$hyphenateCache[$name])) {
+            self::$hyphenateCache[$name] = preg_replace_callback(UPPERCASE_PATTERN, function ($matches) {
+                return '-' . mb_strtolower($matches[0]);
+            }, $name);
+        }
+        return self::$hyphenateCache[$name];
     }
 }

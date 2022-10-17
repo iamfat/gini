@@ -43,6 +43,5 @@ class Middlewares extends \Gini\PHPUnit\TestCase\CLI
         self::assertSame(QuerySet::parseSet('!1*2*3'), [['not like', '1%2%3']]);
         self::assertSame(QuerySet::parseSet('!1*,2*'), [['not', ['1*', '2*']]]);
         self::assertSame(QuerySet::parseSet('|a*,b*'), [['or', ['a*', 'b*']]]);
-
     }
 }

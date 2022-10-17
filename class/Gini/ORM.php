@@ -21,6 +21,7 @@ namespace Gini {
     {
         private $_criteria;
         private $_objects;
+        private $_manyFields;
         private $_name;
         private $_tableName;
         private $_oinfo;
@@ -236,6 +237,7 @@ namespace Gini {
             // clean $_db_time to trigger later fetch
             $this->_db_time = 0;
             $this->_objects = [];
+            $this->_manyFields = [];
             $this->_oinfo = [];
             foreach ($this->structure() as $k => $v) {
                 unset($this->$k); //empty all public properties
@@ -605,7 +607,17 @@ namespace Gini {
                     }
                     $db_data[$k . '_id'] = $o->id ?: null;
                 } elseif (array_key_exists('array', $v)) {
-                    $db_data[$k] = (is_object($this->$k) || is_array($this->$k)) ? J($this->$k) : '{}';
+                    if (is_array($this->$k)) {
+                        if (count($this->$k) === 0) {
+                            $db_data[$k] = '{}';
+                        } else {
+                            $db_data[$k] = J($this->$k);
+                        }
+                    } else if (is_object($this->$k)) {
+                        $db_data[$k] = J($this->$k);
+                    } else {
+                        $db_data[$k] = '{}';
+                    }
                 } elseif (array_key_exists('object_list', $v)) {
                     $db_data[$k] = isset($this->$k) ? J($this->$k->keys()) : '[]';
                 } else {
@@ -667,6 +679,8 @@ namespace Gini {
                 return false;
             }
 
+            $db->beginTransaction();
+
             $tbl_name = $this->tableName();
             $id = intval($db_data['id'] ?? $this->_db_data['id'] ?? 0);
             unset($db_data['id']);
@@ -705,10 +719,21 @@ namespace Gini {
                 $success = true;
             }
 
+            if ($this->_manyFields) foreach ($this->_manyFields as $k => $v) {
+                if (!$v->isTouched()) continue;
+                $this->saveAll($k, $v);
+            }
+
             if ($success) {
                 $id = $id ?: $db->lastInsertId();
                 $this->criteria($id);
                 $this->resetFetch();
+            }
+
+            if ($success) {
+                $db->commit();
+            } else {
+                $db->rollback();
             }
 
             return $success;
@@ -748,12 +773,17 @@ namespace Gini {
             unset(self::$_RELATIONS[$class_name]);
         }
 
+        private static function normalizeName($str)
+        {
+            return preg_replace('#[-_/]+#', '_', $str);
+        }
+
         private function _prepareName()
         {
             // remove Gini/ORM
             list(,, $name) = explode('/', str_replace('\\', '/', strtolower(get_class($this))), 3);
             $this->_name = $name;
-            $this->_tableName = str_replace('/', '_', $name);
+            $this->_tableName = self::normalizeName($name);
         }
 
         /**
@@ -784,7 +814,7 @@ namespace Gini {
 
         public function pivotTableName($field)
         {
-            return '_' . str_replace('/', '_', $this->name()) . '_' . strtolower($field);
+            return $this->normalizeName('_' . $this->name() . '_' . strtolower($field));
         }
 
         /**
@@ -819,7 +849,7 @@ namespace Gini {
                         }
                     }
                 } elseif (array_key_exists('array', $v)) {
-                    $this->$k = @json_decode(strval($data[$k]), true);
+                    $this->$k = @json_decode(strval($data[$k]), true) ?: [];
                 } elseif (array_key_exists('object_list', $v)) {
                     $objects = \Gini\IoC::construct('\Gini\ORMIterator', $v['object_list']);
                     $oids = (array) @json_decode(strval($data[$k]), true);
@@ -866,15 +896,31 @@ namespace Gini {
             // 如果之前没有触发数据库查询, 在这里触发一下
             $this->fetch();
 
+            $name = \Gini\Util::hyphenate($name);
+
+            $manyStructure = $this->manyStructure();
+            if (isset($manyStructure[$name])) {
+                if (!isset($this->_manyFields)) {
+                    $this->_manyFields = [];
+                }
+                if (!isset($this->_manyFields[$name])) {
+                    $this->_manyFields[$name] = $this->getAll($name);
+                }
+                return $this->_manyFields[$name];
+            }
+
             if (isset($this->_objects[$name])) {
                 return $this->_objects[$name];
-            } elseif (isset($this->_oinfo[$name])) {
+            }
+
+            if (isset($this->_oinfo[$name])) {
                 $oi = $this->_oinfo[$name];
                 $o = a($oi->name, $oi->id);
                 $this->_objects[$name] = $o;
-
                 return $o;
-            } elseif (isset($this->_extra[$name])) {
+            }
+
+            if (isset($this->_extra[$name])) {
                 // try find it in _extra
                 return $this->_extra[$name];
             }
@@ -906,6 +952,26 @@ namespace Gini {
             // 如果之前没有触发数据库查询, 在这里触发一下
             $this->fetch();
 
+            $name = \Gini\Util::hyphenate($name);
+
+            $manyStructure = $this->manyStructure();
+            if (isset($manyStructure[$name])) {
+                if (!isset($this->_manyFields)) {
+                    $this->_manyFields = [];
+                }
+                if (array_key_exists('object', $manyStructure[$name])) {
+                    $oname = $manyStructure[$name]['object'];
+                    $objects = new ORMIterator($oname);
+                    foreach ($value as $v) {
+                        $objects[$v->id] = $v;
+                    }
+                    $this->_manyFields[$name] = $objects;
+                } else {
+                    $this->_manyFields[$name] = new Helper\TouchableArray($value);
+                }
+                return;
+            }
+
             $structure = $this->structure();
             if (isset($structure[$name])) {
                 if (array_key_exists('object', $structure[$name])) {
@@ -913,23 +979,24 @@ namespace Gini {
                 } else {
                     $this->$name = $value;
                 }
-            } else {
-                // if $name is  {}_name or {}_id, let's update oinfo firstly.
-                $is_object = false;
-                if (preg_match('/^(.+)_id$/', $name, $parts)) {
-                    $rname = $parts[1];
-                    if (isset($structure[$rname]) && array_key_exists('object', $structure[$rname])) {
-                        $is_object = true;
-                        $oname = $structure[$rname]['object'] ?? $rname;
-                        $this->_oinfo[$rname] = (object) ['name' => $oname, 'id' => (int) $value];
-                        unset($this->_objects[$rname]);
-                    }
+                return;
+            }
+
+            // if $name is  {}_name or {}_id, let's update oinfo firstly.
+            $is_object = false;
+            if (preg_match('/^(.+)_id$/', $name, $idParts)) {
+                $rname = $idParts[1];
+                if (isset($structure[$rname]) && array_key_exists('object', $structure[$rname])) {
+                    $is_object = true;
+                    $oname = $structure[$rname]['object'] ?? $rname;
+                    $this->_oinfo[$rname] = (object) ['name' => $oname, 'id' => (int) $value];
+                    unset($this->_objects[$rname]);
                 }
-                if ($is_object == false) {
-                    // 奇怪 如果之前没有强制类型转换 数组赋值会不成功
-                    $this->_extra = (array) $this->_extra;
-                    $this->_extra[$name] = $value;
-                }
+            }
+            if ($is_object == false) {
+                // 奇怪 如果之前没有强制类型转换 数组赋值会不成功
+                $this->_extra = (array) $this->_extra;
+                $this->_extra[$name] = $value;
             }
         }
 
@@ -943,7 +1010,7 @@ namespace Gini {
         {
             // 如果之前没有触发数据库查询, 在这里触发一下
             $this->fetch();
-
+            $name = \Gini\Util::hyphenate($name);
             // if \Gini\Config::get('system.locale') == 'zh_CN', $object->L('name') will access $object->_extra['i18n'][zh_CN]['name']
             if (!isset($locale)) {
                 $locale = \Gini\Config::get('system.locale');
@@ -979,109 +1046,174 @@ namespace Gini {
             return $this;
         }
 
-        // $friends = $user->all('friends');
-        public function all($field)
+        // $fields = $user->fields;
+        // $friends = $user->getAll('friends');
+        public function getAll($name)
         {
-            if (!$this->id) {
-                return [];
-            }
-
-            $field = \Gini\Util::singularize($field);
+            $name = \Gini\Util::hyphenate($name);
 
             $manyStructure = $this->manyStructure();
-            if (!isset($manyStructure[$field])) {
-                return [$this->$field];
+            if (!isset($manyStructure[$name])) {
+                throw new \BadMethodCallException();
             }
 
             $db = $this->db();
-            if (array_key_exists('object', $manyStructure[$field])) {
-                $objects = [];
-                if (isset($manyStructure[$field]['object'])) {
-                    $oname = $manyStructure[$field]['object'];
-                    $st = $db->query('SELECT :oid AS oid FROM :table1 WHERE :name1=:id1', [
-                        ':table1' => $this->pivotTableName($field),
-                        ':name1' => $this->name() . '_id',
-                        ':oid' => $field . '_id',
-                    ], [
-                        ':id1' => $this->oid,
-                    ]);
-                    $objects = new ORMIterator($oname);
-                    if ($st) {
-                        while ($row = $st->rows()) {
-                            $objects[$row->id] = a($oname, $row->id);
-                        }
+            $table = $this->pivotTableName($name);
+            $objectKey = $this->normalizeName($this->name() . '_id');
+            $singular = $this->normalizeName(\Gini\Util::singularize($name));
+            if (array_key_exists('object', $manyStructure[$name])) {
+                $oname = $manyStructure[$name]['object'];
+                $st = $db->query('SELECT @field_id AS oid FROM @table WHERE @object_id=:id', [
+                    '@table' => $table,
+                    '@object_id' => $objectKey,
+                    '@field_id' => $singular . '_id',
+                ], [
+                    ':id' => $this->oid,
+                ]);
+                $objects = new ORMIterator($oname);
+                if ($st) {
+                    while ($row = $st->row()) {
+                        $objects[$row->id] = a($oname, $row->id);
                     }
-                    return $objects;
+                }
+                $values = $objects;
+            } else {
+                $st = $db->query('SELECT @field AS field FROM @table WHERE @object_id=:id', [
+                    '@table' => $table,
+                    '@object_id' => $objectKey,
+                    '@field' => $singular,
+                ], [
+                    ':id' => $this->id,
+                ]);
+                if ($st) {
+                    $rows = $st->rows();
+                    $values = new Helper\TouchableArray(array_map(function ($v) {
+                        return $v->field;
+                    }, $rows));
                 } else {
-                    $st = $db->query('SELECT :oname AS oname, :oid AS oid FROM :table1 WHERE :name1=:id1', [
-                        ':table1' => $this->pivotTableName($field),
-                        ':name1' => $this->name() . '_id',
-                        ':oname' => $field . '_name',
-                        ':oid' => $field . '_id',
-                    ], [
-                        ':id1' => $this->id,
-                    ]);
-                    $objects = [];
-                    if ($st) {
-                        while ($row = $st->rows()) {
-                            $objects[] = a($row->oname, $row->oid);
-                        }
+                    $values = new Helper\TouchableArray();
+                }
+            }
+            return $values;
+        }
+
+        public function saveAll($name, $values)
+        {
+            $name = \Gini\Util::hyphenate($name);
+
+            $manyStructure = $this->manyStructure();
+            if (!isset($manyStructure[$name])) {
+                throw new \BadMethodCallException();
+            }
+
+            $success = true;
+
+            $db = $this->db();
+            $table = $this->pivotTableName($name);
+            $objectKey = $this->normalizeName($this->name() . '_id');
+            $singular = $this->normalizeName(\Gini\Util::singularize($name));
+            if (array_key_exists('object', $manyStructure[$name])) {
+                $fieldId = $singular . '_id';
+                $st = $db->query('SELECT @field_id AS oid FROM @table WHERE @object_id=:object_id FOR UPDATE', [
+                    '@table' => $table,
+                    '@object_id' => $objectKey,
+                    '@field_id' => $fieldId,
+                ], [
+                    ':object_id' => $this->id,
+                ]);
+
+                $deletings = [];
+                $existed = [];
+                if ($st) while ($row = $st->row()) {
+                    $key = $row->oid;
+                    if (isset($values[$key])) {
+                        $existed[$key] = $row->oid;
+                    } else {
+                        $deletings[$key] = $row->oid;
                     }
-                    return $objects;
+                }
+
+                $addings = [];
+                foreach ($values as $v) {
+                    $key = $v->id;
+                    if (!isset($existed[$key])) {
+                        $addings[] = $v->id;
+                    }
+                }
+
+                if ($success && count($deletings) > 0) {
+                    $success = $db->query('DELETE FROM @table WHERE @object_id=:object_id AND @field_id IN (:values)', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field_id' => $fieldId,
+                    ], [
+                        ':object_id' => $this->id,
+                        ':values' => array_values($deletings),
+                    ]);
+                }
+
+                if ($success && count($addings) > 0) {
+                    $success = $db->query('INSERT INTO @table (@object_id, @field_id) VALUES :values', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field_id' => $fieldId,
+                    ], [
+                        ':values' => SQL(array_map(function ($id) use ($db) {
+                            return '(' . $db->quote([$this->id, $id]) . ')';
+                        }, $addings)),
+                    ]);
+                }
+            } else {
+                $st = $db->query('SELECT @field AS field FROM @table WHERE @object_id=:object_id', [
+                    '@table' => $table,
+                    '@object_id' => $objectKey,
+                    '@field' => $singular,
+                ], [
+                    ':object_id' => $this->id,
+                ]);
+
+                $deletings = [];
+                $existed = [];
+                if ($st) while ($row = $st->row()) {
+                    $key = $row->field;
+                    if (isset($values[$key])) {
+                        $existed[$key] = $row->field;
+                    } else {
+                        $deletings[$key] = $row->field;
+                    }
+                }
+
+                $addings = [];
+                foreach ($values as $v) {
+                    if (!isset($existed[$v])) {
+                        $addings[] = $v;
+                    }
+                }
+
+                if ($success && count($deletings) > 0) {
+                    $success = $db->query('DELETE FROM @table WHERE @object_id=:object_id AND @field IN (:values)', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field' => $singular,
+                    ], [
+                        ':object_id' => $this->id,
+                        ':values' => array_values($deletings),
+                    ]);
+                }
+                if ($success && count($addings) > 0) {
+                    $success = $db->query('INSERT INTO @table (@object_id, @field) VALUES :values', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field' => $singular,
+                    ], [
+                        ':values' => SQL(array_map(function ($id) use ($db) {
+                            return '(' . $db->quote([$this->id, $id]) . ')';
+                        }, $addings)),
+                    ]);
                 }
             }
 
-            $st = $db->query('SELECT $name2 AS field FROM :table1 WHERE :name1=:id1', [
-                ':table1' => $this->pivotTableName($field),
-                ':name1' => $this->name() . '_id',
-                ':name2' => $field,
-            ], [
-                ':id1' => $this->id,
-            ]);
-            if ($st) {
-                $rows = $st->rows();
-                return array_map(function ($v) {
-                    return $v->field;
-                }, $rows);
-            }
-
-            return [];
-        }
-
-        public function addOne($field, $value)
-        {
-            if (!$this->id) {
-                return false;
-            }
-
-            $db = $this->db();
-            $success = $db->query('INSERT INTO :table1 (:name1, :name2) VALUES(:id1, :value2)', [
-                ':table1' => $this->pivotTableName($field),
-                ':name1' => $this->name() . '_id',
-                ':name2' => $field,
-            ], [
-                ':id1' => $this->id,
-                ':value2' => $value,
-            ]);
-            return !!$success;
-        }
-
-        public function removeOne($field, $value)
-        {
-            if (!$this->id) {
-                return false;
-            }
-
-            $db = $this->db();
-            $success = $db->query('DELETE FROM :table1 WHERE :name1=:id1 AND :name2=:value2', [
-                ':table1' => $this->pivotTableName($field),
-                ':name1' => $this->name() . '_id',
-                ':name2' => $field,
-            ], [
-                ':id1' => $this->id,
-                ':value2' => $value,
-            ]);
-            return !!$success;
+            return $success;
         }
 
         public function removeAll($field)
@@ -1090,12 +1222,14 @@ namespace Gini {
                 return false;
             }
 
+            $field = \Gini\Util::hyphenate($field);
+
             $db = $this->db();
-            $success = $db->query('DELETE FROM :table1 WHERE :name1=:id1', [
-                ':table1' => $this->pivotTableName($field),
-                ':name1' => $this->name() . '_id',
+            $success = $db->query('DELETE FROM @table WHERE @object_id=:id', [
+                '@table' => $this->pivotTableName($field),
+                '@object_id' => $this->normalizeName($this->name() . '_id'),
             ], [
-                ':id1' => $this->id,
+                ':id' => $this->id,
             ]);
             return !!$success;
         }

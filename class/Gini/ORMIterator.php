@@ -22,6 +22,8 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     private $_forUpdate = false;
 
+    protected $dirty = false;
+
     public function totalCount()
     {
         $this->fetch('count');
@@ -44,15 +46,16 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         return $this->table_name;
     }
 
-    public function __construct($name)
+    public function __construct($name = null)
     {
         // 查询一下看看是不是复数
-        $name = \Gini\Config::get('orm.plurals')[$name] ?? $name;
-        $this->name = $name;
-        //$this->table_name = str_replace('/', '_', $name);
-        $object = a($name);
-        $this->table_name = $object->tableName();
-        $this->db = $object->db();
+        if ($name) {
+            $name = \Gini\Config::get('orm.plurals')[$name] ?? $name;
+            $this->name = $name;
+            $object = a($name);
+            $this->table_name = $object->tableName();
+            $this->db = $object->db();
+        }
     }
 
     public function __clone()
@@ -115,7 +118,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             return $this;
         }
 
-        switch ($scope) {
+        if ($this->name) switch ($scope) {
             case 'dryrun':
                 // 什么都不干, 只是为了帮助子类做一些必要的重载工作
                 break;
@@ -262,6 +265,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         if ($this->current_id == $id) {
             $this->current_id = key($this->objects);
         }
+        $this->dirty = true;
     }
 
     public function offsetSet($id, $object): void
@@ -273,6 +277,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->objects[$id] = $object;
         $this->current_id = $id;
         $this->count = count($this->objects);
+        $this->dirty = true;
     }
 
     public function offsetExists($id): bool
@@ -290,6 +295,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
             $this->objects = [$object->id => $object] + $this->objects;
         }
 
+        $this->dirty = true;
         $this->count = count($this->objects);
 
         return $this;
@@ -300,13 +306,13 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
         $this->fetch();
         //反排
         $this->objects = array_reverse($this->objects);
-
+        $this->dirty = true;
         return $this;
     }
 
     protected function fieldName($field, $suffix = null)
     {
-        return $this->db->quoteIdent($field . $suffix);
+        return $this->db && $this->db->quoteIdent($field . $suffix);
     }
 
     public function get($key = 'id', $val = null)
@@ -383,5 +389,13 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     public function SQL()
     {
         return $this->SQL;
+    }
+    
+    public function isTouched() {
+        return $this->dirty;
+    }
+
+    public function resetTouch() {
+        $this->dirty = false;
     }
 }
