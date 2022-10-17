@@ -962,9 +962,16 @@ namespace Gini {
                 if (array_key_exists('object', $manyStructure[$name])) {
                     $oname = $manyStructure[$name]['object'];
                     $objects = new ORMIterator($oname);
-                    foreach ($value as $v) {
-                        $objects[$v->id] = $v;
+                    if ($oname) {
+                        foreach ($value as $v) {
+                            $objects[$v->id] = $v;
+                        }
+                    } else {
+                        foreach ($value as $v) {
+                            $objects["{$v->name()}/{$v->id}"] = $v;
+                        }
                     }
+
                     $this->_manyFields[$name] = $objects;
                 } else {
                     $this->_manyFields[$name] = new Helper\TouchableArray($value);
@@ -1063,17 +1070,31 @@ namespace Gini {
             $singular = $this->normalizeName(\Gini\Util::singularize($name));
             if (array_key_exists('object', $manyStructure[$name])) {
                 $oname = $manyStructure[$name]['object'];
-                $st = $db->query('SELECT @field_id AS oid FROM @table WHERE @object_id=:id', [
-                    '@table' => $table,
-                    '@object_id' => $objectKey,
-                    '@field_id' => $singular . '_id',
-                ], [
-                    ':id' => $this->oid,
-                ]);
-                $objects = new ORMIterator($oname);
-                if ($st) {
-                    while ($row = $st->row()) {
+                if ($oname) {
+                    $st = $db->query('SELECT @field_id AS oid FROM @table WHERE @object_id=:id', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field_id' => $singular . '_id',
+                    ], [
+                        ':id' => $this->oid,
+                    ]);
+                    $objects = new ORMIterator($oname);
+                    if ($st) while ($row = $st->row()) {
                         $objects[$row->id] = a($oname, $row->id);
+                    }
+                } else {
+                    $st = $db->query('SELECT @field_name AS oname, @field_id AS oid FROM @table WHERE @object_id=:id', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field_name' => $singular . '_name',
+                        '@field_id' => $singular . '_id',
+                    ], [
+                        ':id' => $this->oid,
+                    ]);
+                    $objects = new ORMIterator($oname);
+                    if ($st) while ($row = $st->row()) {
+                        $key = "{$row->oname}/{$row->id}";
+                        $objects[$key] = a($row->oname, $row->id);
                     }
                 }
                 $values = $objects;
@@ -1113,55 +1134,117 @@ namespace Gini {
             $objectKey = $this->normalizeName($this->name() . '_id');
             $singular = $this->normalizeName(\Gini\Util::singularize($name));
             if (array_key_exists('object', $manyStructure[$name])) {
-                $fieldId = $singular . '_id';
-                $st = $db->query('SELECT @field_id AS oid FROM @table WHERE @object_id=:object_id FOR UPDATE', [
-                    '@table' => $table,
-                    '@object_id' => $objectKey,
-                    '@field_id' => $fieldId,
-                ], [
-                    ':object_id' => $this->id,
-                ]);
-
-                $deletings = [];
-                $existed = [];
-                if ($st) while ($row = $st->row()) {
-                    $key = $row->oid;
-                    if (isset($values[$key])) {
-                        $existed[$key] = $row->oid;
-                    } else {
-                        $deletings[$key] = $row->oid;
-                    }
-                }
-
-                $addings = [];
-                foreach ($values as $v) {
-                    $key = $v->id;
-                    if (!isset($existed[$key])) {
-                        $addings[] = $v->id;
-                    }
-                }
-
-                if ($success && count($deletings) > 0) {
-                    $success = $db->query('DELETE FROM @table WHERE @object_id=:object_id AND @field_id IN (:values)', [
+                if ($manyStructure[$name]['object']) {
+                    $fieldId = $singular . '_id';
+                    $st = $db->query('SELECT @field_id AS oid FROM @table WHERE @object_id=:object_id FOR UPDATE', [
                         '@table' => $table,
                         '@object_id' => $objectKey,
                         '@field_id' => $fieldId,
                     ], [
                         ':object_id' => $this->id,
-                        ':values' => array_values($deletings),
                     ]);
-                }
 
-                if ($success && count($addings) > 0) {
-                    $success = $db->query('INSERT INTO @table (@object_id, @field_id) VALUES :values', [
+                    $deletings = [];
+                    $existed = [];
+                    if ($st) while ($row = $st->row()) {
+                        $key = $row->oid;
+                        if (isset($values[$key])) {
+                            $existed[$key] = $row->oid;
+                        } else {
+                            $deletings[$key] = $row->oid;
+                        }
+                    }
+
+                    $addings = [];
+                    foreach ($values as $v) {
+                        $key = $v->id;
+                        if (!isset($existed[$key])) {
+                            $addings[] = $v->id;
+                        }
+                    }
+
+                    if ($success && count($deletings) > 0) {
+                        $success = $db->query('DELETE FROM @table WHERE @object_id=:object_id AND @field_id IN (:values)', [
+                            '@table' => $table,
+                            '@object_id' => $objectKey,
+                            '@field_id' => $fieldId,
+                        ], [
+                            ':object_id' => $this->id,
+                            ':values' => array_values($deletings),
+                        ]);
+                    }
+
+                    if ($success && count($addings) > 0) {
+                        $success = $db->query('INSERT INTO @table (@object_id, @field_id) VALUES :values', [
+                            '@table' => $table,
+                            '@object_id' => $objectKey,
+                            '@field_id' => $fieldId,
+                        ], [
+                            ':values' => SQL(array_map(function ($id) use ($db) {
+                                return '(' . $db->quote([$this->id, $id]) . ')';
+                            }, $addings)),
+                        ]);
+                    }
+                } else {
+                    $fieldName = $singular . '_name';
+                    $fieldId = $singular . '_id';
+                    $st = $db->query('SELECT @field_name AS oname, @field_id AS oid FROM @table WHERE @object_id=:object_id FOR UPDATE', [
                         '@table' => $table,
                         '@object_id' => $objectKey,
+                        '@field_name' => $fieldName,
                         '@field_id' => $fieldId,
                     ], [
-                        ':values' => SQL(array_map(function ($id) use ($db) {
-                            return '(' . $db->quote([$this->id, $id]) . ')';
-                        }, $addings)),
+                        ':object_id' => $this->id,
                     ]);
+
+                    $deletings = [];
+                    $existed = [];
+                    if ($st) while ($row = $st->row()) {
+                        $key = "{$row->oname}/{$row->id}";
+                        if (isset($values[$key])) {
+                            $existed[$key] = $row;
+                        } else {
+                            $deletings[$key] = $row;
+                        }
+                    }
+
+                    $addings = [];
+                    foreach ($values as $v) {
+                        $oname = $v->name();
+                        $key = "{$oname}/{$v->id}";
+                        if (!isset($existed[$key])) {
+                            $addings[] = [$oname, $v->id];
+                        }
+                    }
+
+                    if ($success && count($deletings) > 0) {
+                        $success = $db->query('DELETE FROM @table WHERE @object_id=:object_id AND (@or_where)', [
+                            '@table' => $table,
+                            '@object_id' => $objectKey,
+                            '@or_where' => join(' OR ', array_map(function ($v) use ($db, $fieldName, $fieldId) {
+                                return '('
+                                    . $db->quoteIdent($fieldName) . '=' . $db->quote($v->oname)
+                                    . ' AND '
+                                    . $db->quoteIdent($fieldId) . '=' . $db->quote($v->oid)
+                                    . ')';
+                            }, $deletings))
+                        ], [
+                            ':object_id' => $this->id,
+                        ]);
+                    }
+
+                    if ($success && count($addings) > 0) {
+                        $success = $db->query('INSERT INTO @table (@object_id, @field_name, @field_id) VALUES :values', [
+                            '@table' => $table,
+                            '@object_id' => $objectKey,
+                            '@field_name' => $fieldName,
+                            '@field_id' => $fieldId,
+                        ], [
+                            ':values' => SQL(array_map(function ($v) use ($db) {
+                                return '(' . $db->quote([$this->id, $v[0], $v[1]]) . ')';
+                            }, $addings)),
+                        ]);
+                    }
                 }
             } else {
                 $st = $db->query('SELECT @field AS field FROM @table WHERE @object_id=:object_id', [
