@@ -44,6 +44,7 @@ class MySQL extends \PDO implements Driver
             $options['charset'] = 'utf8';
         }
 
+        var_dump($dsn, $username, $password, $options);
         parent::__construct($dsn, $username, $password, $options);
         $this->_options = $options;
 

@@ -16,6 +16,8 @@
 
 namespace Gini {
 
+    use \Gini\Database\SQL;
+
     /**
      * Database Abstract Layer.
      *
@@ -91,11 +93,11 @@ namespace Gini {
         public function __construct($dsn, $username = null, $password = null, $options = null)
         {
             list($driver_name) = explode(':', $dsn, 2);
-            $driver_class = '\Gini\Database\\' . $driver_name;
+            $driver_class = '\Gini\Database\\' . $driver_name ?: 'Unknown';
             $this->_driver = \Gini\IoC::construct($driver_class, $dsn, $username, $password, $options);
-            if (!$this->_driver instanceof Database\Driver) {
-                throw new Database\Exception('unknown database driver: ' . $driver_name);
-            }
+            // if (!$this->_driver instanceof Database\Driver) {
+            //     throw new Database\Exception('unknown database driver: ' . $driver_name);
+            // }
         }
 
         /**
@@ -111,7 +113,6 @@ namespace Gini {
             foreach ($args as $arg) {
                 $ident[] = $this->quoteIdent($arg);
             }
-
             return implode('.', $ident);
         }
 
@@ -132,7 +133,6 @@ namespace Gini {
 
                 return implode(',', $s);
             }
-
             return $this->_driver->quoteIdent($s);
         }
 
@@ -150,7 +150,6 @@ namespace Gini {
                 foreach ($s as &$i) {
                     $i = $this->quote($i);
                 }
-
                 return implode(',', $s);
             } elseif (is_null($s)) {
                 return 'NULL';
@@ -158,8 +157,9 @@ namespace Gini {
                 return $s ? 1 : 0;
             } elseif (is_int($s) || is_float($s)) {
                 return $s;
+            } elseif ($s instanceof SQL) {
+                return strval($s);
             }
-
             return $this->_driver->quote($s);
         }
 
@@ -187,6 +187,39 @@ namespace Gini {
             return $this->_driver->lastInsertId($name);
         }
 
+        public function prepareSQL($SQL, $idents = null, $params = null)
+        {
+            // quote all identifiers
+            if (is_array($idents)) {
+                $conversions = [];
+                foreach ($idents as $k => $v) {
+                    if ($v instanceof SQL) {
+                        $conversions[$k] = strval($v);
+                    } else {
+                        $conversions[$k] = $this->quoteIdent($v);
+                    }
+                }
+                $SQL = strtr($SQL, $conversions);
+            }
+
+            $filtered_params = [];
+            if (is_array($params)) {
+                $conversions = [];
+                foreach ($params as $k => $v) {
+                    if ($v instanceof SQL) {
+                        $conversions[$k] = strval($v);
+                    } else if (is_array($v)) {
+                        $conversions[$k] = $this->quote($v);
+                    } else {
+                        $filtered_params[$k] = $v;
+                    }
+                }
+                $SQL = strtr($SQL, $conversions);
+            }
+
+            return [$SQL, $filtered_params];
+        }
+
         /**
          * Query SQL.
          *
@@ -198,17 +231,9 @@ namespace Gini {
          **/
         public function query($SQL, $idents = null, $params = null)
         {
-            // quote all identifiers
-            if (is_array($idents)) {
-                $quotedIdents = [];
-                foreach ($idents as $k => $v) {
-                    $quotedIdents[$k] = $this->_driver->quoteIdent($v);
-                }
+            list($SQL, $params) = $this->prepareSQL($SQL, $idents, $params);
 
-                $SQL = strtr($SQL, $quotedIdents);
-            }
-
-            if (is_array($params)) {
+            if (is_array($params) && count($params) > 0) {
                 $this->_driver->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
                 \Gini\Logger::of('core')->debug('Database query prepare = {SQL}', ['SQL' => preg_replace('/\s+/', ' ', $SQL)]);
                 $st = $this->_driver->prepare($SQL);
