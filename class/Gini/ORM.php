@@ -695,7 +695,7 @@ namespace Gini {
                 if ($id) {
                     if (
                         $this->_db_data['id']
-                        || $db->value('SELECT "id" FROM ' . $db->quoteIdent($tbl_name) . ' WHERE "id"=?', null, [$id])
+                        || $db->value('SELECT "id" FROM ' . $db->quoteIdent($tbl_name) . ' WHERE "id"=? FOR UPDATE', null, [$id])
                     ) {
                         // if data exists, use update to avoid unexpected overwrite.
                         $SQL = 'UPDATE ' . $db->quoteIdent($tbl_name) . ' SET ' . implode(',', $pairs) .
