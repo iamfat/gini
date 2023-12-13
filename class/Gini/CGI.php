@@ -91,7 +91,7 @@ class CGI
                 }
             }
             error_log(sprintf('ERROR %s', $message));
-            $trace = array_slice($e->getTrace(), 1, 5);
+            $trace = array_slice($e->getTrace(), 0, 5);
             foreach ($trace as $n => $t) {
                 $file = $t['file'];
                 foreach (\Gini\Core::$MODULE_INFO as $info) {
