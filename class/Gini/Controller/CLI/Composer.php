@@ -43,7 +43,7 @@ class Composer extends \Gini\Controller\CLI
         $walk($app);
 
         if (!isset($composer_json['name'])) {
-            $composer_json['name'] = APP_ID === 'gini' ? 'genee/gini' : "gini-modules/${APP_ID}";
+            $composer_json['name'] = APP_ID === 'gini' ? 'genee/gini' : "gini-modules/$APP_ID";
         }
 
         if (isset($composer_json['require']) || isset($composer_json['require-dev'])) {

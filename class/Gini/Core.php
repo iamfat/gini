@@ -418,14 +418,6 @@ namespace Gini {
         }
 
         /**
-         * @ignore Assertion Handler
-         **/
-        public static function assertion($file, $line, $code, $desc = null)
-        {
-            throw new \ErrorException($desc ?: $code, -1, 1, $file, $line);
-        }
-
-        /**
          * Function to start the whole gini framework.
          **/
         public static function start()
@@ -437,11 +429,6 @@ namespace Gini {
             $env = $_SERVER['GINI_ENV'] ?? 'production';
             error_reporting($env == 'production' ? (E_ALL & ~(E_NOTICE | E_WARNING)) : (E_ALL & ~E_NOTICE));
             set_error_handler('\Gini\Core::error', E_ALL & ~(E_NOTICE | E_WARNING));
-
-            assert_options(ASSERT_ACTIVE, 1);
-            assert_options(ASSERT_WARNING, 0);
-            defined('ASSERT_QUIET_EVAL') && assert_options(ASSERT_QUIET_EVAL, 1);   // not available in PHP8
-            assert_options(ASSERT_CALLBACK, '\Gini\Core::assertion');
 
             mb_internal_encoding('utf-8');
             mb_language('uni');

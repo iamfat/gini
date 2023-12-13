@@ -54,6 +54,9 @@ namespace Gini\Controller\CGI {
 
     class Hello extends REST
     {
+        public $app;
+        public $env;
+
         public function getAny()
         {
             return new Response\JSON(['method'=>'GET', 'function'=>'getAny']);

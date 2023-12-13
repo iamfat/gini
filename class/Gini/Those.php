@@ -70,6 +70,9 @@ namespace Gini {
 
         private static $_uniqid = 0;
 
+        public $from_SQL;
+        public $where_SQL;
+
         public function uniqid()
         {
             return self::$_uniqid++;

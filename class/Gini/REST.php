@@ -11,7 +11,9 @@ $response = $rest->form()->post('hello/article', ['author'=>'libai']);
 
 class REST
 {
+    private $_http;
     private $_url;
+
     public $timeout = 5;
 
     private static $supportedMethods = ['get', 'post', 'delete', 'put', 'patch'];

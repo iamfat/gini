@@ -5,6 +5,7 @@ namespace Gini\PHPUnit\Core;
 class URI extends \Gini\PHPUnit\TestCase\CLI
 {
     private $_SERVER;
+    private $rurl_mod;
 
     public function setUp(): void
     {

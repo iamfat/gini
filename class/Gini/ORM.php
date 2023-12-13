@@ -17,6 +17,7 @@
 
 namespace Gini {
 
+    #[\AllowDynamicProperties]
     abstract class ORM
     {
         private $_criteria;

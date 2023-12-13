@@ -67,6 +67,9 @@ namespace Gini\Controller\API {
 
     class RPCTest
     {
+        public $app;
+        public $env;
+
         public function actionCamelCaseMethod($s)
         {
             return $s;

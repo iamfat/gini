@@ -35,6 +35,13 @@ abstract class CGI
     public $params;
 
     /**
+     * current app module info.
+     *
+     * @var array
+     */
+    public $app;
+
+    /**
      * Environmental variables such as $_GET/$_POST/$_FILES/route passed to current controller.
      *
      * @var array

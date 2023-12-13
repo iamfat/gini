@@ -6,6 +6,8 @@ use Gini\Those;
 
 class AnyOf implements Condition
 {
+    private $conditions;
+
     public function __construct(array $conditions)
     {
         $this->conditions = $conditions;
