@@ -44,7 +44,10 @@ class WhoAre implements Condition
         $those->context('from', $from);
 
         $whereArr = (array)$ofWhat->context('where');
+        if ($whereArr) {
+            $whereArr[] = 'AND';
+        }
         $whereArr[] = Whose::fieldName($those, 'id') . ' = ' . $ofWhatFieldName;
-        return '(' . implode(' AND ', $whereArr) . ')';
+        return '(' . implode(' ', $whereArr) . ')';
     }
 }
