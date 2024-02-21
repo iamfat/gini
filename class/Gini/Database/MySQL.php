@@ -15,17 +15,10 @@ class MySQL extends \PDO implements Driver
         if ($table || !$this->_table_status) {
             if ($table && $table != '*') {
                 unset($this->_table_status[$table]);
-                $SQL = sprintf(
-                    'SHOW TABLE STATUS FROM %s WHERE "Name"=%s',
-                    $this->quoteIdent($this->_dbname),
-                    $this->quote($table)
-                );
+                $SQL = "SHOW TABLE STATUS FROM {$this->quoteIdent($this->_dbname)} WHERE \"Name\"={$this->quote($table)}";
             } else {
                 $this->_table_status = null;
-                $SQL = sprintf(
-                    'SHOW TABLE STATUS FROM %s',
-                    $this->quoteIdent($this->_dbname)
-                );
+                $SQL = "SHOW TABLE STATUS FROM {$this->quoteIdent($this->_dbname)}";
             }
             $rs = $this->query($SQL);
             while ($r = $rs->fetchObject()) {
@@ -66,7 +59,7 @@ class MySQL extends \PDO implements Driver
             return implode(',', $v);
         }
 
-        return '"'.addslashes($name).'"';
+        return '"' . addslashes($name) . '"';
     }
 
     public function tableExists($table)
@@ -101,7 +94,12 @@ class MySQL extends \PDO implements Driver
             $this->createTable($table);
         }
 
-        $alter_sqls = [];
+        $alter_sqls = [
+            'drop_indexes' => [],
+            'modify_fields' => [],
+            'modify_data' => [],
+            'add_indexes' => [],
+        ];
 
         $fields = (array) $schema['fields'];
 
@@ -110,7 +108,7 @@ class MySQL extends \PDO implements Driver
         $curr_fields = (array) $curr_schema['fields'];
         $missing_fields = array_diff_key($fields, $curr_fields);
         foreach ($missing_fields as $key => $field) {
-            $alter_sqls[1][] = 'ADD '.$this->_fieldSQL($key, $field);
+            $alter_sqls['modify_fields'][] = "ADD {$this->_fieldSQL($key,$field)}";
         }
 
         foreach ($curr_fields as $key => $curr_field) {
@@ -118,16 +116,18 @@ class MySQL extends \PDO implements Driver
             if ($field) {
                 $curr_type = $this->_normalizeType($curr_field['type']);
                 $type = $this->_normalizeType($field['type']);
-                if ($type !== $curr_type
+                if (
+                    $type !== $curr_type
                     || $field['null'] != $curr_field['null']
                     || $field['default'] != $curr_field['default']
-                    || $field['serial'] != $curr_field['serial']) {
-                    $alter_sqls[1][] = sprintf('CHANGE %s %s', $this->quoteIdent($key), $this->_fieldSQL($key, $field));
+                    || $field['serial'] != $curr_field['serial']
+                ) {
+                    $alter_sqls['modify_fields'][] = "CHANGE {$this->quoteIdent($key)} {$this->_fieldSQL($key,$field)}";
                     // echo "Current Fields:\n".yaml_emit($curr_field)."\n";
                     // echo "Expected Fields:\n".yaml_emit($field)."\n";
                 }
             } elseif ($flag & \Gini\Database::ADJFLAG_REMOVE_NONEXISTENT) {
-                $field_sql[0][] = sprintf('DROP %s', $this->quoteIdent($key));
+                $alter_sqls['modify_fields'][] = "DROP {$this->quoteIdent($key)}";
             }
             /*
             elseif ($key[0] != '@') {
@@ -135,8 +135,7 @@ class MySQL extends \PDO implements Driver
                 while (isset($curr_fields[$nkey])) {
                     $nkey .= '_';
                 }
-
-                $field_sql[] = sprintf('CHANGE %s %s'
+                $alter_sqls['modify_fields'][] = sprintf('CHANGE %s %s'
                     , $this->quoteIdent($key)
                     , $this->_fieldSQL($nkey, $curr_field));
             }
@@ -144,7 +143,7 @@ class MySQL extends \PDO implements Driver
         }
 
         if (count($fields) > 0 && isset($curr_fields['_FOO'])) {
-            $alter_sqls[1][] = sprintf('DROP %s', $this->quoteIdent('_FOO'));
+            $alter_sqls['modify_fields'][] = "DROP {$this->quoteIdent('_FOO')}";
         }
 
         // ------ CHECK INDEXES
@@ -153,7 +152,7 @@ class MySQL extends \PDO implements Driver
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
         foreach ($missing_indexes as $key => $val) {
-            $alter_sqls[1][] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
+            $alter_sqls['add_indexes'][] = "ADD {$this->_addIndexSQL($key,$val)}";
         }
 
         foreach ($curr_indexes as $key => $curr_val) {
@@ -162,12 +161,12 @@ class MySQL extends \PDO implements Driver
                 ksort($val);
                 ksort($curr_val);
                 if ($val != $curr_val) {
-                    $alter_sqls[1][] = sprintf('DROP %s', $this->_dropIndexSQL($key, $curr_val));
-                    $alter_sqls[1][] = sprintf('ADD %s', $this->_addIndexSQL($key, $val));
+                    $alter_sqls['drop_indexes'][] = "DROP {$this->_dropIndexSQL($key,$curr_val)}";
+                    $alter_sqls['add_indexes'][] = "ADD {$this->_addIndexSQL($key,$val)}";
                 }
             } else {
                 // remove other indexes
-                $alter_sqls[0][] = sprintf('DROP INDEX %s', $this->quoteIdent($key));
+                $alter_sqls['drop_indexes'][] = "DROP INDEX {$this->quoteIdent($key)}";
             }
         }
 
@@ -178,42 +177,63 @@ class MySQL extends \PDO implements Driver
         $missing_relations = array_diff_key($relations, $curr_relations);
 
         foreach ($missing_relations as $key => $val) {
-            $alter_sqls[2][] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
+            $alter_sqls['add_indexes'][] = "ADD {$this->_addRelationSQL($key,$val)}";
+            $alter_sqls['modify_data'][] = $this->_cleanUpInvalidDataSQL($table, $val);
         }
 
         foreach ($curr_relations as $key => $curr_val) {
             $val = $relations[$key];
             if ($val) {
                 if (array_diff($val, $curr_val)) {
-                    $alter_sqls[0][] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
-                    $alter_sqls[2][] = sprintf('ADD %s', $this->_addRelationSQL($key, $val));
+                    $alter_sqls['drop_indexes'][] = "DROP FOREIGN KEY {$this->quoteIdent($key)}";
+                    $alter_sqls['add_indexes'][] = "ADD {$this->_addRelationSQL($key,$val)}";
+                    $alter_sqls['modify_data'][] = $this->_cleanUpInvalidDataSQL($table, $val);
                 }
             } else {
                 // remove other relations
-                $alter_sqls[2][] = sprintf('DROP FOREIGN KEY %s', $this->quoteIdent($key));
+                $alter_sqls['drop_indexes'][] = "DROP FOREIGN KEY {$this->quoteIdent($key)}";
             }
         }
 
-        foreach ($alter_sqls as $sqls) {
+        $error = null;
+        foreach ($alter_sqls as $key => $sqls) {
             if (count($sqls) == 0) {
                 continue;
             }
-            $SQL = sprintf(
-                'ALTER TABLE %s %s',
-                $this->quoteIdent($table),
-                implode(', ', $sqls)
-            );
-            if (false === $this->query($SQL)) {
-                throw new \Gini\Database\Exception($this->errorInfo()[2]."\tSQL: $SQL");
+            if ($key === 'modify_data') {
+                foreach ($sqls as $sql) {
+                    try {
+                        if (!$this->query($sql)) {
+                            $error =  "{$this->errorInfo()[2]} SQL: $sql";
+                            break;
+                        }
+                    } catch (\PDOException $e) {
+                        $error = "{$e->getMessage()} SQL: $sql";
+                    }
+                }
+            } else {
+                $sql = 'ALTER TABLE ' . $this->quoteIdent($table) . ' ' .  implode(', ', $sqls);
+                try {
+                    if (!$this->query($sql)) {
+                        $error =  "{$this->errorInfo()[2]} SQL: $sql";
+                    }
+                } catch (\PDOException $e) {
+                    $error = "{$e->getMessage()} SQL: $sql";
+                }
             }
-            $this->tableSchema($table, true);
+            if ($error) break;
         }
+        if ($error) {
+            throw new \Gini\Database\Exception($error);
+        }
+
+        $this->tableSchema($table, true);
     }
 
     public function tableSchema($name, $refresh = false)
     {
         if ($refresh || !isset($this->_table_schema[$name]['fields'])) {
-            $ds = $this->query(sprintf('SHOW FIELDS FROM "%s"', $name));
+            $ds = $this->query("SHOW FIELDS FROM {$this->quoteIdent($name)}");
 
             $fields = [];
             if ($ds) {
@@ -240,7 +260,7 @@ class MySQL extends \PDO implements Driver
         }
 
         if ($refresh || !isset($this->_table_schema[$name]['indexes'])) {
-            $ds = $this->query(sprintf('SHOW INDEX FROM %s', $this->quoteIdent($name)));
+            $ds = $this->query('SHOW INDEX FROM ' . $this->quoteIdent($name));
             $indexes = [];
             if ($ds) {
                 while ($row = $ds->fetchObject()) {
@@ -256,7 +276,7 @@ class MySQL extends \PDO implements Driver
         }
 
         if ($refresh || !isset($this->_table_schema[$name]['relations'])) {
-            $ds = $this->query(sprintf('SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_SCHEMA = %s AND TABLE_NAME = %s AND REFERENCED_TABLE_NAME IS NOT NULL', $this->quote($this->_dbname), $this->quote($name)));
+            $ds = $this->query("SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE CONSTRAINT_SCHEMA = {$this->quote($this->_dbname)} AND TABLE_NAME = {$this->quote($name)} AND REFERENCED_TABLE_NAME IS NOT NULL");
             $relations = [];
             if ($ds) {
                 while ($row = $ds->fetchObject()) {
@@ -278,32 +298,31 @@ class MySQL extends \PDO implements Driver
     private function _fieldSQL($key, $field)
     {
         if (isset($field['default'])) {
-            if (in_array($field['type'], ['datetime','timestamp'])
-                && $field['default'] == 'CURRENT_TIMESTAMP') {
+            if (
+                in_array($field['type'], ['datetime', 'timestamp'])
+                && $field['default'] == 'CURRENT_TIMESTAMP'
+            ) {
                 $default = $field['default'];
             } elseif (!in_array($field['type'], ['text', 'mediumtext', 'longtext'])) {
                 $default = $field['serial'] ? null : $this->quote($field['default']);
             }
         }
 
-        return sprintf(
-            '%s %s%s%s%s',
-            $this->quoteIdent($key),
-            $field['type'],
-            $field['null'] ? '' : ' NOT NULL',
-            $default ? ' DEFAULT '.$default : '',
-            $field['serial'] ? ' AUTO_INCREMENT' : ''
-        );
+        return $this->quoteIdent($key) . ' ' .
+            $field['type'] .
+            ($field['null'] ? '' : ' NOT NULL') .
+            ($default ? ' DEFAULT ' . $default : '') .
+            ($field['serial'] ? ' AUTO_INCREMENT PRIMARY KEY' : '');
     }
 
     private function _dropIndexSQL($key, $val)
     {
         switch ($val['type']) {
-        case 'primary':
-            $type = 'PRIMARY KEY';
-            break;
-        default:
-            $type = 'INDEX '.$this->quoteIdent($key);
+            case 'primary':
+                $type = 'PRIMARY KEY';
+                break;
+            default:
+                $type = "INDEX {$this->quoteIdent($key)}";
         }
 
         return $type;
@@ -311,21 +330,23 @@ class MySQL extends \PDO implements Driver
 
     private function _addIndexSQL($key, $val)
     {
+        $quotedKey = $this->quoteIdent($key);
         switch ($val['type']) {
-        case 'primary':
-            $type = 'PRIMARY KEY';
-            break;
-        case 'unique':
-            $type = 'UNIQUE '.$this->quoteIdent($key);
-            break;
-        case 'fulltext':
-            $type = 'FULLTEXT '.$this->quoteIdent($key);
-            break;
-        default:
-            $type = 'INDEX '.$this->quoteIdent($key);
+            case 'primary':
+                $type = 'PRIMARY KEY';
+                break;
+            case 'unique':
+                $type = 'UNIQUE ' . $quotedKey;
+                break;
+            case 'fulltext':
+                $type = 'FULLTEXT ' . $quotedKey;
+                break;
+            default:
+                $type = 'INDEX ' . $quotedKey;
         }
 
-        return sprintf('%s (%s)', $type, $this->quoteIdent($val['fields']));
+        $quotedFields = $this->quoteIdent($val['fields']);
+        return "$type ($quotedFields)";
     }
 
     private function _addRelationSQL($key, $val)
@@ -358,15 +379,21 @@ class MySQL extends \PDO implements Driver
                 $updateAction = 'NO ACTION';
         }
 
-        return sprintf(
-            'CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s',
-            $this->quoteIdent($key),
-            $this->quoteIdent($val['column']),
-            $this->quoteIdent($val['ref_table']),
-            $this->quoteIdent($val['ref_column']),
-            $deleteAction,
-            $updateAction
-        );
+        return "CONSTRAINT {$this->quoteIdent($key)} FOREIGN KEY ({$this->quoteIdent($val['column'])}) REFERENCES {$this->quoteIdent($val['ref_table'])} ({$this->quoteIdent($val['ref_column'])}) ON DELETE $deleteAction ON UPDATE $updateAction";
+    }
+
+    private function _cleanUpInvalidDataSQL($table, $val)
+    {
+        // 修正破坏完整性的数据
+        $quotedTable = $this->quoteIdent($table);
+        $quotedColumn = $this->quoteIdent($val['column']);
+        $quotedRefTable = $this->quoteIdent($val['ref_table']);
+        $quotedRefColumn = $this->quoteIdent($val['ref_column']);
+        if ($val['delete'] == 'null') {
+            return "UPDATE IGNORE $quotedTable SET $quotedColumn=NULL WHERE NOT EXISTS (SELECT * FROM $quotedRefTable WHERE $quotedRefColumn=$quotedTable.$quotedColumn)";
+        } else {
+            return "DELETE IGNORE FROM $quotedTable WHERE NOT EXISTS (SELECT * FROM $quotedRefTable WHERE $quotedRefColumn=$quotedTable.$quotedColumn)";
+        }
     }
 
     public function createTable($table)
@@ -379,12 +406,7 @@ class MySQL extends \PDO implements Driver
             $engine = 'innodb';  //innodb as default db
         }
 
-        $SQL = sprintf(
-            'CREATE TABLE IF NOT EXISTS %s (%s INT NOT NULL) ENGINE = %s DEFAULT CHARSET = utf8',
-            $this->quoteIdent($table),
-            $this->quoteIdent('_FOO'),
-            $this->quote($engine)
-        );
+        $SQL = "CREATE TABLE IF NOT EXISTS {$this->quoteIdent($table)} ({$this->quoteIdent('_FOO')} INT NOT NULL) ENGINE = {$this->quote($engine)} DEFAULT CHARSET = utf8";
         $rs = $this->query($SQL);
         $this->_updateTableStatus($table);
 
@@ -393,12 +415,9 @@ class MySQL extends \PDO implements Driver
 
     public function dropTable($table)
     {
-        $this->query('DROP TABLE '.$this->quoteIdent($table));
-        $this->_updateTableStatus($table);
-        unset($this->_prepared_tables[$table]);
-        unset($this->_table_fields[$table]);
-        unset($this->_table_indexes[$table]);
-
+        $this->query("DROP TABLE {$this->quoteIdent($table)}");
+        unset($this->_table_status[$table]);
+        unset($this->_table_schema[$table]);
         return true;
     }
 
@@ -408,8 +427,7 @@ class MySQL extends \PDO implements Driver
         while ($r = $rs->fetch(\PDO::FETCH_NUM)) {
             $tables[] = $r[0];
         }
-        $this->query('DROP TABLE '.$this->quoteIdent($tables));
-
+        $this->query("TRUNCATE TABLE IF EXISTS {$this->quoteIdent($tables)}");
         return true;
     }
 
@@ -470,7 +488,7 @@ class MySQL extends \PDO implements Driver
 
         $diff = array_diff($engines, $supportedEngines);
         if (!empty($diff)) {
-            return ['MySQL does not support following engines: '.implode(',', $diff)];
+            return ['MySQL does not support following engines: ' . implode(',', $diff)];
         }
     }
 }

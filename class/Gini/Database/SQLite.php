@@ -310,11 +310,8 @@ class SQLite extends \PDO implements Driver
     public function dropTable($table)
     {
         $this->query('DROP TABLE IF EXISTS '.$this->quoteIdent($table));
-        $this->_update_table_status($table);
-        unset($this->_prepared_tables[$table]);
-        unset($this->_table_fields[$table]);
-        unset($this->_table_indexes[$table]);
-
+        unset($this->_table_status[$table]);
+        unset($this->_table_schema[$table]);
         return true;
     }
 
@@ -329,7 +326,7 @@ class SQLite extends \PDO implements Driver
         }
 
         foreach ((array) $tables as $table) {
-            $this->query('DROP TABLE IF EXISTS '.$this->quoteIdent($table));
+            $this->query('TRUNCATE TABLE IF EXISTS '.$this->quoteIdent($table));
         }
 
         return true;
