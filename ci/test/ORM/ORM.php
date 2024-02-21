@@ -90,7 +90,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
                 return $result;
             }));
 
-        \Gini\IoC::bind('\Gini\ORM\UTSample', function ($criteria = null) use ($db) {
+        \Gini\IoC::bind('\Gini\ORM\UT\Sample', function ($criteria = null) use ($db) {
             $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_' . uniqid())
                 ->setMethods(['db', 'ownProperties', 'name', 'tableName'])
@@ -103,11 +103,11 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
 
             $o->expects($this->any())
                 ->method('name')
-                ->will($this->returnValue('utsample'));
+                ->will($this->returnValue('ut/sample'));
 
             $o->expects($this->any())
                 ->method('tableName')
-                ->will($this->returnValue('utsample'));
+                ->will($this->returnValue('ut_sample'));
 
             $o->expects($this->any())
                 ->method('ownProperties')
@@ -115,13 +115,13 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
                     'id' => 'bigint,primary,serial',
                     '_extra' => 'array',
                     'object' => 'object',
-                    'sample' => 'object:utsample',
+                    'sample' => 'object:ut/sample',
                     'number' => 'int',
                     'boolean' => 'bool',
                     'datetime' => 'datetime',
                     'timestamp' => 'timestamp',
                     'text' => 'string',
-                    'apple' => 'object:utsample,many',
+                    'apple' => 'object:ut/sample,many',
                     'orange' => 'string:40,many',
                 ]));
 
@@ -138,14 +138,14 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
 
     public function tearDown(): void
     {
-        \Gini\IoC::clear('\Gini\ORM\UTSample');
+        \Gini\IoC::clear('\Gini\ORM\UT\Sample');
         parent::tearDown();
     }
 
     public function testSaveObject()
     {
-        $o1 = a('utsample');
-        $o2 = a('utsample');
+        $o1 = a('ut/sample');
+        $o2 = a('ut/sample');
 
         $o2->id = 10;
 
@@ -156,7 +156,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
             ->will($this->returnCallback(function ($SQL) {
                 self::assertEquals(
                     $SQL,
-                    'INSERT INTO "utsample" SET "_extra"=\'{}\',"object_name"=\'utsample\',"object_id"=10,"sample_id"=NULL,"number"=0,"boolean"=0,"datetime"=\'0000-00-00 00:00:00\',"timestamp"=NOW(),"text"=\'\''
+                    'INSERT INTO "ut_sample" SET "_extra"=\'{}\',"object_name"=\'ut/sample\',"object_id"=10,"sample_id"=NULL,"number"=0,"boolean"=0,"datetime"=\'0000-00-00 00:00:00\',"timestamp"=NOW(),"text"=\'\''
                 );
             }));
 
@@ -165,7 +165,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
 
     public function testORMSchema()
     {
-        $schema = a('utsample')->ormSchema();
+        $schema = a('ut/sample')->ormSchema();
         $fields = $schema['fields'];
         self::assertEquals($fields['id'], ['type' => 'bigint', 'serial' => true, 'default' => 0]);
         self::assertEquals($fields['_extra'], ['type' => 'text', 'default' => '{}']);
@@ -181,10 +181,10 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
 
     public function testGet()
     {
-        $o1 = a('utsample', 2);
+        $o1 = a('ut/sample', 2);
         $o1->setData([
             'id' => 10,
-            'object_name' => 'utsample',
+            'object_name' => 'ut/sample',
             'object_id' => 2,
             'sample_id' => 4,
         ]);
@@ -200,7 +200,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
 
     public function testInjection()
     {
-        $o1 = a('utsample', 2);
+        $o1 = a('ut/sample', 2);
         $o1->inject([
             'properties' => [
                 'inject_prop1' => 'string:*',
@@ -224,11 +224,11 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
 
     public function testORMAdditionalSchemas()
     {
-        $o = a('utsample');
+        $o = a('ut/sample');
         self::assertEquals($o->ormAdditionalSchemas(), [
-            '_utsample_apple' => [
+            '_ut_sample_apple' => [
                 'fields' => [
-                    'utsample_id' => [
+                    'ut_sample_id' => [
                         'type' => 'bigint',
                         'null' => true,
                     ],
@@ -238,28 +238,28 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
                     ]
                 ],
                 'indexes' => [
-                    'PRIMARY' => ['type' => 'primary', 'fields' => ['utsample_id', 'apple_id']],
+                    'PRIMARY' => ['type' => 'primary', 'fields' => ['ut_sample_id', 'apple_id']],
                 ],
                 'relations' => [
-                    '_utsample_apple_utsample' => [
+                    '_ut_sample_apple_ut_sample' => [
                         'delete' => 'cascade',
                         'update' => 'cascade',
-                        'column' => 'utsample_id',
-                        'ref_table' => 'utsample',
+                        'column' => 'ut_sample_id',
+                        'ref_table' => 'ut_sample',
                         'ref_column' => 'id',
                     ],
-                    '_utsample_apple_apple' => [
+                    '_ut_sample_apple_apple' => [
                         'delete' => 'cascade',
                         'update' => 'cascade',
                         'column' => 'apple_id',
-                        'ref_table' => 'utsample',
+                        'ref_table' => 'ut_sample',
                         'ref_column' => 'id',
                     ]
                 ]
             ],
-            '_utsample_orange' => [
+            '_ut_sample_orange' => [
                 'fields' => [
-                    'utsample_id' => [
+                    'ut_sample_id' => [
                         'type' => 'bigint',
                         'null' => true,
                     ],
@@ -269,14 +269,14 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
                     ]
                 ],
                 'indexes' => [
-                    'PRIMARY' => ['type' => 'primary', 'fields' => ['utsample_id', 'orange']],
+                    'PRIMARY' => ['type' => 'primary', 'fields' => ['ut_sample_id', 'orange']],
                 ],
                 'relations' => [
-                    '_utsample_orange_utsample' => [
+                    '_ut_sample_orange_ut_sample' => [
                         'delete' => 'cascade',
                         'update' => 'cascade',
-                        'column' => 'utsample_id',
-                        'ref_table' => 'utsample',
+                        'column' => 'ut_sample_id',
+                        'ref_table' => 'ut_sample',
                         'ref_column' => 'id',
                     ]
                 ]
@@ -286,11 +286,11 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
 
     public function testGetMany()
     {
-        $o1 = a('utsample', 1979);
+        $o1 = a('ut/sample', 1979);
 
-        $o2 = a('utsample', 2);
-        $o3 = a('utsample', 3);
-        $o4 = a('utsample', 4);
+        $o2 = a('ut/sample', 2);
+        $o3 = a('ut/sample', 3);
+        $o4 = a('ut/sample', 4);
 
         $o1->apple[$o2->id] = $o2;
         $o1->apple[$o3->id] = $o3;
@@ -328,8 +328,8 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
             $SQLs[] = $SQL;
         }
 
-        self::assertEquals($SQLs[2], 'SELECT "apple_id" AS oid FROM "_utsample_apple" WHERE "utsample_id"=1979 FOR UPDATE');
-        self::assertEquals($SQLs[3], 'DELETE FROM "_utsample_apple" WHERE "utsample_id"=1979 AND "apple_id" IN (1)');
-        self::assertEquals($SQLs[4], 'INSERT INTO "_utsample_apple" ("utsample_id", "apple_id") VALUES (1979,3),(1979,4)');
+        self::assertEquals($SQLs[2], 'SELECT "apple_id" AS oid FROM "_ut_sample_apple" WHERE "ut_sample_id"=1979 FOR UPDATE');
+        self::assertEquals($SQLs[3], 'DELETE FROM "_ut_sample_apple" WHERE "ut_sample_id"=1979 AND "apple_id" IN (1)');
+        self::assertEquals($SQLs[4], 'INSERT INTO "_ut_sample_apple" ("ut_sample_id", "apple_id") VALUES (1979,3),(1979,4)');
     }
 }

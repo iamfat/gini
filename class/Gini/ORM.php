@@ -353,7 +353,7 @@ namespace Gini {
 
             foreach ($structure as $k => $v) {
                 $field = null;
-
+                $fieldKey = $this->normalizeName($k);
                 foreach ($v as $p => $pv) {
                     switch ($p) {
                         case 'int':
@@ -408,24 +408,23 @@ namespace Gini {
                         case 'default':
                             $field['default'] = $pv;
                             break;
-                        case 'primary':
-                            $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => [$k]];
-                            break;
-                        case 'unique':
-                            $indexes['_IDX_' . $k] = ['type' => 'unique', 'fields' => [$k]];
-                            break;
                         case 'serial':
                             $field['serial'] = true;
+                        case 'primary':
+                            $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => [$fieldKey]];
+                            break;
+                        case 'unique':
+                            $indexes['_IDX_' . $fieldKey] = ['type' => 'unique', 'fields' => [$fieldKey]];
                             break;
                         case 'index':
-                            $indexes['_IDX_' . $k] = ['fields' => [$k]];
+                            $indexes['_IDX_' . $fieldKey] = ['fields' => [$fieldKey]];
                             // no break
                         case 'object':
                             // 需要添加新的$field
                             if (!$pv) {
-                                $fields[$k . '_name'] = ['type' => 'varchar(120)'];
+                                $fields[$fieldKey . '_name'] = ['type' => 'varchar(120)'];
                             }
-                            $fields[$k . '_id'] = ['type' => 'bigint', 'null' => true];
+                            $fields[$fieldKey . '_id'] = ['type' => 'bigint', 'null' => true];
                     }
                 }
 
@@ -468,7 +467,7 @@ namespace Gini {
                                 break;
                         }
                     }
-                    $fields[$k] = $field;
+                    $fields[$fieldKey] = $field;
                 }
             }
 
@@ -478,16 +477,17 @@ namespace Gini {
                 $vvv['delete'] = $vv['delete'];
                 $vvv['update'] = $vv['update'];
 
+                $relationKey = $this->normalizeName($k);
                 // correct object name
                 if (array_key_exists('object', (array) $structure[$k])) {
                     if (!$structure[$k]['object']) {
                         continue;
                     }
-                    $vvv['column'] = $k . '_id';
+                    $vvv['column'] = $relationKey . '_id';
                     $vvv['ref_table'] = a($structure[$k]['object'])->tableName();
                     $vvv['ref_column'] = 'id';
                 } elseif (isset($vv['ref'])) {
-                    $vvv['column'] = $k;
+                    $vvv['column'] = $relationKey;
                     $ref = explode('.', $vv['ref'], 2);
                     $vvv['ref_table'] = a($ref[0])->tableName();
                     $vvv['ref_column'] = $ref[1];
@@ -497,7 +497,7 @@ namespace Gini {
                 }
 
                 $prefix = $table ?: $this->tableName();
-                $relations[$prefix . '_' . $k] = $vvv;
+                $relations[$prefix . '_' . $relationKey] = $vvv;
             }
 
             // 索引项
@@ -505,12 +505,12 @@ namespace Gini {
             foreach ($ormIndexes as $k => $v) {
                 list($vk, $vv) = explode(':', $v, 2);
                 $vk = trim($vk);
-                $vv = trim($vv);
+                $vv = trim($vv ?? '');
                 if (!$vv) {
-                    $vv = trim($vk);
+                    $vv = $vk;
                     $vk = null;
                 }
-
+                $indexKey = $this->normalizeName($k);
                 $vv = explode(',', $vv);
                 foreach ($vv as &$vvv) {
                     $vvv = trim($vvv);
@@ -521,20 +521,23 @@ namespace Gini {
                         }
                         $vvv = $vvv . '_id';
                     }
+                    $vvv = $this->normalizeName($vvv);
                 }
 
                 switch ($vk) {
                     case 'unique':
-                        $indexes['_MIDX_' . $k] = ['type' => 'unique', 'fields' => $vv];
+                        $indexes['_MIDX_' . $indexKey] = ['type' => 'unique', 'fields' => $vv];
                         break;
                     case 'primary':
-                        $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => $vv];
+                        if (!isset($indexes['PRIMARY'])) {
+                            $indexes['PRIMARY'] = ['type' => 'primary', 'fields' => $vv];
+                        }
                         break;
                     case 'fulltext':
-                        $indexes['_MIDX_' . $k] = ['type' => 'fulltext', 'fields' => $vv];
+                        $indexes['_MIDX_' . $indexKey] = ['type' => 'fulltext', 'fields' => $vv];
                         break;
                     default:
-                        $indexes['_MIDX_' . $k] = ['fields' => $vv];
+                        $indexes['_MIDX_' . $indexKey] = ['fields' => $vv];
                 }
             }
 
