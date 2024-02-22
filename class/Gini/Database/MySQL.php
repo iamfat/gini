@@ -178,7 +178,7 @@ class MySQL extends \PDO implements Driver
 
         foreach ($missing_relations as $key => $val) {
             $alter_sqls['add_indexes'][] = "ADD {$this->_addRelationSQL($key,$val)}";
-            $alter_sqls['modify_data'][] = $this->_cleanUpInvalidDataSQL($table, $val);
+            $alter_sqls['modify_data'][] = $this->_cleanUpInvalidDataSQL($table, $val, $fields[$val['column']]);
         }
 
         foreach ($curr_relations as $key => $curr_val) {
@@ -187,7 +187,7 @@ class MySQL extends \PDO implements Driver
                 if (array_diff($val, $curr_val)) {
                     $alter_sqls['drop_indexes'][] = "DROP FOREIGN KEY {$this->quoteIdent($key)}";
                     $alter_sqls['add_indexes'][] = "ADD {$this->_addRelationSQL($key,$val)}";
-                    $alter_sqls['modify_data'][] = $this->_cleanUpInvalidDataSQL($table, $val);
+                    $alter_sqls['modify_data'][] = $this->_cleanUpInvalidDataSQL($table, $val, $fields[$val['column']]);
                 }
             } else {
                 // remove other relations
@@ -209,6 +209,7 @@ class MySQL extends \PDO implements Driver
                         }
                     } catch (\PDOException $e) {
                         $error = "{$e->getMessage()} SQL: $sql";
+                        break;
                     }
                 }
             } else {
@@ -361,6 +362,9 @@ class MySQL extends \PDO implements Driver
             case 'null':
                 $deleteAction = 'SET NULL';
                 break;
+            case 'default':
+                $deleteAction = 'SET DEFAULT';
+                break;
             default:
                 $deleteAction = 'NO ACTION';
         }
@@ -375,6 +379,9 @@ class MySQL extends \PDO implements Driver
             case 'null':
                 $updateAction = 'SET NULL';
                 break;
+            case 'default':
+                $updateAction = 'SET DEFAULT';
+                break;
             default:
                 $updateAction = 'NO ACTION';
         }
@@ -382,7 +389,7 @@ class MySQL extends \PDO implements Driver
         return "CONSTRAINT {$this->quoteIdent($key)} FOREIGN KEY ({$this->quoteIdent($val['column'])}) REFERENCES {$this->quoteIdent($val['ref_table'])} ({$this->quoteIdent($val['ref_column'])}) ON DELETE $deleteAction ON UPDATE $updateAction";
     }
 
-    private function _cleanUpInvalidDataSQL($table, $val)
+    private function _cleanUpInvalidDataSQL($table, $val, $field)
     {
         // 修正破坏完整性的数据
         $quotedTable = $this->quoteIdent($table);
@@ -391,6 +398,9 @@ class MySQL extends \PDO implements Driver
         $quotedRefColumn = $this->quoteIdent($val['ref_column']);
         if ($val['delete'] == 'null') {
             return "UPDATE IGNORE $quotedTable SET $quotedColumn=NULL WHERE NOT EXISTS (SELECT * FROM $quotedRefTable WHERE $quotedRefColumn=$quotedTable.$quotedColumn)";
+        } else  if ($val['delete'] === 'default') {
+            $quotedDefaultValue = $this->quote($field['default']);
+            return "UPDATE IGNORE $quotedTable SET $quotedColumn=$quotedDefaultValue WHERE NOT EXISTS (SELECT * FROM $quotedRefTable WHERE $quotedRefColumn=$quotedTable.$quotedColumn)";
         } else {
             return "DELETE IGNORE FROM $quotedTable WHERE NOT EXISTS (SELECT * FROM $quotedRefTable WHERE $quotedRefColumn=$quotedTable.$quotedColumn)";
         }
