@@ -55,7 +55,7 @@ namespace Gini {
                         throw new Database\Exception('database "' . $name . '" was not configured correctly!');
                     }
 
-                    $db = \Gini\IoC::construct('\Gini\Database', $opt['dsn'], $opt['username'], $opt['password'], $opt['options']);
+                    $db = \Gini\IoC::construct('\Gini\Database', $opt['dsn'] ?? null, $opt['username'] ?? null, $opt['password'] ?? null, $opt['options'] ?? null);
                 }
 
                 static::$DB[$name] = $db;

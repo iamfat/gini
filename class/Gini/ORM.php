@@ -436,7 +436,7 @@ namespace Gini {
                                 if (!isset($field['null']) && !isset($field['default'])) {
                                     $field['default'] = 0;
                                 } else {
-                                    $field['default'] = intval($field['default']);
+                                    $field['default'] = isset($field['default']) ? intval($field['default']) : 0;
                                 }
                                 break;
                             case 'double':
@@ -503,9 +503,9 @@ namespace Gini {
             // 索引项
             $ormIndexes = $ormIndexes ?: $this->ormIndexes();
             foreach ($ormIndexes as $k => $v) {
-                list($vk, $vv) = explode(':', $v, 2);
+                list($vk, $vv) = array_pad(explode(':', $v, 2), 2, '');
                 $vk = trim($vk);
-                $vv = trim($vv ?? '');
+                $vv = trim($vv);
                 if (!$vv) {
                     $vv = $vk;
                     $vk = null;
@@ -605,11 +605,11 @@ namespace Gini {
                         }
                     } else {
                         $o = $this->_oinfo[$k] ?? null;
-                        if (!isset($oname)) {
+                        if (isset($o) && !isset($oname)) {
                             $db_data[$k . '_name'] = $oname ?: $o->name;
                         }
                     }
-                    $db_data[$k . '_id'] = $o->id ?: null;
+                    $db_data[$k . '_id'] = $o ? $o->id ?? null : null;
                 } elseif (array_key_exists('array', $v)) {
                     if (is_array($this->$k)) {
                         if (count($this->$k) === 0) {

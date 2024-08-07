@@ -108,7 +108,11 @@ class MySQL extends \PDO implements Driver
         $curr_fields = (array) $curr_schema['fields'];
         $missing_fields = array_diff_key($fields, $curr_fields);
         foreach ($missing_fields as $key => $field) {
-            $alter_sqls['modify_fields'][] = "ADD {$this->_fieldSQL($key,$field)}";
+            if ($field['serial']) {
+                $alter_sqls['create_fields'][] = "ADD {$this->_fieldSQL($key,$field)}";
+            } else {
+                $alter_sqls['modify_fields'][] = "ADD {$this->_fieldSQL($key,$field)}";
+            }
         }
 
         foreach ($curr_fields as $key => $curr_field) {
@@ -118,9 +122,9 @@ class MySQL extends \PDO implements Driver
                 $type = $this->_normalizeType($field['type']);
                 if (
                     $type !== $curr_type
-                    || $field['null'] != $curr_field['null']
-                    || $field['default'] != $curr_field['default']
-                    || $field['serial'] != $curr_field['serial']
+                    || ($field['null'] ?? null) != ($curr_field['null'] ?? null)
+                    || ($field['default'] ?? null) != ($curr_field['default'] ?? null)
+                    || ($field['serial'] ?? null) != ($curr_field['serial'] ?? null)
                 ) {
                     $alter_sqls['modify_fields'][] = "CHANGE {$this->quoteIdent($key)} {$this->_fieldSQL($key,$field)}";
                     // echo "Current Fields:\n".yaml_emit($curr_field)."\n";
@@ -152,7 +156,14 @@ class MySQL extends \PDO implements Driver
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
         foreach ($missing_indexes as $key => $val) {
-            $alter_sqls['add_indexes'][] = "ADD {$this->_addIndexSQL($key,$val)}";
+            if ($val['type'] === 'primary') {
+                $index_fields = $val['fields'];
+                if (count($index_fields) > 1 || !$fields[$index_fields[0]] || !$fields[$index_fields[0]]['serial']) {
+                    $alter_sqls['create_fields'][] = "ADD {$this->_addIndexSQL($key,$val)}";
+                }
+            } else {
+                $alter_sqls['add_indexes'][] = "ADD {$this->_addIndexSQL($key,$val)}";
+            }
         }
 
         foreach ($curr_indexes as $key => $curr_val) {
@@ -311,9 +322,9 @@ class MySQL extends \PDO implements Driver
 
         return $this->quoteIdent($key) . ' ' .
             $field['type'] .
-            ($field['null'] ? '' : ' NOT NULL') .
-            ($default ? ' DEFAULT ' . $default : '') .
-            ($field['serial'] ? ' AUTO_INCREMENT PRIMARY KEY' : '');
+            (isset($field['null']) ? '' : ' NOT NULL') .
+            (isset($default) ? ' DEFAULT ' . $default : '') .
+            (isset($field['serial']) ? ' AUTO_INCREMENT PRIMARY KEY' : '');
     }
 
     private function _dropIndexSQL($key, $val)

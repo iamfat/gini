@@ -43,7 +43,7 @@ class Config
 
     public static function set($key, $val)
     {
-        list($category, $key) = explode('.', $key, 2);
+        list($category, $key) = array_pad(explode('.', $key, 2), 2, null);
         if ($key) {
             if ($val === null) {
                 unset(self::$items[$category][$key]);
@@ -61,7 +61,7 @@ class Config
 
     public static function append($key, $val)
     {
-        list($category, $key) = explode('.', $key, 2);
+        list($category, $key) = array_pad(explode('.', $key, 2), 2, null);
         if (self::$items[$category][$key] === null) {
             self::$items[$category][$key] = $val;
         } elseif (is_array(self::$items[$category][$key])) {

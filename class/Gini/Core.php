@@ -426,8 +426,8 @@ namespace Gini {
             register_shutdown_function('\Gini\Core::shutdown');
             set_exception_handler('\Gini\Core::exception');
 
-            $env = $_SERVER['GINI_ENV'] ?? 'production';
-            error_reporting($env == 'production' ? (E_ALL & ~(E_NOTICE | E_WARNING)) : (E_ALL & ~E_NOTICE));
+            $env = $_SERVER['GINI_ENV'] ?? 'development';
+            error_reporting($env === 'development' ?  (E_ALL & ~E_NOTICE) : (E_ALL & ~(E_NOTICE | E_WARNING)));
             set_error_handler('\Gini\Core::error', E_ALL & ~(E_NOTICE | E_WARNING));
 
             mb_internal_encoding('utf-8');
@@ -568,7 +568,7 @@ namespace {
             if (count($args) > 1) {
                 $str = call_user_func_array('sprintf', $args);
             } else {
-                $str = $args[0];
+                $str = $args[0] ?? '';
             }
 
             // iconv('UTF-8', 'UTF-8//TRANSLIT//IGNORE', $str)

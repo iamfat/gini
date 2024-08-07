@@ -93,7 +93,7 @@ class CGI
             error_log(sprintf('ERROR %s', $message));
             $trace = array_slice($e->getTrace(), 0, 5);
             foreach ($trace as $n => $t) {
-                $file = $t['file'];
+                $file = $t['file'] ?? '';
                 foreach (\Gini\Core::$MODULE_INFO as $info) {
                     if (0 == strncmp($file, $info->path, strlen($info->path))) {
                         $file = "[$info->id] " . \Gini\File::relativePath($file, $info->path);
@@ -187,7 +187,7 @@ class CGI
         }
     }
 
-    public static function header(string $string, bool $replace = true, int $http_response_code = null)
+    public static function header(string $string, bool $replace = true, int $http_response_code = 0)
     {
         $header = static::$requestOptions['header'];
         if ($header) {
@@ -228,14 +228,14 @@ class CGI
 
         Session::setup();
 
-        if (!$options['aio']) {
+        if (!isset($options['aio']) || !$options['aio']) {
             static::beforeRequest($options);
         }
     }
 
     public static function shutdown()
     {
-        if (!static::$setupOptions['aio']) {
+        if (!isset(static::$setupOptions['aio']) || !static::$setupOptions['aio']) {
             static::afterRequest();
         }
         Session::shutdown();

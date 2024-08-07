@@ -43,7 +43,7 @@ class Util
     public static function randPassword($length = 12, $level = 3)
     {
         list($usec, $sec) = explode(' ', microtime());
-        srand((float) $sec + ((float) $usec * 100000));
+        srand(floor((float) $sec + ((float) $usec * 100000)));
 
         $validchars[1] = '0123456789abcdfghjkmnpqrstvwxyz';
         $validchars[2] = '0123456789abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';

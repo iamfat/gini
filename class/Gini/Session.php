@@ -142,7 +142,7 @@ class Session
         restore_error_handler();
 
         $now = time();
-        foreach ((array) $_SESSION['@TIMEOUT'] as $token => $timeout) {
+        if (isset($_SESSION['@TIMEOUT'])) foreach ((array) $_SESSION['@TIMEOUT'] as $token => $timeout) {
             if ($now > $timeout) {
                 unset($_SESSION[$token]);
                 unset($_SESSION['@TIMEOUT'][$token]);
@@ -156,7 +156,7 @@ class Session
             return;
         }
 
-        foreach ((array) $_SESSION['@ONETIME'] as $token => $remove) {
+        if (isset($_SESSION['@ONETIME'])) foreach ((array) $_SESSION['@ONETIME'] as $token => $remove) {
             if ($remove) {
                 unset($_SESSION['@ONETIME'][$token]);
                 unset($_SESSION[$token]);

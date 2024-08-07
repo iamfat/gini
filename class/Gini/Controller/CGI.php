@@ -83,7 +83,7 @@ abstract class CGI
         if ($methodName) {
             $actionName = preg_replace('/^action/i', '', $methodName);
         } else {
-            $actionName = strtr($params[0], ['-' => '', '_' => '']);
+            $actionName = strtr($params[0] ?? '', ['-' => '', '_' => '']);
             if (
                 $actionName && $actionName[0] != '_'
                 && method_exists($this, 'action' . $actionName)

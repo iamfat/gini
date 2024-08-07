@@ -35,7 +35,7 @@ namespace Gini {
             }
 
             if ($query) {
-                if ($ui['query']) {
+                if (isset($ui['query'])) {
                     if (is_string($query)) {
                         $query = self::parseQuery($query);
                     }
