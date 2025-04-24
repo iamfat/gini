@@ -251,13 +251,16 @@ class CGI
         URI::setup();
         static::$route = trim($_SERVER['PATH_INFO'] ?? $_SERVER['ORIG_PATH_INFO'], '/');
         $contentType = explode(';', $_SERVER['CONTENT_TYPE'], 2)[0];
-        if ($contentType == 'application/json') {
-            $_POST = (array) @json_decode(self::content(), true);
-        } elseif (
-            $contentType == 'application/x-www-form-urlencoded'
-            && !in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])
-        ) {
-            $_POST = URI::parseQuery(self::content());
+        $contentLength = intval($_SERVER['CONTENT_LENGTH'] ?? 0);
+        if ($contentLength <= 4096) { 
+            if ($contentType == 'application/json') {
+                $_POST = (array) @json_decode(self::content(), true);
+            } elseif (
+                $contentType == 'application/x-www-form-urlencoded'
+                && !in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])
+            ) {
+                $_POST = URI::parseQuery(self::content());
+            }    
         }
         static::$requestOptions = $options;
 
