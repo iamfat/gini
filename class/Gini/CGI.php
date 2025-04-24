@@ -60,9 +60,13 @@ class CGI
         }
 
         return [
-            'get' => $_GET, 'post' => $_POST,
-            'files' => $_FILES, 'server' => $_SERVER, 'cookie' => $_COOKIE,
-            'route' => static::$route, 'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
+            'get' => $_GET,
+            'post' => $_POST,
+            'files' => $_FILES,
+            'server' => $_SERVER,
+            'cookie' => $_COOKIE,
+            'route' => static::$route,
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
         ];
     }
 
@@ -246,9 +250,13 @@ class CGI
     {
         URI::setup();
         static::$route = trim($_SERVER['PATH_INFO'] ?? $_SERVER['ORIG_PATH_INFO'], '/');
-        if (explode(';', $_SERVER['CONTENT_TYPE'], 2)[0] == 'application/json') {
+        $contentType = explode(';', $_SERVER['CONTENT_TYPE'], 2)[0];
+        if ($contentType == 'application/json') {
             $_POST = (array) @json_decode(self::content(), true);
-        } elseif (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
+        } elseif (
+            $contentType == 'application/x-www-form-urlencoded'
+            && !in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])
+        ) {
             $_POST = URI::parseQuery(self::content());
         }
         static::$requestOptions = $options;
