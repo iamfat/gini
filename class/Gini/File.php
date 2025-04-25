@@ -143,36 +143,30 @@ class File
         if (!$from) {
             $from = APP_PATH;
         }
-        // some compatibility fixes for Windows paths
-        $from = is_dir($from) ? rtrim($from, '\/') : $from;
-        $to = is_dir($to) ? rtrim($to, '\/') : $to;
-        $from = str_replace('\\', '/', $from);
-        $to = str_replace('\\', '/', $to);
 
-        $from = explode('/', $from);
-        $to = explode('/', $to);
-        $relPath = $to;
+        // 规范化路径
+        $from = rtrim(str_replace(['\\', '//', './', '/.'], ['/', '/', '/', '/'], $from), '/');
+        $to = rtrim(str_replace(['\\', '//', './', '/.'], ['/', '/', '/', '/'], $to), '/');
 
-        foreach ($from as $depth => $dir) {
-            // find first non-matching dir
-            if ($dir === $to[$depth]) {
-                // ignore this directory
-                array_shift($relPath);
-            } else {
-                // get number of remaining dirs to $from
-                $remaining = count($from) - $depth;
-                if ($remaining > 1) {
-                    // add traversals up to first matching dir
-                    $padLength = (count($relPath) + $remaining - 1) * -1;
-                    $relPath = array_pad($relPath, $padLength, '..');
-                    break;
-                } else {
-                    $relPath[0] = './' . $relPath[0];
-                }
+        // 分割路径
+        $from = array_values(array_filter(explode('/', $from), 'strlen'));
+        $to = array_values(array_filter(explode('/', $to), 'strlen'));
+
+        // 比较路径
+        $common = 0;
+        $max = min(count($from), count($to));
+        for ($i = 0; $i < $max; $i++) {
+            if ($from[$i] !== $to[$i]) {
+                break;
             }
+            $common++;
         }
 
-        return implode('/', $relPath);
+        // 构建相对路径
+        $relative = array_fill(0, count($from) - $common, '..');
+        $relative = array_merge($relative, array_slice($to, $common));
+
+        return implode('/', $relative) ?: '.';
     }
 
     public static function inPaths($path, $paths = array())
