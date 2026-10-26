@@ -4,6 +4,8 @@ namespace Gini\PHPUnit\Those;
 
 class ORM extends \Gini\PHPUnit\TestCase\CLI
 {
+    use \Gini\PHPUnit\MockDatabase;
+
     private $resultRows = [];
     private $SQLs = [];
 
@@ -11,59 +13,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
     {
         parent::setUp();
 
-        $db = self::getMockBuilder('\Gini\Database')
-            ->setMockClassName('MOBJ_' . uniqid())
-            ->setMethods(['query', 'quote', 'quoteIdent', 'ident'])
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $db->expects($this->any())
-            ->method('quoteIdent')
-            ->will($this->returnCallback(function ($s) use ($db) {
-                if (is_array($s)) {
-                    foreach ($s as &$i) {
-                        $i = $db->quoteIdent($i);
-                    }
-
-                    return implode(',', $s);
-                }
-
-                return '"' . addslashes($s) . '"';
-            }));
-
-        $db->expects($this->any())
-            ->method('quote')
-            ->will($this->returnCallback(function ($s) use ($db) {
-                if (is_array($s)) {
-                    foreach ($s as &$i) {
-                        $i = $db->quote($i);
-                    }
-
-                    return implode(',', $s);
-                } elseif (is_null($s)) {
-                    return 'NULL';
-                } elseif (is_bool($s)) {
-                    return $s ? 1 : 0;
-                } elseif (is_int($s) || is_float($s)) {
-                    return $s;
-                }
-
-                return '\'' . addslashes($s) . '\'';
-            }));
-
-        $db->expects($this->any())
-            ->method('ident')
-            ->will($this->returnCallback(
-                function ($s) use ($db) {
-                    $args = func_get_args();
-                    $ident = array();
-                    foreach ($args as $arg) {
-                        $ident[] = $db->quoteIdent($arg);
-                    }
-
-                    return implode('.', $ident);
-                }
-            ));
+        $db = $this->createDatabaseMock(['query', 'quote', 'quoteIdent', 'ident']);
 
         $result = self::getMockBuilder('\Gini\Database\Statement')
             ->setMockClassName('MOBJ_' . uniqid())
@@ -76,17 +26,15 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
             ->will($this->returnCallback(function () {
                 $r = current($this->resultRows);
                 next($this->resultRows);
+
                 return $r ?? [];
             }));
 
-        $db->expects($this->any())
-            ->method('query')
-            ->will($this->returnCallback(function ($SQL, $idents, $others) use ($result) {
-                $this->SQLs[] = $SQL;
-                return $result;
-            }));
+        $this->attachQueryHandler($db, $result, function ($SQL) {
+            $this->SQLs[] = $SQL;
+        });
 
-        \Gini\IoC::bind('\Gini\ORM\User', function ($criteria = null) use ($db) {
+        $this->bindIoC('\Gini\ORM\User', function ($criteria = null) use ($db) {
             $o = $this->getMockBuilder('\Gini\ORM\Base')
                 ->setMockClassName('MOBJ_' . uniqid())
                 ->setMethods(['db', 'ownProperties', 'name', 'tableName'])
@@ -116,7 +64,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
                     'description' => 'string:*,null',
                     'friend' => 'object:user,many',
                     'relation' => 'object,many',
-                    'prop' => 'bigint,many'
+                    'prop' => 'bigint,many',
                 ]));
 
             unset($o->id);
@@ -136,7 +84,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
 
     public function tearDown(): void
     {
-        \Gini\IoC::clear('\Gini\ORM\User');
+        $this->clearMockIoC();
         parent::tearDown();
     }
 
@@ -153,7 +101,7 @@ class ORM extends \Gini\PHPUnit\TestCase\CLI
         self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'COOL%\'', $user->those()->SQL());
 
         \Gini\Those::reset();
-        $user  = a('user')->whose('name')->contains('COOL');
+        $user = a('user')->whose('name')->contains('COOL');
         $user->those()->makeSQL();
         self::assertEquals('SELECT DISTINCT "t0"."id","t0"."_extra","t0"."name","t0"."money","t0"."father_id","t0"."description" FROM "user" AS "t0" WHERE "t0"."name" LIKE \'%COOL%\'', $user->those()->SQL());
     }

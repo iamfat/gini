@@ -58,9 +58,9 @@ class Index extends \Gini\Controller\CLI
             // Use Username / Password
             $username = readline('User: ');
             echo 'Password: ';
-            `stty -echo`;
+            shell_exec('stty -echo');
             $password = rtrim(fgets(STDIN), "\n");
-            `stty echo`;
+            shell_exec('stty echo');
             echo "\n\n";
 
             try {

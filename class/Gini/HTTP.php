@@ -101,11 +101,11 @@ class HTTP
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FRESH_CONNECT => true,
             CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'] ?? 'Gini/'.SYS_VERSION,
-            CURLOPT_REFERER => $scheme.'://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],
+            CURLOPT_REFERER => $scheme.'://'.($_SERVER['HTTP_HOST'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
         ));
 
         $header = $this->_header;
-        $contentType = trim(explode(';', $header['content-type'])[0]);
+        $contentType = trim(explode(';', $header['content-type'] ?? '')[0]);
         if (!isset($header['Expect'])) {
             $header['Expect'] = '';
         }
@@ -172,13 +172,10 @@ class HTTP
         if ($errno) {
             $err = curl_error($ch);
             Logger::of('core')->error("CURL ERROR($errno $err): $url ");
-            curl_close($ch);
             return new HTTP\Response(null, 500);
         }
 
         $info = curl_getinfo($ch);
-
-        curl_close($ch);
 
         return new HTTP\Response($data, $info['http_code']);
     }

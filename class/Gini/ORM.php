@@ -818,6 +818,13 @@ namespace Gini {
 
         public function pivotTableName($field)
         {
+            $manyStructure = $this->manyStructure();
+            assert(isset($manyStructure[$field]));
+            if (isset($manyStructure[$field]['via'])) {
+                $via = strtolower($manyStructure[$field]['via']);
+                $pivotName = $this->normalizeName(\strtolower($via));
+                return $pivotName;
+            }
             return $this->normalizeName('_' . $this->name() . '_' . strtolower($field));
         }
 
@@ -1055,6 +1062,98 @@ namespace Gini {
                 }
             }
             return $this;
+        }
+
+        public function add($name, $value)
+        {
+            $name = \Gini\Util::hyphenate($name);
+            $manyStructure = $this->manyStructure();
+            if (!isset($manyStructure[$name])) {
+                throw new \BadMethodCallException();
+            }
+
+            $db = $this->db();
+            $table = $this->pivotTableName($name);
+            $objectKey = $this->normalizeName($this->name() . '_id');
+            $singular = $this->normalizeName(\Gini\Util::singularize($name));
+            if (array_key_exists('object', $manyStructure[$name])) {
+                $oname = $manyStructure[$name]['object'];
+                if ($oname) {
+                    $st = $db->query('INSERT INTO @table (@object_id, @field_id) VALUES :values', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field_id' => $singular . '_id',
+                    ], [
+                        ':values' => SQL('(' . $db->quote($this->id) . ', ' . $db->quote($value->id) . ')'),
+                    ]);
+                } else {
+                    $st = $db->query('INSERT INTO @table (@object_id, @field_name, @field_id) VALUES :values', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field_name' => $singular . '_name',
+                        '@field_id' => $singular . '_id',
+                    ], [
+                        ':values' => SQL('(' . $db->quote($this->id) . ', ' . $db->quote($value->name()) . ', ' . $db->quote($value->id) . ')'),
+                    ]);
+                }
+            } else {
+                $db->query('INSERT INTO @table (@object_id, @field) VALUES :values', [
+                    '@table' => $table,
+                    '@object_id' => $objectKey,
+                    '@field' => $singular,
+                ], [
+                    ':values' => SQL('(' . $db->quote($this->id) . ', ' . $db->quote($value) . ')'),
+                ]);
+            }
+
+            return $this;
+        }
+
+        public function remove($name, $value)
+        {
+            $name = \Gini\Util::hyphenate($name);
+            $manyStructure = $this->manyStructure();
+            if (!isset($manyStructure[$name])) {
+                throw new \BadMethodCallException();
+            }
+
+            $db = $this->db();
+            $table = $this->pivotTableName($name);
+            $objectKey = $this->normalizeName($this->name() . '_id');
+            $singular = $this->normalizeName(\Gini\Util::singularize($name));
+            if (array_key_exists('object', $manyStructure[$name])) {
+                $oname = $manyStructure[$name]['object'];
+                if ($oname) {
+                    $db->query('DELETE FROM @table WHERE @object_id=:id AND @field_id=:field_id', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field_id' => $singular . '_id',
+                    ], [
+                        ':id' => $this->id,
+                        ':field_id' => $value->id,
+                    ]);
+                } else {
+                    $db->query('DELETE FROM @table WHERE @object_id=:id AND @field_name=:field_name AND @field_id=:field_id', [
+                        '@table' => $table,
+                        '@object_id' => $objectKey,
+                        '@field_name' => $singular . '_name',
+                        '@field_id' => $singular . '_id',
+                    ], [
+                        ':id' => $this->id,
+                        ':field_name' => $value->name(),
+                        ':field_id' => $value->id,
+                    ]);
+                }
+            } else {
+                $db->query('DELETE FROM @table WHERE @object_id=:id AND @field=:field', [
+                    '@table' => $table,
+                    '@object_id' => $objectKey,
+                    '@field' => $singular,
+                ], [
+                    ':id' => $this->id,
+                    ':field' => $value,
+                ]);
+            }
         }
 
         // $fields = $user->fields;

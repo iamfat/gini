@@ -10,7 +10,7 @@ class Response
 
     public function __construct($data, $code=200)
     {
-        list($header, $body) = explode("\n\n", str_replace("\r", '', $data), 2);
+        list($header, $body) = array_pad(explode("\n\n", str_replace("\r", '', (string) $data), 2), 2, '');
 
         $this->body = trim($body);
 

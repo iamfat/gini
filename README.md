@@ -59,3 +59,28 @@ class Hello extends \Gini\Controller\REST {
     }
 }
 ```
+
+## 运行测试
+
+本机无需安装 PHP / Composer，测试通过 docker 容器运行，依赖树按 PHP 版本分目录并存（`vendor7`、`vendor85`），容器内把对应目录映射为 `vendor`：
+
+```sh
+# 一键双版本回归（PHP 7.4 + PHP 8.5 全量 phpunit）
+ci/dual-test.sh
+```
+
+脚本运行前会清理含陈旧绝对路径的 `cache/class_map.json`，退出时自动清理映射产生的 `vendor` 符号链接。
+
+单文件 / 带 filter 的手动跑法（结束后记得 `rm -f vendor cache/class_map.json`）：
+
+```sh
+# PHP 7.4
+docker run --rm -v "$PWD":/app -w /app docker.genee.cn/php:7.4-alpine \
+    sh -c "ln -sfn vendor7 vendor && vendor7/bin/phpunit ci/test/ORM/ORMIterator.php"
+
+# PHP 8.5
+docker run --rm -v "$PWD":/app -w /app docker.genee.cn/php:8.5-alpine \
+    sh -c "ln -sfn vendor85 vendor && vendor85/bin/phpunit --filter testFetch"
+
+rm -f vendor cache/class_map.json
+```

@@ -57,7 +57,7 @@ namespace Gini {
                 $url = $scheme . '://';
 
                 if (isset($ui['user'])) {
-                    if ($ui['pass']) {
+                    if (!empty($ui['pass'])) {
                         $url .= $ui['user'] . ':' . $ui['pass'] . '@';
                     } else {
                         $url .= $ui['user'] . '@';

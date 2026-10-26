@@ -18,4 +18,17 @@ namespace Gini\Controller;
 
 abstract class API
 {
+    /**
+     * current app module info.
+     *
+     * @var object
+     */
+    public $app;
+
+    /**
+     * Environmental variables passed to current controller.
+     *
+     * @var array
+     */
+    public $env;
 }

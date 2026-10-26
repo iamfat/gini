@@ -4,28 +4,19 @@ namespace Gini\PHPUnit\REST {
 
     class Remote extends \Gini\PHPUnit\TestCase\CLI
     {
-        public function testDefault()
+        public function setUp(): void
         {
+            parent::setUp();
             \Gini\IoC::bind('\Gini\HTTP', $this->getHttp());
-
-            $this->canInit();
-            $this->canOf();
-            $this->canPost();
-            $this->canPut();
-            $this->canPatch();
-            $this->canGet();
-            $this->canDelete();
-            $this->canException();
-            $this->canDisableCookie();
-            $this->canEnableCookie();
-            $this->canForm();
-            $this->canJson();
-            $this->canHeader();
-
-            \Gini\IoC::clear('\Gini\HTTP');
         }
 
-        private function canInit(): void
+        public function tearDown(): void
+        {
+            \Gini\IoC::clear('\Gini\HTTP');
+            parent::tearDown();
+        }
+
+        public function testInit(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -43,7 +34,7 @@ namespace Gini\PHPUnit\REST {
          * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canOf(): void
+        public function testOf(): void
         {
             try {
                 $rest = \Gini\REST::of('http://localhost/rest');
@@ -58,7 +49,7 @@ namespace Gini\PHPUnit\REST {
          * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canGet(): void
+        public function testGet(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -74,7 +65,7 @@ namespace Gini\PHPUnit\REST {
          * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canPost(): void
+        public function testPost(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -90,7 +81,7 @@ namespace Gini\PHPUnit\REST {
          * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canPut(): void
+        public function testPut(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -106,7 +97,7 @@ namespace Gini\PHPUnit\REST {
          *  如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canPatch(): void
+        public function testPatch(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -122,7 +113,7 @@ namespace Gini\PHPUnit\REST {
          * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canDelete(): void
+        public function testDelete(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -138,7 +129,7 @@ namespace Gini\PHPUnit\REST {
          * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canEnableCookie(): void
+        public function testEnableCookie(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -155,7 +146,7 @@ namespace Gini\PHPUnit\REST {
          * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canDisableCookie(): void
+        public function testDisableCookie(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -172,7 +163,7 @@ namespace Gini\PHPUnit\REST {
          * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canHeader(): void
+        public function testHeader(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -189,7 +180,7 @@ namespace Gini\PHPUnit\REST {
          *  如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canJson(): void
+        public function testJson(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -202,11 +193,11 @@ namespace Gini\PHPUnit\REST {
         }
 
         /**
-         *  请求 header 接口 如果请求结果中 content-type 的值为 json 则 header 设置成功
-         *  如果捕获到异常, 说明请求失败
+         * 请求 header 接口 如果请求结果中 content-type 的值为 json 则 header 设置成功
+         * 如果捕获到异常, 说明请求失败
          * @return void
          */
-        private function canForm(): void
+        public function testForm(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -223,7 +214,7 @@ namespace Gini\PHPUnit\REST {
          * 其他情况 测试不通过
          * @return void
          */
-        private function canException(): void
+        public function testException(): void
         {
             try {
                 $rest = new \Gini\REST('http://localhost/rest');
@@ -236,6 +227,89 @@ namespace Gini\PHPUnit\REST {
                 self::fail();
             }
             self::fail();
+        }
+
+        public function testGetThrowsRestExceptionOn404(): void
+        {
+            $this->bindRawResponse("HTTP/1.1 404 Not Found\nContent-Type: application/json\n\n{\"msg\": \"gone\"}");
+            $rest = new \Gini\REST('http://localhost/rest');
+
+            try {
+                $rest->get('missing');
+                self::fail('4xx 响应应抛出 REST\\Exception');
+            } catch (\Gini\REST\Exception $e) {
+                self::assertSame(404, (int) $e->getCode());
+                self::assertSame('Not Found', $e->getMessage());
+                // 异常携带解码后的响应体
+                self::assertSame(['msg' => 'gone'], $e->getData());
+            }
+        }
+
+        public function testPostThrowsRestExceptionOn500WithUndecodableBody(): void
+        {
+            $this->bindRawResponse("HTTP/1.1 500 Internal Server Error\nContent-Type: text/html\n\n<html>oops</html>");
+            $rest = new \Gini\REST('http://localhost/rest');
+
+            try {
+                $rest->post('article', ['a' => 1]);
+                self::fail('5xx 响应应抛出 REST\\Exception');
+            } catch (\Gini\REST\Exception $e) {
+                self::assertSame(500, (int) $e->getCode());
+                self::assertSame('Internal Server Error', $e->getMessage());
+                // 非 JSON 响应体 → data 为 null
+                self::assertNull($e->getData());
+            }
+        }
+
+        public function testBadRequestExceptionCarriesDecodedPayload(): void
+        {
+            $this->bindRawResponse("HTTP/1.1 400 Bad Request\n\n{\"error\": \"invalid\", \"details\": [1, 2]}");
+            $rest = new \Gini\REST('http://localhost/rest');
+
+            try {
+                $rest->delete('article/9');
+                self::fail('400 响应应抛出 REST\\Exception');
+            } catch (\Gini\REST\Exception $e) {
+                self::assertSame(400, (int) $e->getCode());
+                self::assertSame('Bad Request', $e->getMessage());
+                self::assertSame(['error' => 'invalid', 'details' => [1, 2]], $e->getData());
+            }
+        }
+
+        public function testBadJsonOn2xxReturnsNull(): void
+        {
+            $this->bindRawResponse("HTTP/1.1 200 OK\nContent-Type: text/plain\n\nnot-a-json-body");
+            $rest = new \Gini\REST('http://localhost/rest');
+
+            // 2xx + 坏 JSON: @json_decode 抑制错误, 原样返回 null, 不抛异常
+            self::assertNull($rest->get('article'));
+        }
+
+        public function testUnsupportedMethodReturnsNull(): void
+        {
+            $rest = new \Gini\REST('http://localhost/rest');
+
+            // 不在 supportedMethods 白名单: __call 无返回值
+            self::assertNull($rest->frobnicate('article'));
+        }
+
+        /**
+         * 以给定原始 HTTP 报文绑定 \Gini\HTTP 替身, 用于异常分支注入
+         */
+        private function bindRawResponse(string $raw): void
+        {
+            \Gini\IoC::bind('\Gini\HTTP', function () use ($raw) {
+                $http = $this->getMockBuilder('\Gini\HTTP')
+                    ->setMockClassName('MOBJ_' . uniqid())
+                    ->getMock();
+                $http->expects($this->any())
+                    ->method('request')
+                    ->will($this->returnCallback(function () use ($raw) {
+                        return new \Gini\HTTP\Response($raw);
+                    }));
+
+                return $http;
+            });
         }
 
         /**

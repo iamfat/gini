@@ -189,10 +189,10 @@ class CLI
         error_log(sprintf('[E] %s (%s:%d)', $message, $file, $line));
         $trace = array_slice($e->getTrace(), 1);
         foreach ($trace as $n => $t) {
-            if ($t['class'] == 'Gini\Core' && $t['function'] == 'start') {
+            if (($t['class'] ?? null) == 'Gini\Core' && $t['function'] == 'start') {
                 break;
             }
-            $file = $t['file'];
+            $file = $t['file'] ?? '';
             foreach (\Gini\Core::$MODULE_INFO as $info) {
                 if (0 == strncmp($file, $info->path, strlen($info->path))) {
                     $file = "[$info->id] " . \Gini\File::relativePath($file, $info->path);
@@ -202,7 +202,7 @@ class CLI
             error_log(sprintf(
                 '%3d. %s%s(%s) in (%s:%d)',
                 $n + 1,
-                $t['class'] ? $t['class'] . '::' : '',
+                ($t['class'] ?? '') ? $t['class'] . '::' : '',
                 $t['function'],
                 isset($t['args']) ? implode(", ", array_map(function ($x) {
                     return json_encode($x, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);

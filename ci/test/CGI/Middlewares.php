@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\PHPUnit\TestCase\CGI;
+namespace Gini\PHPUnit\CGI;
 
 use \Gini\CGI\Middleware\QuerySet;
 

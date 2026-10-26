@@ -411,9 +411,24 @@ namespace Gini {
         public static function error($errno, $errstr, $errfile, $errline)
         {
             // error was suppressed with the @-operator
-            if (0 === error_reporting()) {
+            // PHP 7 sets error_reporting() to 0; PHP 8+ sets a mask that
+            // excludes the suppressed level, so a bitmask check is required.
+            if (!(error_reporting() & $errno)) {
                 return false;
             }
+
+            // deprecations are advisory only: log them at debug level and
+            // continue instead of escalating every runtime deprecation
+            // (abundant on PHP 8.5) into an exception.
+            if ($errno & (E_DEPRECATED | E_USER_DEPRECATED)) {
+                Logger::of('core')->debug('DEPRECATED: {message} in {file} on line {line}', [
+                    'message' => $errstr,
+                    'file' => $errfile,
+                    'line' => $errline,
+                ]);
+                return true;
+            }
+
             throw new \ErrorException($errstr, $errno, 1, $errfile, $errline);
         }
 

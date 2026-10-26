@@ -107,7 +107,7 @@ class CGI
                 error_log(sprintf(
                     '    %d) %s%s() in %s on line %d',
                     $n + 1,
-                    $t['class'] ? $t['class'] . '::' : '',
+                    ($t['class'] ?? '') ? $t['class'] . '::' : '',
                     $t['function'],
                     $file,
                     $t['line']
@@ -249,8 +249,8 @@ class CGI
     public static function beforeRequest(array $options = [])
     {
         URI::setup();
-        static::$route = trim($_SERVER['PATH_INFO'] ?? $_SERVER['ORIG_PATH_INFO'], '/');
-        $contentType = explode(';', $_SERVER['CONTENT_TYPE'], 2)[0];
+        static::$route = trim($_SERVER['PATH_INFO'] ?? $_SERVER['ORIG_PATH_INFO'] ?? '', '/');
+        $contentType = explode(';', $_SERVER['CONTENT_TYPE'] ?? '', 2)[0];
         $contentLength = intval($_SERVER['CONTENT_LENGTH'] ?? 0);
         if ($contentLength <= 4096) { 
             if ($contentType == 'application/json') {

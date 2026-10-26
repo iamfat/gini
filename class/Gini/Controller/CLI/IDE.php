@@ -10,6 +10,7 @@ class IDE extends \Gini\Controller\CLI
         if (file_exists($vscodeSettingsPath)) {
             $vscodeSettings = json_decode(file_get_contents($vscodeSettingsPath), true);
         } else {
+            \Gini\File::ensureDir(dirname($vscodeSettingsPath));
             $vscodeSettings = [];
         }
 

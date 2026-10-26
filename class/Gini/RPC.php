@@ -15,9 +15,9 @@ class RPC
     private static $_RPCs = [];
     public static function of($name, $cookie = null, $header = [])
     {
-        if (!self::$_RPCs[$name]) {
+        if (!(self::$_RPCs[$name] ?? null)) {
             $conf = \Gini\Config::get('app.rpc');
-            $rpc = IoC::construct('\Gini\RPC', $conf[$name]['url'], null, $cookie, $header);
+            $rpc = IoC::construct('\Gini\RPC', $conf[$name]['url'] ?? null, null, $cookie, $header);
             self::$_RPCs[$name] = $rpc;
         }
 
@@ -62,7 +62,7 @@ class RPC
         $id = base_convert($this->_uniqid++, 10, 36);
 
         $rpcTimeout = Config::get('rpc.timeout');
-        $timeout = $rpcTimeout[$method] ?? $rpcTimeout['default'];
+        $timeout = $rpcTimeout[$method] ?? ($rpcTimeout['default'] ?? 5);
 
         $this->_header['X-Gini-RPC-Session'] = $_SERVER['HTTP_X_GINI_RPC_SESSION'] ?? gethostname().'/'.APP_ID.'/'.md5(uniqid('', true));
 
@@ -158,13 +158,10 @@ class RPC
         $errno = curl_errno($ch);
         if ($errno) {
             $message = curl_error($ch);
-            curl_close($ch);
 
             \Gini\Logger::of('http-jsonrpc')->error('RPC cURL error: {url}: {message}', ['url' => $this->_url, 'message' => $message]);
             throw IoC::construct('\Gini\RPC\Exception', "transport error: $message", -32300);
         }
-
-        curl_close($ch);
 
         return $data;
     }

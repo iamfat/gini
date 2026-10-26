@@ -1,6 +1,6 @@
 <?php
 
-namespace Gini\PHPUnit\TestCase\CGI {
+namespace Gini\PHPUnit\CGI {
 
     class General extends \Gini\PHPUnit\TestCase\CLI
     {

@@ -12,6 +12,7 @@
         "bin/gini"
     ],
     "require": {
+        "php": "^7.4 || ^8.5",
         "sabre/dav": "^4.1",
         "doctrine/inflector": "^2",
         "doctrine/annotations": "^1.10",

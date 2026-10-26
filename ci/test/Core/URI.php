@@ -63,6 +63,55 @@ class URI extends \Gini\PHPUnit\TestCase\CLI
         self::assertEquals(\Gini\URI::buildQuery(['a' => [1, 2, 3], 'b' => 4]), "a=1&a=2&a=3&b=4");
     }
 
+    public function testURLEdgeCases(): void
+    {
+        // mailto 分支: parse_url 对标准 mailto 不返回 user/host 键,
+        // 框架实际拼出 "mailto:@"（记录既有行为）
+        self::assertEquals('mailto:@', URL('mailto:user@example.com'));
+
+        // 绝对 URL: 旧 query 与新 query 合并（数组）
+        self::assertEquals(
+            URL('http://foo.bar/path?a=1', ['b' => 2]),
+            'http://foo.bar/path?a=1&b=2'
+        );
+        // 字符串形式 query
+        self::assertEquals(
+            URL('http://foo.bar/path', 'b=2'),
+            'http://foo.bar/path?b=2'
+        );
+        // fragment 追加分隔符
+        self::assertEquals(
+            URL('http://foo.bar/a', null, 'frag'),
+            'http://foo.bar/a#frag'
+        );
+
+        // 无 host 的相对路径走 base(); 无 forwarded/HTTPS 时 scheme 为 http
+        unset($_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTPS']);
+        $_SERVER['HTTP_HOST'] = 'fake.com';
+        $_SERVER['SCRIPT_NAME'] = '/x/index.php';
+        \Gini\URI::setup();
+        self::assertEquals(URL('hello', ['q' => 1]), 'http://fake.com/x/hello?q=1');
+    }
+
+    public function testRURLWithModQuery(): void
+    {
+        $_SERVER['HTTP_HOST'] = 'fake.com';
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
+        $_SERVER['SCRIPT_NAME'] = '/index.php';
+        \Gini\Config::set('system.rurl_mod', [
+            'js' => ['query' => 'v=$(VERSION)'],
+        ]);
+        \Gini\URI::setup();
+
+        self::assertEquals(
+            RURL('hello.js', 'js'),
+            'http://fake.com/assets/js/hello.js?v=' . APP_HASH
+        );
+
+        // 外部 URL 不拼 base, 但仍可追加 mod query
+        self::assertStringStartsWith('http://abc.com/ade/hello.js?v=', RURL('http://abc.com/ade/hello.js', 'js'));
+    }
+
     public function tearDown(): void
     {
         $_SERVER['HTTP_HOST'] = $this->_SERVER['HTTP_HOST'] ?? null;

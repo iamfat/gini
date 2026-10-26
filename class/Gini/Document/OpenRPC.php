@@ -5,7 +5,7 @@ namespace Gini\Document;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationException;
 use Doctrine\Common\Annotations\AnnotationRegistry;
-use Doctrine\Common\Inflector\Inflector;
+use Doctrine\Inflector\InflectorFactory;
 
 use Gini\Document\OpenRPC\DocLexer;
 
@@ -16,6 +16,8 @@ AnnotationRegistry::registerUniqueLoader(function ($class) {
 class OpenRPC
 {
     private $lexer;
+
+    private static $inflector;
 
     public function __construct()
     {
@@ -73,7 +75,7 @@ class OpenRPC
         }
 
         $class = preg_replace('/^' . preg_quote('Gini\\Controller\\API\\') . '/', '', $rm->class);
-        $name = strtr($class, ['\\' => '.']) . '.' . Inflector::camelize($matches[2]);
+        $name = strtr($class, ['\\' => '.']) . '.' . self::inflector()->camelize($matches[2]);
 
         $methodItem = [
             'name' => $name,
@@ -144,6 +146,11 @@ class OpenRPC
         }, $rps);
 
         return $methodItem;
+    }
+
+    private static function inflector(): \Doctrine\Inflector\Inflector
+    {
+        return self::$inflector ??= InflectorFactory::create()->build();
     }
 
     public static function scan()

@@ -4,15 +4,13 @@ namespace Gini\PHPUnit\Those;
 
 class SubField extends \Gini\PHPUnit\TestCase\CLI
 {
+    use \Gini\PHPUnit\MockDatabase;
+
     public function setUp(): void
     {
         parent::setUp();
 
-        $db = self::getMockBuilder('\Gini\Database')
-            ->setMockClassName('MOBJ_' . uniqid())
-            ->setMethods(['query', 'quote', 'quoteIdent', 'ident'])
-            ->disableOriginalConstructor()
-            ->getMock();
+        $db = $this->createDatabaseMock();
 
         $query = self::getMockBuilder('\Gini\Database\Statement')
             ->setMockClassName('MOBJ_' . uniqid())
@@ -20,61 +18,7 @@ class SubField extends \Gini\PHPUnit\TestCase\CLI
             ->disableOriginalConstructor()
             ->getMock();
 
-        $db->expects($this->any())
-            ->method('quoteIdent')
-            ->will($this->returnCallback(function ($s) use ($db) {
-                if (is_array($s)) {
-                    foreach ($s as &$i) {
-                        $i = $db->quoteIdent($i);
-                    }
-
-                    return implode(',', $s);
-                }
-
-                return '"' . addslashes($s) . '"';
-            }));
-
-        $db->expects($this->any())
-            ->method('quote')
-            ->will($this->returnCallback(function ($s) use ($db) {
-                if (is_array($s)) {
-                    foreach ($s as &$i) {
-                        $i = $db->quote($i);
-                    }
-
-                    return implode(',', $s);
-                } elseif (is_null($s)) {
-                    return 'NULL';
-                } elseif (is_bool($s)) {
-                    return $s ? 1 : 0;
-                } elseif (is_int($s) || is_float($s)) {
-                    return $s;
-                }
-
-                return '\'' . addslashes($s) . '\'';
-            }));
-
-
-        $db->expects($this->any())
-            ->method('ident')
-            ->will($this->returnCallback(
-                function ($s) use ($db) {
-                    $args = func_get_args();
-                    $ident = array();
-                    foreach ($args as $arg) {
-                        $ident[] = $db->quoteIdent($arg);
-                    }
-
-                    return implode('.', $ident);
-                }
-            ));
-
-
-        $db->expects($this->any())
-            ->method('query')
-            ->will($this->returnCallback(function ($s, $s1, $s2) use ($query) {
-                return $query;
-            }));
+        $this->attachQueryHandler($db, $query);
 
         \Gini\IoC::bind('\Gini\ORM\Company', function () use ($db) {
             $o = $this->getMockBuilder('\Gini\ORM\Base')

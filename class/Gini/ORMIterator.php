@@ -235,7 +235,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
     public function valid(): bool
     {
         $this->fetch();
-        return isset($this->objects[$this->current_id]);
+        return null !== $this->current_id && isset($this->objects[$this->current_id]);
     }
     // Iterator End
 
