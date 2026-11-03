@@ -31,3 +31,9 @@
 
 - 保留弃用进 handler 会增加 debug 日志量（已由 logger 级别控制，非 warning 级不落盘）。
 - `count(null)` 等类型收紧无法兜底，需业务侧迁移；已在 spec 中明确边界，避免误判。
+
+## Supersede（实现期修正）
+
+初版设计在 `Database\Driver` 接口上声明 `inTransaction()`。该做法会破坏向后兼容：任何已存在的第三方/模块驱动（`implements Driver`）在类声明阶段即 fatal「must implement abstract method」，且 7.4 与 8.5 同样失败——与本次"老代码双版本行为如常"的目标直接冲突；此外该接口本身并未声明 `beginTransaction/commit/rollBack`，单独补一个方法也不一致。
+
+最终实现：**不在接口上声明**，改由 `Database::_finishTransaction()` 以 `method_exists($driver, 'inTransaction')` 探测——无该方法时沿用原有行为（直接下发 commit/rollBack），有该方法时做状态校验并记 debug。`Database\Unknown` 保留 `inTransaction()` 返回 false 作为防御性实现。

@@ -252,8 +252,8 @@ class CGI
         static::$route = trim($_SERVER['PATH_INFO'] ?? $_SERVER['ORIG_PATH_INFO'] ?? '', '/');
         $contentType = explode(';', $_SERVER['CONTENT_TYPE'] ?? '', 2)[0];
         $contentLength = intval($_SERVER['CONTENT_LENGTH'] ?? 0);
-        // 超过上限时不解析 body（默认 4MB，可用 cgi.max_body_size 调整）
-        $maxBodySize = (int) (Config::get('cgi.max_body_size') ?: 4194304);
+        // 超过上限时不解析 body（默认 4MB，可用 system.cgi.max_body_size 调整）
+        $maxBodySize = (int) (Config::get('system.cgi.max_body_size') ?: 4194304);
         if ($contentLength <= $maxBodySize) {
             if ($contentType == 'application/json') {
                 $_POST = (array) @json_decode(self::content(), true);

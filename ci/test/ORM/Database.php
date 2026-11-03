@@ -129,4 +129,43 @@ class Database extends \Gini\PHPUnit\TestCase\CLI
         $db->commit();
         self::assertSame(0, $level->getValue($db));
     }
+
+    /**
+     * 旧式第三方驱动（未实现 inTransaction）必须保持原有行为：
+     * 直接下发 commit/rollBack，不得因新逻辑中断。
+     */
+    public function testLegacyDriverWithoutInTransactionStillCommits(): void
+    {
+        $driver = new class implements \Gini\Database\Driver {
+            public $commits = 0;
+            public $rollbacks = 0;
+            public function quoteIdent($s) { return '"' . $s . '"'; }
+            public function tableExists($t) { return false; }
+            public function tableStatus($t) { return null; }
+            public function tableSchema($n, $r = false) { return null; }
+            public function createTable($t, $e = null) { return false; }
+            public function adjustTable($t, $s, $f = 0) { return false; }
+            public function dropTable($t) { return false; }
+            public function emptyDatabase() { return false; }
+            public function diagnose() { return null; }
+            public function beginTransaction() {}
+            public function commit() { ++$this->commits; }
+            public function rollBack() { ++$this->rollbacks; }
+        };
+
+        $db = (new \ReflectionClass(\Gini\Database::class))->newInstanceWithoutConstructor();
+        $prop = new \ReflectionProperty(\Gini\Database::class, '_driver');
+        $prop->setAccessible(true);
+        $prop->setValue($db, $driver);
+        $level = new \ReflectionProperty(\Gini\Database::class, '_transactionLevel');
+        $level->setAccessible(true);
+        $level->setValue($db, 1);
+
+        $db->commit();
+        self::assertSame(1, $driver->commits);
+
+        $level->setValue($db, 1);
+        $db->rollback();
+        self::assertSame(1, $driver->rollbacks);
+    }
 }

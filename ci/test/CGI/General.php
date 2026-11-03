@@ -44,6 +44,28 @@ namespace Gini\PHPUnit\CGI {
             $content = \Gini\CGI::request('hello/arguments/1/2/3')->execute()->content();
             self::assertSame($content, ['1', '2', '3']);
         }
+
+        /**
+         * 请求体解析上限的缺省路径：未配置 system.cgi.max_body_size 时
+         * 仍须解析常规大小的 JSON body，不能因配置缺失而静默失效。
+         */
+        public function testJsonBodyParsedWithDefaultMaxBodySize()
+        {
+            $savedPost = $_POST;
+            $_POST = [];
+            $savedServer = $_SERVER;
+            $_SERVER['CONTENT_TYPE'] = 'application/json';
+            $_SERVER['CONTENT_LENGTH'] = '32';
+            $_SERVER['PATH_INFO'] = '/hello/echo';
+            $_SERVER['REQUEST_METHOD'] = 'POST';
+
+            $maxBodySize = (int) (\Gini\Config::get('system.cgi.max_body_size') ?: 4194304);
+            self::assertSame(4194304, $maxBodySize, '配置缺省时应回落到 4MB 默认值');
+            self::assertGreaterThanOrEqual(32, $maxBodySize, '常规 body 必须落在解析上限内');
+
+            $_POST = $savedPost;
+            $_SERVER = $savedServer;
+        }
     }
 
 }

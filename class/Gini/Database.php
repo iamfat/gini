@@ -363,7 +363,16 @@ namespace Gini {
          **/
         private function _finishTransaction($rollback)
         {
-            if (!$this->_driver->inTransaction()) {
+            $driver = $this->_driver;
+
+            // Third-party drivers implementing Database\Driver predate this
+            // method; keep their behaviour (issue the call directly) instead of
+            // breaking their class declaration or fatalling here.
+            if (!method_exists($driver, 'inTransaction')) {
+                return $rollback ? $driver->rollBack() : $driver->commit();
+            }
+
+            if (!$driver->inTransaction()) {
                 \Gini\Logger::of('core')->debug('Database transaction state mismatch: no active transaction when {action}', [
                     'action' => $rollback ? 'rollBack' : 'commit',
                 ]);
@@ -371,7 +380,7 @@ namespace Gini {
                 return false;
             }
 
-            return $rollback ? $this->_driver->rollBack() : $this->_driver->commit();
+            return $rollback ? $driver->rollBack() : $driver->commit();
         }
 
         /**

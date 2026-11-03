@@ -82,4 +82,17 @@ class DeprecationPipeline extends \Gini\PHPUnit\TestCase\Unit
             throw $e;
         }
     }
+
+    /**
+     * 守护 Core::start() 的掩码配置：两个掩码都必须保留弃用位。
+     * 本用例不修改 error_reporting，断言的是 bootstrap 之后的真实状态。
+     * （若有人把 E_DEPRECATED 从 Core::start 的 error_reporting 抹掉，此处失败）
+     */
+    public function testStartKeepsDeprecationLevelsInErrorReporting(): void
+    {
+        self::assertNotSame(0, error_reporting() & E_DEPRECATED,
+            'Core::start() 的 error_reporting 掩码丢失了 E_DEPRECATED，弃用兜底失效');
+        self::assertNotSame(0, error_reporting() & E_USER_DEPRECATED,
+            'Core::start() 的 error_reporting 掩码丢失了 E_USER_DEPRECATED，弃用兜底失效');
+    }
 }

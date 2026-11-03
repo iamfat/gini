@@ -11,9 +11,6 @@ interface Driver
 {
     public function quoteIdent($s);
 
-    /** Whether a transaction is currently active (PDO-compatible semantics). */
-    public function inTransaction();
-
     public function tableExists($table);
     public function tableStatus($table);
     public function tableSchema($name, $refresh);
