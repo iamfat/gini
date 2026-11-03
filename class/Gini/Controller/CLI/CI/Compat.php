@@ -51,6 +51,11 @@ class Compat extends \Gini\Controller\CLI
     {
         $path = $params[0] ?? getcwd();
 
+        // 相对路径先归一为绝对（扫描器以绝对路径运算）
+        if (is_dir($path) || is_file($path)) {
+            $path = realpath($path) ?: $path;
+        }
+
         if (!is_dir($path) && !is_file($path)) {
             echo "! not a directory or file: $path\n";
 
@@ -111,14 +116,7 @@ class Compat extends \Gini\Controller\CLI
                 continue;
             }
 
-            // Skip dependency trees, caches and tooling dirs: hits there are
-            // not owned by the scanned project.
-            $rel = str_replace('\\', '/', substr($file, strlen($path)));
-            foreach (self::$skipDirs as $dir) {
-                if (stripos("/{$rel}/", "/{$dir}/") !== false) {
-                    continue 2;
-                }
-            }
+            // 跳过依赖树/缓存/工具目录已在 _phpFiles 遍历层完成。
             $lines = file($file);
             if ($lines === false) {
                 continue;
@@ -162,24 +160,52 @@ class Compat extends \Gini\Controller\CLI
             return;
         }
 
-        $it = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS)
-        );
+        // RecursiveDirectoryIterator 在子目录不可读时 fatal（getChildren），
+        // 这里改用显式递归：跳过无权限/失效的目录而不是中断整个扫描。
+        foreach (scandir($path) ?: [] as $name) {
+            if ($name === '.' || $name === '..') {
+                continue;
+            }
 
-        foreach ($it as $f) {
-            $name = $f->getFilename();
-            $matched = false;
-            foreach ($suffixes as $suffix) {
-                $len = strlen($suffix);
-                if (substr($name, -$len) === $suffix) {
-                    $matched = true;
+            $full = $path.DIRECTORY_SEPARATOR.$name;
+
+            if (!is_dir($full)) {
+                yield from self::_matchSuffix($full, $suffixes);
+
+                continue;
+            }
+
+            if (!is_readable($full)) {
+                continue;
+            }
+
+            // 跳过依赖目录：命中不属于被扫项目；依赖树体量也不适合逐文件扫描
+            $skipped = false;
+            foreach (self::$skipDirs as $dir) {
+                if ($name === $dir) {
+                    $skipped = true;
                     break;
                 }
             }
-            if (!$matched) {
+            if ($skipped) {
                 continue;
             }
-            yield $f->getPathname();
+
+            yield from self::_phpFiles($full, $suffixes);
+        }
+    }
+
+    private static function _matchSuffix($file, $suffixes)
+    {
+        $name = basename($file);
+
+        foreach ($suffixes as $suffix) {
+            $len = strlen($suffix);
+            if (substr($name, -$len) === $suffix) {
+                yield $file;
+
+                return;
+            }
         }
     }
 }
