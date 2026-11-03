@@ -95,4 +95,44 @@ class DeprecationPipeline extends \Gini\PHPUnit\TestCase\Unit
         self::assertNotSame(0, error_reporting() & E_USER_DEPRECATED,
             'Core::start() 的 error_reporting 掩码丢失了 E_USER_DEPRECATED，弃用兜底失效');
     }
+
+    /**
+     * 老业务代码在 PHP 8 下最常见的弃用来源，经框架 handler 后必须
+     * 与 7.4 结果一致地运行（openspec/specs/legacy-runtime-compat）。
+     * 真实引擎触发（非手工构造），双版本结果一致即为兼容。
+     */
+    public function testLegacyNullArgCallsReturnSameValue(): void
+    {
+        error_reporting($this->_savedReporting);
+
+        self::assertSame('x', @utf8_encode('x'));
+        self::assertSame(0, strlen(@null));
+        self::assertSame('', @str_replace('a', 'b', null));
+        self::assertSame(false, @array_key_exists(null, []));
+    }
+
+    /**
+     * TypeError / Error 无法被错误处理器吸收（openspec/specs/
+     * legacy-runtime-compat 明确为业务必修），但框架的 Core::exception
+     * 必须能以异常形式最终接管（register_shutdown/exception 兜底链）。
+     */
+    public function testHardFailuresAreCatchableThorwables(): void
+    {
+        $caught = null;
+        try {
+            $r = count(null);
+            if (PHP_VERSION_ID < 80000) {
+                // 7.4: warning + 返回 0，不抛
+                $caught = 'PHP7:0';
+            }
+        } catch (\TypeError $e) {
+            $caught = $e;
+        }
+        if (PHP_VERSION_ID < 80000) {
+            self::assertSame('PHP7:0', $caught, "PHP 7.4 下 count(null) 应返回 0");
+        } else {
+            self::assertInstanceOf(\TypeError::class, $caught,
+                'PHP 8+ 下 count(null) 是 TypeError，错误处理器无法吸收（业务必修）');
+        }
+    }
 }
