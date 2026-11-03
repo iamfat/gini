@@ -24,4 +24,7 @@ rurl_mod:
     query: '_v=$(VERSION)'
   css:
     query: '_v=$(VERSION)'
+cgi:
+  # 请求体解析上限（字节）；超过时不解析 $_POST，防止大请求拖垮内存
+  max_body_size: 4194304
 ...

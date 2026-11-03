@@ -13,6 +13,14 @@ class SQLite extends \PDO implements Driver
 
     private $_h;
 
+    public function __construct($dsn, $username = null, $password = null, $options = null)
+    {
+        parent::__construct($dsn, $username, $password, (array) $options);
+        // PHP 8.0: PDO 默认错误模式改为 ERRMODE_EXCEPTION；Database 层依赖
+        // query()/execute() 返回 false 的错误语义，这里与 MySQL 驱动保持一致。
+        $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT);
+    }
+
     public function quoteIdent($s)
     {
         return '"'.addslashes($s).'"';

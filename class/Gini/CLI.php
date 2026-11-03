@@ -192,7 +192,7 @@ class CLI
             if (($t['class'] ?? null) == 'Gini\Core' && $t['function'] == 'start') {
                 break;
             }
-            $file = $t['file'] ?? '';
+            $file = $t['file'] ?? ''; // PHP 8.3: stack trace 中 file 可能为 null
             foreach (\Gini\Core::$MODULE_INFO as $info) {
                 if (0 == strncmp($file, $info->path, strlen($info->path))) {
                     $file = "[$info->id] " . \Gini\File::relativePath($file, $info->path);

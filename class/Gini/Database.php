@@ -320,9 +320,9 @@ namespace Gini {
                 --$this->_transactionLevel;
                 if ($this->_transactionLevel == 0) {
                     if ($this->_transactionRollback) {
-                        $this->_driver->rollback();
+                        $this->_finishTransaction(true);
                     } else {
-                        $this->_driver->commit();
+                        $this->_finishTransaction(false);
                     }
                 }
             }
@@ -340,13 +340,38 @@ namespace Gini {
             if ($this->_transactionLevel > 0) {
                 --$this->_transactionLevel;
                 if ($this->_transactionLevel == 0) {
-                    $this->_driver->rollBack();
+                    $this->_finishTransaction(true);
                 } else {
                     $this->_transactionRollback = true;
                 }
             }
 
             return $this;
+        }
+
+        /**
+         * Finish the outermost transaction.
+         *
+         * PDO's commit()/rollBack() throw "There is no active transaction" when
+         * the driver already left the transaction (DDL implicit commit, driver
+         * failure during beginTransaction, or direct driver usage). PHP 7.4 and
+         * 8.x behave identically here, so this is a state-check guard rather
+         * than a version compatibility shim: log the mismatch instead of
+         * silently swallowing it or letting the exception escape.
+         *
+         * @ignore
+         **/
+        private function _finishTransaction($rollback)
+        {
+            if (!$this->_driver->inTransaction()) {
+                \Gini\Logger::of('core')->debug('Database transaction state mismatch: no active transaction when {action}', [
+                    'action' => $rollback ? 'rollBack' : 'commit',
+                ]);
+
+                return false;
+            }
+
+            return $rollback ? $this->_driver->rollBack() : $this->_driver->commit();
         }
 
         /**

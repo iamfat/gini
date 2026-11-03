@@ -157,7 +157,15 @@ abstract class CGI
                 case 'files':
                     return $this->env['files'] ?? [];
                 default:
-                    return array_merge($this->env['get'] ?? [], $this->env['post'] ?? []);
+                    $get = $this->env['get'] ?? [];
+                    if (is_object($get) && method_exists($get, 'toArray')) {
+                        $get = $get->toArray();
+                    }
+                    $post = $this->env['post'] ?? [];
+                    if (is_object($post) && method_exists($post, 'toArray')) {
+                        $post = $post->toArray();
+                    }
+                    return array_merge((array)$get, (array)$post);
             }
         } else {
             switch ($mode) {
@@ -168,6 +176,7 @@ abstract class CGI
                     } else {
                         array_merge($this->env['get'], $data);
                     }
+                    break;
                 case 'post':
                     $this->env['post'] = $this->env['post'] ?? [];
                     if ($overwrite) {
@@ -175,6 +184,7 @@ abstract class CGI
                     } else {
                         array_merge($this->env['post'], $data);
                     }
+                    break;
             }
         }
     }

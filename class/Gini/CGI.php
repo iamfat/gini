@@ -110,7 +110,7 @@ class CGI
                     ($t['class'] ?? '') ? $t['class'] . '::' : '',
                     $t['function'],
                     $file,
-                    $t['line']
+                    $t['line'] ?? 0
                 ));
             }
         }
@@ -182,7 +182,7 @@ class CGI
 
     public static function redirect($url = '', $query = null, $permanent  = false)
     {
-        $redirect = static::$requestOptions['redirect'];
+        $redirect = static::$requestOptions['redirect'] ?? null;
         if ($redirect) {
             $redirect($url, $query, $permanent);
         } else {
@@ -193,7 +193,7 @@ class CGI
 
     public static function header(string $string, bool $replace = true, int $http_response_code = 0)
     {
-        $header = static::$requestOptions['header'];
+        $header = static::$requestOptions['header'] ?? null;
         if ($header) {
             $header($string, $replace, $http_response_code);
         } else {
@@ -252,7 +252,9 @@ class CGI
         static::$route = trim($_SERVER['PATH_INFO'] ?? $_SERVER['ORIG_PATH_INFO'] ?? '', '/');
         $contentType = explode(';', $_SERVER['CONTENT_TYPE'] ?? '', 2)[0];
         $contentLength = intval($_SERVER['CONTENT_LENGTH'] ?? 0);
-        if ($contentLength <= 4096) { 
+        // 超过上限时不解析 body（默认 4MB，可用 cgi.max_body_size 调整）
+        $maxBodySize = (int) (Config::get('cgi.max_body_size') ?: 4194304);
+        if ($contentLength <= $maxBodySize) {
             if ($contentType == 'application/json') {
                 $_POST = (array) @json_decode(self::content(), true);
             } elseif (

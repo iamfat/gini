@@ -38,6 +38,8 @@ class MySQL extends \PDO implements Driver
         }
 
         parent::__construct($dsn, $username, $password, $options);
+        // PHP 8.0: PDO 默认错误模式从 ERRMODE_SILENT 改为 ERRMODE_EXCEPTION，恢复原有行为
+        $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT);
         $this->_options = $options;
 
         if (preg_match('/dbname\s*=\s*(\w+)/', $dsn, $parts)) {
@@ -97,6 +99,7 @@ class MySQL extends \PDO implements Driver
         $alter_sqls = [
             'drop_indexes' => [],
             'modify_fields' => [],
+            'create_fields' => [],
             'modify_data' => [],
             'add_indexes' => [],
         ];
@@ -108,7 +111,7 @@ class MySQL extends \PDO implements Driver
         $curr_fields = (array) $curr_schema['fields'];
         $missing_fields = array_diff_key($fields, $curr_fields);
         foreach ($missing_fields as $key => $field) {
-            if ($field['serial']) {
+            if ($field['serial'] ?? false) {
                 $alter_sqls['create_fields'][] = "ADD {$this->_fieldSQL($key,$field)}";
             } else {
                 $alter_sqls['modify_fields'][] = "ADD {$this->_fieldSQL($key,$field)}";
@@ -116,10 +119,10 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($curr_fields as $key => $curr_field) {
-            $field = $fields[$key];
+            $field = $fields[$key] ?? null;
             if ($field) {
-                $curr_type = $this->_normalizeType($curr_field['type']);
-                $type = $this->_normalizeType($field['type']);
+                $curr_type = $this->_normalizeType($curr_field['type'] ?? '');
+                $type = $this->_normalizeType($field['type'] ?? '');
                 if (
                     $type !== $curr_type
                     || ($field['null'] ?? null) != ($curr_field['null'] ?? null)
@@ -156,9 +159,9 @@ class MySQL extends \PDO implements Driver
         $missing_indexes = array_diff_key($indexes, $curr_indexes);
 
         foreach ($missing_indexes as $key => $val) {
-            if ($val['type'] === 'primary') {
+            if (($val['type'] ?? '') === 'primary') {
                 $index_fields = $val['fields'];
-                if (count($index_fields) > 1 || !$fields[$index_fields[0]] || !$fields[$index_fields[0]]['serial']) {
+                if (count($index_fields) > 1 || !isset($fields[$index_fields[0]]) || !($fields[$index_fields[0]]['serial'] ?? false)) {
                     $alter_sqls['create_fields'][] = "ADD {$this->_addIndexSQL($key,$val)}";
                 }
             } else {
@@ -167,7 +170,7 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($curr_indexes as $key => $curr_val) {
-            $val = $indexes[$key];
+            $val = $indexes[$key] ?? null;
             if ($val) {
                 ksort($val);
                 ksort($curr_val);
@@ -182,9 +185,9 @@ class MySQL extends \PDO implements Driver
         }
 
         // ------ CHECK RELATIONS
-        $relations = (array) $schema['relations'];
+        $relations = (array) ($schema['relations'] ?? []);
 
-        $curr_relations = (array) $curr_schema['relations'];
+        $curr_relations = (array) ($curr_schema['relations'] ?? []);
         $missing_relations = array_diff_key($relations, $curr_relations);
 
         foreach ($missing_relations as $key => $val) {
@@ -193,7 +196,7 @@ class MySQL extends \PDO implements Driver
         }
 
         foreach ($curr_relations as $key => $curr_val) {
-            $val = $relations[$key];
+            $val = $relations[$key] ?? null;
             if ($val) {
                 if (array_diff($val, $curr_val)) {
                     $alter_sqls['drop_indexes'][] = "DROP FOREIGN KEY {$this->quoteIdent($key)}";
@@ -316,7 +319,7 @@ class MySQL extends \PDO implements Driver
             ) {
                 $default = $field['default'];
             } elseif (!in_array($field['type'], ['text', 'mediumtext', 'longtext'])) {
-                $default = $field['serial'] ? null : $this->quote($field['default']);
+                $default = !empty($field['serial']) ? null : $this->quote($field['default']);
             }
         }
 
@@ -329,7 +332,7 @@ class MySQL extends \PDO implements Driver
 
     private function _dropIndexSQL($key, $val)
     {
-        switch ($val['type']) {
+        switch ($val['type'] ?? '') {
             case 'primary':
                 $type = 'PRIMARY KEY';
                 break;
@@ -343,7 +346,7 @@ class MySQL extends \PDO implements Driver
     private function _addIndexSQL($key, $val)
     {
         $quotedKey = $this->quoteIdent($key);
-        switch ($val['type']) {
+        switch ($val['type'] ?? '') {
             case 'primary':
                 $type = 'PRIMARY KEY';
                 break;

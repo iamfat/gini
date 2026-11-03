@@ -14,6 +14,11 @@ class Unknown implements Driver
         return '"' . addslashes($s) . '"';
     }
 
+    public function inTransaction()
+    {
+        return false;
+    }
+
     public function tableExists($table)
     {
         return false;

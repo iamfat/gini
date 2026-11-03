@@ -303,7 +303,7 @@ namespace Gini {
                 $db_relation = static::$db_relation;
                 //check all injections
                 foreach (self::$_INJECTIONS[$class_name] ?? [] as $injection) {
-                    $db_relation = array_merge($db_relation, (array) $injection['relations']);
+                    $db_relation = array_merge($db_relation, (array) ($injection['relations'] ?? []));
                 }
 
                 $relations = [];
@@ -474,8 +474,8 @@ namespace Gini {
             $ormRelations = $ormRelations ?: $this->ormRelations();
             foreach ($ormRelations as $k => $vv) {
                 $vvv = [];
-                $vvv['delete'] = $vv['delete'];
-                $vvv['update'] = $vv['update'];
+                $vvv['delete'] = $vv['delete'] ?? null;
+                $vvv['update'] = $vv['update'] ?? null;
 
                 $relationKey = $this->normalizeName($k);
                 // correct object name
@@ -515,8 +515,8 @@ namespace Gini {
                 foreach ($vv as &$vvv) {
                     $vvv = trim($vvv);
                     // correct object name
-                    if (array_key_exists('object', (array) $structure[$vvv])) {
-                        if (!$structure[$vvv]['object']) {
+                    if (array_key_exists('object', (array) ($structure[$vvv] ?? []))) {
+                        if (!($structure[$vvv]['object'] ?? null)) {
                             $vv[] = $vvv . '_name';
                         }
                         $vvv = $vvv . '_id';
@@ -662,6 +662,7 @@ namespace Gini {
             foreach ($this->structure() as $k => $v) {
                 if (
                     isset($v['string']) && is_numeric($v['string'])
+                    && isset($db_data[$k]) && !is_null($db_data[$k])
                     && mb_strlen($db_data[$k]) > intval($v['string'])
                 ) {
                     return false;
@@ -695,10 +696,11 @@ namespace Gini {
                     (($v instanceof Database\SQL) ? strval($v) : $db->quote($v));
             }
 
+            $SQL = null;
             if (count($pairs) > 0) {
                 if ($id) {
                     if (
-                        $this->_db_data['id']
+                        !empty($this->_db_data['id'])
                         || $db->value('SELECT "id" FROM ' . $db->quoteIdent($tbl_name) . ' WHERE "id"=? FOR UPDATE', null, [$id])
                     ) {
                         // if data exists, use update to avoid unexpected overwrite.
@@ -870,15 +872,20 @@ namespace Gini {
                     $this->$k = $objects;
                 } elseif ($this->autocast) {
                     // 根据数据类型做类型转换
-                    $types = array_keys($v);
-                    if (count(array_intersect($types, ['int', 'bigint'])) > 0) {
-                        $this->$k = (int) $data[$k];
-                    } elseif (count(array_intersect($types, ['double', 'float', 'decimal'])) > 0) {
-                        $this->$k = (float) $data[$k];
-                    } elseif (count(array_intersect($types, ['bool'])) > 0) {
-                        $this->$k = !!$data[$k];
+                    $val = $data[$k] ?? null;
+                    if ($val === null) {
+                        $this->$k = null;
                     } else {
-                        $this->$k = $data[$k];
+                        $types = array_keys($v);
+                        if (count(array_intersect($types, ['int', 'bigint'])) > 0) {
+                            $this->$k = (int) $val;
+                        } elseif (count(array_intersect($types, ['double', 'float', 'decimal'])) > 0) {
+                            $this->$k = (float) $val;
+                        } elseif (count(array_intersect($types, ['bool'])) > 0) {
+                            $this->$k = (bool) $val;
+                        } else {
+                            $this->$k = $val;
+                        }
                     }
                 } else {
                     $this->$k = $data[$k] ?? null;

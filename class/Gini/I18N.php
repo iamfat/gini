@@ -29,9 +29,9 @@ namespace Gini {
 
         public static function stripContext($s)
         {
-            list($c, $t) = explode("\004", $s, 2);
+            $parts = explode("\004", $s, 2);
 
-            return $t ?: $c;
+            return ($parts[1] ?? '') ?: $parts[0];
         }
     }
 

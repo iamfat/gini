@@ -77,4 +77,56 @@ class Database extends \Gini\PHPUnit\TestCase\CLI
         self::assertSame('"db"."table"."field"', $db->ident('db', 'table', 'field'));
         self::assertSame('NOW()', $db->quoteIdent(SQL('NOW()')));
     }
+
+    /**
+     * 事务状态失配（驱动已不在事务中）时不得让 PDOException 逃逸。
+     * PHP 7.4 与 8.x 的 PDO 在无活动事务时 commit/rollBack 均抛异常，
+     * 因此这里是状态校验而非版本兼容。
+     */
+    public function testCommitWithoutActiveDriverTransactionDoesNotThrow(): void
+    {
+        $driver = $this->getMockBuilder('\Gini\Database\Unknown')
+            ->disableOriginalConstructor()
+            ->setMethods(['inTransaction', 'commit', 'rollBack', 'beginTransaction'])
+            ->getMock();
+        $driver->method('inTransaction')->willReturn(false);
+        $driver->expects(self::never())->method('commit');
+        $driver->expects(self::never())->method('rollBack');
+
+        $db = (new \ReflectionClass(\Gini\Database::class))->newInstanceWithoutConstructor();
+        $prop = new \ReflectionProperty(\Gini\Database::class, '_driver');
+        $prop->setAccessible(true);
+        $prop->setValue($db, $driver);
+        $level = new \ReflectionProperty(\Gini\Database::class, '_transactionLevel');
+        $level->setAccessible(true);
+        $level->setValue($db, 1);
+
+        $db->commit();
+        self::assertSame(0, $level->getValue($db));
+
+        $level->setValue($db, 1);
+        $db->rollback();
+        self::assertSame(0, $level->getValue($db));
+    }
+
+    public function testCommitWithActiveDriverTransactionCommits(): void
+    {
+        $driver = $this->getMockBuilder('\Gini\Database\Unknown')
+            ->disableOriginalConstructor()
+            ->setMethods(['inTransaction', 'commit', 'rollBack'])
+            ->getMock();
+        $driver->method('inTransaction')->willReturn(true);
+        $driver->expects(self::once())->method('commit');
+
+        $db = (new \ReflectionClass(\Gini\Database::class))->newInstanceWithoutConstructor();
+        $prop = new \ReflectionProperty(\Gini\Database::class, '_driver');
+        $prop->setAccessible(true);
+        $prop->setValue($db, $driver);
+        $level = new \ReflectionProperty(\Gini\Database::class, '_transactionLevel');
+        $level->setAccessible(true);
+        $level->setValue($db, 1);
+
+        $db->commit();
+        self::assertSame(0, $level->getValue($db));
+    }
 }

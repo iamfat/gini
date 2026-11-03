@@ -193,7 +193,7 @@ class ORMIterator implements \Iterator, \ArrayAccess, \Countable
 
     public function object($id)
     {
-        if (!isset($this->objects[$id])) {
+        if (is_null($id) || !isset($this->objects[$id])) {
             return null;
         }
         if ($this->objects[$id] === true) {

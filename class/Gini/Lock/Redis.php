@@ -9,6 +9,7 @@ class Redis implements Driver
     private $_instances = [];
     private $_resource;
     private $_quorum;
+    private $_token;
 
     public const CLOCK_DRIFT_FACTOR = 0.01;
     public const RETRY_MAX = 3;
