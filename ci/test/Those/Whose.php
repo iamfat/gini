@@ -1,9 +1,9 @@
 <?php
 
-namespace Gini\PHPUnit\Those;
-
-class Whose extends \Gini\PHPUnit\TestCase\CLI
+namespace Gini\PHPUnit\Those
 {
+    class Whose extends \Gini\PHPUnit\TestCase\CLI
+    {
     use \Gini\PHPUnit\MockDatabase;
 
     public function setUp(): void
@@ -53,6 +53,7 @@ class Whose extends \Gini\PHPUnit\TestCase\CLI
 
     public function tearDown(): void
     {
+        unset(\Gini\Database::$DB['default']);
         $this->clearMockIoC();
         parent::tearDown();
     }
@@ -219,11 +220,50 @@ class Whose extends \Gini\PHPUnit\TestCase\CLI
         self::assertSame([1, 2], $this->readProperty($c, 'params'));
     }
 
+    public function testNamespacedModelPivotJoinColumn(): void
+    {
+        // 命名空间模型 tag/type 的 many 字段 pivot JOIN,
+        // 对象侧外键列须规范化为 tag_type_id (而非非法的 tag/type_id)
+        $db = $this->createDatabaseMock();
+        \Gini\Database::$DB['default'] = $db;
+
+        \Gini\Those::reset();
+        $those = those('tag/type');
+        $those->whose('taggibles.name')->is('X');
+        $those->makeSQL();
+        $sql = $those->SQL();
+
+        // pivot 表名与对象侧外键列均经 normalizeName 规范化
+        self::assertStringContainsString('LEFT JOIN "_tag_type_taggibles"', $sql);
+        self::assertStringContainsString('"tag_type_id"="t0"."id"', $sql);
+        self::assertStringNotContainsString('tag/type_id', $sql);
+    }
+
     private function readProperty($object, string $name)
     {
         $r = new \ReflectionProperty(\Gini\Those\Whose::class, $name);
         $r->setAccessible(true);
 
         return $r->getValue($object);
+    }
+    }
+}
+
+// fixture 模型:注册进生产命名空间, 走 ORM\Base 真实的 name/tableName/normalizeName 路径
+// 类名 Tag\Type → name() = 'tag/type', tableName() = 'tag_type'
+namespace Gini\ORM\Tag
+{
+    // 注: 不能 extends \Gini\ORM\Object — PHP 8.5 中 Object 为保留类名, autoload 即 fatal
+    class Type extends \Gini\ORM\Base
+    {
+        public $taggibles = 'many:taggible,object:taggible';
+    }
+}
+
+namespace Gini\ORM
+{
+    class Taggible extends \Gini\ORM\Base
+    {
+        public $name = 'string:50';
     }
 }

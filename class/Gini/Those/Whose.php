@@ -187,7 +187,7 @@ class Whose implements Condition
                     $joinedTables[$pivotKey] = $pivotTable = 't' . $those->uniqid();
                     $join[$pivotKey] = $JOIN_OP . $db->ident($pivotName)
                         . ' AS ' . $db->quoteIdent($pivotTable)
-                        . ' ON ' . $db->ident($pivotTable, $name . '_id') . '=' . $db->ident($table, 'id');
+                        . ' ON ' . $db->ident($pivotTable, preg_replace('#[-_/]+#', '_', $name) . '_id') . '=' . $db->ident($table, 'id');
                     $those->context('joined-tables', $joinedTables);
                     $those->context('join', $join);
                 }
