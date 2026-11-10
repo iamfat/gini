@@ -219,6 +219,51 @@ class Whose extends \Gini\PHPUnit\TestCase\CLI
         self::assertSame([1, 2], $this->readProperty($c, 'params'));
     }
 
+    public function testPivotTableJoinWithCompoundModelName(): void
+    {
+        $db = $this->createDatabaseMock();
+
+        $this->bindIoC('\Gini\ORM\Tag\Type', function ($criteria = null) use ($db) {
+            $o = self::getMockBuilder('\Gini\ORM\Base')
+                ->setMockClassName('MOBJ_' . uniqid())
+                ->setMethods(['db', 'ownProperties', 'name', 'tableName'])
+                ->disableOriginalConstructor()
+                ->getMock();
+
+            $o->expects(self::any())->method('db')->will(self::returnValue($db));
+            $o->expects(self::any())->method('name')->will(self::returnValue('tag/type'));
+            $o->expects(self::any())->method('tableName')->will(self::returnValue('tag_type'));
+            $o->expects(self::any())
+                ->method('ownProperties')
+                ->will(self::returnValue([
+                    'id' => 'bigint,primary,serial',
+                    '_extra' => 'array',
+                    'name' => 'string:50',
+                    'taggibles' => 'string:50,many',
+                ]));
+
+            unset($o->id);
+            unset($o->_extra);
+            if (isset($criteria)) {
+                $criteria = $o->normalizeCriteria($o->criteria($criteria));
+                $o->setData($criteria);
+            }
+
+            return $o;
+        });
+
+        \Gini\Those::reset();
+        $those = those('tag/type');
+        $those->whose('taggibles')->isIn(['group']);
+        $those->makeSQL();
+
+        $sql = $those->SQL();
+
+        // 验证 pivot 表 ON 条件关联键被归一化为 tag_type_id 而非带斜杠的 tag/type_id
+        self::assertStringContainsString('LEFT JOIN "_tag_type_taggibles" AS "t1" ON "t1"."tag_type_id"="t0"."id"', $sql);
+        self::assertStringContainsString('WHERE "t1"."taggibles" IN (\'group\')', $sql);
+    }
+
     private function readProperty($object, string $name)
     {
         $r = new \ReflectionProperty(\Gini\Those\Whose::class, $name);
